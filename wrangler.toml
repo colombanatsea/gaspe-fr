@@ -1,0 +1,9 @@
+name = "gaspe-fr"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 binding configured in CF dashboard
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "gaspe-db"
+# database_id = "3c26d76d-e348-4dda-a20f-e0fdc0bda55e"
