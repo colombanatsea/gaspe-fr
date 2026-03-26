@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 
+export const dynamic = "force-static";
+
 const BASE_URL = "https://www.gaspe.fr";
 
 /**
  * Dynamic sitemap — static pages now, DB-driven pages later
  * When DB is connected, add: jobs, articles, events
  */
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();
 
   // Static pages
