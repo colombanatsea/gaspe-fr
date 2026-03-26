@@ -3,9 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { publishedJobs } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export function JobList() {
   const searchParams = useSearchParams();
+  const { user, updateUser } = useAuth();
 
   const selectedContracts = searchParams.getAll("contrat");
   const selectedCategories = searchParams.getAll("categorie");
@@ -23,6 +25,40 @@ export function JobList() {
     }
     return true;
   });
+
+  const isCandidatLoggedIn = user?.role === "candidat";
+  const savedOffers = user?.savedOffers ?? [];
+  const applications = user?.applications ?? [];
+
+  const handleSave = (slug: string) => {
+    if (!user || user.role !== "candidat") return;
+    const currentSaved = user.savedOffers ?? [];
+    if (currentSaved.includes(slug)) {
+      // Unsave
+      updateUser({
+        ...user,
+        savedOffers: currentSaved.filter((s) => s !== slug),
+      });
+    } else {
+      updateUser({
+        ...user,
+        savedOffers: [...currentSaved, slug],
+      });
+    }
+  };
+
+  const handleApply = (slug: string) => {
+    if (!user || user.role !== "candidat") return;
+    const currentApps = user.applications ?? [];
+    if (currentApps.find((a) => a.offerId === slug)) return; // Already applied
+    updateUser({
+      ...user,
+      applications: [
+        ...currentApps,
+        { offerId: slug, date: new Date().toISOString(), status: "pending" },
+      ],
+    });
+  };
 
   return (
     <div>
@@ -55,6 +91,12 @@ export function JobList() {
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
+              isCandidatLoggedIn={isCandidatLoggedIn}
+              isLoggedIn={!!user}
+              isSaved={savedOffers.includes(job.slug)}
+              hasApplied={!!applications.find((a) => a.offerId === job.slug)}
+              onSave={() => handleSave(job.slug)}
+              onApply={() => handleApply(job.slug)}
             />
           ))}
         </div>

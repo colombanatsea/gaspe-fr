@@ -1,15 +1,104 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Gestion des offres d'emploi",
-};
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { jobs as staticJobs, type Job } from "@/data/jobs";
+import { formatDate } from "@/lib/utils";
+
+const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
+const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
+
+function getAllOffers(): Job[] {
+  const adminRaw = typeof window !== "undefined" ? localStorage.getItem(ADMIN_OFFERS_KEY) : null;
+  const adherentRaw = typeof window !== "undefined" ? localStorage.getItem(ADHERENT_OFFERS_KEY) : null;
+  const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
+  const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
+  return [...staticJobs, ...adminOffers, ...adherentOffers];
+}
 
 export default function AdminOffresPage() {
-  // Placeholder — will be replaced by server action data
-  const jobs: never[] = [];
+  const { user } = useAuth();
+  const router = useRouter();
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [search, setSearch] = useState("");
+  const [filterContract, setFilterContract] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  useEffect(() => {
+    if (!user || user.role !== "admin") {
+      router.push("/connexion");
+      return;
+    }
+    setAllJobs(getAllOffers());
+  }, [user, router]);
+
+  if (!user || user.role !== "admin") return null;
+
+  const filtered = allJobs.filter((j) => {
+    const matchSearch =
+      !search ||
+      j.title.toLowerCase().includes(search.toLowerCase()) ||
+      j.company.toLowerCase().includes(search.toLowerCase()) ||
+      j.location.toLowerCase().includes(search.toLowerCase());
+    const matchContract = !filterContract || j.contractType === filterContract;
+    const matchStatus =
+      !filterStatus ||
+      (filterStatus === "published" && j.published) ||
+      (filterStatus === "draft" && !j.published);
+    return matchSearch && matchContract && matchStatus;
+  });
+
+  function togglePublish(id: string) {
+    // Try admin offers first
+    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
+    const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
+    const adminIdx = adminOffers.findIndex((j) => j.id === id);
+    if (adminIdx >= 0) {
+      adminOffers[adminIdx].published = !adminOffers[adminIdx].published;
+      localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(adminOffers));
+      setAllJobs(getAllOffers());
+      return;
+    }
+    // Try adherent offers
+    const adherentRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
+    const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
+    const adhIdx = adherentOffers.findIndex((j) => j.id === id);
+    if (adhIdx >= 0) {
+      adherentOffers[adhIdx].published = !adherentOffers[adhIdx].published;
+      localStorage.setItem(ADHERENT_OFFERS_KEY, JSON.stringify(adherentOffers));
+      setAllJobs(getAllOffers());
+      return;
+    }
+    // Static jobs: store toggle in admin offers as override
+    const staticJob = staticJobs.find((j) => j.id === id);
+    if (staticJob) {
+      const toggled = { ...staticJob, published: !staticJob.published };
+      adminOffers.push(toggled);
+      localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(adminOffers));
+      setAllJobs(getAllOffers());
+    }
+  }
+
+  function deleteOffer(id: string) {
+    if (!confirm("Supprimer cette offre ?")) return;
+    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
+    const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
+    const filtered2 = adminOffers.filter((j) => j.id !== id);
+    localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(filtered2));
+
+    const adherentRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
+    const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
+    const filtered3 = adherentOffers.filter((j) => j.id !== id);
+    localStorage.setItem(ADHERENT_OFFERS_KEY, JSON.stringify(filtered3));
+
+    setAllJobs(getAllOffers());
+  }
+
+  const contractTypes = [...new Set(allJobs.map((j) => j.contractType))];
 
   return (
     <div className="space-y-6">
@@ -19,7 +108,7 @@ export default function AdminOffresPage() {
             Gestion des offres d&apos;emploi
           </h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            Créez et gérez les offres d&apos;emploi des compagnies adhérentes.
+            {filtered.length} offre{filtered.length !== 1 ? "s" : ""} au total
           </p>
         </div>
         <Button href="/admin/offres/new">
@@ -28,22 +117,48 @@ export default function AdminOffresPage() {
         </Button>
       </div>
 
-      {jobs.length === 0 ? (
+      {/* Search & Filters */}
+      <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par titre, entreprise, lieu..."
+          className="flex-1 min-w-[240px] rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+        <select
+          value={filterContract}
+          onChange={(e) => setFilterContract(e.target.value)}
+          className="rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+        >
+          <option value="">Tous les contrats</option>
+          {contractTypes.map((ct) => (
+            <option key={ct} value={ct}>{ct}</option>
+          ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+        >
+          <option value="">Tous les statuts</option>
+          <option value="published">Publi&eacute;</option>
+          <option value="draft">Brouillon</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
         <div className="rounded-lg border border-border-light bg-background p-12 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-teal">
             <BriefcaseIcon className="h-8 w-8 text-primary" />
           </div>
           <h3 className="font-heading text-lg font-semibold text-foreground">
-            Aucune offre
+            Aucune offre trouv&eacute;e
           </h3>
           <p className="mt-2 text-sm text-foreground-muted">
-            Créez la première&nbsp;!
+            Modifiez vos filtres ou cr&eacute;ez une nouvelle offre.
           </p>
-          <div className="mt-6">
-            <Button href="/admin/offres/new" variant="secondary">
-              Créer une offre
-            </Button>
-          </div>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border-light bg-background">
@@ -52,13 +167,47 @@ export default function AdminOffresPage() {
               <tr className="border-b border-border-light text-left">
                 <th className="px-4 py-3 font-heading font-semibold text-foreground">Titre</th>
                 <th className="px-4 py-3 font-heading font-semibold text-foreground">Entreprise</th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground">Lieu</th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground">Contrat</th>
                 <th className="px-4 py-3 font-heading font-semibold text-foreground">Statut</th>
                 <th className="px-4 py-3 font-heading font-semibold text-foreground">Date</th>
                 <th className="px-4 py-3 font-heading font-semibold text-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {/* Rows will be rendered here once data is connected */}
+              {filtered.map((job) => (
+                <tr key={job.id} className="border-b border-border-light last:border-0 hover:bg-surface/50">
+                  <td className="px-4 py-3 font-medium text-foreground">{job.title}</td>
+                  <td className="px-4 py-3 text-foreground-muted">{job.company}</td>
+                  <td className="px-4 py-3 text-foreground-muted">{job.location}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="neutral">{job.contractType}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant={job.published ? "green" : "warm"}>
+                      {job.published ? "Publi\u00e9" : "Brouillon"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-foreground-muted">{formatDate(job.publishedAt)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => togglePublish(job.id)}
+                        className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors"
+                        title={job.published ? "D\u00e9publier" : "Publier"}
+                      >
+                        {job.published ? "D\u00e9publier" : "Publier"}
+                      </button>
+                      <button
+                        onClick={() => deleteOffer(job.id)}
+                        className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

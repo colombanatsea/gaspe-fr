@@ -2,21 +2,90 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { members } from "@/data/members";
+import { slugify } from "@/lib/utils";
+import type { Job } from "@/data/jobs";
 
-const contractTypes = ["CDI", "CDD", "Stage", "Alternance"];
+const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 
+const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance"];
 const categories = [
   "Pont",
   "Machine",
-  "Personnel hôtelier",
-  "Personnel à terre",
+  "Technique",
+  "Personnel h\u00f4telier",
+  "Personnel \u00e0 terre",
   "Direction",
   "Autre",
 ];
 
 export default function AdminNewOffrePage() {
-  const [isSubmitting] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    company: "",
+    location: "",
+    contractType: "",
+    category: "",
+    salaryRange: "",
+    contactEmail: "",
+    applicationUrl: "",
+    profile: "",
+    conditions: "",
+  });
+
+  if (!user || user.role !== "admin") {
+    if (typeof window !== "undefined") router.push("/connexion");
+    return null;
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const slug = slugify(form.title);
+    const id = `admin-${Date.now()}`;
+    const companySlug = slugify(form.company);
+
+    const newJob: Job = {
+      id,
+      slug,
+      title: form.title,
+      company: form.company,
+      companySlug,
+      location: form.location,
+      contractType: form.contractType as Job["contractType"],
+      category: form.category || "Autre",
+      description: form.description,
+      profile: form.profile,
+      conditions: form.conditions,
+      contactEmail: form.contactEmail,
+      salaryRange: form.salaryRange || undefined,
+      publishedAt: new Date().toISOString().split("T")[0],
+      published: true,
+    };
+
+    const raw = localStorage.getItem(ADMIN_OFFERS_KEY);
+    const existing: Job[] = raw ? JSON.parse(raw) : [];
+    existing.push(newJob);
+    localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(existing));
+
+    router.push("/admin/offres");
+  }
+
+  const inputClass =
+    "w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -29,19 +98,21 @@ export default function AdminNewOffrePage() {
         </p>
       </div>
 
-      <form className="space-y-5 rounded-lg bg-background p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-5 rounded-lg bg-background p-6 shadow-sm">
         {/* Titre */}
         <div>
-          <label htmlFor="titre" className="block text-sm font-medium text-foreground mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
             Titre de l&apos;offre <span className="text-red-500">*</span>
           </label>
           <input
-            id="titre"
-            name="titre"
+            id="title"
+            name="title"
             type="text"
             required
+            value={form.title}
+            onChange={handleChange}
             placeholder="Ex : Capitaine 500 UMS"
-            className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+            className={inputClass}
           />
         </div>
 
@@ -55,69 +126,115 @@ export default function AdminNewOffrePage() {
             name="description"
             rows={6}
             required
-            placeholder="Décrivez le poste, les missions et le profil recherché..."
-            className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="D&eacute;crivez le poste, les missions..."
+            className={inputClass}
+          />
+        </div>
+
+        {/* Profil recherch&eacute; */}
+        <div>
+          <label htmlFor="profile" className="block text-sm font-medium text-foreground mb-1">
+            Profil recherch&eacute;
+          </label>
+          <textarea
+            id="profile"
+            name="profile"
+            rows={4}
+            value={form.profile}
+            onChange={handleChange}
+            placeholder="Brevets requis, exp&eacute;rience..."
+            className={inputClass}
+          />
+        </div>
+
+        {/* Conditions */}
+        <div>
+          <label htmlFor="conditions" className="block text-sm font-medium text-foreground mb-1">
+            Conditions &amp; avantages
+          </label>
+          <textarea
+            id="conditions"
+            name="conditions"
+            rows={4}
+            value={form.conditions}
+            onChange={handleChange}
+            placeholder="R&eacute;mun&eacute;ration, r&eacute;gime social, rythme..."
+            className={inputClass}
           />
         </div>
 
         {/* Entreprise + Lieu */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="entreprise" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="company" className="block text-sm font-medium text-foreground mb-1">
               Entreprise <span className="text-red-500">*</span>
             </label>
-            <input
-              id="entreprise"
-              name="entreprise"
-              type="text"
+            <select
+              id="company"
+              name="company"
               required
-              placeholder="Ex : Compagnie Océane"
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
-            />
+              value={form.company}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              <option value="">S&eacute;lectionner un adh&eacute;rent...</option>
+              {members.map((m) => (
+                <option key={m.slug} value={m.name}>{m.name}</option>
+              ))}
+              <option value="__other">Autre...</option>
+            </select>
           </div>
           <div>
-            <label htmlFor="lieu" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="location" className="block text-sm font-medium text-foreground mb-1">
               Lieu <span className="text-red-500">*</span>
             </label>
             <input
-              id="lieu"
-              name="lieu"
+              id="location"
+              name="location"
               type="text"
               required
+              value={form.location}
+              onChange={handleChange}
               placeholder="Ex : Lorient, Bretagne"
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+              className={inputClass}
             />
           </div>
         </div>
 
-        {/* Contrat + Catégorie */}
+        {/* Contrat + Cat&eacute;gorie */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="contrat" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="contractType" className="block text-sm font-medium text-foreground mb-1">
               Type de contrat <span className="text-red-500">*</span>
             </label>
             <select
-              id="contrat"
-              name="contrat"
+              id="contractType"
+              name="contractType"
               required
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+              value={form.contractType}
+              onChange={handleChange}
+              className={inputClass}
             >
-              <option value="">Sélectionner...</option>
+              <option value="">S&eacute;lectionner...</option>
               {contractTypes.map((type) => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="categorie" className="block text-sm font-medium text-foreground mb-1">
-              Catégorie
+            <label htmlFor="category" className="block text-sm font-medium text-foreground mb-1">
+              Cat&eacute;gorie
             </label>
             <select
-              id="categorie"
-              name="categorie"
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+              id="category"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className={inputClass}
             >
-              <option value="">Sélectionner...</option>
+              <option value="">S&eacute;lectionner...</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -127,42 +244,48 @@ export default function AdminNewOffrePage() {
 
         {/* Salaire */}
         <div>
-          <label htmlFor="salaire" className="block text-sm font-medium text-foreground mb-1">
+          <label htmlFor="salaryRange" className="block text-sm font-medium text-foreground mb-1">
             Fourchette salariale
           </label>
           <input
-            id="salaire"
-            name="salaire"
+            id="salaryRange"
+            name="salaryRange"
             type="text"
+            value={form.salaryRange}
+            onChange={handleChange}
             placeholder="Ex : 35 000 - 45 000 EUR brut/an"
-            className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+            className={inputClass}
           />
         </div>
 
         {/* Contact + URL */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-foreground mb-1">
               Email de contact
             </label>
             <input
-              id="email"
-              name="email"
+              id="contactEmail"
+              name="contactEmail"
               type="email"
+              value={form.contactEmail}
+              onChange={handleChange}
               placeholder="recrutement@compagnie.fr"
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+              className={inputClass}
             />
           </div>
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="applicationUrl" className="block text-sm font-medium text-foreground mb-1">
               URL de candidature
             </label>
             <input
-              id="url"
-              name="url"
+              id="applicationUrl"
+              name="applicationUrl"
               type="url"
+              value={form.applicationUrl}
+              onChange={handleChange}
               placeholder="https://..."
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+              className={inputClass}
             />
           </div>
         </div>

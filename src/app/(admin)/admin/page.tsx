@@ -35,9 +35,12 @@ export default function AdminDashboardPage() {
   ];
 
   const quickActions = [
-    { label: "Gérer les comptes", href: "/admin/comptes" },
+    { label: "G\u00e9rer les comptes", href: "/admin/comptes" },
     { label: "Offres d\u2019emploi", href: "/admin/offres" },
-    { label: "Nouvel article", href: "/admin/actualites" },
+    { label: "Positions & Presse", href: "/admin/positions" },
+    { label: "Formations", href: "/admin/formations" },
+    { label: "Agenda", href: "/admin/agenda" },
+    { label: "Documents", href: "/admin/documents" },
     { label: "Voir le site", href: "/", external: true },
   ];
 
