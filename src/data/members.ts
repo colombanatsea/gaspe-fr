@@ -91,7 +91,7 @@ export const members: Member[] = [
     city: "Giens",
     latitude: 43.005,
     longitude: 6.200,
-    region: "Provence-Alpes-Côte d'Azur",
+    region: "Provence-Alpes-Côte d\u2019Azur",
     territory: "metropole",
     category: "titulaire",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image14.png",
@@ -170,9 +170,9 @@ export const members: Member[] = [
     shipCount: 1,
   },
   {
-    name: "K\u00e9olis Maritime Fouras Aix",
+    name: "Kéolis Maritime Fouras Aix",
     slug: "keolis-maritime-fouras-aix",
-    city: "\u00cele d\u2019Aix",
+    city: "Île d\u2019Aix",
     latitude: 46.01,
     longitude: -1.174,
     region: "Nouvelle-Aquitaine",
@@ -198,12 +198,12 @@ export const members: Member[] = [
     shipCount: 6,
   },
   {
-    name: "RATP Dev Toulon Provence M\u00e9diterran\u00e9e",
+    name: "RATP Dev Toulon Provence Méditerranée",
     slug: "ratp-dev-toulon",
     city: "Toulon",
     latitude: 43.12,
     longitude: 5.931,
-    region: "Provence-Alpes-C\u00f4te d\u2019Azur",
+    region: "Provence-Alpes-Côte d\u2019Azur",
     territory: "metropole",
     category: "titulaire",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image18.png",
@@ -243,7 +243,7 @@ export const members: Member[] = [
     city: "Marseille",
     latitude: 43.293,
     longitude: 5.364,
-    region: "Provence-Alpes-C\u00f4te d\u2019Azur",
+    region: "Provence-Alpes-Côte d\u2019Azur",
     territory: "metropole",
     category: "titulaire",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image13.png",
@@ -252,12 +252,12 @@ export const members: Member[] = [
     shipCount: 7,
   },
   {
-    name: "Syndicat Mixte des Travers\u00e9es du Delta du Rh\u00f4ne (SMTDR)",
+    name: "Syndicat Mixte des Traversées du Delta du Rhône (SMTDR)",
     slug: "smtdr",
     city: "Arles",
     latitude: 43.676,
     longitude: 4.627,
-    region: "Provence-Alpes-C\u00f4te d\u2019Azur",
+    region: "Provence-Alpes-Côte d\u2019Azur",
     territory: "metropole",
     category: "titulaire",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image7.png",
@@ -280,7 +280,7 @@ export const members: Member[] = [
     shipCount: 5,
   },
   {
-    name: "Z\u00e9phyr & Bor\u00e9e \u2013 Treizhadenn An Oriant (TAO)",
+    name: "Zéphyr & Borée \u2013 Treizhadenn An Oriant (TAO)",
     slug: "zephyr-boree-tao",
     city: "Lorient",
     latitude: 47.742,
@@ -293,7 +293,7 @@ export const members: Member[] = [
   },
 
   // ═══════════════════════════════════════════════════
-  //  ASSOCI\u00c9S & EXPERTS
+  //  ASSOCIÉS & EXPERTS
   // ═══════════════════════════════════════════════════
   {
     name: "Capstan Avocats",
@@ -301,7 +301,7 @@ export const members: Member[] = [
     city: "Paris",
     latitude: 48.870,
     longitude: 2.337,
-    region: "\u00cele-de-France",
+    region: "Île-de-France",
     territory: "metropole",
     category: "associe",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image12.png",
@@ -319,7 +319,7 @@ export const members: Member[] = [
     shipCount: 2,
   },
   {
-    name: "Compagnie Vend\u00e9enne",
+    name: "Compagnie Vendéenne",
     slug: "compagnie-vendeenne",
     city: "La Rochelle",
     latitude: 46.159,
@@ -333,7 +333,7 @@ export const members: Member[] = [
   {
     name: "Filhet Allard Maritime",
     slug: "filhet-allard-maritime",
-    city: "M\u00e9rignac",
+    city: "Mérignac",
     latitude: 44.830,
     longitude: -0.640,
     region: "Nouvelle-Aquitaine",
@@ -367,7 +367,7 @@ export const members: Member[] = [
     shipCount: 1,
   },
   {
-    name: "K\u00e9olis Bordeaux m\u00e9tropole",
+    name: "Kéolis Bordeaux métropole",
     slug: "keolis-bordeaux-metropole",
     city: "Bordeaux",
     latitude: 44.851,
@@ -384,7 +384,7 @@ export const members: Member[] = [
     city: "Suresnes",
     latitude: 48.891,
     longitude: 2.237,
-    region: "\u00cele-de-France",
+    region: "Île-de-France",
     territory: "metropole",
     category: "associe",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image10.png",
@@ -405,7 +405,7 @@ export const members: Member[] = [
     shipCount: 84,
   },
   {
-    name: "Transport Maritime C\u00f4tier (TMC)",
+    name: "Transport Maritime Côtier (TMC)",
     slug: "transport-maritime-cotier",
     city: "Vannes",
     latitude: 47.639,
@@ -422,5 +422,5 @@ export const members: Member[] = [
 /** Helper: titulaires only */
 export const titulaires = members.filter((m) => m.category === "titulaire");
 
-/** Helper: associ\u00e9s & experts only */
+/** Helper: associés & experts only */
 export const associes = members.filter((m) => m.category === "associe");

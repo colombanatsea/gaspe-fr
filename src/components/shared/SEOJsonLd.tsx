@@ -28,7 +28,7 @@ export function OrganizationJsonLd() {
         url: "https://www.gaspe.fr",
         foundingDate: "1951",
         description:
-          "Association de loi 1901 regroupant les armateurs assurant des missions de service public de transport de passagers ou de fret sur des lignes c\u00f4ti\u00e8res nationales.",
+          "Association de loi 1901 regroupant les armateurs assurant des missions de service public de transport de passagers ou de fret sur des lignes côtières nationales.",
         address: {
           "@type": "PostalAddress",
           streetAddress: "Quai de la Fosse, Maison de la Mer - Daniel Gilard",

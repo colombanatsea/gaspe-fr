@@ -6,24 +6,24 @@ import { Badge } from "@/components/ui/Badge";
 export const metadata: Metadata = {
   title: "Notre Groupement",
   description:
-    "Pr\u00e9sentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
+    "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
 };
 
 const engagements = [
   {
-    title: "S\u00e9curit\u00e9 et Conformit\u00e9 R\u00e9glementaire",
+    title: "Sécurité et Conformité Réglementaire",
     description:
-      "Respect des normes de s\u00e9curit\u00e9 maritime, s\u00e9curit\u00e9 des \u00e9quipages et passagers.",
+      "Respect des normes de sécurité maritime, sécurité des équipages et passagers.",
   },
   {
     title: "Protection de l\u2019Environnement",
     description:
-      "R\u00e9duction des \u00e9missions polluantes, gestion responsable des d\u00e9chets.",
+      "Réduction des émissions polluantes, gestion responsable des déchets.",
   },
   {
-    title: "Responsabilit\u00e9 Sociale",
+    title: "Responsabilité Sociale",
     description:
-      "Conditions de travail justes, promotion de la diversit\u00e9 et inclusion.",
+      "Conditions de travail justes, promotion de la diversité et inclusion.",
   },
   {
     title: "Service Public et relation clients",
@@ -31,52 +31,52 @@ const engagements = [
       "Service fiable et ponctuel, communication transparente.",
   },
   {
-    title: "Innovation et Am\u00e9lioration Continue",
+    title: "Innovation et Amélioration Continue",
     description:
-      "D\u00e9marche d\u2019am\u00e9lioration continue des performances.",
+      "Démarche d\u2019amélioration continue des performances.",
   },
   {
     title: "Gestion des Risques",
     description:
-      "Plans de gestion des risques, continuit\u00e9 des op\u00e9rations.",
+      "Plans de gestion des risques, continuité des opérations.",
   },
 ];
 
 const bureauMembers = [
   {
     name: "Baudouin PAPPENS",
-    role: "Pr\u00e9sident",
+    role: "Président",
     company: "Compagnie Yeu Continent",
   },
   {
     name: "Guillaume du FONTENIOUX",
-    role: "Vice-pr\u00e9sident",
+    role: "Vice-président",
     company: "Compagnie des Bacs de Loire",
   },
   {
     name: "Marc L\u2019Alexandre",
-    role: "Vice-pr\u00e9sident",
+    role: "Vice-président",
     company: "Groupe LHD",
   },
   {
     name: "Nelly DEPARDIEU",
-    role: "Secr\u00e9taire",
+    role: "Secrétaire",
     company: "Compagnie maritime DNO (Manche Iles Express)",
   },
   {
     name: "Franck LAUSSEL",
-    role: "Secr\u00e9taire adjoint",
+    role: "Secrétaire adjoint",
     company: undefined,
   },
   {
     name: "Thomas CREPY",
-    role: "Tr\u00e9sorier",
-    company: "Compagnie Oc\u00e9ane",
+    role: "Trésorier",
+    company: "Compagnie Océane",
   },
   {
     name: "Colomban Monnier",
-    role: "D\u00e9l\u00e9gu\u00e9 G\u00e9n\u00e9ral",
-    company: "Pr\u00e9sident de la Fondation ENSM",
+    role: "Délégué Général",
+    company: "Président de la Fondation ENSM",
   },
 ];
 
@@ -86,7 +86,7 @@ export default function NotreGroupementPage() {
       {/* Hero */}
       <PageHeader
         title="Notre Groupement"
-        description="Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entit\u00e9 collaborative qui regroupe des membres engag\u00e9s dans les services maritimes."
+        description="Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entité collaborative qui regroupe des membres engagés dans les services maritimes."
         breadcrumbs={[{ label: "Notre Groupement" }]}
       />
 
@@ -121,9 +121,9 @@ export default function NotreGroupementPage() {
           </p>
           <ul className="space-y-3 max-w-3xl">
             {[
-              "Garantir des services de transport s\u00fbrs et fiables",
-              "Maintenir une flotte de navires en bon \u00e9tat et op\u00e9rationnelle",
-              "Assurer des services r\u00e9guliers et fiables",
+              "Garantir des services de transport sûrs et fiables",
+              "Maintenir une flotte de navires en bon état et opérationnelle",
+              "Assurer des services réguliers et fiables",
               "Proposer des tarifs raisonnables et accessibles",
             ].map((item) => (
               <li key={item} className="flex gap-3">

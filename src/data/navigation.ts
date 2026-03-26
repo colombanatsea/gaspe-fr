@@ -4,9 +4,8 @@ export const mainNavigation: NavItem[] = [
   { label: "Accueil", href: "/" },
   { label: "Notre Groupement", href: "/notre-groupement" },
   { label: "Nos Adhérents", href: "/nos-adherents" },
-  { label: "Actualités", href: "/actualites" },
   { label: "Positions", href: "/positions" },
-  { label: "Presse", href: "/presse" },
+  { label: "Documents", href: "/documents" },
   { label: "Agenda", href: "/agenda" },
   {
     label: "Nos Compagnies Recrutent",
@@ -23,8 +22,8 @@ export const footerNavigation = {
     { label: "Nos Positions", href: "/positions" },
   ],
   ressources: [
-    { label: "Actualités", href: "/actualites" },
-    { label: "Presse", href: "/presse" },
+    { label: "Positions", href: "/positions" },
+    { label: "Documents", href: "/documents" },
     { label: "Agenda", href: "/agenda" },
   ],
   legal: [

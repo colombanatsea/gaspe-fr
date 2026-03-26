@@ -4,41 +4,25 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export const metadata: Metadata = {
   title: "Agenda",
   description:
-    "Retrouvez les \u00e9v\u00e9nements et rendez-vous \u00e0 venir du GASPE et du secteur maritime.",
+    "Retrouvez les événements et rendez-vous à venir du GASPE et du secteur maritime.",
 };
 
 const events = [
   {
-    title: "Assembl\u00e9e G\u00e9n\u00e9rale 2026",
-    date: "15 avril 2026",
-    dateShort: { day: "15", month: "AVR" },
+    title: "Assemblée Générale Extraordinaire du GASPE",
+    date: "19 mai 2026",
+    dateShort: { day: "19", month: "MAI" },
     location: "Nantes",
     description:
-      "Assembl\u00e9e g\u00e9n\u00e9rale annuelle du GASPE. Bilan d\u2019activit\u00e9, \u00e9lections et perspectives pour le groupement.",
+      "Assemblée Générale Extraordinaire du Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau.",
   },
   {
-    title: "Salon Euromaritime",
-    date: "4\u20136 juin 2026",
-    dateShort: { day: "4-6", month: "JUIN" },
-    location: "Marseille",
+    title: "Assises de l'Économie de la Mer 2026",
+    date: "24-25 novembre 2026",
+    dateShort: { day: "24-25", month: "NOV" },
+    location: "La Rochelle",
     description:
-      "Le rendez-vous de l\u2019\u00e9conomie maritime en M\u00e9diterran\u00e9e. Le GASPE sera pr\u00e9sent sur le salon pour repr\u00e9senter ses adh\u00e9rents.",
-  },
-  {
-    title: "Journ\u00e9es nationales de la mer",
-    date: "8\u201314 juin 2026",
-    dateShort: { day: "8-14", month: "JUIN" },
-    location: "France enti\u00e8re",
-    description:
-      "Semaine de sensibilisation du grand public aux enjeux maritimes. Nos compagnies adh\u00e9rentes organisent des portes ouvertes.",
-  },
-  {
-    title: "Congr\u00e8s annuel des armateurs",
-    date: "22 octobre 2026",
-    dateShort: { day: "22", month: "OCT" },
-    location: "Paris",
-    description:
-      "Congr\u00e8s r\u00e9unissant l\u2019ensemble des acteurs du transport maritime fran\u00e7ais. Tables rondes, conf\u00e9rences et networking.",
+      "Les Assises de l'Économie de la Mer, le rendez-vous annuel majeur de la communauté maritime française. Deux jours de conférences, tables rondes et rencontres réunissant les acteurs de l'économie maritime : armateurs, ports, industrie navale, énergies marines, pêche, recherche et pouvoirs publics. Organisées par le Cluster Maritime Français et Le Marin.",
   },
 ];
 
@@ -47,7 +31,7 @@ export default function AgendaPage() {
     <>
       <PageHeader
         title="Agenda"
-        description="Les \u00e9v\u00e9nements du GASPE et du secteur maritime."
+        description="Les événements du GASPE et du secteur maritime."
         breadcrumbs={[{ label: "Agenda" }]}
       />
 

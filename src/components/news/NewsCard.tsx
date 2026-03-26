@@ -17,7 +17,7 @@ const categoryConfig: Record<
   { label: string; borderClass: string; badgeClass: string }
 > = {
   actualite: {
-    label: "Actualit\u00e9",
+    label: "Actualité",
     borderClass: "border-l-primary",
     badgeClass: "bg-primary/10 text-primary",
   },

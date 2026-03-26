@@ -40,7 +40,7 @@ function validate(data: FormData): FormErrors {
   if (!data.message.trim()) {
     errors.message = "Le message est requis.";
   } else if (data.message.trim().length < 10) {
-    errors.message = "Le message doit contenir au moins 10 caract\u00e8res.";
+    errors.message = "Le message doit contenir au moins 10 caractères.";
   }
   return errors;
 }
@@ -174,7 +174,7 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Soci\u00e9t\u00e9 */}
+                {/* Société */}
                 <div>
                   <label
                     htmlFor="societe"

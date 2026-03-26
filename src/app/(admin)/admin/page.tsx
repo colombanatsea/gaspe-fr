@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const stats = [
   { label: "Offres d'emploi", value: "\u2014", href: "/admin/offres", color: "border-l-primary" },
   { label: "Articles", value: "\u2014", href: "/admin/actualites", color: "border-l-[var(--gaspe-blue-600)]" },
-  { label: "\u00c9v\u00e9nements", value: "\u2014", href: "#", color: "border-l-[var(--gaspe-warm-400)]" },
+  { label: "Événements", value: "\u2014", href: "#", color: "border-l-[var(--gaspe-warm-400)]" },
   { label: "Messages", value: "\u2014", href: "/admin/contacts", color: "border-l-[var(--gaspe-green-400)]" },
 ];
 
