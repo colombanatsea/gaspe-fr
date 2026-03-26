@@ -3,19 +3,13 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
 import { Button } from "@/components/ui/Button";
+import { publishedJobs } from "@/data/jobs";
 
-const contractTypes = ["CDI", "CDD", "Stage", "Alternance"];
+const contractTypes = ["CDI", "CDD", "Saisonnier"];
+const categories = ["Pont", "Machine", "Technique"];
 
-const regions = [
-  "Toutes les régions",
-  "Bretagne",
-  "Normandie",
-  "Nouvelle-Aquitaine",
-  "Occitanie",
-  "Provence-Alpes-Côte d'Azur",
-  "Corse",
-  "Outre-mer",
-];
+// Derive unique companies from the actual job data
+const companies = Array.from(new Set(publishedJobs.map((j) => j.company))).sort();
 
 export function JobFilters() {
   const router = useRouter();
@@ -23,7 +17,8 @@ export function JobFilters() {
   const searchParams = useSearchParams();
 
   const selectedContracts = searchParams.getAll("contrat");
-  const selectedRegion = searchParams.get("region") ?? "";
+  const selectedCategories = searchParams.getAll("categorie");
+  const selectedCompany = searchParams.get("entreprise") ?? "";
 
   const updateParams = useCallback(
     (key: string, value: string | string[]) => {
@@ -39,25 +34,27 @@ export function JobFilters() {
     [router, pathname, searchParams],
   );
 
-  const toggleContract = (type: string) => {
-    const next = selectedContracts.includes(type)
-      ? selectedContracts.filter((c) => c !== type)
-      : [...selectedContracts, type];
-    updateParams("contrat", next);
+  const toggleFilter = (key: string, current: string[], value: string) => {
+    const next = current.includes(value)
+      ? current.filter((c) => c !== value)
+      : [...current, value];
+    updateParams(key, next);
   };
 
-  const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateParams("region", e.target.value);
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateParams("entreprise", e.target.value);
   };
 
   const resetFilters = () => {
     router.push(pathname, { scroll: false });
   };
 
-  const hasFilters = selectedContracts.length > 0 || selectedRegion;
+  const hasFilters =
+    selectedContracts.length > 0 || selectedCategories.length > 0 || selectedCompany;
 
   return (
     <div className="space-y-6">
+      {/* Contract type */}
       <div>
         <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
           Type de contrat
@@ -68,7 +65,7 @@ export function JobFilters() {
               <input
                 type="checkbox"
                 checked={selectedContracts.includes(type)}
-                onChange={() => toggleContract(type)}
+                onChange={() => toggleFilter("contrat", selectedContracts, type)}
                 className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary"
               />
               <span className="text-sm text-foreground">{type}</span>
@@ -77,18 +74,40 @@ export function JobFilters() {
         </div>
       </div>
 
+      {/* Category */}
       <div>
         <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
-          Région
+          Catégorie
+        </h3>
+        <div className="space-y-2">
+          {categories.map((cat) => (
+            <label key={cat} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(cat)}
+                onChange={() => toggleFilter("categorie", selectedCategories, cat)}
+                className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-foreground">{cat}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Company */}
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
+          Entreprise
         </h3>
         <select
-          value={selectedRegion}
-          onChange={handleRegionChange}
+          value={selectedCompany}
+          onChange={handleCompanyChange}
           className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
         >
-          {regions.map((region) => (
-            <option key={region} value={region === "Toutes les régions" ? "" : region}>
-              {region}
+          <option value="">Toutes les entreprises</option>
+          {companies.map((company) => (
+            <option key={company} value={company}>
+              {company}
             </option>
           ))}
         </select>
