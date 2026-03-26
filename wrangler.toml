@@ -1,0 +1,16 @@
+name = "gaspe-fr"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# Cloudflare D1 database
+[[d1_databases]]
+binding = "DB"
+database_name = "gaspe-db"
+database_id = "3c26d76d-e348-4dda-a20f-e0fdc0bda55e"
+
+# Cloudflare R2 storage (PDFs, videos, photos, CVs)
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "gaspe-files"
+# Create with: wrangler r2 bucket create gaspe-files
