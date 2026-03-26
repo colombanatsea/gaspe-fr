@@ -137,7 +137,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
     }
 
     return (
-      <div className={cn("relative", className)}>
+      <div className={cn("relative isolate z-0", className)}>
         <div id="gaspe-member-map" className="w-full h-full" style={{ minHeight: 400 }} />
 
         <div className="absolute bottom-4 left-4 z-[500] flex flex-col gap-2">

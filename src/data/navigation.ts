@@ -15,6 +15,12 @@ export const mainNavigation: NavItem[] = [
   { label: "Contact", href: "/contact" },
 ];
 
+export const authNavigation = {
+  admin: { label: "Administration", href: "/admin" },
+  adherent: { label: "Espace Adhérent", href: "/espace-adherent" },
+  candidat: { label: "Espace Candidat", href: "/espace-candidat" },
+} as const;
+
 export const footerNavigation = {
   groupement: [
     { label: "Qui sommes-nous", href: "/notre-groupement" },

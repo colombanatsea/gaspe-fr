@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_FULL_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/shared/SEOJsonLd";
+import { Providers } from "@/components/shared/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,7 +40,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <OrganizationJsonLd />
         <WebSiteJsonLd />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

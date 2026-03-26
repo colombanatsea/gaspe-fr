@@ -1,25 +1,46 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { Card } from "@/components/ui/Card";
 
-export const metadata: Metadata = {
-  title: "Tableau de bord",
-};
-
-const stats = [
-  { label: "Offres d'emploi", value: "\u2014", href: "/admin/offres", color: "border-l-primary" },
-  { label: "Articles", value: "\u2014", href: "/admin/actualites", color: "border-l-[var(--gaspe-blue-600)]" },
-  { label: "Événements", value: "\u2014", href: "#", color: "border-l-[var(--gaspe-warm-400)]" },
-  { label: "Messages", value: "\u2014", href: "/admin/contacts", color: "border-l-[var(--gaspe-green-400)]" },
-];
-
-const quickActions = [
-  { label: "Nouvelle offre d\u2019emploi", href: "/admin/offres/new" },
-  { label: "Nouvel article", href: "/admin/actualites" },
-  { label: "Voir le site", href: "/", external: true },
-];
-
 export default function AdminDashboardPage() {
+  const { user, getAllUsers } = useAuth();
+  const router = useRouter();
+  const [counts, setCounts] = useState({ pending: 0, adherents: 0, candidats: 0, total: 0 });
+
+  useEffect(() => {
+    if (!user || user.role !== "admin") {
+      router.push("/connexion");
+      return;
+    }
+    const users = getAllUsers();
+    setCounts({
+      pending: users.filter((u) => u.role === "adherent" && !u.approved).length,
+      adherents: users.filter((u) => u.role === "adherent" && u.approved).length,
+      candidats: users.filter((u) => u.role === "candidat").length,
+      total: users.length,
+    });
+  }, [user, router, getAllUsers]);
+
+  if (!user || user.role !== "admin") return null;
+
+  const stats = [
+    { label: "Comptes en attente", value: String(counts.pending), href: "/admin/comptes", color: "border-l-[var(--gaspe-warm-400)]" },
+    { label: "Adhérents actifs", value: String(counts.adherents), href: "/admin/comptes", color: "border-l-[var(--gaspe-blue-600)]" },
+    { label: "Candidats", value: String(counts.candidats), href: "/admin/comptes", color: "border-l-[var(--gaspe-green-400)]" },
+    { label: "Comptes total", value: String(counts.total), href: "/admin/comptes", color: "border-l-primary" },
+  ];
+
+  const quickActions = [
+    { label: "Gérer les comptes", href: "/admin/comptes" },
+    { label: "Offres d\u2019emploi", href: "/admin/offres" },
+    { label: "Nouvel article", href: "/admin/actualites" },
+    { label: "Voir le site", href: "/", external: true },
+  ];
+
   return (
     <div className="space-y-8">
       <div>

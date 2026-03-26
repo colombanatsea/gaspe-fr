@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { mainNavigation } from "@/data/navigation";
+import { mainNavigation, authNavigation } from "@/data/navigation";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 interface MobileNavProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface MobileNavProps {
 
 export function MobileNav({ open, onClose }: MobileNavProps) {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   // Close on route change
   useEffect(() => {
@@ -74,6 +76,49 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               {item.label}
             </Link>
           ))}
+
+          {/* Auth section */}
+          <div className="my-2 border-t border-border-light" />
+          {isAuthenticated && user ? (
+            <>
+              <Link
+                href={authNavigation[user.role].href}
+                className="rounded-md px-3 py-3 text-sm font-medium text-primary bg-surface-teal transition-colors"
+              >
+                Mon espace
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  onClose();
+                }}
+                className="rounded-md px-3 py-3 text-sm font-medium text-left text-red-600 hover:bg-red-50 transition-colors"
+              >
+                Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/connexion"
+                className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-surface-teal transition-colors"
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/inscription/candidat"
+                className="rounded-md px-3 py-3 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+              >
+                Inscription Candidat
+              </Link>
+              <Link
+                href="/inscription/adherent"
+                className="rounded-md px-3 py-3 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+              >
+                Inscription Adhérent
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 border-t border-border-light p-4">

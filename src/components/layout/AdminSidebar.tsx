@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SITE_NAME } from "@/lib/constants";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboardIcon },
+  { label: "Comptes", href: "/admin/comptes", icon: ShieldIcon },
   { label: "Offres d'emploi", href: "/admin/offres", icon: BriefcaseIcon },
   { label: "Actualités", href: "/admin/actualites", icon: NewspaperIcon },
   { label: "Contacts", href: "/admin/contacts", icon: UsersIcon },
@@ -14,6 +16,8 @@ const navItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
 
   return (
     <aside className="flex h-screen w-60 flex-col bg-[var(--gaspe-neutral-900)] text-white">
@@ -60,6 +64,7 @@ export function AdminSidebar() {
       {/* Sign out */}
       <div className="px-3 py-4 border-t border-[var(--gaspe-neutral-800)]">
         <button
+          onClick={() => { logout(); router.push("/connexion"); }}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--gaspe-neutral-400)] hover:bg-[var(--gaspe-neutral-800)] hover:text-white transition-colors"
         >
           <LogOutIcon className="h-4 w-4 shrink-0" />
@@ -107,6 +112,14 @@ function UsersIcon({ className }: { className?: string }) {
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
 }
