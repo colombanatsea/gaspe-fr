@@ -4,15 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { members } from "@/data/members";
 
 const GASPE_MEMBERS = [
-  "Brittany Ferries",
-  "Compagnie Océane",
-  "Corsica Ferries",
-  "Corsica Linea",
-  "La Méridionale",
-  "Penn Ar Bed",
-  "Vedettes de Bréhat",
+  ...members.map((m) => m.name).sort((a, b) => a.localeCompare(b, "fr")),
   "Autre (préciser)",
 ];
 

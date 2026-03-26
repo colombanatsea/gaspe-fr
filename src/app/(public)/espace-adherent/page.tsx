@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { members } from "@/data/members";
 
 const privateDocuments = [
   { title: "PV Assemblée Générale 2025", type: "PV AG", date: "15/12/2025" },
@@ -16,12 +17,15 @@ const privateDocuments = [
   { title: "Circulaire n°2025-07 - Formation STCW", type: "Circulaire", date: "01/09/2025" },
 ];
 
-const memberDirectory = [
-  { name: "Brittany Ferries", contact: "Jean Martin", email: "j.martin@brittanyferries.fr", phone: "02 98 XX XX XX" },
-  { name: "Compagnie Océane", contact: "Marie Leroy", email: "m.leroy@oceane.fr", phone: "02 97 XX XX XX" },
-  { name: "Corsica Linea", contact: "Pierre Rossi", email: "p.rossi@corsicalinea.com", phone: "04 95 XX XX XX" },
-  { name: "La Méridionale", contact: "Sophie Blanc", email: "s.blanc@lameridionale.fr", phone: "04 91 XX XX XX" },
-];
+const memberDirectory = members
+  .filter((m) => m.category === "titulaire")
+  .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+  .map((m) => ({
+    name: m.name,
+    contact: "—",
+    email: m.websiteUrl ? `contact@${new URL(m.websiteUrl).hostname.replace("www.", "")}` : "—",
+    phone: "—",
+  }));
 
 export default function EspaceAdherentPage() {
   const { user } = useAuth();
