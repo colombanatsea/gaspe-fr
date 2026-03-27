@@ -60,8 +60,8 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
           scrollWheelZoom: true,
         });
 
-        // Clean, modern tile layer — CartoDB Voyager (French labels)
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        // Minimal tile layer — CartoDB Positron no labels (coastlines + water only)
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
           attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
           subdomains: "abcd",
           maxZoom: 19,

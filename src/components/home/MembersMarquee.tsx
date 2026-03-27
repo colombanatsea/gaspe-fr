@@ -30,26 +30,18 @@ export function MembersMarquee() {
         <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-[var(--gaspe-neutral-900)] to-transparent" />
 
         <div className="flex overflow-hidden">
-          <div className="marquee-track flex shrink-0 items-center gap-12">
+          <div className="marquee-track flex shrink-0 items-center gap-8">
             {/* Duplicate for seamless loop */}
             {[...titulaires, ...titulaires].map((member, i) => (
               <div
                 key={`${member.slug}-${i}`}
-                className="flex shrink-0 items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-5 py-3 hover:bg-white/10 transition-colors"
+                className="flex shrink-0 items-center gap-3 rounded-xl border border-white/8 bg-white/5 px-5 py-3 hover:bg-white/10 transition-colors"
               >
-                {member.logoUrl ? (
-                  <img
-                    src={member.logoUrl}
-                    alt={member.name}
-                    className="h-8 w-auto max-w-[100px] object-contain brightness-0 invert opacity-70"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded bg-[var(--gaspe-teal-600)]/30">
-                    <span className="font-heading text-xs font-bold text-[var(--gaspe-teal-400)]">
-                      {member.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">
+                  <span className="font-heading text-xs font-bold text-[var(--gaspe-teal-400)]">
+                    {member.name.charAt(0)}
+                  </span>
+                </div>
                 <span className="whitespace-nowrap text-sm font-medium text-white/70">
                   {member.name}
                 </span>

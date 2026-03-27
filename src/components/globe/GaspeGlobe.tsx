@@ -98,7 +98,8 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const globe = new THREE.Mesh(globeGeo, globeMat);
       scene.add(globe);
 
-      // Load textures
+      // Load textures — routes only start drawing AFTER texture is visible
+      let textureReady = false;
       const textureLoader = new THREE.TextureLoader();
       const texturePath = "/assets/textures/";
       textureLoader.load(
@@ -107,6 +108,8 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           t.colorSpace = THREE.SRGBColorSpace;
           globeMat.map = t;
           globeMat.needsUpdate = true;
+          // Small delay so the globe renders a few frames before routes start
+          setTimeout(() => { textureReady = true; }, 300);
           setLoaded(true);
         },
         undefined,
@@ -116,6 +119,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           globeMat.emissive = new THREE.Color(0x050a14);
           globeMat.emissiveIntensity = 0.3;
           globeMat.needsUpdate = true;
+          setTimeout(() => { textureReady = true; }, 300);
           setLoaded(true);
         },
       );
@@ -207,9 +211,9 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
 
           const pos = latLonToVec3(lat, lon, DOT_RADIUS);
           const dotMat = new THREE.MeshBasicMaterial({
-            color: TEAL_300,
+            color: 0x4dd9e6,
             transparent: true,
-            opacity: 0.9,
+            opacity: 1.0,
           });
           const dot = new THREE.Mesh(dotGeo, dotMat);
           dot.position.copy(pos);
@@ -245,10 +249,11 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const routeGroup = new THREE.Group();
       const animatedRoutes: AnimatedRoute[] = [];
 
+      const BRIGHT_TEAL = 0x4dd9e6; // Brighter for visibility on texture
       const ROUTE_COLORS: Record<number, { color: number; opacity: number }> = {
-        1: { color: TEAL_400, opacity: 0.9 },
-        2: { color: TEAL_400, opacity: 0.6 },
-        3: { color: TEAL_400, opacity: 0.35 },
+        1: { color: BRIGHT_TEAL, opacity: 1.0 },
+        2: { color: TEAL_400, opacity: 0.8 },
+        3: { color: TEAL_400, opacity: 0.5 },
       };
 
       maritimeRoutes.forEach((route, idx) => {
@@ -297,24 +302,32 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
 
       // ── CONTINUOUS ROTATION ──
       const CRUISE_SPEED = 0.0004;
-      let frameCount = 0;
+      let drawFrameCount = 0;
+      let routeDrawingStarted = false;
 
       function animate() {
         if (disposed) return;
         requestAnimationFrame(animate);
-        frameCount++;
 
         pivotGroup.rotation.y += CRUISE_SPEED;
 
-        // Draw routes progressively
-        for (const ar of animatedRoutes) {
-          if (ar.drawnPoints >= ar.totalPoints) continue;
-          if (!ar.started) {
-            if (frameCount >= ar.startDelay) ar.started = true;
-            else continue;
+        // Only start drawing routes AFTER texture is loaded and visible
+        if (textureReady) {
+          if (!routeDrawingStarted) {
+            routeDrawingStarted = true;
+            drawFrameCount = 0;
           }
-          ar.drawnPoints = Math.min(ar.drawnPoints + ar.drawSpeed, ar.totalPoints);
-          ar.line.geometry.setDrawRange(0, ar.drawnPoints);
+          drawFrameCount++;
+
+          for (const ar of animatedRoutes) {
+            if (ar.drawnPoints >= ar.totalPoints) continue;
+            if (!ar.started) {
+              if (drawFrameCount >= ar.startDelay) ar.started = true;
+              else continue;
+            }
+            ar.drawnPoints = Math.min(ar.drawnPoints + ar.drawSpeed, ar.totalPoints);
+            ar.line.geometry.setDrawRange(0, ar.drawnPoints);
+          }
         }
 
         controls.update();
