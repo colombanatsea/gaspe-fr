@@ -114,35 +114,29 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 - Footer: wave separator, newsletter CTA, social icons
 - Mobile fixes: admin sidebar hidden on mobile, larger touch targets, responsive tables
 
-## Known issues & gaps (audited end of session 3)
+## Known issues & gaps (audited end of session 6)
 
-### Critical
-- ~~**Admin mobile nav missing**~~ — FIXED: slide-out drawer with hamburger on mobile
-- **Globe routes visibility** — routes may not be visible if Earth texture fails to load (fallback dark sphere = no contrast)
+### Resolved
+- ~~**Admin mobile nav**~~ — FIXED: slide-out drawer with hamburger
+- ~~**Globe routes visibility**~~ — FIXED: wireframe fallback when texture fails
+- ~~**Newsletter form**~~ — FIXED: API client + localStorage fallback
+- ~~**Social links**~~ — FIXED: real LinkedIn + X (Twitter) URLs
+- ~~**Contact form**~~ — FIXED: API client with localStorage storage + admin messages page
+- ~~**Formations empty**~~ — FIXED: 8 seed formations auto-loaded
+- ~~**Admin CMS pages**~~ — FIXED: all upgraded to session 3 design
+- ~~**Job card hover CTA**~~ — FIXED: visible on touch (sm:opacity-0)
+- ~~**Member logos annuaire**~~ — FIXED: MemberLogo component with onError fallback
+- ~~**Analytics + Cookie consent**~~ — FIXED: CF Web Analytics + RGPD banner
 
-### Functional gaps
-- ~~**Newsletter form**~~ — FIXED: client component with validation + localStorage storage
-- **Social links** — Footer LinkedIn/Twitter icons point to `href="#"` (no real URLs)
-- **Document downloads** — all download links are `#` placeholders
-- **Contact form** — form works with localStorage storage (no real email sending yet)
-- ~~**Formations start empty**~~ — FIXED: 8 seed formations auto-loaded on first visit
-- ~~**Admin CMS pages (formations/positions/agenda/documents)**~~ — FIXED: upgraded to session 3 design
-
-### Data consistency
-- **Adherent JobOffer type** — separate from Job type, missing `slug`, `companySlug`, `salaryMin` fields. When merged into public listing, these are filled with fallbacks
-- **Member logos** — external URLs from gaspe.fr, may break due to CORS/404. Marquee uses text-only pills as workaround, but map popups and adherent directory still attempt external logos
-- **OG images** — disabled (.bak), no social sharing previews
-
-### UX/design debt
-- ~~**Job card hover CTA**~~ — FIXED: always visible on mobile (sm:opacity-0 only)
-- **MembersMarquee** — fade gradients `w-24` aggressive on screens < 375px
-- ~~**Admin formations/positions/agenda/documents**~~ — FIXED: all upgraded to session 3 design
-
-### Not implemented
-- No real email sending (contact, notifications, newsletter)
-- No file upload (CV upload is filename-only in localStorage)
-- Domain gaspe.fr not connected
-- No analytics, no cookie consent banner
+### Remaining
+- **Document downloads** — all download links are `#` placeholders (needs R2 storage)
+- **No real email sending** — contact/newsletter stored in localStorage (Worker stub ready, needs deploy)
+- **No file upload** — CV upload is filename-only (R2 Worker endpoint ready, needs deploy)
+- **Domain gaspe.fr** — not connected (manual CF Pages config)
+- **OG images** — no social sharing preview images generated yet
+- **Adherent JobOffer type** — separate from Job type, fallback fields when merged
+- **Member logos on map** — Leaflet popups use raw `<img>` (can't use React components)
+- **MembersMarquee** — fade gradients `w-24` tight on screens < 375px
 
 ## Session 3b completed (admin mobile + formations + CMS upgrade)
 - Admin mobile drawer: slide-out from left, backdrop blur, grouped sections, auto-close on route
@@ -188,18 +182,10 @@ npx wrangler deploy --config workers/wrangler.toml
 4. ~~**Production hardening**~~ — DONE: Worker input sanitization (XSS), email validation, max length, CORS whitelist
 5. **Domain gaspe.fr** — NOT DONE (manual CF Pages config needed)
 
-## Known remaining gaps
-- Document download links still `#` placeholders
-- OG social sharing images not yet generated
-- Worker not yet deployed (needs `wrangler deploy`)
-- No real Resend API key configured yet
-- MembersMarquee fade gradients aggressive on screens < 375px
-
 ## Session 7 plan
 1. **Deploy CF Worker** to production + configure Resend API key
 2. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
 3. **OG images** — generate social sharing previews
-4. **Admin contact messages** — read received messages in admin dashboard
-5. **Real document files** — replace `#` download links with actual PDF uploads
-6. **Lighthouse 95+** — audit and fix remaining performance issues
-7. **Dark mode** — optional toggle with CSS variables
+4. **Real document files** — replace `#` download links with actual PDF uploads via R2
+5. **Lighthouse 95+** — audit and fix remaining performance issues
+6. **Dark mode** — optional toggle with CSS variables

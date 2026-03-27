@@ -114,11 +114,19 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         },
         undefined,
         () => {
-          // Fallback: dark ocean color
-          globeMat.color.set(0x0f1d30);
-          globeMat.emissive = new THREE.Color(0x050a14);
-          globeMat.emissiveIntensity = 0.3;
+          // Fallback: dark ocean with visible wireframe
+          globeMat.color.set(0x0a1520);
+          globeMat.emissive = new THREE.Color(0x060e18);
+          globeMat.emissiveIntensity = 0.4;
+          globeMat.transparent = true;
+          globeMat.opacity = 0.8;
           globeMat.needsUpdate = true;
+          // Make wireframe more visible as visual indicator
+          const fallbackWire = new THREE.Mesh(
+            new THREE.SphereGeometry(GLOBE_RADIUS + 0.002, 36, 18),
+            new THREE.MeshBasicMaterial({ color: TEAL_400, wireframe: true, transparent: true, opacity: 0.15, depthWrite: false }),
+          );
+          pivotGroup.add(fallbackWire);
           setTimeout(() => { textureReady = true; }, 300);
           setLoaded(true);
         },

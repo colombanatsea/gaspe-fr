@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { members } from "@/data/members";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MemberLogo } from "@/components/shared/MemberLogo";
 
 type ViewMode = "grid" | "list";
 type FilterCategory = "Tous" | "Titulaires" | "Associ\u00e9s";
@@ -138,21 +139,7 @@ export default function AdherentAnnuairePage() {
           {filtered.map((member) => (
             <Card key={member.slug} className="flex flex-col">
               <div className="flex items-start gap-3">
-                {member.logoUrl ? (
-                  <img
-                    src={member.logoUrl}
-                    alt={member.name}
-                    className="h-12 w-12 rounded-lg object-contain bg-white border border-border-light shrink-0"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-lg bg-surface-teal flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
-                      <circle cx="12" cy="5" r="3" />
-                      <line x1="12" y1="22" x2="12" y2="8" />
-                      <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
-                    </svg>
-                  </div>
-                )}
+                <MemberLogo logoUrl={member.logoUrl} name={member.name} size="md" />
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-sm leading-tight">{member.name}</CardTitle>
                   <p className="text-xs text-foreground-muted mt-0.5">{member.city}, {member.region}</p>
@@ -193,21 +180,7 @@ export default function AdherentAnnuairePage() {
         <div className="space-y-2">
           {filtered.map((member) => (
             <Card key={member.slug} className="flex items-center gap-4">
-              {member.logoUrl ? (
-                <img
-                  src={member.logoUrl}
-                  alt={member.name}
-                  className="h-10 w-10 rounded-lg object-contain bg-white border border-border-light shrink-0"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-lg bg-surface-teal flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary">
-                    <circle cx="12" cy="5" r="3" />
-                    <line x1="12" y1="22" x2="12" y2="8" />
-                    <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
-                  </svg>
-                </div>
-              )}
+              <MemberLogo logoUrl={member.logoUrl} name={member.name} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-heading font-semibold text-sm text-foreground">{member.name}</span>
