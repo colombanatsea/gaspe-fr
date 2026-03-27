@@ -123,8 +123,8 @@ export function JobCard({
               </span>
             </div>
 
-            {/* View CTA — appears on hover */}
-            <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* View CTA — always visible on touch, hover on desktop */}
+            <div className="mt-3 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--gaspe-teal-600)]">
                 Voir l&apos;offre
                 <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

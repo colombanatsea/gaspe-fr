@@ -25,6 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${job.title} - ${job.company}`,
     description: `Offre d'emploi : ${job.title} chez ${job.company} à ${job.location}. ${job.contractType}.`,
+    openGraph: {
+      title: `${job.title} - ${job.company} | GASPE`,
+      description: `${job.contractType} — ${job.location}. ${job.salaryRange ?? ""}`.trim(),
+      type: "article",
+      url: `https://gaspe-fr.pages.dev/nos-compagnies-recrutent/${slug}`,
+    },
   };
 }
 
@@ -62,8 +68,35 @@ export default async function JobDetailPage({ params }: PageProps) {
   );
   const mailtoHref = `mailto:${job.contactEmail}?subject=${mailtoSubject}&body=${mailtoBody}`;
 
+  // JSON-LD structured data for JobPosting
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: job.description.replace(/<[^>]+>/g, "").trim(),
+    datePosted: job.publishedAt,
+    employmentType: job.contractType === "CDI" ? "FULL_TIME" : job.contractType === "CDD" ? "TEMPORARY" : "SEASONAL",
+    hiringOrganization: {
+      "@type": "Organization",
+      name: job.company,
+      sameAs: member?.websiteUrl ?? undefined,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: { "@type": "PostalAddress", addressLocality: job.location, addressCountry: "FR" },
+    },
+    ...(job.salaryMin ? {
+      baseSalary: {
+        "@type": "MonetaryAmount",
+        currency: "EUR",
+        value: { "@type": "QuantitativeValue", value: job.salaryMin, unitText: "MONTH" },
+      },
+    } : {}),
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Hero banner */}
       <div className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
         <div className="absolute inset-0">

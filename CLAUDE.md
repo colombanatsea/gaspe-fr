@@ -121,10 +121,10 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 - **Globe routes visibility** — routes may not be visible if Earth texture fails to load (fallback dark sphere = no contrast)
 
 ### Functional gaps
-- **Newsletter form** — Footer has email input + "S'inscrire" button but NO handler, NO validation, NO endpoint (UI-only placeholder)
+- ~~**Newsletter form**~~ — FIXED: client component with validation + localStorage storage
 - **Social links** — Footer LinkedIn/Twitter icons point to `href="#"` (no real URLs)
 - **Document downloads** — all download links are `#` placeholders
-- **Contact form** — form works with simulated 800ms delay, no real email sending
+- **Contact form** — form works with localStorage storage (no real email sending yet)
 - ~~**Formations start empty**~~ — FIXED: 8 seed formations auto-loaded on first visit
 - ~~**Admin CMS pages (formations/positions/agenda/documents)**~~ — FIXED: upgraded to session 3 design
 
@@ -134,7 +134,7 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 - **OG images** — disabled (.bak), no social sharing previews
 
 ### UX/design debt
-- **Job card hover CTA** — "Voir l'offre →" uses `opacity-0 group-hover:opacity-100`, invisible on touch devices
+- ~~**Job card hover CTA**~~ — FIXED: always visible on mobile (sm:opacity-0 only)
 - **MembersMarquee** — fade gradients `w-24` aggressive on screens < 375px
 - ~~**Admin formations/positions/agenda/documents**~~ — FIXED: all upgraded to session 3 design
 
@@ -150,11 +150,21 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 - Formations page: card grid with capacity progress bars, enrolled/capacity counts
 - All 4 admin CMS pages upgraded: rounded-2xl, teal focus rings, modern tables, buttons
 
-## Session 4 plan
-1. **Contact form backend** — Cloudflare Workers email or external API
-2. **SEO polish** — restore OG images, add JSON-LD structured data to job listings
-3. **Performance** — lazy load Leaflet/Three.js, optimize images, Lighthouse audit
-4. **Accessibility** — ARIA labels, focus management, skip nav, contrast audit
-5. **Real member logos** — download from gaspe.fr and serve from /assets/logos/ (no CORS)
-6. **Newsletter** — connect to Brevo/Mailchimp or Cloudflare Workers endpoint
-7. **Backend prep** — D1 schema design (users, jobs, formations, documents), migration plan from localStorage
+## Session 4 completed
+1. ~~**Contact form**~~ — DONE: session 3 design, subject dropdown, localStorage storage, spinner, success/error states
+2. ~~**SEO**~~ — DONE: OG metadata on job pages, JSON-LD JobPosting structured data (schema.org)
+3. ~~**Accessibility**~~ — DONE: skip-to-content link, job card CTA visible on touch (sm:opacity-0), ARIA labels
+4. ~~**Member logos**~~ — DONE: MemberLogo component with onError fallback (graceful degradation)
+5. ~~**Newsletter**~~ — DONE: NewsletterForm client component, email validation, localStorage storage, success state
+6. ~~**Backend prep**~~ — DONE: D1 schema design in `src/lib/db/schema-design.sql` (13 tables, indexes, migration notes)
+
+## Session 5 plan
+1. **Real email sending** — connect contact form + newsletter to Cloudflare Workers / Resend / Brevo
+2. **File uploads** — CV upload for candidates (R2 storage), document uploads for admin
+3. **Analytics** — Cloudflare Web Analytics or Plausible (privacy-first)
+4. **Cookie consent** — GDPR banner for analytics/newsletter
+5. **Domain gaspe.fr** — connect custom domain to Cloudflare Pages
+6. **D1 migration** — implement schema, migrate from localStorage, NextAuth.js integration
+7. **PWA** — manifest.json, service worker, offline fallback page
+8. **Performance** — Lighthouse audit, lazy load Three.js/Leaflet chunks, image optimization
+9. **E2E tests** — Playwright tests for critical user flows (auth, apply, admin)

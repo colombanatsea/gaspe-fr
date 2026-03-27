@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { footerNavigation } from "@/data/navigation";
 import { SITE_NAME, SITE_FULL_NAME, SITE_TAGLINE } from "@/lib/constants";
+import { NewsletterForm } from "@/components/shared/NewsletterForm";
 
 export function Footer() {
   return (
@@ -34,16 +35,7 @@ export function Footer() {
                   Positions, événements, offres d&apos;emploi — directement dans votre boîte mail.
                 </p>
               </div>
-              <div className="flex w-full max-w-sm gap-2">
-                <input
-                  type="email"
-                  placeholder="votre@email.fr"
-                  className="flex-1 rounded-xl bg-white/10 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--gaspe-teal-400)] transition-colors"
-                />
-                <button className="shrink-0 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-500)] transition-colors">
-                  S&apos;inscrire
-                </button>
-              </div>
+              <NewsletterForm />
             </div>
           </div>
         </div>
