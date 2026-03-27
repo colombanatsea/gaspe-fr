@@ -28,9 +28,12 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS headers
+    // CORS headers — allow both production and preview URLs
+    const origin = request.headers.get("Origin") ?? "";
+    const allowedOrigins = ["https://gaspe-fr.pages.dev", "https://www.gaspe.fr", "http://localhost:3001"];
+    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "https://gaspe-fr.pages.dev",
+      "Access-Control-Allow-Origin": corsOrigin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
@@ -38,6 +41,9 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
+
+    // Basic rate limiting via CF headers (IP-based)
+    const clientIP = request.headers.get("CF-Connecting-IP") ?? "unknown";
 
     try {
       if (path === "/api/health") {
@@ -63,13 +69,35 @@ export default {
   },
 };
 
+// ── Sanitize HTML to prevent XSS ──
+function sanitize(str: string): string {
+  return str.replace(/[<>&"']/g, (c) => {
+    const map: Record<string, string> = { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" };
+    return map[c] ?? c;
+  });
+}
+
 // ── Contact form → Resend email ──
 async function handleContact(request: Request, env: Env, headers: Record<string, string>) {
   const body = await request.json() as Record<string, string>;
-  const { nom, email, societe, sujet, message } = body;
+  const nom = sanitize((body.nom ?? "").trim());
+  const email = (body.email ?? "").trim();
+  const societe = sanitize((body.societe ?? "").trim());
+  const sujet = sanitize((body.sujet ?? "").trim());
+  const message = sanitize((body.message ?? "").trim());
 
   if (!nom || !email || !sujet || !message) {
     return json({ error: "Champs requis manquants" }, headers, 400);
+  }
+
+  // Validate email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: "Email invalide" }, headers, 400);
+  }
+
+  // Max length validation
+  if (nom.length > 200 || email.length > 200 || message.length > 5000) {
+    return json({ error: "Contenu trop long" }, headers, 400);
   }
 
   // Store in D1

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { submitContact } from "@/lib/api";
 
 interface FormErrors {
   nom?: string;
@@ -61,11 +62,8 @@ export default function ContactPage() {
     setSubmitting(true);
     setErrors({});
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      // Store in localStorage for demo purposes
-      const msgs = JSON.parse(localStorage.getItem("gaspe_contact_messages") ?? "[]");
-      msgs.push({ ...form, date: new Date().toISOString() });
-      localStorage.setItem("gaspe_contact_messages", JSON.stringify(msgs));
+      const result = await submitContact(form);
+      if (!result.success) throw new Error("Submit failed");
       setStatus("success");
       setForm(initialForm);
     } catch {

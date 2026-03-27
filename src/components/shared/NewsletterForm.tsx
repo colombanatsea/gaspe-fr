@@ -1,27 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { subscribeNewsletter } from "@/lib/api";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "success" | "error" | "submitting">("idle");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setStatus("error");
       return;
     }
-    // Store in localStorage for demo
-    try {
-      const subs = JSON.parse(localStorage.getItem("gaspe_newsletter") ?? "[]");
-      if (!subs.includes(email)) {
-        subs.push(email);
-        localStorage.setItem("gaspe_newsletter", JSON.stringify(subs));
-      }
+    setStatus("submitting");
+    const result = await subscribeNewsletter(email);
+    if (result.success) {
       setStatus("success");
       setEmail("");
-    } catch {
+    } else {
       setStatus("error");
     }
   }
@@ -48,12 +45,14 @@ export function NewsletterForm() {
           status === "error" ? "border-red-400" : "border-white/10 focus:border-[var(--gaspe-teal-400)]"
         }`}
         aria-label="Adresse email pour la newsletter"
+        disabled={status === "submitting"}
       />
       <button
         type="submit"
-        className="shrink-0 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-500)] transition-colors"
+        disabled={status === "submitting"}
+        className="shrink-0 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-500)] transition-colors disabled:opacity-50"
       >
-        S&apos;inscrire
+        {status === "submitting" ? "..." : "S'inscrire"}
       </button>
     </form>
   );

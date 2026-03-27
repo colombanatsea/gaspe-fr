@@ -5,6 +5,7 @@ import { members, titulaires, associes } from "@/data/members";
 import { MemberMap } from "@/components/map/MemberMap";
 import type { MemberMapHandle } from "@/components/map/MemberMap";
 import { Badge } from "@/components/ui/Badge";
+import { MemberLogo } from "@/components/shared/MemberLogo";
 import type { Member } from "@/types";
 
 function MemberRow({
@@ -17,24 +18,10 @@ function MemberRow({
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 hover:bg-surface transition-colors cursor-pointer"
+      className="w-full text-left p-4 hover:bg-[var(--gaspe-neutral-50)] transition-colors cursor-pointer"
     >
       <div className="flex items-start gap-3">
-        {member.logoUrl ? (
-          <div className="shrink-0 w-10 h-10 rounded bg-white border border-border-light flex items-center justify-center overflow-hidden">
-            <img
-              src={member.logoUrl}
-              alt={member.name}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-        ) : (
-          <div className="shrink-0 w-10 h-10 rounded bg-[var(--gaspe-teal-50)] border border-border-light flex items-center justify-center">
-            <span className="text-sm font-bold text-[var(--gaspe-teal-600)]">
-              {member.name.charAt(0)}
-            </span>
-          </div>
-        )}
+        <MemberLogo logoUrl={member.logoUrl} name={member.name} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-heading text-sm font-semibold text-foreground leading-tight">

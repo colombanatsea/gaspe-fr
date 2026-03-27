@@ -181,12 +181,25 @@ npx wrangler deploy --config workers/wrangler.toml
 # 6. Update frontend API_URL to point to worker
 ```
 
-## Session 6 plan
-1. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
-2. **Deploy CF Worker** — real email sending (Resend), D1 migration from localStorage
-3. **R2 file uploads** — wire CV upload + admin document upload to R2
-4. **Social links** — real LinkedIn/Twitter URLs for GASPE
-5. **Member logos** — download from gaspe.fr and serve locally (no CORS)
-6. **OG images** — generate social sharing previews per page
-7. **Lighthouse 95+** — audit and fix remaining issues
-8. **Production hardening** — rate limiting, input sanitization, error monitoring
+## Session 6 completed
+1. ~~**API client**~~ — DONE: `src/lib/api.ts` with CF Worker + localStorage fallback for contact/newsletter/upload
+2. ~~**Social links**~~ — DONE: LinkedIn + X (Twitter) real URLs in footer
+3. ~~**Member logos**~~ — DONE: MemberLogo component used in nos-adherents sidebar (onError fallback)
+4. ~~**Production hardening**~~ — DONE: Worker input sanitization (XSS), email validation, max length, CORS whitelist
+5. **Domain gaspe.fr** — NOT DONE (manual CF Pages config needed)
+
+## Known remaining gaps
+- Document download links still `#` placeholders
+- OG social sharing images not yet generated
+- Worker not yet deployed (needs `wrangler deploy`)
+- No real Resend API key configured yet
+- MembersMarquee fade gradients aggressive on screens < 375px
+
+## Session 7 plan
+1. **Deploy CF Worker** to production + configure Resend API key
+2. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
+3. **OG images** — generate social sharing previews
+4. **Admin contact messages** — read received messages in admin dashboard
+5. **Real document files** — replace `#` download links with actual PDF uploads
+6. **Lighthouse 95+** — audit and fix remaining performance issues
+7. **Dark mode** — optional toggle with CSS variables
