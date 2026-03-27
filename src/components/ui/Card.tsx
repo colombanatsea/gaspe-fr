@@ -4,14 +4,16 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   accent?: boolean;
+  hover?: boolean;
 }
 
-export function Card({ children, className, accent = true }: CardProps) {
+export function Card({ children, className, accent = true, hover = true }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg bg-background p-6 shadow-sm",
+        "rounded-2xl bg-background p-6 shadow-sm border border-[var(--gaspe-neutral-200)]",
         accent && "border-l-[3px] border-l-primary",
+        hover && "gaspe-card-hover hover:border-[var(--gaspe-teal-200)]",
         className,
       )}
     >
@@ -30,7 +32,7 @@ export function CardTitle({ children, className }: { children: React.ReactNode; 
 
 export function CardDescription({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={cn("mt-1 text-sm text-foreground-muted", className)}>
+    <p className={cn("mt-2 text-sm text-foreground-muted leading-relaxed", className)}>
       {children}
     </p>
   );
