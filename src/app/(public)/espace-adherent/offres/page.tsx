@@ -13,6 +13,8 @@ interface JobOffer {
   title: string;
   description: string;
   location: string;
+  zone: string;
+  brevet: string;
   contractType: string;
   category: string;
   salaryRange: string;
@@ -28,10 +30,22 @@ interface JobOffer {
 
 const OFFERS_KEY = "gaspe_adherent_offers";
 
+const ZONES = [
+  { value: "normandie", label: "Normandie" },
+  { value: "bretagne", label: "Bretagne" },
+  { value: "nouvelle-aquitaine", label: "Nouvelle-Aquitaine" },
+  { value: "pays-de-la-loire", label: "Pays de la Loire" },
+  { value: "paca", label: "PACA" },
+  { value: "ile-de-france", label: "Île-de-France" },
+  { value: "dom-tom", label: "Outre-mer" },
+];
+
 const emptyForm = {
   title: "",
   description: "",
   location: "",
+  zone: "normandie",
+  brevet: "",
   contractType: "CDI",
   category: "Pont",
   salaryRange: "",
@@ -104,6 +118,8 @@ export default function AdherentOffresPage() {
           title: form.title,
           description: form.description,
           location: form.location,
+          zone: form.zone,
+          brevet: form.brevet,
           contractType: form.contractType,
           category: form.category,
           salaryRange: form.salaryRange,
@@ -119,6 +135,8 @@ export default function AdherentOffresPage() {
         title: form.title,
         description: form.description,
         location: form.location,
+        zone: form.zone,
+        brevet: form.brevet,
         contractType: form.contractType,
         category: form.category,
         salaryRange: form.salaryRange,
@@ -144,6 +162,8 @@ export default function AdherentOffresPage() {
       title: offer.title,
       description: offer.description ?? "",
       location: offer.location,
+      zone: offer.zone ?? "normandie",
+      brevet: offer.brevet ?? "",
       contractType: offer.contractType ?? "CDI",
       category: offer.category ?? "Pont",
       salaryRange: offer.salaryRange ?? "",
@@ -233,6 +253,21 @@ export default function AdherentOffresPage() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-foreground">Zone</label>
+                <select
+                  value={form.zone}
+                  onChange={(e) => update("zone", e.target.value)}
+                  className={inputClass}
+                >
+                  {ZONES.map((z) => (
+                    <option key={z.value} value={z.value}>{z.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-foreground">Type de contrat</label>
                 <select
                   value={form.contractType}
@@ -259,6 +294,19 @@ export default function AdherentOffresPage() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">Brevet requis</label>
+                <input
+                  type="text"
+                  value={form.brevet}
+                  onChange={(e) => update("brevet", e.target.value)}
+                  className={inputClass}
+                  placeholder="Ex: Capitaine 500, Chef Mécanicien 3000 kW..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground">Fourchette salariale</label>
                 <input
