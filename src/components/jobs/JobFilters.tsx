@@ -134,7 +134,7 @@ export function JobFilters() {
             <button
               key={type}
               onClick={() => toggleFilter("contrat", selectedContracts, type)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
                 selectedContracts.includes(type)
                   ? "bg-[var(--gaspe-teal-600)] text-white"
                   : "bg-[var(--gaspe-neutral-100)] text-foreground-muted hover:bg-[var(--gaspe-neutral-200)]"
@@ -160,7 +160,7 @@ export function JobFilters() {
             <button
               key={cat}
               onClick={() => toggleFilter("categorie", selectedCategories, cat)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
                 selectedCategories.includes(cat)
                   ? "bg-[var(--gaspe-teal-600)] text-white"
                   : "bg-[var(--gaspe-neutral-100)] text-foreground-muted hover:bg-[var(--gaspe-neutral-200)]"

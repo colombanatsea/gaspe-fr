@@ -126,7 +126,7 @@ export function Header() {
           )}
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-md text-foreground-muted hover:bg-surface"
+            className="p-2.5 -mr-1 rounded-lg text-foreground-muted hover:bg-surface"
             aria-label="Ouvrir le menu"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
