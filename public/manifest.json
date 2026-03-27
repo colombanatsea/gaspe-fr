@@ -1,0 +1,42 @@
+{
+  "name": "GASPE — Groupement des Armateurs de Services Publics Maritimes",
+  "short_name": "GASPE",
+  "description": "Fédérer et représenter les compagnies maritimes de proximité",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F3F0",
+  "theme_color": "#1B7E8A",
+  "lang": "fr",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "government"],
+  "shortcuts": [
+    {
+      "name": "Offres d'emploi",
+      "url": "/nos-compagnies-recrutent",
+      "description": "Voir les offres d'emploi maritime"
+    },
+    {
+      "name": "Nos Adhérents",
+      "url": "/nos-adherents",
+      "description": "Carte des adhérents GASPE"
+    }
+  ]
+}

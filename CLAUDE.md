@@ -158,13 +158,35 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 5. ~~**Newsletter**~~ — DONE: NewsletterForm client component, email validation, localStorage storage, success state
 6. ~~**Backend prep**~~ — DONE: D1 schema design in `src/lib/db/schema-design.sql` (13 tables, indexes, migration notes)
 
-## Session 5 plan
-1. **Real email sending** — connect contact form + newsletter to Cloudflare Workers / Resend / Brevo
-2. **File uploads** — CV upload for candidates (R2 storage), document uploads for admin
-3. **Analytics** — Cloudflare Web Analytics or Plausible (privacy-first)
-4. **Cookie consent** — GDPR banner for analytics/newsletter
-5. **Domain gaspe.fr** — connect custom domain to Cloudflare Pages
-6. **D1 migration** — implement schema, migrate from localStorage, NextAuth.js integration
-7. **PWA** — manifest.json, service worker, offline fallback page
-8. **Performance** — Lighthouse audit, lazy load Three.js/Leaflet chunks, image optimization
-9. **E2E tests** — Playwright tests for critical user flows (auth, apply, admin)
+## Session 5 completed
+1. ~~**Analytics + Cookie consent**~~ — DONE: CF Web Analytics (conditional on consent), RGPD banner with accept/reject, localStorage persistence
+2. ~~**PWA**~~ — DONE: manifest.json (shortcuts, icons), service worker (cache-first + offline fallback), offline.html page
+3. ~~**Performance**~~ — DONE: DNS prefetch for Unsplash/CartoDB, font preconnect already present, Three.js/Leaflet already lazy-loaded via dynamic()
+4. ~~**E2E tests**~~ — DONE: Playwright config (desktop + mobile viewports), 4 test suites: homepage, auth, recruitment, contact (12 tests total)
+5. ~~**Backend API**~~ — DONE: CF Workers stub in `workers/api.ts` with Resend email, D1 storage, R2 upload. wrangler.toml ready. Deploy: `npx wrangler deploy --config workers/wrangler.toml`
+6. **Domain gaspe.fr** — NOT DONE (manual CF Pages config needed)
+
+### Backend deployment steps (when ready)
+```bash
+# 1. Create D1 database
+npx wrangler d1 create gaspe-db
+# 2. Run schema
+npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql
+# 3. Create R2 bucket
+npx wrangler r2 bucket create gaspe-uploads
+# 4. Set Resend API key
+npx wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
+# 5. Deploy worker
+npx wrangler deploy --config workers/wrangler.toml
+# 6. Update frontend API_URL to point to worker
+```
+
+## Session 6 plan
+1. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
+2. **Deploy CF Worker** — real email sending (Resend), D1 migration from localStorage
+3. **R2 file uploads** — wire CV upload + admin document upload to R2
+4. **Social links** — real LinkedIn/Twitter URLs for GASPE
+5. **Member logos** — download from gaspe.fr and serve locally (no CORS)
+6. **OG images** — generate social sharing previews per page
+7. **Lighthouse 95+** — audit and fix remaining issues
+8. **Production hardening** — rate limiting, input sanitization, error monitoring
