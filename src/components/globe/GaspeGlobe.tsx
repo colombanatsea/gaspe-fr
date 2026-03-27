@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { members } from "@/data/members";
 import { maritimeRoutes } from "@/data/routes";
 
 interface GaspeGlobeProps {
@@ -32,27 +31,24 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       if (disposed) return;
 
       const GLOBE_RADIUS = 1.0;
-      const ROUTE_RADIUS = GLOBE_RADIUS + 0.005;
+      const ROUTE_RADIUS = GLOBE_RADIUS + 0.004;
       const DOT_RADIUS = GLOBE_RADIUS + 0.008;
+      const SPHERE_SEG = 96;
       const PX_RATIO = Math.min(window.devicePixelRatio, 2);
       const BG_COLOR = 0x0a1520;
-      const TEAL_600 = 0x1b7e8a;
       const TEAL_400 = 0x6daaac;
       const TEAL_300 = 0x8ac6ca;
 
       // ── SCENE ──
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
-        45,
-        container!.clientWidth / container!.clientHeight,
-        0.01,
-        100,
+        45, container!.clientWidth / container!.clientHeight, 0.01, 100,
       );
 
-      // Initial view: looking at France from Atlantic
+      // Initial view: France from Atlantic
       const initLon = 2;
       const initLat = 35;
-      const initDist = 2.4;
+      const initDist = 2.2;
       const phi = ((90 - initLat) * Math.PI) / 180;
       const theta = (-initLon * Math.PI) / 180;
       camera.position.set(
@@ -63,9 +59,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       camera.lookAt(0, 0, 0);
 
       const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: false,
-        powerPreference: "high-performance",
+        antialias: true, alpha: false, powerPreference: "high-performance",
       });
       renderer.setSize(container!.clientWidth, container!.clientHeight);
       renderer.setPixelRatio(PX_RATIO);
@@ -77,59 +71,64 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
-      controls.rotateSpeed = 0.4;
+      controls.rotateSpeed = 0.5;
       controls.enableZoom = true;
-      controls.zoomSpeed = 0.6;
-      controls.minDistance = 1.6;
-      controls.maxDistance = 3.5;
+      controls.zoomSpeed = 0.8;
+      controls.minDistance = 1.5;
+      controls.maxDistance = 4;
       controls.enablePan = false;
       controls.autoRotate = false;
 
-      // ── LIGHTING (subtle) ──
-      scene.add(new THREE.AmbientLight(0x444466, 2));
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+      // ── LIGHTING ──
+      scene.add(new THREE.AmbientLight(0x666666, 1.5));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
       dirLight.position.set(5, 3, 5);
       scene.add(dirLight);
+      const backLight = new THREE.DirectionalLight(0x1b4455, 0.4);
+      backLight.position.set(-3, -2, -5);
+      scene.add(backLight);
 
-      // ── GLOBE — clean dark sphere + wireframe ──
-      const globeGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64);
-
-      // Solid dark sphere
+      // ── GLOBE with Earth texture ──
+      const globeGeo = new THREE.SphereGeometry(GLOBE_RADIUS, SPHERE_SEG, SPHERE_SEG);
       const globeMat = new THREE.MeshPhongMaterial({
-        color: 0x0d1f2d,
-        emissive: 0x060e18,
-        emissiveIntensity: 0.5,
-        shininess: 15,
-        transparent: true,
-        opacity: 0.95,
+        color: 0xffffff,
+        shininess: 25,
+        bumpScale: 0.015,
       });
       const globe = new THREE.Mesh(globeGeo, globeMat);
       scene.add(globe);
 
-      // Wireframe overlay — subtle grid lines
-      const wireGeo = new THREE.SphereGeometry(GLOBE_RADIUS + 0.001, 36, 18);
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: TEAL_600,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.06,
-        depthWrite: false,
+      // Load textures
+      const textureLoader = new THREE.TextureLoader();
+      const texturePath = "/assets/textures/";
+      textureLoader.load(
+        texturePath + "earth-blue-marble.jpg",
+        (t: any) => {
+          t.colorSpace = THREE.SRGBColorSpace;
+          globeMat.map = t;
+          globeMat.needsUpdate = true;
+          setLoaded(true);
+        },
+        undefined,
+        () => {
+          // Fallback: dark ocean color
+          globeMat.color.set(0x0f1d30);
+          globeMat.emissive = new THREE.Color(0x050a14);
+          globeMat.emissiveIntensity = 0.3;
+          globeMat.needsUpdate = true;
+          setLoaded(true);
+        },
+      );
+      textureLoader.load(texturePath + "earth-topology.png", (t: any) => {
+        globeMat.bumpMap = t;
+        globeMat.needsUpdate = true;
       });
-      scene.add(new THREE.Mesh(wireGeo, wireMat));
 
-      // ── ATMOSPHERE (teal glow) ──
-      const atmoVS = `varying vec3 vNormal;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }`;
-      const atmoFS = `varying vec3 vNormal;
-        void main() {
-          float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1)), 3.0);
-          gl_FragColor = vec4(0.1, 0.5, 0.54, 1.0) * intensity * 0.5;
-        }`;
+      // ── ATMOSPHERE (GASPE teal glow) ──
+      const atmoVS = `varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+      const atmoFS = `varying vec3 vNormal; void main() { float i = pow(0.65 - dot(vNormal, vec3(0,0,1)), 3.0); gl_FragColor = vec4(0.1, 0.5, 0.55, 1.0) * i * 0.7; }`;
       const atmosphere = new THREE.Mesh(
-        new THREE.SphereGeometry(GLOBE_RADIUS * 1.08, 48, 48),
+        new THREE.SphereGeometry(GLOBE_RADIUS * 1.12, 64, 64),
         new THREE.ShaderMaterial({
           vertexShader: atmoVS,
           fragmentShader: atmoFS,
@@ -141,25 +140,22 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       );
       scene.add(atmosphere);
 
-      // ── STARFIELD (sparse) ──
+      // ── STARFIELD ──
       const starGeo = new THREE.BufferGeometry();
       const starVerts: number[] = [];
-      for (let i = 0; i < 800; i++) {
-        const r = 20 + Math.random() * 30;
-        const t = Math.random() * Math.PI * 2;
-        const p = Math.acos(2 * Math.random() - 1);
+      for (let i = 0; i < 1200; i++) {
+        const r = 15 + Math.random() * 35;
+        const st = Math.random() * Math.PI * 2;
+        const sp = Math.acos(2 * Math.random() - 1);
         starVerts.push(
-          r * Math.sin(p) * Math.cos(t),
-          r * Math.sin(p) * Math.sin(t),
-          r * Math.cos(p),
+          r * Math.sin(sp) * Math.cos(st),
+          r * Math.sin(sp) * Math.sin(st),
+          r * Math.cos(sp),
         );
       }
       starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starVerts, 3));
       scene.add(
-        new THREE.Points(
-          starGeo,
-          new THREE.PointsMaterial({ color: 0x8899bb, size: 0.03, sizeAttenuation: true }),
-        ),
+        new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xaabbdd, size: 0.04, sizeAttenuation: true })),
       );
 
       // ── UTILITY ──
@@ -189,15 +185,14 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         return pts;
       }
 
-      // ── PIVOT GROUP ──
+      // ── PIVOT GROUP — everything rotates together ──
       const pivotGroup = new THREE.Group();
       pivotGroup.add(globe);
-      pivotGroup.add(new THREE.Mesh(wireGeo, wireMat));
       pivotGroup.add(atmosphere);
 
-      // ── PORT DOTS (endpoints of each route) ──
+      // ── PORT DOTS at route endpoints ──
       const dotGroup = new THREE.Group();
-      const dotGeo = new THREE.SphereGeometry(0.008, 10, 10);
+      const dotGeo = new THREE.SphereGeometry(0.010, 12, 12);
       const portSet = new Set<string>();
 
       maritimeRoutes.forEach((route) => {
@@ -219,11 +214,25 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           const dot = new THREE.Mesh(dotGeo, dotMat);
           dot.position.copy(pos);
           dotGroup.add(dot);
+
+          // Glow ring
+          const ringGeo = new THREE.RingGeometry(0.014, 0.019, 16);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color: TEAL_400,
+            transparent: true,
+            opacity: 0.35,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.position.copy(pos);
+          ring.lookAt(0, 0, 0);
+          dotGroup.add(ring);
         });
       });
       pivotGroup.add(dotGroup);
 
-      // ── ROUTE LINES with draw animation ──
+      // ── ROUTE LINES with progressive draw animation ──
       interface AnimatedRoute {
         line: any;
         totalPoints: number;
@@ -236,19 +245,23 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const routeGroup = new THREE.Group();
       const animatedRoutes: AnimatedRoute[] = [];
 
+      const ROUTE_COLORS: Record<number, { color: number; opacity: number }> = {
+        1: { color: TEAL_400, opacity: 0.9 },
+        2: { color: TEAL_400, opacity: 0.6 },
+        3: { color: TEAL_400, opacity: 0.35 },
+      };
+
       maritimeRoutes.forEach((route, idx) => {
-        const tier = route.tier;
-        const opacity = tier === 1 ? 0.85 : tier === 2 ? 0.55 : 0.3;
-        const lineWidth = 1; // LineBasicMaterial doesn't support width > 1 on most GPUs
+        const style = ROUTE_COLORS[route.tier];
+        if (!style) return;
 
         const mat = new THREE.LineBasicMaterial({
-          color: TEAL_400,
+          color: style.color,
           transparent: true,
-          opacity,
+          opacity: style.opacity,
           depthWrite: false,
         });
 
-        // Build points
         const points: any[] = [];
         for (let i = 0; i < route.coordinates.length; i++) {
           const [lat, lon] = route.coordinates[i];
@@ -256,7 +269,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
             points.push(latLonToVec3(lat, lon, ROUTE_RADIUS));
           } else {
             const [prevLat, prevLon] = route.coordinates[i - 1];
-            const interp = interpolateGreatCircle(prevLat, prevLon, lat, lon, ROUTE_RADIUS, 1.5);
+            const interp = interpolateGreatCircle(prevLat, prevLon, lat, lon, ROUTE_RADIUS, 3);
             points.push(...interp);
           }
         }
@@ -264,8 +277,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         if (points.length < 2) return;
 
         const geo = new THREE.BufferGeometry().setFromPoints(points);
-        // Start hidden — draw range at 0
-        geo.setDrawRange(0, 0);
+        geo.setDrawRange(0, 0); // Start hidden
 
         const line = new THREE.Line(geo, mat);
         routeGroup.add(line);
@@ -274,19 +286,17 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           line,
           totalPoints: points.length,
           drawnPoints: 0,
-          drawSpeed: Math.max(1, Math.ceil(points.length / 20)), // draw in ~20 frames (~0.33s)
+          drawSpeed: Math.max(1, Math.ceil(points.length / 15)), // draw in ~15 frames
           started: false,
-          startDelay: idx * 3, // stagger: 3 frames apart
+          startDelay: idx * 4, // stagger 4 frames apart
         });
       });
 
       pivotGroup.add(routeGroup);
       scene.add(pivotGroup);
 
-      setLoaded(true);
-
-      // ── ANIMATION ──
-      const CRUISE_SPEED = 0.0003;
+      // ── CONTINUOUS ROTATION ──
+      const CRUISE_SPEED = 0.0004;
       let frameCount = 0;
 
       function animate() {
@@ -294,21 +304,15 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         requestAnimationFrame(animate);
         frameCount++;
 
-        // Rotate
         pivotGroup.rotation.y += CRUISE_SPEED;
 
         // Draw routes progressively
         for (const ar of animatedRoutes) {
           if (ar.drawnPoints >= ar.totalPoints) continue;
-
           if (!ar.started) {
-            if (frameCount >= ar.startDelay) {
-              ar.started = true;
-            } else {
-              continue;
-            }
+            if (frameCount >= ar.startDelay) ar.started = true;
+            else continue;
           }
-
           ar.drawnPoints = Math.min(ar.drawnPoints + ar.drawSpeed, ar.totalPoints);
           ar.line.geometry.setDrawRange(0, ar.drawnPoints);
         }
@@ -351,13 +355,10 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
     return (
       <div className={cn("flex items-center justify-center", className)}>
         <div className="relative">
-          <div className="h-48 w-48 rounded-full bg-gradient-to-br from-[#0d1f2d] to-[#142838] border border-[var(--gaspe-teal-600)]/20 flex items-center justify-center">
-            <div className="absolute inset-2 rounded-full border border-[var(--gaspe-teal-600)]/10" />
-            <div className="text-center">
-              <span className="font-heading text-3xl font-bold text-[var(--gaspe-teal-400)]">28</span>
-              <br />
-              <span className="text-xs uppercase tracking-wider text-white/40">compagnies</span>
-            </div>
+          <div className="h-48 w-48 rounded-full bg-gradient-to-br from-[#42B3D5] via-[#6DAAAC] to-[#5AA89A] animate-pulse opacity-60" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
+            <span className="font-heading text-3xl font-bold">28</span>
+            <span className="text-xs uppercase tracking-wider opacity-80">compagnies</span>
           </div>
         </div>
       </div>
@@ -373,7 +374,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         <div className="absolute inset-0 flex items-center justify-center bg-[#0a1520]">
           <div className="text-center">
             <div className="h-8 w-8 mx-auto border-2 border-[var(--gaspe-teal-400)] border-t-transparent rounded-full animate-spin" />
-            <p className="mt-3 text-xs text-white/40 uppercase tracking-wider">Chargement...</p>
+            <p className="mt-3 text-xs text-white/40 uppercase tracking-wider">Chargement du globe...</p>
           </div>
         </div>
       )}

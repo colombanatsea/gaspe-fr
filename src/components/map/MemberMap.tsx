@@ -32,10 +32,8 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
       flyToMember(member: Member) {
         const map = mapRef.current;
         if (!map) return;
-        // Zoom to member location
         const zoom = member.territory === "dom-tom" ? 11 : 12;
         map.flyTo([member.latitude, member.longitude], zoom, { duration: 1.2 });
-        // Open popup
         const marker = markersRef.current.get(member.slug);
         if (marker) {
           setTimeout(() => marker.openPopup(), 800);
@@ -62,9 +60,10 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
           scrollWheelZoom: true,
         });
 
-        L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://www.openstreetmap.fr/">OSM France</a>',
-          subdomains: "abc",
+        // Clean, modern tile layer — CartoDB Voyager (French labels)
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+          subdomains: "abcd",
           maxZoom: 19,
         }).addTo(map);
 
@@ -72,19 +71,19 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
 
         function createIcon(isDomTom: boolean, isAssociate: boolean) {
           const color = isDomTom ? "#2F72A0" : "#1B7E8A";
-          const size = isAssociate ? 10 : 14;
-          const borderWidth = isAssociate ? 1.5 : 2;
+          const size = isAssociate ? 12 : 16;
           return L.divIcon({
             className: "gaspe-marker",
             html: `<div style="
               width:${size}px;height:${size}px;
               background:${color};
-              border:${borderWidth}px solid white;
+              border:2.5px solid white;
               border-radius:50%;
-              box-shadow:0 2px 6px rgba(0,0,0,0.3);
+              box-shadow:0 2px 8px rgba(27,126,138,0.35);
+              transition: transform 0.2s;
             "></div>`,
-            iconSize: [size + 4, size + 4],
-            iconAnchor: [(size + 4) / 2, (size + 4) / 2],
+            iconSize: [size + 6, size + 6],
+            iconAnchor: [(size + 6) / 2, (size + 6) / 2],
           });
         }
 
@@ -93,27 +92,30 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
           const marker = L.marker([member.latitude, member.longitude], { icon });
 
           const logoHtml = member.logoUrl
-            ? `<img src="${member.logoUrl}" alt="${member.name}" style="max-height:32px;max-width:120px;object-fit:contain;margin-bottom:6px;" />`
+            ? `<img src="${member.logoUrl}" alt="${member.name}" style="max-height:36px;max-width:130px;object-fit:contain;margin-bottom:8px;" />`
             : "";
           const categoryLabel = member.category === "titulaire" ? "Titulaire" : "Associé";
           const categoryColor = member.category === "titulaire" ? "#1B7E8A" : "#2F72A0";
 
           marker.bindPopup(`
-            <div style="font-family:var(--font-body);min-width:180px;">
+            <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:200px;padding:12px;">
               ${logoHtml}
-              <div style="font-weight:600;font-size:13px;color:#222221;">${member.name}</div>
-              <div style="font-size:11px;color:#6B6560;margin-top:2px;">
+              <div style="font-weight:600;font-size:14px;color:#222221;line-height:1.3;">${member.name}</div>
+              <div style="font-size:12px;color:#6B6560;margin-top:4px;">
                 ${member.city} &middot; ${member.region}
               </div>
-              <span style="
-                display:inline-block;margin-top:6px;
-                font-size:10px;font-weight:600;color:white;
-                background:${categoryColor};
-                padding:2px 8px;border-radius:9999px;
-              ">${categoryLabel}</span>
-              ${member.territory === "dom-tom" ? '<span style="display:inline-block;margin-top:6px;margin-left:4px;font-size:10px;font-weight:600;color:white;background:#EFCA8F;padding:2px 8px;border-radius:9999px;">Outre-mer</span>' : ""}
+              <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+                <span style="
+                  display:inline-block;
+                  font-size:10px;font-weight:600;color:white;
+                  background:${categoryColor};
+                  padding:3px 10px;border-radius:9999px;
+                ">${categoryLabel}</span>
+                ${member.territory === "dom-tom" ? '<span style="display:inline-block;font-size:10px;font-weight:600;color:#222;background:#EFCA8F;padding:3px 10px;border-radius:9999px;">Outre-mer</span>' : ""}
+              </div>
+              ${member.websiteUrl ? `<a href="${member.websiteUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:#1B7E8A;text-decoration:none;font-weight:500;">Visiter le site &rarr;</a>` : ""}
             </div>
-          `, { closeButton: true, maxWidth: 260 });
+          `, { closeButton: true, maxWidth: 280 });
 
           marker.addTo(map);
           markersRef.current.set(member.slug, marker);
@@ -140,12 +142,13 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
       <div className={cn("relative isolate z-0", className)}>
         <div id="gaspe-member-map" className="w-full h-full" style={{ minHeight: 400 }} />
 
-        <div className="absolute bottom-4 left-4 z-[500] flex flex-col gap-2">
+        {/* Territory buttons */}
+        <div className="absolute bottom-4 left-4 z-[500] flex flex-wrap gap-2">
           {VIEWS.map((view) => (
             <button
               key={view.label}
               onClick={() => flyTo(view.lat, view.lng, view.zoom)}
-              className="rounded-md bg-background/90 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-foreground shadow-md hover:bg-background transition-colors border border-border-light"
+              className="rounded-xl bg-white/95 backdrop-blur-sm px-3.5 py-2 text-xs font-semibold text-foreground shadow-lg hover:bg-white hover:shadow-xl transition-all border border-[var(--gaspe-neutral-200)]"
             >
               {view.label}
             </button>
