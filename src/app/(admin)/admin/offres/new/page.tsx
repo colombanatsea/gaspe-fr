@@ -65,6 +65,7 @@ export default function AdminNewOffrePage() {
       company: form.company,
       companySlug,
       location: form.location,
+      zone: 'normandie',
       contractType: form.contractType as Job["contractType"],
       category: form.category || "Autre",
       description: form.description,
