@@ -114,24 +114,44 @@ Admin sidebar: collapsible, grouped sections, pending badge, hidden on mobile (<
 - Footer: wave separator, newsletter CTA, social icons
 - Mobile fixes: admin sidebar hidden on mobile, larger touch targets, responsive tables
 
-## Known issues & TODOs
-- Globe routes may not be visible if texture fails to load (fallback dark sphere has no contrast)
-- Logo attribution: verify DNO Manche Iles Express vs Capstan Avocats logo
-- Document download links are placeholder (#)
-- OG images disabled (.bak) — re-enable when SSR is restored
-- No real email sending (contact form, notifications)
-- Domain gaspe.fr not connected yet
-- Admin sidebar needs mobile drawer (currently hidden <lg, no nav on mobile admin)
-- Job card hover CTA invisible on touch devices (opacity transition)
+## Known issues & gaps (audited end of session 3)
+
+### Critical
+- **Admin mobile nav missing** — sidebar hidden <lg, NO mobile drawer/hamburger → admin unusable on mobile
+- **Globe routes visibility** — routes may not be visible if Earth texture fails to load (fallback dark sphere = no contrast)
+
+### Functional gaps
+- **Newsletter form** — Footer has email input + "S'inscrire" button but NO handler, NO validation, NO endpoint (UI-only placeholder)
+- **Social links** — Footer LinkedIn/Twitter icons point to `href="#"` (no real URLs)
+- **Document downloads** — all download links are `#` placeholders
+- **Contact form** — form works with simulated 800ms delay, no real email sending
+- **Formations start empty** — admin/adherent/candidat formation pages read from `gaspe_formations` localStorage which starts empty (no seed data, unlike agenda/documents which have seeds)
+- **Admin CMS pages (formations/positions/agenda/documents)** — still use old design system (`rounded-lg`, old input styles) not upgraded to session 3 `rounded-2xl` style
+
+### Data consistency
+- **Adherent JobOffer type** — separate from Job type, missing `slug`, `companySlug`, `salaryMin` fields. When merged into public listing, these are filled with fallbacks
+- **Member logos** — external URLs from gaspe.fr, may break due to CORS/404. Marquee uses text-only pills as workaround, but map popups and adherent directory still attempt external logos
+- **OG images** — disabled (.bak), no social sharing previews
+
+### UX/design debt
+- **Job card hover CTA** — "Voir l'offre →" uses `opacity-0 group-hover:opacity-100`, invisible on touch devices
+- **MembersMarquee** — fade gradients `w-24` aggressive on screens < 375px
+- **Admin formations/positions/agenda/documents** — not yet upgraded to session 3 design (rounded-2xl, teal colors, modern inputs)
+
+### Not implemented
+- No real email sending (contact, notifications, newsletter)
+- No file upload (CV upload is filename-only in localStorage)
+- Domain gaspe.fr not connected
+- No analytics, no cookie consent banner
 
 ## Session 4 plan
-1. **Admin mobile drawer** — slide-out nav for admin on mobile (currently hidden)
-2. **Real formations catalog** — seed 8-10 GASPE formations with rich data, enrollment system
-3. **Contact form** — working form with validation + success state (no backend yet)
-4. **SEO polish** — restore OG images, add structured data to job listings
-5. **Performance** — lazy load Leaflet/Three.js, optimize images, lighthouse audit
-6. **Accessibility** — ARIA labels, focus management, skip nav, contrast audit
-7. **Real member logos** — download and serve locally from /assets/logos/ (no CORS)
-8. **Dark mode** — optional, CSS variables already support it
-9. **PWA** — manifest.json, service worker for offline access
-10. **Backend prep** — schema design for D1 migration (users, jobs, formations, documents)
+1. **Admin mobile drawer** — slide-out hamburger nav for admin on mobile (<lg)
+2. **Seed formations** — 8-10 GASPE maritime formations with rich data, dates, enrollment
+3. **Upgrade admin CMS pages** — formations/positions/agenda/documents to session 3 design system
+4. **Contact form backend** — Cloudflare Workers email or external API
+5. **SEO polish** — restore OG images, add JSON-LD structured data to job listings
+6. **Performance** — lazy load Leaflet/Three.js, optimize images, Lighthouse audit
+7. **Accessibility** — ARIA labels, focus management, skip nav, contrast audit
+8. **Real member logos** — download from gaspe.fr and serve from /assets/logos/ (no CORS)
+9. **Newsletter** — connect to Brevo/Mailchimp or Cloudflare Workers endpoint
+10. **Backend prep** — D1 schema design (users, jobs, formations, documents), migration plan from localStorage
