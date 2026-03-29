@@ -87,6 +87,56 @@ export function JobList() {
   const savedOffers = user?.savedOffers ?? [];
   const applications = user?.applications ?? [];
 
+  // Matching score computation for candidates
+  const computeMatchScore = (job: Job): number => {
+    if (!isCandidatLoggedIn || !user) return 0;
+    let score = 0;
+    let factors = 0;
+
+    // Desired position match (40 pts)
+    const desired = (user.desiredPosition ?? "").toLowerCase();
+    if (desired) {
+      factors += 40;
+      const title = job.title.toLowerCase();
+      if (title.includes(desired) || desired.includes(title.split(" ")[0])) {
+        score += 40;
+      } else if (
+        desired.split(" ").some((w) => w.length > 3 && title.includes(w))
+      ) {
+        score += 25;
+      }
+    }
+
+    // Category match (20 pts)
+    const currentPos = (user.currentPosition ?? "").toLowerCase();
+    if (currentPos) {
+      factors += 20;
+      const cat = job.category.toLowerCase();
+      if (currentPos.includes(cat) || currentPos.includes("pont") && cat === "pont" ||
+          currentPos.includes("machine") && cat === "machine" ||
+          currentPos.includes("mécanicien") && cat === "machine" ||
+          currentPos.includes("capitaine") && cat === "pont") {
+        score += 20;
+      }
+    }
+
+    // Certifications match (30 pts)
+    const certs = ((user as unknown as Record<string, unknown>).certifications as string ?? "").toLowerCase();
+    if (certs && job.brevet) {
+      factors += 30;
+      const brevet = job.brevet.toLowerCase();
+      if (certs.includes(brevet) || brevet.split(" ").filter((w) => w.length > 3).some((w) => certs.includes(w))) {
+        score += 30;
+      }
+    }
+
+    // Contract type bonus (10 pts — everyone gets a baseline)
+    factors += 10;
+    score += 10;
+
+    return factors > 0 ? Math.round((score / factors) * 100) : 0;
+  };
+
   const handleSave = (slug: string) => {
     if (!user || user.role !== "candidat") return;
     const currentSaved = user.savedOffers ?? [];
@@ -166,6 +216,7 @@ export function JobList() {
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
+              matchScore={isCandidatLoggedIn ? computeMatchScore(job) : undefined}
               isCandidatLoggedIn={isCandidatLoggedIn}
               isLoggedIn={!!user}
               isSaved={savedOffers.includes(job.slug)}

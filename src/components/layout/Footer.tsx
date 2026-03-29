@@ -167,7 +167,7 @@ export function Footer() {
         <div className="border-t border-white/10">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-xs text-[var(--gaspe-neutral-500)]">
-              &copy; {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés.
+              &copy; {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés. · v2.0.0
             </p>
             <div className="flex gap-6">
               {footerNavigation.legal.map((item) => (

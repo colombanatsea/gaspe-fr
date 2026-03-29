@@ -13,6 +13,7 @@ interface JobCardProps {
   date: string;
   slug: string;
   salaryRange?: string;
+  matchScore?: number;
   isCandidatLoggedIn?: boolean;
   isLoggedIn?: boolean;
   isSaved?: boolean;
@@ -63,6 +64,7 @@ export function JobCard({
   date,
   slug,
   salaryRange,
+  matchScore,
   isCandidatLoggedIn,
   isLoggedIn,
   isSaved,
@@ -93,6 +95,23 @@ export function JobCard({
                 <p className="mt-1 text-sm font-medium text-foreground-muted">{company}</p>
               </div>
               <div className="flex gap-2">
+                {matchScore != null && matchScore > 0 && (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold font-heading ${
+                      matchScore >= 80
+                        ? "bg-[var(--gaspe-green-50)] text-[var(--gaspe-green-600)]"
+                        : matchScore >= 50
+                        ? "bg-[var(--gaspe-warm-100)] text-[var(--gaspe-warm-600)]"
+                        : "bg-[var(--gaspe-neutral-100)] text-[var(--gaspe-neutral-600)]"
+                    }`}
+                    title="Score de correspondance avec votre profil"
+                  >
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    {matchScore}%
+                  </span>
+                )}
                 <Badge variant={contractBadgeVariant[contractType] ?? "neutral"}>
                   {contractType}
                 </Badge>

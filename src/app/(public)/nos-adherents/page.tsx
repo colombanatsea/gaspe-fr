@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { members, titulaires, associes } from "@/data/members";
 import { MemberMap } from "@/components/map/MemberMap";
 import type { MemberMapHandle } from "@/components/map/MemberMap";
@@ -16,29 +17,40 @@ function MemberRow({
   onClick: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left p-4 hover:bg-[var(--gaspe-neutral-50)] transition-colors cursor-pointer"
-    >
-      <div className="flex items-start gap-3">
-        <MemberLogo logoUrl={member.logoUrl} name={member.name} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-heading text-sm font-semibold text-foreground leading-tight">
-              {member.name}
-            </h3>
-            {member.territory === "dom-tom" && (
-              <Badge variant="blue" className="shrink-0 text-[10px]">
-                Outre-mer
-              </Badge>
-            )}
+    <div className="flex items-center gap-1 hover:bg-[var(--gaspe-neutral-50)] transition-colors">
+      <button
+        onClick={onClick}
+        className="flex-1 text-left p-4 cursor-pointer"
+      >
+        <div className="flex items-start gap-3">
+          <MemberLogo logoUrl={member.logoUrl} name={member.name} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-heading text-sm font-semibold text-foreground leading-tight">
+                {member.name}
+              </h3>
+              {member.territory === "dom-tom" && (
+                <Badge variant="blue" className="shrink-0 text-[10px]">
+                  Outre-mer
+                </Badge>
+              )}
+            </div>
+            <p className="mt-0.5 text-xs text-foreground-muted">
+              {member.city} &middot; {member.region}
+            </p>
           </div>
-          <p className="mt-0.5 text-xs text-foreground-muted">
-            {member.city} &middot; {member.region}
-          </p>
         </div>
-      </div>
-    </button>
+      </button>
+      <Link
+        href={`/nos-adherents/${member.slug}`}
+        className="shrink-0 p-3 text-foreground-muted hover:text-[var(--gaspe-teal-600)] transition-colors"
+        title={`Fiche ${member.name}`}
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
+      </Link>
+    </div>
   );
 }
 

@@ -6,6 +6,23 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 
 export type UserRole = "admin" | "adherent" | "candidat";
 
+export type ApplicationStatus =
+  | "pending"      // Envoyée
+  | "viewed"       // Vue par l'entreprise
+  | "shortlisted"  // Présélectionnée
+  | "interview"    // Entretien planifié
+  | "accepted"     // Acceptée
+  | "rejected";    // Refusée
+
+export const APPLICATION_STATUS_CONFIG: Record<ApplicationStatus, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral"; icon: string }> = {
+  pending:     { label: "Envoyée",        variant: "neutral", icon: "clock" },
+  viewed:      { label: "Vue",            variant: "blue",    icon: "eye" },
+  shortlisted: { label: "Présélectionnée", variant: "teal",   icon: "star" },
+  interview:   { label: "Entretien",      variant: "warm",    icon: "calendar" },
+  accepted:    { label: "Acceptée",       variant: "green",   icon: "check" },
+  rejected:    { label: "Refusée",        variant: "neutral",  icon: "x" },
+};
+
 export interface User {
   id: string;
   email: string;
@@ -18,7 +35,7 @@ export interface User {
   currentPosition?: string;
   desiredPosition?: string;
   savedOffers?: string[];
-  applications?: { offerId: string; date: string; status: string }[];
+  applications?: { offerId: string; date: string; status: ApplicationStatus }[];
   createdAt: string;
 }
 

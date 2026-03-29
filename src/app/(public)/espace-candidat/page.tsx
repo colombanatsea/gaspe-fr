@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, type User } from "@/lib/auth/AuthContext";
+import { useAuth, type User, type ApplicationStatus, APPLICATION_STATUS_CONFIG } from "@/lib/auth/AuthContext";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -379,25 +379,56 @@ export default function EspaceCandidatPage() {
                 </div>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {applications.map((app, i) => {
                   const job = publishedJobs.find((j) => j.slug === app.offerId || j.id === app.offerId);
+                  const status = (app.status as ApplicationStatus) || "pending";
+                  const config = APPLICATION_STATUS_CONFIG[status] ?? APPLICATION_STATUS_CONFIG.pending;
+                  const PIPELINE_STEPS: ApplicationStatus[] = ["pending", "viewed", "shortlisted", "interview", "accepted"];
+                  const stepIdx = PIPELINE_STEPS.indexOf(status);
+                  const isRejected = status === "rejected";
                   return (
-                    <Card key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-heading font-semibold text-foreground">
-                          {job ? job.title : `Offre #${app.offerId}`}
-                        </p>
-                        {job && (
-                          <p className="text-xs text-foreground-muted">{job.company}</p>
-                        )}
-                        <p className="text-xs text-foreground-muted">
-                          Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
-                        </p>
+                    <Card key={i}>
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                          <p className="font-heading font-semibold text-foreground">
+                            {job ? job.title : `Offre #${app.offerId}`}
+                          </p>
+                          {job && (
+                            <p className="text-xs text-foreground-muted">{job.company} \u00b7 {job.location}</p>
+                          )}
+                          <p className="text-xs text-foreground-muted mt-0.5">
+                            Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                        <Badge variant={config.variant}>{config.label}</Badge>
                       </div>
-                      <Badge variant={app.status === "accepted" ? "green" : app.status === "rejected" ? "warm" : "neutral"}>
-                        {app.status === "accepted" ? "Accept\u00e9e" : app.status === "rejected" ? "Refus\u00e9e" : "En attente"}
-                      </Badge>
+                      {/* Pipeline progress bar */}
+                      {!isRejected ? (
+                        <div className="flex items-center gap-1 mt-2">
+                          {PIPELINE_STEPS.map((step, si) => {
+                            const stepConfig = APPLICATION_STATUS_CONFIG[step];
+                            const isActive = si <= stepIdx;
+                            const isCurrent = si === stepIdx;
+                            return (
+                              <div key={step} className="flex-1 flex flex-col items-center gap-1">
+                                <div
+                                  className={`h-1.5 w-full rounded-full transition-colors ${
+                                    isActive
+                                      ? "bg-[var(--gaspe-teal-600)]"
+                                      : "bg-[var(--gaspe-neutral-200)]"
+                                  }`}
+                                />
+                                <span className={`text-[9px] hidden sm:block ${isCurrent ? "font-semibold text-[var(--gaspe-teal-600)]" : "text-foreground-muted"}`}>
+                                  {stepConfig.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--gaspe-neutral-200)]" />
+                      )}
                     </Card>
                   );
                 })}
