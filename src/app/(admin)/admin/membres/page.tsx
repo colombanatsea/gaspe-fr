@@ -4,33 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
-import { members as seedMembers } from "@/data/members";
-import type { Member } from "@/types";
-
-// ---------------------------------------------------------------------------
-// Exported helpers so other components can read members from localStorage
-// ---------------------------------------------------------------------------
-export const MEMBERS_KEY = "gaspe_members";
-
-export interface StoredMember extends Member {
-  archived?: boolean;
-}
-
-export function getMembers(): StoredMember[] {
-  if (typeof window === "undefined") return [];
-  const raw = localStorage.getItem(MEMBERS_KEY);
-  if (!raw) {
-    // seed on first access
-    const seeded: StoredMember[] = seedMembers.map((m) => ({ ...m, archived: false }));
-    localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-  return JSON.parse(raw) as StoredMember[];
-}
-
-function saveMembers(list: StoredMember[]) {
-  localStorage.setItem(MEMBERS_KEY, JSON.stringify(list));
-}
+import { getStoredMembers, saveMembers, type StoredMember } from "@/lib/members-store";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -88,7 +62,7 @@ export default function AdminMembresPage() {
   const [form, setForm] = useState<StoredMember>({ ...emptyForm });
 
   const refresh = useCallback(() => {
-    setMembers(getMembers());
+    setMembers(getStoredMembers());
   }, []);
 
   useEffect(() => {
@@ -136,7 +110,7 @@ export default function AdminMembresPage() {
 
   function handleSave() {
     if (!form.name.trim()) return;
-    const list = getMembers();
+    const list = getStoredMembers();
     const slug = form.slug || slugify(form.name);
     const entry: StoredMember = { ...form, slug };
 
@@ -158,20 +132,20 @@ export default function AdminMembresPage() {
 
   function handleArchive(m: StoredMember) {
     if (!confirm(`Archiver ${m.name} ?`)) return;
-    const list = getMembers().map((x) => (x.slug === m.slug ? { ...x, archived: true } : x));
+    const list = getStoredMembers().map((x) => (x.slug === m.slug ? { ...x, archived: true } : x));
     saveMembers(list);
     refresh();
   }
 
   function handleUnarchive(m: StoredMember) {
-    const list = getMembers().map((x) => (x.slug === m.slug ? { ...x, archived: false } : x));
+    const list = getStoredMembers().map((x) => (x.slug === m.slug ? { ...x, archived: false } : x));
     saveMembers(list);
     refresh();
   }
 
   function handleDelete(m: StoredMember) {
     if (!confirm(`Supprimer d\u00e9finitivement ${m.name} ? Cette action est irr\u00e9versible.`)) return;
-    const list = getMembers().filter((x) => x.slug !== m.slug);
+    const list = getStoredMembers().filter((x) => x.slug !== m.slug);
     saveMembers(list);
     refresh();
   }

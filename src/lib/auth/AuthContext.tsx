@@ -175,6 +175,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
+  // Sync across tabs via storage event
+  useEffect(() => {
+    function handleStorageChange(e: StorageEvent) {
+      if (e.key === CURRENT_KEY) {
+        if (!e.newValue) { setUser(null); return; }
+        try { setUser(JSON.parse(e.newValue) as User); } catch { /* ignore */ }
+      }
+      if (e.key === USERS_KEY && user) {
+        // Re-read fresh user data if users array changed (e.g. admin approved/archived)
+        try {
+          const users = JSON.parse(e.newValue ?? "[]") as User[];
+          const fresh = users.find((u) => u.id === user.id);
+          if (fresh) { setUser(fresh); writeStore(CURRENT_KEY, fresh); }
+          else { setUser(null); localStorage.removeItem(CURRENT_KEY); } // user was deleted
+        } catch { /* ignore */ }
+      }
+    }
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [user]);
+
   const login = useCallback((email: string, password: string) => {
     const users = readStore<User[]>(USERS_KEY, []);
     const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
@@ -241,6 +262,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (idx >= 0) {
       users[idx].approved = true;
       writeStore(USERS_KEY, users);
+      // Update current_user if it's the same user (e.g. they're logged in another tab)
+      const current = readStore<User | null>(CURRENT_KEY, null);
+      if (current?.id === id) writeStore(CURRENT_KEY, users[idx]);
     }
   }, []);
 
@@ -251,6 +275,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     delete passwords[id];
     writeStore(USERS_KEY, filtered);
     writeStore(PASSWORDS_KEY, passwords);
+    // Clear current_user if the rejected user is logged in
+    const current = readStore<User | null>(CURRENT_KEY, null);
+    if (current?.id === id) localStorage.removeItem(CURRENT_KEY);
   }, []);
 
   const updateUser = useCallback((updated: User) => {

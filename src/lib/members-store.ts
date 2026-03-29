@@ -17,8 +17,9 @@ export function getStoredMembers(): StoredMember[] {
   if (typeof window === "undefined") return staticMembers;
   const raw = localStorage.getItem(MEMBERS_KEY);
   if (!raw) {
-    localStorage.setItem(MEMBERS_KEY, JSON.stringify(staticMembers));
-    return staticMembers;
+    const seeded: StoredMember[] = staticMembers.map((m) => ({ ...m, archived: false }));
+    localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
+    return seeded;
   }
   return JSON.parse(raw);
 }
