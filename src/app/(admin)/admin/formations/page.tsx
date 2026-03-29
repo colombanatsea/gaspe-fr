@@ -217,7 +217,7 @@ function getFormations(): Formation[] {
     localStorage.setItem(FORMATIONS_KEY, JSON.stringify(SEED_FORMATIONS));
     return SEED_FORMATIONS;
   }
-  return JSON.parse(raw);
+  try { return JSON.parse(raw); } catch { return SEED_FORMATIONS; }
 }
 
 const modalityLabel: Record<FormationModality, string> = {

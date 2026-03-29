@@ -21,7 +21,7 @@ export function getStoredMembers(): StoredMember[] {
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
     return seeded;
   }
-  return JSON.parse(raw);
+  try { return JSON.parse(raw); } catch { return staticMembers; }
 }
 
 /** Get only active (non-archived) members. */

@@ -61,7 +61,7 @@ function getEvents(): AgendaEvent[] {
     localStorage.setItem(AGENDA_KEY, JSON.stringify(SEED_EVENTS));
     return SEED_EVENTS;
   }
-  return JSON.parse(raw);
+  try { return JSON.parse(raw); } catch { return []; }
 }
 
 export default function AdminAgendaPage() {

@@ -73,6 +73,12 @@ export default function AdherentProfilPage() {
       alert("L'image ne doit pas dépasser 500 Ko.");
       return;
     }
+    // Validate file type (reject SVG for XSS prevention)
+    const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      alert("Format accepté : JPG, PNG, GIF, WebP uniquement.");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setCompanyLogo(reader.result as string);
     reader.readAsDataURL(file);

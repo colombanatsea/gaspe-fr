@@ -4,7 +4,11 @@
 
 function escapeCsv(value: string | number | boolean | undefined | null): string {
   if (value === undefined || value === null) return "";
-  const str = String(value);
+  let str = String(value);
+  // Prevent CSV formula injection (DDE attacks in Excel)
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
   if (str.includes(",") || str.includes('"') || str.includes("\n")) {
     return `"${str.replace(/"/g, '""')}"`;
   }

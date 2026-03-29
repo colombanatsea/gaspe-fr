@@ -121,7 +121,7 @@ async function handleContact(request: Request, env: Env, headers: Record<string,
         html: `
           <h2>Nouveau message de contact</h2>
           <p><strong>Nom :</strong> ${nom}</p>
-          <p><strong>Email :</strong> ${email}</p>
+          <p><strong>Email :</strong> ${sanitize(email)}</p>
           ${societe ? `<p><strong>Société :</strong> ${societe}</p>` : ""}
           <p><strong>Sujet :</strong> ${sujet}</p>
           <hr/>
