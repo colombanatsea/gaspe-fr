@@ -243,6 +243,7 @@ function DocumentsContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un document..."
+            aria-label="Rechercher un document"
             className="w-full rounded-md border border-border-light bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>

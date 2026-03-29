@@ -76,6 +76,7 @@ export function JobFilters() {
           value={searchQuery}
           onChange={(e) => updateParams("q", e.target.value)}
           placeholder="Titre, compagnie, lieu..."
+          aria-label="Rechercher une offre d'emploi"
           className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none transition-colors"
         />
       </div>

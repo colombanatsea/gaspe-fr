@@ -405,8 +405,9 @@ function SimulateurSalaire() {
         <div className="grid gap-4 sm:grid-cols-3">
           {/* Category */}
           <div>
-            <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Catégorie</label>
+            <label htmlFor="sim-category" className="block text-xs font-semibold text-foreground-muted mb-1.5">Catégorie</label>
             <select
+              id="sim-category"
               className={selectCls}
               value={selectedCategory}
               onChange={(e) => {
@@ -424,8 +425,9 @@ function SimulateurSalaire() {
 
           {/* Level */}
           <div>
-            <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Niveau / Poste</label>
+            <label htmlFor="sim-level" className="block text-xs font-semibold text-foreground-muted mb-1.5">Niveau / Poste</label>
             <select
+              id="sim-level"
               className={selectCls}
               value={selectedLevel}
               disabled={!selectedCategory}
@@ -443,8 +445,9 @@ function SimulateurSalaire() {
 
           {/* Echelon */}
           <div>
-            <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Échelon</label>
+            <label htmlFor="sim-echelon" className="block text-xs font-semibold text-foreground-muted mb-1.5">Échelon</label>
             <select
+              id="sim-echelon"
               className={selectCls}
               value={selectedEchelon}
               disabled={!selectedLevel}
