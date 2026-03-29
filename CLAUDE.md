@@ -201,7 +201,7 @@ npx wrangler deploy --config workers/wrangler.toml
 14. ~~**API documentation**~~ — DONE: guide déploiement Worker amélioré dans `src/lib/api.ts`
 
 ### Architecture v2.0.0
-- **79 pages** statiques (48 → 79 avec les 31 pages culture)
+- **81 pages** statiques (48 → 81 avec les 31 pages culture + 2 pages légales)
 - **Route groups**: `(public)/`, `(admin)/`, `(auth)/`
 - **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
 - **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable
@@ -215,6 +215,9 @@ npx wrangler deploy --config workers/wrangler.toml
 - ~~**OG images**~~ — FIXED: SVG statique + metadata
 - ~~**CSP headers**~~ — FIXED: Cloudflare `_headers` file
 - ~~**Document downloads UX**~~ — FIXED: état "bientôt disponible" + toast
+- ~~**Pages légales manquantes**~~ — FIXED: mentions légales + politique confidentialité RGPD
+- ~~**Postuler détail offre**~~ — FIXED: JobDetailActions (save + apply pour candidats connectés)
+- ~~**Type safety User**~~ — FIXED: experience, certifications, cvFilename dans l'interface User
 
 #### Remaining (nécessitent infrastructure)
 - **Domain gaspe.fr** — config DNS manuelle CF Pages
@@ -223,4 +226,4 @@ npx wrangler deploy --config workers/wrangler.toml
 - **Upload CV réel** — nécessite endpoint R2 du Worker
 - **Dark mode** — toggle optionnel (nice-to-have)
 - **Lighthouse 95+** — audit perf (nice-to-have)
-- **E2E tests mis à jour** — couvrir nouvelles pages (79 pages vs 12 tests)
+- **E2E tests mis à jour** — couvrir nouvelles pages (81 pages vs 12 tests)

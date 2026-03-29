@@ -122,7 +122,7 @@ export function JobList() {
     }
 
     // Certifications match via STCW (30 pts)
-    const certs = ((user as unknown as Record<string, unknown>).certifications as string ?? "");
+    const certs = user.certifications ?? "";
     if (certs && job.brevet) {
       factors += 30;
       const { score: certScore } = matchCertifications(certs, job.brevet);

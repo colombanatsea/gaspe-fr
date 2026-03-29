@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { JobDetailActions } from "@/components/jobs/JobDetailActions";
 import { jobs } from "@/data/jobs";
 import { members } from "@/data/members";
 import { formatDate } from "@/lib/utils";
@@ -196,6 +197,9 @@ export default async function JobDetailPage({ params }: PageProps) {
                 </p>
               )}
             </div>
+
+            {/* Candidate actions */}
+            <JobDetailActions jobSlug={job.slug} />
 
             {/* Job details card */}
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6">

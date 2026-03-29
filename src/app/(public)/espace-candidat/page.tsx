@@ -41,9 +41,9 @@ export default function EspaceCandidatPage() {
       currentPosition: user.currentPosition ?? "",
       desiredPosition: user.desiredPosition ?? "",
       phone: user.phone ?? "",
-      experience: (user as unknown as Record<string, unknown>).experience as string ?? "",
-      certifications: (user as unknown as Record<string, unknown>).certifications as string ?? "",
-      cvFilename: (user as unknown as Record<string, unknown>).cvFilename as string ?? "",
+      experience: user.experience ?? "",
+      certifications: user.certifications ?? "",
+      cvFilename: user.cvFilename ?? "",
     });
 
     // Count formations
@@ -60,7 +60,9 @@ export default function EspaceCandidatPage() {
       currentPosition: form.currentPosition,
       desiredPosition: form.desiredPosition,
       phone: form.phone,
-      ...({ experience: form.experience, certifications: form.certifications, cvFilename: form.cvFilename } as Record<string, string>),
+      experience: form.experience,
+      certifications: form.certifications,
+      cvFilename: form.cvFilename,
     } as User);
     setEditing(false);
   }, [user, form, updateUser]);
@@ -368,8 +370,8 @@ export default function EspaceCandidatPage() {
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">CV</p>
                     <p className="text-sm text-foreground">
-                      {(user as unknown as Record<string, unknown>).cvFilename
-                        ? String((user as unknown as Record<string, unknown>).cvFilename)
+                      {user.cvFilename
+                        ? user.cvFilename
                         : "Non charg\u00e9"}
                     </p>
                   </div>

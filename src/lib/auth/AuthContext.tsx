@@ -37,6 +37,9 @@ export interface User {
   desiredPosition?: string;
   savedOffers?: string[];
   applications?: { offerId: string; date: string; status: ApplicationStatus }[];
+  experience?: string;
+  certifications?: string;
+  cvFilename?: string;
   createdAt: string;
 }
 
@@ -210,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
       ...(data.role === "adherent" ? { company: data.company } : {}),
       ...(data.role === "candidat"
-        ? { currentPosition: data.currentPosition, desiredPosition: data.desiredPosition, savedOffers: [], applications: [] }
+        ? { currentPosition: data.currentPosition, desiredPosition: data.desiredPosition, savedOffers: [], applications: [], experience: "", certifications: "", cvFilename: "" }
         : {}),
     };
 
