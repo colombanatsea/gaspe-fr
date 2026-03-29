@@ -4,8 +4,19 @@
  * Set API_URL to the deployed worker URL to enable real backend.
  */
 
-// Set this to the deployed CF Worker URL when ready (e.g. "https://gaspe-api.username.workers.dev")
-// Leave empty to use localStorage fallback
+/**
+ * Set this to the deployed CF Worker URL when ready.
+ * Example: "https://gaspe-api.colombanatsea.workers.dev"
+ * Leave empty to use localStorage fallback (demo mode).
+ *
+ * Deployment steps:
+ * 1. npx wrangler d1 create gaspe-db
+ * 2. npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql
+ * 3. npx wrangler r2 bucket create gaspe-uploads
+ * 4. npx wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
+ * 5. npx wrangler deploy --config workers/wrangler.toml
+ * 6. Set API_URL below to the worker URL
+ */
 const API_URL = "";
 
 async function apiPost(path: string, data: unknown): Promise<{ success: boolean; error?: string }> {

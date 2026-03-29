@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { hashPassword, verifyPassword, isHashed } from "./hash";
 
 /* ---------- Types ---------- */
 
@@ -43,9 +44,9 @@ interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   role: UserRole | null;
-  login: (email: string, password: string) => { success: boolean; error?: string };
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  register: (data: RegisterData) => { success: boolean; error?: string };
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   getAllUsers: () => User[];
   approveUser: (id: string) => void;
   rejectUser: (id: string) => void;
@@ -92,23 +93,48 @@ function writeStore(key: string, value: unknown) {
 
 /* ---------- Seed admin ---------- */
 
+const ADMIN_SETTINGS_KEY = "gaspe_admin_settings";
+
+interface AdminSettings {
+  email: string;
+  name: string;
+}
+
+function getAdminSettings(): AdminSettings {
+  const stored = readStore<AdminSettings | null>(ADMIN_SETTINGS_KEY, null);
+  return stored ?? { email: "admin@gaspe.fr", name: "Administrateur GASPE" };
+}
+
 const ADMIN_SEED: User = {
   id: "admin-001",
-  email: "admin@gaspe.fr",
-  name: "Administrateur GASPE",
+  email: getAdminSettings().email,
+  name: getAdminSettings().name,
   role: "admin",
   approved: true,
   createdAt: "2025-01-01T00:00:00.000Z",
 };
 
-function ensureSeeded() {
+async function ensureSeeded() {
   const users = readStore<User[]>(USERS_KEY, []);
   const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
   if (!users.find((u) => u.id === ADMIN_SEED.id)) {
     users.push(ADMIN_SEED);
-    passwords[ADMIN_SEED.id] = "admin123";
+    // Hash the default password
+    const hashed = await hashPassword("admin123", ADMIN_SEED.email);
+    passwords[ADMIN_SEED.id] = hashed;
     writeStore(USERS_KEY, users);
     writeStore(PASSWORDS_KEY, passwords);
+  } else {
+    // Migrate plaintext passwords to hashed
+    let changed = false;
+    for (const user of users) {
+      const pwd = passwords[user.id];
+      if (pwd && !isHashed(pwd)) {
+        passwords[user.id] = await hashPassword(pwd, user.email);
+        changed = true;
+      }
+    }
+    if (changed) writeStore(PASSWORDS_KEY, passwords);
   }
 }
 
@@ -133,12 +159,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const login = useCallback((email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const users = readStore<User[]>(USERS_KEY, []);
     const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
     const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (!found) return { success: false, error: "Aucun compte trouvé avec cet email." };
-    if (passwords[found.id] !== password) return { success: false, error: "Mot de passe incorrect." };
+    const storedPwd = passwords[found.id];
+    if (!storedPwd) return { success: false, error: "Mot de passe incorrect." };
+    // Support both hashed and legacy plaintext during migration
+    const valid = isHashed(storedPwd)
+      ? await verifyPassword(password, found.email, storedPwd)
+      : storedPwd === password;
+    if (!valid) return { success: false, error: "Mot de passe incorrect." };
+    // Migrate plaintext to hashed on successful login
+    if (!isHashed(storedPwd)) {
+      passwords[found.id] = await hashPassword(password, found.email);
+      writeStore(PASSWORDS_KEY, passwords);
+    }
     if (found.role === "adherent" && !found.approved) {
       return { success: false, error: "Votre compte est en attente de validation par l'administrateur." };
     }
@@ -152,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") localStorage.removeItem(CURRENT_KEY);
   }, []);
 
-  const register = useCallback((data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData) => {
     const users = readStore<User[]>(USERS_KEY, []);
     const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
 
@@ -176,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     users.push(newUser);
-    passwords[id] = data.password;
+    passwords[id] = await hashPassword(data.password, data.email);
     writeStore(USERS_KEY, users);
     writeStore(PASSWORDS_KEY, passwords);
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { matchCertifications } from "@/data/stcw";
 
 const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
@@ -120,14 +121,12 @@ export function JobList() {
       }
     }
 
-    // Certifications match (30 pts)
-    const certs = ((user as unknown as Record<string, unknown>).certifications as string ?? "").toLowerCase();
+    // Certifications match via STCW (30 pts)
+    const certs = ((user as unknown as Record<string, unknown>).certifications as string ?? "");
     if (certs && job.brevet) {
       factors += 30;
-      const brevet = job.brevet.toLowerCase();
-      if (certs.includes(brevet) || brevet.split(" ").filter((w) => w.length > 3).some((w) => certs.includes(w))) {
-        score += 30;
-      }
+      const { score: certScore } = matchCertifications(certs, job.brevet);
+      score += Math.round((certScore / 100) * 30);
     }
 
     // Contract type bonus (10 pts — everyone gets a baseline)

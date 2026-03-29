@@ -64,11 +64,26 @@ export default function EspaceCandidatPage() {
     setEditing(false);
   }, [user, form, updateUser]);
 
+  const [cvError, setCvError] = useState("");
+
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setForm((p) => ({ ...p, cvFilename: file.name }));
+    setCvError("");
+    if (!file) return;
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      setCvError("Format accepté : PDF, DOC ou DOCX uniquement.");
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setCvError("Le fichier ne doit pas dépasser 5 Mo.");
+      return;
+    }
+    setForm((p) => ({ ...p, cvFilename: file.name }));
   };
 
   if (!user || user.role !== "candidat") return null;

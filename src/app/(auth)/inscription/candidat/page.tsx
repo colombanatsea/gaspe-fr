@@ -22,7 +22,7 @@ export default function InscriptionCandidatPage() {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -31,7 +31,7 @@ export default function InscriptionCandidatPage() {
       return;
     }
 
-    const result = register({
+    const result = await register({
       role: "candidat",
       name: form.name,
       email: form.email,
