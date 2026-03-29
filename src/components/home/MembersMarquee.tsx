@@ -2,31 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { members } from "@/data/members";
 import { useScrollReveal } from "@/lib/useScrollReveal";
-
-function getArchivedCompanies(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const users = JSON.parse(localStorage.getItem("gaspe_users") ?? "[]");
-    return users
-      .filter((u: { role: string; archived?: boolean }) => u.role === "adherent" && u.archived)
-      .map((u: { company?: string }) => u.company)
-      .filter(Boolean);
-  } catch { return []; }
-}
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 
 export function MembersMarquee() {
   const ref = useScrollReveal();
-  const [archivedCompanies, setArchivedCompanies] = useState<string[]>([]);
+  const [titulaires, setTitulaires] = useState<StoredMember[]>([]);
 
   useEffect(() => {
-    setArchivedCompanies(getArchivedCompanies());
+    setTitulaires(getActiveMembers().filter((m) => m.category === "titulaire"));
   }, []);
-
-  const titulaires = members.filter(
-    (m) => m.category === "titulaire" && !archivedCompanies.includes(m.name)
-  );
 
   return (
     <section ref={ref} className="relative bg-[var(--gaspe-neutral-900)] py-16 overflow-hidden">

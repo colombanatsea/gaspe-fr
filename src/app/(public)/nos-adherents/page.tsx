@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { members, titulaires, associes } from "@/data/members";
+import { useRef, useEffect, useState } from "react";
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { MemberMap } from "@/components/map/MemberMap";
 import type { MemberMapHandle } from "@/components/map/MemberMap";
 import { Badge } from "@/components/ui/Badge";
@@ -44,9 +44,17 @@ function MemberRow({
 
 export default function NosAdherentsPage() {
   const mapRef = useRef<MemberMapHandle>(null);
-  const regions = [...new Set(members.map((m) => m.region))].sort();
+  const [allMembers, setAllMembers] = useState<StoredMember[]>([]);
 
-  function handleMemberClick(member: Member) {
+  useEffect(() => {
+    setAllMembers(getActiveMembers());
+  }, []);
+
+  const titul = allMembers.filter((m) => m.category === "titulaire");
+  const assoc = allMembers.filter((m) => m.category === "associe");
+  const regions = [...new Set(allMembers.map((m) => m.region))].sort();
+
+  function handleMemberClick(member: StoredMember) {
     mapRef.current?.flyToMember(member);
   }
 
@@ -54,7 +62,7 @@ export default function NosAdherentsPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       {/* Map — 70% on desktop */}
       <div className="flex-1 lg:w-[70%]">
-        <MemberMap ref={mapRef} members={members} className="h-[50vh] lg:h-full" />
+        <MemberMap ref={mapRef} members={allMembers} className="h-[50vh] lg:h-full" />
       </div>
 
       {/* Sidebar — 30% on desktop */}
@@ -65,12 +73,12 @@ export default function NosAdherentsPage() {
             Membres Titulaires
           </h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            {titulaires.length} armateurs &middot; {regions.length} régions
+            {titul.length} armateurs &middot; {regions.length} régions
           </p>
         </div>
 
         <div className="divide-y divide-border-light">
-          {titulaires.map((member) => (
+          {titul.map((member) => (
             <MemberRow
               key={member.slug}
               member={member}
@@ -85,12 +93,12 @@ export default function NosAdherentsPage() {
             Associés &amp; Experts
           </h2>
           <p className="mt-1 text-sm text-foreground-muted">
-            {associes.length} membres
+            {assoc.length} membres
           </p>
         </div>
 
         <div className="divide-y divide-border-light">
-          {associes.map((member) => (
+          {assoc.map((member) => (
             <MemberRow
               key={member.slug}
               member={member}

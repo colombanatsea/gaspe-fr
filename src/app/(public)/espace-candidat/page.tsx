@@ -8,6 +8,7 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { publishedJobs } from "@/data/jobs";
+import { computeMatchScore, MATCH_COLORS } from "@/lib/matching";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -335,23 +336,35 @@ export default function EspaceCandidatPage() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {savedJobDetails.map((job) => job && (
-                  <Link key={job.id} href={`/nos-compagnies-recrutent/${job.slug}`} className="block group">
-                    <Card className="hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {job.title}
-                          </p>
-                          <p className="text-sm text-foreground-muted">
-                            {job.company} — {job.location}
-                          </p>
+                {savedJobDetails.map((job) => {
+                  if (!job) return null;
+                  const match = user ? computeMatchScore(user, job) : null;
+                  const matchColor = match ? MATCH_COLORS[match.level] : null;
+                  return (
+                    <Link key={job.id} href={`/nos-compagnies-recrutent/${job.slug}`} className="block group">
+                      <Card className="hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {job.title}
+                            </p>
+                            <p className="text-sm text-foreground-muted">
+                              {job.company} — {job.location}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            {match && match.score > 0 && matchColor && (
+                              <span className={`rounded-lg px-2 py-1 text-[10px] font-bold ${matchColor.bg} ${matchColor.text}`}>
+                                {match.score}%
+                              </span>
+                            )}
+                            <Badge variant="teal">{job.contractType}</Badge>
+                          </div>
                         </div>
-                        <Badge variant="teal">{job.contractType}</Badge>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
+                      </Card>
+                    </Link>
+                  );
+                })}
                 {savedOffers.filter((slug) => !publishedJobs.find((j) => j.slug === slug || j.id === slug)).map((offerId) => (
                   <Card key={offerId}>
                     <p className="text-sm text-foreground-muted">Offre #{offerId} (non disponible)</p>
@@ -428,6 +441,38 @@ export default function EspaceCandidatPage() {
               ))}
             </nav>
           </Card>
+
+          {/* Top matches */}
+          {user && (() => {
+            const matches = publishedJobs
+              .map((j) => ({ job: j, match: computeMatchScore(user, j) }))
+              .filter((m) => m.match.score > 0)
+              .sort((a, b) => b.match.score - a.match.score)
+              .slice(0, 3);
+
+            if (matches.length === 0) return null;
+            return (
+              <Card>
+                <CardTitle>Suggestions pour vous</CardTitle>
+                <div className="mt-3 space-y-2">
+                  {matches.map(({ job, match }) => {
+                    const color = MATCH_COLORS[match.level];
+                    return (
+                      <Link key={job.id} href={`/nos-compagnies-recrutent/${job.slug}`} className="block group">
+                        <div className="rounded-lg px-3 py-2 hover:bg-surface transition-colors">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary truncate">{job.title}</p>
+                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold shrink-0 ${color.bg} ${color.text}`}>{match.score}%</span>
+                          </div>
+                          <p className="text-xs text-foreground-muted truncate">{job.company}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })()}
 
           <Card>
             <CardTitle>Besoin d&apos;aide ?</CardTitle>

@@ -34,6 +34,7 @@ export const footerNavigation = {
   ],
   legal: [
     { label: "Mentions légales", href: "/mentions-legales" },
-    { label: "Politique de confidentialité", href: "/confidentialite" },
+    { label: "Confidentialité", href: "/confidentialite" },
+    { label: "CGU", href: "/cgu" },
   ],
 };

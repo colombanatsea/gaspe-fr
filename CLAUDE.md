@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**46 pages** — deployed on Cloudflare Pages (static export)
+**52+ pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Dev**: `C:/Dev/gaspe-fr/` (fast, use this for all coding)
@@ -182,10 +182,78 @@ npx wrangler deploy --config workers/wrangler.toml
 4. ~~**Production hardening**~~ — DONE: Worker input sanitization (XSS), email validation, max length, CORS whitelist
 5. **Domain gaspe.fr** — NOT DONE (manual CF Pages config needed)
 
-## Session 7 plan
-1. **Deploy CF Worker** to production + configure Resend API key
-2. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
-3. **OG images** — generate social sharing previews
-4. **Real document files** — replace `#` download links with actual PDF uploads via R2
-5. **Lighthouse 95+** — audit and fix remaining performance issues
-6. **Dark mode** — optional toggle with CSS variables
+## Session 11 completed
+1. ~~**Profil entreprise adhérent**~~ — DONE: `/espace-adherent/profil` — logo upload, description, coordonnées, navires CRUD, rôle compagnie (8 options), complétion pondérée
+2. ~~**Annuaire par rôle**~~ — DONE: onglet "Contacts par rôle" dans annuaire adhérent, filtres par rôle, contacts pairs
+3. ~~**Gestion adhésions admin**~~ — DONE: statut due/payée/en cours, archivage adhérent (retire accès+marquee+carte), stats dashboard
+4. ~~**Formations enrichies**~~ — DONE: modalité (présentiel/distanciel/hybride), calendrier par jour avec lieu/visio, pièces jointes admin
+5. ~~**Agenda enrichi**~~ — DONE: adresse complète, pièces jointes, visibilité publique limitée (titre+date), détails réservés adhérents
+
+## Session 12 completed
+1. ~~**Admin membres CRUD**~~ — DONE: `/admin/membres` — CRUD complet, archivage, recherche, filtres catégorie. CMS localStorage (`gaspe_members`) avec seed des 31 membres. Effet immédiat sur carte, marquee, compteurs via `src/lib/members-store.ts`
+2. ~~**Matching candidat/offre**~~ — DONE: `src/lib/matching.ts` — scoring 0-100 (brevet 40%, zone 25%, catégorie 20%, contrat 15%), 4 niveaux (excellent/good/partial/low), badges dans espace candidat + suggestions sidebar
+3. ~~**Notifications internes**~~ — DONE: `src/lib/notifications.ts` + `NotificationBell` composant — 6 types (offre, formation, adhésion, document, agenda), badge non-lus dans le header, dropdown panneau, mark as read, polling 5s
+4. ~~**Export CSV admin**~~ — DONE: `src/lib/export-csv.ts` — 3 exports (comptes, adhésions, candidatures) avec BOM UTF-8 pour Excel, boutons dans le dashboard admin
+5. ~~**Pages légales**~~ — DONE: 3 pages complètes inspirées de gaspe.fr — `/mentions-legales`, `/confidentialite` (RGPD), `/cgu` — lien CGU ajouté au footer
+6. ~~**OG images**~~ — DONE: 3 SVG (default, groupement, recrutement) dans public/, metadata mise à jour dans layout.tsx + pages clés
+7. **Dark mode** — NOT DONE: pas de système dark mode CSS existant dans le codebase (les tokens CSS sont light-only), ajout nécessiterait un refactoring complet des variables
+
+## Architecture — nouveaux fichiers session 11-12
+
+| Fichier | Rôle |
+|---------|------|
+| `src/lib/members-store.ts` | Store CMS membres (localStorage + seed statique) |
+| `src/lib/matching.ts` | Scoring candidat ↔ offre (brevet, zone, catégorie) |
+| `src/lib/notifications.ts` | Système notifications in-app (localStorage) |
+| `src/lib/export-csv.ts` | Export CSV (comptes, adhésions, candidatures) |
+| `src/app/(admin)/admin/membres/page.tsx` | Admin CRUD membres |
+| `src/app/(public)/espace-adherent/profil/page.tsx` | Profil entreprise adhérent |
+| `src/app/(public)/mentions-legales/page.tsx` | Mentions légales |
+| `src/app/(public)/confidentialite/page.tsx` | Politique de confidentialité RGPD |
+| `src/app/(public)/cgu/page.tsx` | Conditions Générales d'Utilisation |
+| `src/components/shared/NotificationBell.tsx` | Cloche notifications header |
+| `public/og-default.svg` | OG image par défaut |
+| `public/og-groupement.svg` | OG image groupement |
+| `public/og-recrutement.svg` | OG image recrutement |
+
+## Console Admin (11 sections — updated session 12)
+| Section | Route | Features |
+|---------|-------|----------|
+| Dashboard | `/admin` | 4 stat cards, CMS grid, quick actions, CSV exports, site info |
+| Comptes | `/admin/comptes` | Table, search, role/membership filters, approve/reject, archive, membership status dropdown |
+| **Membres** | `/admin/membres` | **NEW** CRUD 31 membres, archive, search, catégorie filter |
+| Offres | `/admin/offres` | Search, contract/status filters, publish/unpublish, delete |
+| Formations | `/admin/formations` | Cards, modality badges, schedule per day, attachments upload |
+| Positions | `/admin/positions` | CMS with categories, tags, publish toggle |
+| Agenda | `/admin/agenda` | Events CRUD, address, attachments, public/adherent visibility |
+| Documents | `/admin/documents` | 4 categories, public/private, upload |
+| Messages | `/admin/messages` | Contact form messages, read badge |
+| Paramètres | `/admin/parametres` | Admin info, site settings, password change |
+
+## New localStorage keys (session 11-12)
+- `gaspe_members` — CMS members (seeded from src/data/members.ts)
+- `gaspe_notifications` — notifications in-app per user
+
+## Adherent profile fields (session 11)
+User type extended with: `companyRole` (8 options), `companyDescription`, `companyLogo` (base64), `companyAddress`, `companyEmail`, `companyPhone`, `vessels[]` (CRUD), `membershipStatus` (due/paid/pending), `archived` (boolean)
+
+## Known issues & gaps (updated session 12)
+
+### Remaining
+- **Document downloads** — all download links are `#` placeholders (needs R2 storage)
+- **No real email sending** — contact/newsletter stored in localStorage (Worker stub ready)
+- **No file upload to server** — CV upload is filename-only, document/formation attachments are base64 in localStorage
+- **Domain gaspe.fr** — not connected (manual CF Pages config)
+- **Dark mode** — not implemented (CSS variables are light-only, needs full refactoring)
+- **No backend** — CF Worker ready but not deployed (workers/api.ts)
+- **Matching limited** — candidat certifications field is freetext, not connected to maritime-certifications data
+- **Notifications** — no server push, polling localStorage every 5s
+
+## Next session suggestions
+1. **Deploy CF Worker** + connect gaspe.fr domain
+2. **Dark mode** — add prefers-color-scheme + toggle with CSS variable overrides
+3. **Maritime certifications** — connect checkbox-based certifications to matching engine
+4. **Real file storage** — R2 bucket for documents, CVs, formation attachments
+5. **Lighthouse 95+** — performance audit
+6. **Print styles** — for member directory, job offers
+7. **Accessibility audit** — WCAG AA compliance check

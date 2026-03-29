@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#42B3D5"/>
+      <stop offset="50%" stop-color="#6DAAAC"/>
+      <stop offset="100%" stop-color="#5AA89A"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#156A74" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1B7E8A" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Decorative wave bottom -->
+  <path d="M0,480 C200,440 400,520 600,480 C800,440 1000,520 1200,480 L1200,630 L0,630 Z" fill="url(#wave)"/>
+  <!-- Second wave layer -->
+  <path d="M0,520 C300,490 500,550 700,510 C900,470 1100,540 1200,520 L1200,630 L0,630 Z" fill="#156A74" fill-opacity="0.2"/>
+  <!-- Decorative circles -->
+  <circle cx="150" cy="120" r="80" fill="white" fill-opacity="0.06"/>
+  <circle cx="1050" cy="200" r="120" fill="white" fill-opacity="0.05"/>
+  <circle cx="900" cy="500" r="60" fill="white" fill-opacity="0.04"/>
+  <!-- GASPE text -->
+  <text x="600" y="240" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="120" fill="white" letter-spacing="8">GASPE</text>
+  <!-- Full name -->
+  <text x="600" y="320" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.9">Groupement des Armateurs de Services Publics</text>
+  <text x="600" y="360" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.9">Maritimes de Passages d'Eau</text>
+  <!-- Tagline -->
+  <text x="600" y="430" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="32" fill="white" letter-spacing="2">Localement ancrés. Socialement engagés.</text>
+  <!-- Subtle divider line -->
+  <rect x="500" y="390" width="200" height="2" rx="1" fill="white" fill-opacity="0.4"/>
+</svg>

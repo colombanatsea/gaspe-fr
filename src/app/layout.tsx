@@ -17,6 +17,21 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
     description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/og-default.svg",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} – ${SITE_FULL_NAME}`,
+        type: "image/svg+xml",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
+    description: SITE_DESCRIPTION,
+    images: ["/og-default.svg"],
   },
   robots: { index: true, follow: true },
   alternates: { canonical: SITE_URL },
