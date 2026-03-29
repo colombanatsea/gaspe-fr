@@ -7,6 +7,8 @@ import { JobDetailActions } from "@/components/jobs/JobDetailActions";
 import { jobs } from "@/data/jobs";
 import { members } from "@/data/members";
 import { formatDate } from "@/lib/utils";
+import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
+import { JobMatchScore } from "@/components/jobs/JobMatchScore";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -149,12 +151,12 @@ export default async function JobDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <ScrollRevealWrapper className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
           {/* Main content */}
           <div className="space-y-8">
             {/* Description */}
-            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8">
+            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
                 dangerouslySetInnerHTML={{ __html: job.description }}
@@ -162,7 +164,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </div>
 
             {/* Profile */}
-            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8">
+            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal stagger-2">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
                 dangerouslySetInnerHTML={{ __html: job.profile }}
@@ -170,7 +172,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </div>
 
             {/* Conditions */}
-            <div className="rounded-2xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-100)] p-8">
+            <div className="rounded-2xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-100)] p-8 reveal stagger-3">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
                 dangerouslySetInnerHTML={{ __html: job.conditions }}
@@ -179,7 +181,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-5 lg:sticky lg:top-20 h-fit">
+          <div className="space-y-5 lg:sticky lg:top-20 h-fit reveal stagger-1">
             {/* Apply card */}
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 shadow-sm">
               <h3 className="font-heading text-base font-semibold text-foreground mb-4">
@@ -200,6 +202,17 @@ export default async function JobDetailPage({ params }: PageProps) {
 
             {/* Candidate actions */}
             <JobDetailActions jobSlug={job.slug} />
+
+            {/* Score matching (candidats only) */}
+            <JobMatchScore
+              job={{
+                title: job.title,
+                category: job.category,
+                zone: job.zone,
+                contractType: job.contractType,
+                brevet: job.brevet,
+              }}
+            />
 
             {/* Job details card */}
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6">
@@ -298,7 +311,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </Link>
           </div>
         </div>
-      </div>
+      </ScrollRevealWrapper>
     </>
   );
 }

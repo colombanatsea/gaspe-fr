@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -83,6 +84,7 @@ function tagVariant(tag: Tag) {
 /* ------------------------------------------------------------------ */
 
 export default function PositionsPage() {
+  const revealRef = useScrollReveal();
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<Tag | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -118,11 +120,11 @@ export default function PositionsPage() {
         breadcrumbs={[{ label: "Positions" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div ref={revealRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* -------------------------------------------------------- */}
         {/*  Section 1 — Positions du GASPE                          */}
         {/* -------------------------------------------------------- */}
-        <section>
+        <section className="reveal">
           <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
             Positions du GASPE
           </h2>
@@ -134,7 +136,7 @@ export default function PositionsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher une position..."
-              className="flex-1 rounded-md border border-border-light bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="flex-1 rounded-xl border border-border-light bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
             <div className="flex gap-2 flex-wrap">
               <button
@@ -175,7 +177,7 @@ export default function PositionsPage() {
               {visible.map((position) => (
                 <article
                   key={position.slug}
-                  className="rounded-lg bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md"
+                  className="rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
@@ -203,7 +205,7 @@ export default function PositionsPage() {
             <div className="mt-8 text-center">
               <button
                 onClick={() => setShowAll(true)}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
               >
                 Voir plus
               </button>
@@ -214,16 +216,16 @@ export default function PositionsPage() {
         {/* -------------------------------------------------------- */}
         {/*  Section 2 — Espace Presse                               */}
         {/* -------------------------------------------------------- */}
-        <section className="mt-16">
+        <section className="mt-16 reveal">
           <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
             Espace Presse
           </h2>
 
-          <div className="rounded-lg bg-background border border-border-light p-8 shadow-sm">
+          <div className="rounded-2xl bg-background border border-border-light p-8 shadow-sm">
             <div className="flex flex-col md:flex-row gap-8">
               {/* Logo / identity block */}
               <div className="shrink-0 flex items-start justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-lg gaspe-gradient">
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl gaspe-gradient">
                   <span className="font-heading text-3xl font-bold text-white">
                     G
                   </span>
@@ -256,7 +258,7 @@ export default function PositionsPage() {
                 <div className="flex flex-wrap gap-3">
                   <a
                     href="#"
-                    className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
                   >
                     <svg
                       className="h-4 w-4"
@@ -275,7 +277,7 @@ export default function PositionsPage() {
                   </a>
                   <a
                     href="#"
-                    className="inline-flex items-center gap-2 rounded-md border border-primary text-primary px-5 py-2.5 text-sm font-medium hover:bg-surface-teal transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl border border-primary text-primary px-5 py-2.5 text-sm font-medium hover:bg-surface-teal transition-colors"
                   >
                     <svg
                       className="h-4 w-4"

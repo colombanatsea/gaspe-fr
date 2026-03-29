@@ -4,6 +4,7 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -168,6 +169,7 @@ function PdfIcon({ className }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 function DocumentsContent() {
+  const revealRef = useScrollReveal();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
@@ -221,9 +223,9 @@ function DocumentsContent() {
   }, [filtered]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div ref={revealRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Search + category filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-10">
+      <div className="flex flex-col sm:flex-row gap-4 mb-10 reveal">
         <div className="relative flex-1">
           <svg
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted"
@@ -244,7 +246,7 @@ function DocumentsContent() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un document..."
             aria-label="Rechercher un document"
-            className="w-full rounded-md border border-border-light bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-xl border border-border-light bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -283,8 +285,8 @@ function DocumentsContent() {
         </p>
       ) : (
         <div className="space-y-12">
-          {grouped.map(({ category, docs }) => (
-            <section key={category}>
+          {grouped.map(({ category, docs }, groupIdx) => (
+            <section key={category} className={`reveal stagger-${groupIdx + 1}`}>
               <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
                 {category}
               </h2>
@@ -292,7 +294,7 @@ function DocumentsContent() {
                 {docs.map((doc) => (
                   <article
                     key={doc.title}
-                    className="rounded-lg bg-background border-l-[3px] border-l-primary p-6 shadow-sm transition-shadow hover:shadow-md"
+                    className="rounded-xl bg-background border-l-[3px] border-l-primary p-6 shadow-sm transition-shadow hover:shadow-md"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-4">
