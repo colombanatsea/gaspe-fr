@@ -396,21 +396,51 @@ export default function EspaceCandidatPage() {
                 {applications.map((app, i) => {
                   const job = publishedJobs.find((j) => j.slug === app.offerId || j.id === app.offerId);
                   return (
-                    <Card key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-heading font-semibold text-foreground">
-                          {job ? job.title : `Offre #${app.offerId}`}
-                        </p>
-                        {job && (
-                          <p className="text-xs text-foreground-muted">{job.company}</p>
-                        )}
-                        <p className="text-xs text-foreground-muted">
-                          Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
-                        </p>
+                    <Card key={i}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-heading font-semibold text-foreground">
+                            {job ? job.title : `Offre #${app.offerId}`}
+                          </p>
+                          {job && <p className="text-xs text-foreground-muted">{job.company}</p>}
+                          <p className="text-xs text-foreground-muted">
+                            Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                        <Badge variant={
+                          app.status === "accepted" ? "green" :
+                          app.status === "rejected" ? "warm" :
+                          app.status === "interview" ? "warm" :
+                          app.status === "shortlisted" ? "teal" :
+                          app.status === "viewed" ? "blue" : "neutral"
+                        }>
+                          {app.status === "accepted" ? "Acceptée" :
+                           app.status === "rejected" ? "Refusée" :
+                           app.status === "interview" ? "Entretien" :
+                           app.status === "shortlisted" ? "Présélectionné" :
+                           app.status === "viewed" ? "Vue" :
+                           app.status === "sent" ? "Envoyée" : "En attente"}
+                        </Badge>
                       </div>
-                      <Badge variant={app.status === "accepted" ? "green" : app.status === "rejected" ? "warm" : "neutral"}>
-                        {app.status === "accepted" ? "Accept\u00e9e" : app.status === "rejected" ? "Refus\u00e9e" : "En attente"}
-                      </Badge>
+                      {/* Pipeline steps */}
+                      <div className="mt-3 flex items-center gap-1">
+                        {["sent", "viewed", "shortlisted", "interview", "accepted"].map((step, si) => {
+                          const stepOrder = ["sent", "viewed", "shortlisted", "interview", "accepted"];
+                          const currentIdx = stepOrder.indexOf(app.status === "pending" ? "sent" : app.status);
+                          const isActive = si <= currentIdx && app.status !== "rejected";
+                          return (
+                            <div key={step} className="flex items-center gap-1 flex-1">
+                              <div className={`h-1.5 flex-1 rounded-full ${isActive ? "bg-[var(--gaspe-teal-400)]" : "bg-[var(--gaspe-neutral-200)]"}`} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Recruiter message */}
+                      {(app as { message?: string }).message && (
+                        <div className="mt-2 rounded-lg bg-[var(--gaspe-teal-50)] px-3 py-2 text-xs text-[var(--gaspe-teal-700)]">
+                          <span className="font-semibold">Message du recruteur :</span> {(app as { message?: string }).message}
+                        </div>
+                      )}
                     </Card>
                   );
                 })}

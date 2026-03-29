@@ -3,16 +3,20 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import type { MatchResult } from "@/lib/matching";
+import { MATCH_COLORS } from "@/lib/matching";
 
 interface JobCardProps {
   title: string;
   company: string;
+  companySlug?: string;
   location: string;
   contractType: string;
   category: string;
   date: string;
   slug: string;
   salaryRange?: string;
+  matchScore?: MatchResult;
   isCandidatLoggedIn?: boolean;
   isLoggedIn?: boolean;
   isSaved?: boolean;
@@ -57,12 +61,14 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
 export function JobCard({
   title,
   company,
+  companySlug,
   location,
   contractType,
   category,
   date,
   slug,
   salaryRange,
+  matchScore,
   isCandidatLoggedIn,
   isLoggedIn,
   isSaved,
@@ -70,6 +76,7 @@ export function JobCard({
   onSave,
   onApply,
 }: JobCardProps) {
+  const matchColor = matchScore ? MATCH_COLORS[matchScore.level] : null;
   const colors = categoryColors[category] ?? { bg: "var(--gaspe-neutral-100)", text: "var(--gaspe-neutral-700)" };
 
   return (
@@ -92,7 +99,12 @@ export function JobCard({
                 </h3>
                 <p className="mt-1 text-sm font-medium text-foreground-muted">{company}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                {matchScore && matchScore.score > 0 && matchColor && (
+                  <span className={`rounded-lg px-2 py-1 text-[10px] font-bold leading-none ${matchColor.bg} ${matchColor.text}`} title={matchScore.details.join(" · ")}>
+                    {matchScore.score}%
+                  </span>
+                )}
                 <Badge variant={contractBadgeVariant[contractType] ?? "neutral"}>
                   {contractType}
                 </Badge>

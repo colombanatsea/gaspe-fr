@@ -58,8 +58,26 @@ export interface User {
   /** Candidat-specific */
   currentPosition?: string;
   desiredPosition?: string;
+  preferredZone?: string;
   savedOffers?: string[];
-  applications?: { offerId: string; date: string; status: string }[];
+  applications?: { offerId: string; date: string; status: string; message?: string }[];
+  /** Structured certifications (replaces freetext) */
+  structuredCertifications?: {
+    certId: string;
+    obtainedDate?: string;
+    expiryDate?: string;
+    reference?: string;
+    verified?: boolean;
+  }[];
+  /** Sea service history */
+  seaService?: {
+    id: string;
+    vesselName: string;
+    vesselType?: string;
+    rank: string;
+    startDate: string;
+    endDate?: string;
+  }[];
   createdAt: string;
 }
 

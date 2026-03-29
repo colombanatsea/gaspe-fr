@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, COMPANY_ROLES, type User } from "@/lib/auth/AuthContext";
-import { members } from "@/data/members";
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
+import { haversineDistance, getCurrentPosition, RADIUS_OPTIONS } from "@/lib/geo";
 
 type Tab = "members" | "peers";
 type ViewMode = "grid" | "list";
@@ -28,6 +29,11 @@ export default function AdherentAnnuairePage() {
   const [view, setView] = useState<ViewMode>("grid");
   const [peerRoleFilter, setPeerRoleFilter] = useState<string>("mine");
   const [peers, setPeers] = useState<User[]>([]);
+  const [members, setMembers] = useState<StoredMember[]>([]);
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [geoEnabled, setGeoEnabled] = useState(false);
+  const [geoRadius, setGeoRadius] = useState(100);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== "adherent") {
@@ -42,14 +48,34 @@ export default function AdherentAnnuairePage() {
         (u) => u.role === "adherent" && u.approved && !u.archived && u.id !== user.id
       );
       setPeers(adherents);
+      setMembers(getActiveMembers());
     }
   }, [user, getAllUsers]);
 
+  async function handleGeolocate() {
+    setGeoLoading(true);
+    try {
+      const pos = await getCurrentPosition();
+      setUserPos(pos);
+      setGeoEnabled(true);
+    } catch { /* silent */ }
+    setGeoLoading(false);
+  }
+
   if (!user || user.role !== "adherent") return null;
 
-  // Members tab filtering
-  const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  const filteredMembers = sortedMembers.filter((m) => {
+  // Members tab filtering with optional geolocation
+  type MemberWithDist = StoredMember & { distance?: number };
+  let geoMembers: MemberWithDist[] = [...members].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
+  if (geoEnabled && userPos) {
+    geoMembers = geoMembers
+      .map((m) => ({ ...m, distance: haversineDistance(userPos[0], userPos[1], m.latitude, m.longitude) }))
+      .filter((m) => m.distance! <= geoRadius)
+      .sort((a, b) => a.distance! - b.distance!);
+  }
+
+  const filteredMembers = geoMembers.filter((m) => {
     const catFilter = categoryMap[filter];
     if (catFilter && m.category !== catFilter) return false;
     if (search.trim()) {
@@ -165,6 +191,26 @@ export default function AdherentAnnuairePage() {
             </div>
           )}
         </div>
+
+        {/* Geolocation for members tab */}
+        {tab === "members" && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {!geoEnabled ? (
+              <button onClick={handleGeolocate} disabled={geoLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] bg-[var(--gaspe-teal-50)] hover:bg-[var(--gaspe-teal-100)] transition-colors disabled:opacity-50">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                {geoLoading ? "..." : "Autour de moi"}
+              </button>
+            ) : (
+              <>
+                <select value={geoRadius} onChange={(e) => setGeoRadius(Number(e.target.value))} className="rounded-lg border border-[var(--gaspe-teal-200)] bg-[var(--gaspe-teal-50)] px-2 py-1 text-xs font-semibold text-[var(--gaspe-teal-600)]">
+                  {RADIUS_OPTIONS.map((r) => <option key={r} value={r}>{r} km</option>)}
+                </select>
+                <span className="text-xs text-[var(--gaspe-teal-600)]">{filteredMembers.length} résultat{filteredMembers.length !== 1 ? "s" : ""}</span>
+                <button onClick={() => { setGeoEnabled(false); setUserPos(null); }} className="text-xs text-foreground-muted hover:text-red-500">×</button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Category filters for members */}
         {tab === "members" && (

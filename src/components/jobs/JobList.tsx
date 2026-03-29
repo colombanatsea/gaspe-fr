@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { computeMatchScore, type MatchResult } from "@/lib/matching";
 
 const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
@@ -86,6 +87,20 @@ export function JobList() {
   const isCandidatLoggedIn = user?.role === "candidat";
   const savedOffers = user?.savedOffers ?? [];
   const applications = user?.applications ?? [];
+  const [sortByMatch, setSortByMatch] = useState(false);
+
+  // Compute match scores for logged-in candidates
+  const matchScores = new Map<string, MatchResult>();
+  if (isCandidatLoggedIn && user) {
+    for (const job of filtered) {
+      matchScores.set(job.id, computeMatchScore(user, job));
+    }
+  }
+
+  // Sort by match if enabled
+  const sortedJobs = sortByMatch && matchScores.size > 0
+    ? [...filtered].sort((a, b) => (matchScores.get(b.id)?.score ?? 0) - (matchScores.get(a.id)?.score ?? 0))
+    : filtered;
 
   const handleSave = (slug: string) => {
     if (!user || user.role !== "candidat") return;
@@ -122,10 +137,24 @@ export function JobList() {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
-        <p className="text-sm font-medium text-foreground-muted">
-          <span className="font-heading text-lg font-bold text-foreground">{filtered.length}</span>{" "}
-          offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-medium text-foreground-muted">
+            <span className="font-heading text-lg font-bold text-foreground">{filtered.length}</span>{" "}
+            offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
+          </p>
+          {isCandidatLoggedIn && (
+            <button
+              onClick={() => setSortByMatch((p) => !p)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                sortByMatch
+                  ? "bg-[var(--gaspe-teal-600)] text-white"
+                  : "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-100)]"
+              }`}
+            >
+              Trier par compatibilité
+            </button>
+          )}
+        </div>
         {activeFilters.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {activeFilters.map((f) => (
@@ -155,17 +184,19 @@ export function JobList() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((job) => (
+          {sortedJobs.map((job) => (
             <JobCard
               key={job.id}
               title={job.title}
               company={job.company}
+              companySlug={job.companySlug}
               location={job.location}
               contractType={job.contractType}
               category={job.category}
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
+              matchScore={matchScores.get(job.id)}
               isCandidatLoggedIn={isCandidatLoggedIn}
               isLoggedIn={!!user}
               isSaved={savedOffers.includes(job.slug)}

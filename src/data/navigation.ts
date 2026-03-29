@@ -6,6 +6,7 @@ export const mainNavigation: NavItem[] = [
   { label: "Nos Adhérents", href: "/nos-adherents" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
+  { label: "Boîte à outils", href: "/boite-a-outils" },
   { label: "Agenda", href: "/agenda" },
   {
     label: "Nos Compagnies Recrutent",

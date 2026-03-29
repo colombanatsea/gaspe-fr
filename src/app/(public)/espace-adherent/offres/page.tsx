@@ -3,10 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth, type User } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { addNotification } from "@/lib/notifications";
+
+const APPLICATION_STATUSES = [
+  { value: "sent", label: "Envoyée", variant: "neutral" as const },
+  { value: "viewed", label: "Vue", variant: "blue" as const },
+  { value: "shortlisted", label: "Présélectionné", variant: "teal" as const },
+  { value: "interview", label: "Entretien", variant: "warm" as const },
+  { value: "accepted", label: "Acceptée", variant: "green" as const },
+  { value: "rejected", label: "Refusée", variant: "neutral" as const },
+];
 
 interface JobOffer {
   id: string;
@@ -484,6 +494,174 @@ export default function AdherentOffresPage() {
           </div>
         </>
       )}
+
+      {/* ═══ Applicant Pipeline Management ═══ */}
+      <ApplicantPipeline offers={offers} />
+    </div>
+  );
+}
+
+// ── Applicant Pipeline Component ──
+
+function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[] }) {
+  const { getAllUsers, updateUser } = useAuth();
+  const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [messageTarget, setMessageTarget] = useState<string | null>(null);
+
+  // Find all candidates who applied to any of these offers
+  const allUsers = getAllUsers();
+  const candidates = allUsers.filter((u) => u.role === "candidat" && u.applications && u.applications.length > 0);
+
+  function getApplicants(offerId: string) {
+    return candidates
+      .filter((c) => c.applications?.some((a) => a.offerId === offerId))
+      .map((c) => ({
+        user: c,
+        application: c.applications!.find((a) => a.offerId === offerId)!,
+      }));
+  }
+
+  function handleStatusChange(candidateId: string, offerId: string, newStatus: string) {
+    const users = getAllUsers();
+    const candidate = users.find((u) => u.id === candidateId);
+    if (!candidate) return;
+
+    const updatedApps = (candidate.applications ?? []).map((a) =>
+      a.offerId === offerId ? { ...a, status: newStatus } : a
+    );
+    updateUser({ ...candidate, applications: updatedApps });
+
+    // Notify candidate
+    const statusLabel = APPLICATION_STATUSES.find((s) => s.value === newStatus)?.label ?? newStatus;
+    const offer = offers.find((o) => o.id === offerId);
+    addNotification({
+      userId: candidateId,
+      type: "offer_new",
+      title: `Candidature mise à jour`,
+      message: `Votre candidature pour "${offer?.title}" est passée au statut : ${statusLabel}`,
+      href: "/espace-candidat",
+    });
+  }
+
+  function handleSendMessage(candidateId: string, offerId: string) {
+    if (!messageText.trim()) return;
+
+    const users = getAllUsers();
+    const candidate = users.find((u) => u.id === candidateId);
+    if (!candidate) return;
+
+    const updatedApps = (candidate.applications ?? []).map((a) =>
+      a.offerId === offerId ? { ...a, message: messageText.trim() } : a
+    );
+    updateUser({ ...candidate, applications: updatedApps });
+
+    const offer = offers.find((o) => o.id === offerId);
+    addNotification({
+      userId: candidateId,
+      type: "offer_new",
+      title: `Message du recruteur`,
+      message: `Concernant "${offer?.title}" : ${messageText.trim().slice(0, 100)}`,
+      href: "/espace-candidat",
+    });
+
+    setMessageText("");
+    setMessageTarget(null);
+  }
+
+  const offersWithApplicants = offers.filter((o) => getApplicants(o.id).length > 0);
+
+  if (offersWithApplicants.length === 0) return null;
+
+  const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
+
+  return (
+    <div className="mt-8">
+      <h2 className="font-heading text-xl font-semibold text-foreground mb-4">
+        Gestion des candidatures
+      </h2>
+      <div className="space-y-3">
+        {offersWithApplicants.map((offer) => {
+          const applicants = getApplicants(offer.id);
+          const isExpanded = expandedOffer === offer.id;
+
+          return (
+            <div key={offer.id} className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white overflow-hidden">
+              <button
+                onClick={() => setExpandedOffer(isExpanded ? null : offer.id)}
+                className="w-full flex items-center justify-between p-5 hover:bg-[var(--gaspe-neutral-50)] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-heading font-semibold text-foreground">{offer.title}</span>
+                  <Badge variant="teal">{applicants.length} candidat{applicants.length > 1 ? "s" : ""}</Badge>
+                </div>
+                <svg className={`h-4 w-4 text-foreground-muted transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isExpanded && (
+                <div className="border-t border-[var(--gaspe-neutral-100)] divide-y divide-[var(--gaspe-neutral-100)]">
+                  {applicants.map(({ user: candidate, application }) => {
+                    const statusInfo = APPLICATION_STATUSES.find((s) => s.value === application.status) ?? APPLICATION_STATUSES[0];
+                    const isMessaging = messageTarget === `${candidate.id}-${offer.id}`;
+
+                    return (
+                      <div key={candidate.id} className="p-5 space-y-3">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div>
+                            <p className="font-heading text-sm font-semibold text-foreground">{candidate.name}</p>
+                            <p className="text-xs text-foreground-muted">{candidate.email} {candidate.phone && `· ${candidate.phone}`}</p>
+                            <p className="text-xs text-foreground-muted">Postulé le {new Date(application.date).toLocaleDateString("fr-FR")}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={application.status}
+                              onChange={(e) => handleStatusChange(candidate.id, offer.id, e.target.value)}
+                              className="rounded-lg border border-[var(--gaspe-neutral-200)] px-2.5 py-1.5 text-xs font-semibold focus:border-[var(--gaspe-teal-400)] focus:outline-none"
+                            >
+                              {APPLICATION_STATUSES.map((s) => (
+                                <option key={s.value} value={s.value}>{s.label}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => setMessageTarget(isMessaging ? null : `${candidate.id}-${offer.id}`)}
+                              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                            >
+                              {isMessaging ? "Annuler" : "Message"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Recruiter message */}
+                        {application.message && !isMessaging && (
+                          <div className="rounded-lg bg-[var(--gaspe-teal-50)] px-4 py-2.5 text-xs text-[var(--gaspe-teal-700)]">
+                            <span className="font-semibold">Message envoyé :</span> {application.message}
+                          </div>
+                        )}
+
+                        {isMessaging && (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={messageText}
+                              onChange={(e) => setMessageText(e.target.value)}
+                              placeholder="Ex: RDV le 15 mai à 10h au port..."
+                              className={inputClass}
+                              onKeyDown={(e) => e.key === "Enter" && handleSendMessage(candidate.id, offer.id)}
+                            />
+                            <Button onClick={() => handleSendMessage(candidate.id, offer.id)}>Envoyer</Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
