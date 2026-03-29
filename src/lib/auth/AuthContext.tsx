@@ -148,15 +148,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hydrate on mount
   useEffect(() => {
-    ensureSeeded();
-    const current = readStore<User | null>(CURRENT_KEY, null);
-    if (current) {
-      // Re-read from store to get latest data
-      const users = readStore<User[]>(USERS_KEY, []);
-      const fresh = users.find((u) => u.id === current.id) ?? null;
-      setUser(fresh);
+    async function init() {
+      await ensureSeeded();
+      const current = readStore<User | null>(CURRENT_KEY, null);
+      if (current) {
+        const users = readStore<User[]>(USERS_KEY, []);
+        const fresh = users.find((u) => u.id === current.id) ?? null;
+        setUser(fresh);
+      }
+      setReady(true);
     }
-    setReady(true);
+    init();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

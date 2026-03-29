@@ -182,10 +182,45 @@ npx wrangler deploy --config workers/wrangler.toml
 4. ~~**Production hardening**~~ — DONE: Worker input sanitization (XSS), email validation, max length, CORS whitelist
 5. **Domain gaspe.fr** — NOT DONE (manual CF Pages config needed)
 
-## Session 7 plan
-1. **Deploy CF Worker** to production + configure Resend API key
-2. **Connect gaspe.fr domain** — CF Pages custom domain + SSL
-3. **OG images** — generate social sharing previews
-4. **Real document files** — replace `#` download links with actual PDF uploads via R2
-5. **Lighthouse 95+** — audit and fix remaining performance issues
-6. **Dark mode** — optional toggle with CSS variables
+## Session 14 completed (v2.0.0)
+
+### Features livrées
+1. ~~**Boîte à outils CCN 3228**~~ — DONE: page `/boite-a-outils` avec 6 sections (grilles salariales, congés/repos, régime ENIM, accords branche, classifications, simulateur salaire interactif). Données dans `src/data/ccn3228.ts`
+2. ~~**Pages culture entreprise**~~ — DONE: 31 pages dynamiques `/nos-adherents/[slug]` avec fiche complète (identité, stats, valeurs, offres, sidebar CCN). `generateStaticParams` pour SSG
+3. ~~**Pipeline candidature 6 statuts**~~ — DONE: Envoyée → Vue → Présélectionnée → Entretien → Acceptée/Refusée. Barre de progression visuelle dans espace-candidat. Types dans `AuthContext.tsx`
+4. ~~**Score matching offres**~~ — DONE: correspondance profil/offre (poste, catégorie, certifications STCW) affiché sur les cartes emploi. Badge étoile coloré (vert >80%, orange >50%)
+5. ~~**Version v2.0.0**~~ — DONE: footer, admin dashboard, package.json
+6. ~~**Géolocalisation "Autour de moi"**~~ — DONE: bouton sur carte adhérents, tri par distance (Haversine), affichage distance. `src/lib/geolocation.ts`
+7. ~~**Certifications STCW**~~ — DONE: catalogue structuré 24 certifications (pont/machine/sécurité/radio) dans `src/data/stcw.ts`. Sélection structurée dans profil candidat + matching V2
+8. ~~**Mots de passe hashés**~~ — DONE: SHA-256 via Web Crypto API + migration auto des anciens mots de passe en clair. `src/lib/auth/hash.ts`
+9. ~~**Admin configurable**~~ — DONE: credentials admin via `gaspe_admin_settings` localStorage (plus de hardcoded)
+10. ~~**CSP headers**~~ — DONE: `public/_headers` pour Cloudflare (X-Frame, X-Content-Type, Referrer-Policy, CSP, Permissions-Policy)
+11. ~~**OG image**~~ — DONE: SVG statique `public/og-image.svg` + metadata OpenGraph + Twitter Card dans layout.tsx
+12. ~~**Documents UX**~~ — DONE: bouton "Bientôt disponible" + toast notification pour les documents non encore uploadés
+13. ~~**Upload CV validation**~~ — DONE: types PDF/DOC/DOCX + taille max 5 Mo
+14. ~~**API documentation**~~ — DONE: guide déploiement Worker amélioré dans `src/lib/api.ts`
+
+### Architecture v2.0.0
+- **79 pages** statiques (48 → 79 avec les 31 pages culture)
+- **Route groups**: `(public)/`, `(admin)/`, `(auth)/`
+- **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
+- **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable
+- **Sécurité**: CSP headers, password hashing, file upload validation, XSS sanitization
+
+### Known issues & gaps (audited end of session 14)
+
+#### Resolved (session 14)
+- ~~**Mots de passe en clair**~~ — FIXED: SHA-256 hashing + migration auto
+- ~~**Admin hardcodé**~~ — FIXED: configurable via localStorage
+- ~~**OG images**~~ — FIXED: SVG statique + metadata
+- ~~**CSP headers**~~ — FIXED: Cloudflare `_headers` file
+- ~~**Document downloads UX**~~ — FIXED: état "bientôt disponible" + toast
+
+#### Remaining (nécessitent infrastructure)
+- **Domain gaspe.fr** — config DNS manuelle CF Pages
+- **Email réel** — déployer CF Worker + Resend API key
+- **Document PDF uploads** — nécessite R2 bucket
+- **Upload CV réel** — nécessite endpoint R2 du Worker
+- **Dark mode** — toggle optionnel (nice-to-have)
+- **Lighthouse 95+** — audit perf (nice-to-have)
+- **E2E tests mis à jour** — couvrir nouvelles pages (79 pages vs 12 tests)

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { STCW_CERTIFICATIONS, STCW_CATEGORY_LABELS, type STCWCategory } from "@/data/stcw";
 import { useAuth, type User, type ApplicationStatus, APPLICATION_STATUS_CONFIG } from "@/lib/auth/AuthContext";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -261,13 +262,59 @@ export default function EspaceCandidatPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground">Certifications (STCW, brevets, etc.)</label>
-                    <textarea
-                      rows={3}
+                    <label className="block text-sm font-medium text-foreground mb-2">Certifications STCW &amp; brevets</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {form.certifications.split(",").filter(Boolean).map((cert) => {
+                        const trimmed = cert.trim();
+                        return (
+                          <span key={trimmed} className="inline-flex items-center gap-1 rounded-full bg-[var(--gaspe-teal-50)] px-3 py-1 text-xs font-medium text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]">
+                            {trimmed}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const certs = form.certifications.split(",").map(c => c.trim()).filter(c => c && c !== trimmed);
+                                setForm((p) => ({ ...p, certifications: certs.join(", ") }));
+                              }}
+                              className="hover:text-[var(--gaspe-teal-800)] cursor-pointer"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <select
+                      className={inputClass}
+                      value=""
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) return;
+                        const existing = form.certifications.split(",").map(c => c.trim()).filter(Boolean);
+                        if (!existing.includes(val)) {
+                          setForm((p) => ({ ...p, certifications: [...existing, val].join(", ") }));
+                        }
+                      }}
+                    >
+                      <option value="">+ Ajouter une certification...</option>
+                      {(["pont", "machine", "securite", "radio"] as STCWCategory[]).map((cat) => (
+                        <optgroup key={cat} label={STCW_CATEGORY_LABELS[cat]}>
+                          {STCW_CERTIFICATIONS.filter(c => c.category === cat).map((cert) => (
+                            <option key={cert.code} value={cert.frenchName}>
+                              {cert.frenchName} ({cert.stcwRef})
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-foreground-muted">Sélectionnez vos certifications dans la liste ou saisissez-les ci-dessous.</p>
+                    <input
+                      type="text"
                       value={form.certifications}
                       onChange={(e) => setForm((p) => ({ ...p, certifications: e.target.value }))}
-                      className={inputClass}
-                      placeholder="CFBS, Capitaine 500, STCW II/3..."
+                      className={`${inputClass} mt-1`}
+                      placeholder="Saisie libre : CFBS, Capitaine 500..."
                     />
                   </div>
                   <div>
