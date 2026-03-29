@@ -6,6 +6,37 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 
 export type UserRole = "admin" | "adherent" | "candidat";
 
+export type CompanyRole =
+  | "dirigeant"
+  | "exploitation"
+  | "armement"
+  | "paie"
+  | "technique"
+  | "logistique"
+  | "achats"
+  | "formation";
+
+export const COMPANY_ROLES: { value: CompanyRole; label: string }[] = [
+  { value: "dirigeant", label: "Dirigeant" },
+  { value: "exploitation", label: "Exploitation" },
+  { value: "armement", label: "Armement" },
+  { value: "paie", label: "Paie" },
+  { value: "technique", label: "Technique" },
+  { value: "logistique", label: "Logistique" },
+  { value: "achats", label: "Achats" },
+  { value: "formation", label: "Formation" },
+];
+
+export interface Vessel {
+  id: string;
+  name: string;
+  imo?: string;
+  ums?: string;
+  size?: string;
+}
+
+export type MembershipStatus = "due" | "paid" | "pending";
+
 export interface User {
   id: string;
   email: string;
@@ -14,6 +45,16 @@ export interface User {
   company?: string;
   phone?: string;
   approved?: boolean;
+  archived?: boolean;
+  /** Adherent-specific */
+  companyRole?: CompanyRole;
+  companyDescription?: string;
+  companyLogo?: string; // base64 data URL
+  companyAddress?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  vessels?: Vessel[];
+  membershipStatus?: MembershipStatus;
   /** Candidat-specific */
   currentPosition?: string;
   desiredPosition?: string;

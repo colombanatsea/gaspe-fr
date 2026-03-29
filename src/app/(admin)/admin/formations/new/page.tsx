@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import type { FormationModality, FormationDay } from "../page";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -26,15 +27,29 @@ export default function AdminNewFormationPage() {
     prerequisites: "",
     price: "",
     contactEmail: "",
+    modality: "presentiel" as FormationModality,
   });
+
+  const [schedule, setSchedule] = useState<FormationDay[]>([]);
+  const [newDay, setNewDay] = useState<FormationDay>({ date: "", location: "", visioLink: "" });
 
   if (!user || user.role !== "admin") {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function addDay() {
+    if (!newDay.date) return;
+    setSchedule((prev) => [...prev, { ...newDay }].sort((a, b) => a.date.localeCompare(b.date)));
+    setNewDay({ date: "", location: "", visioLink: "" });
+  }
+
+  function removeDay(idx: number) {
+    setSchedule((prev) => prev.filter((_, i) => i !== idx));
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -46,6 +61,7 @@ export default function AdminNewFormationPage() {
       ...form,
       capacity: Number(form.capacity) || 0,
       status: "open" as const,
+      schedule: schedule.length > 0 ? schedule : undefined,
     };
 
     const raw = localStorage.getItem(FORMATIONS_KEY);
@@ -57,18 +73,18 @@ export default function AdminNewFormationPage() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary";
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Nouvelle formation</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          Remplissez les informations pour cr&eacute;er une formation.
+          Remplissez les informations pour créer une formation.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 rounded-lg bg-background p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-6">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
             Titre <span className="text-red-500">*</span>
@@ -91,40 +107,55 @@ export default function AdminNewFormationPage() {
             <input id="organizer" name="organizer" type="text" required value={form.organizer} onChange={handleChange} placeholder="Ex : ENSM" className={inputClass} />
           </div>
           <div>
+            <label htmlFor="modality" className="block text-sm font-medium text-foreground mb-1">
+              Modalité <span className="text-red-500">*</span>
+            </label>
+            <select id="modality" name="modality" value={form.modality} onChange={handleChange} className={inputClass}>
+              <option value="presentiel">Présentiel</option>
+              <option value="distanciel">Distanciel</option>
+              <option value="hybride">Hybride</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
             <label htmlFor="location" className="block text-sm font-medium text-foreground mb-1">
-              Lieu <span className="text-red-500">*</span>
+              Lieu principal <span className="text-red-500">*</span>
             </label>
             <input id="location" name="location" type="text" required value={form.location} onChange={handleChange} placeholder="Ex : Nantes" className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-foreground mb-1">Email de contact</label>
+            <input id="contactEmail" name="contactEmail" type="email" value={form.contactEmail} onChange={handleChange} placeholder="formation@exemple.fr" className={inputClass} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium text-foreground mb-1">
-              Date de d&eacute;but <span className="text-red-500">*</span>
+              Date de début <span className="text-red-500">*</span>
             </label>
             <input id="startDate" name="startDate" type="date" required value={form.startDate} onChange={handleChange} className={inputClass} />
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-foreground mb-1">
-              Date de fin
-            </label>
+            <label htmlFor="endDate" className="block text-sm font-medium text-foreground mb-1">Date de fin</label>
             <input id="endDate" name="endDate" type="date" value={form.endDate} onChange={handleChange} className={inputClass} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-foreground mb-1">Dur&eacute;e</label>
+            <label htmlFor="duration" className="block text-sm font-medium text-foreground mb-1">Durée</label>
             <input id="duration" name="duration" type="text" value={form.duration} onChange={handleChange} placeholder="Ex : 3 jours" className={inputClass} />
           </div>
           <div>
-            <label htmlFor="capacity" className="block text-sm font-medium text-foreground mb-1">Capacit&eacute;</label>
+            <label htmlFor="capacity" className="block text-sm font-medium text-foreground mb-1">Capacité</label>
             <input id="capacity" name="capacity" type="number" value={form.capacity} onChange={handleChange} placeholder="Ex : 20" className={inputClass} />
           </div>
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-foreground mb-1">Tarif</label>
-            <input id="price" name="price" type="text" value={form.price} onChange={handleChange} placeholder="Ex : 500 EUR" className={inputClass} />
+            <input id="price" name="price" type="text" value={form.price} onChange={handleChange} placeholder="Ex : 500 €" className={inputClass} />
           </div>
         </div>
 
@@ -134,21 +165,63 @@ export default function AdminNewFormationPage() {
         </div>
 
         <div>
-          <label htmlFor="prerequisites" className="block text-sm font-medium text-foreground mb-1">Pr&eacute;requis</label>
-          <textarea id="prerequisites" name="prerequisites" rows={2} value={form.prerequisites} onChange={handleChange} placeholder="Conditions d'acc&egrave;s..." className={inputClass} />
+          <label htmlFor="prerequisites" className="block text-sm font-medium text-foreground mb-1">Prérequis</label>
+          <textarea id="prerequisites" name="prerequisites" rows={2} value={form.prerequisites} onChange={handleChange} placeholder="Conditions d'accès..." className={inputClass} />
         </div>
 
-        <div>
-          <label htmlFor="contactEmail" className="block text-sm font-medium text-foreground mb-1">Email de contact</label>
-          <input id="contactEmail" name="contactEmail" type="email" value={form.contactEmail} onChange={handleChange} placeholder="formation@exemple.fr" className={inputClass} />
+        {/* Schedule per day */}
+        <div className="border-t border-[var(--gaspe-neutral-100)] pt-4">
+          <h3 className="font-heading text-sm font-semibold text-foreground mb-3">Calendrier par jour (optionnel)</h3>
+          {schedule.length > 0 && (
+            <div className="space-y-1 mb-3">
+              {schedule.map((day, i) => (
+                <div key={i} className="flex items-center gap-3 text-xs rounded-lg bg-[var(--gaspe-neutral-50)] px-3 py-2">
+                  <span className="font-medium text-foreground w-24 shrink-0">{day.date}</span>
+                  {day.location && <span className="text-foreground-muted truncate">{day.location}</span>}
+                  {day.visioLink && <span className="text-[var(--gaspe-blue-600)] truncate">{day.visioLink}</span>}
+                  <button type="button" onClick={() => removeDay(i)} className="ml-auto text-red-500 hover:underline shrink-0">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <input
+              type="date"
+              value={newDay.date}
+              onChange={(e) => setNewDay((p) => ({ ...p, date: e.target.value }))}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              value={newDay.location ?? ""}
+              onChange={(e) => setNewDay((p) => ({ ...p, location: e.target.value }))}
+              placeholder="Lieu"
+              className={inputClass}
+            />
+            <input
+              type="url"
+              value={newDay.visioLink ?? ""}
+              onChange={(e) => setNewDay((p) => ({ ...p, visioLink: e.target.value }))}
+              placeholder="Lien visio"
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={addDay}
+              disabled={!newDay.date}
+              className="rounded-xl bg-[var(--gaspe-teal-50)] px-4 py-2.5 text-sm font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-100)] disabled:opacity-50 transition-colors"
+            >
+              + Jour
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--gaspe-neutral-100)]">
           <Link href="/admin/formations" className="inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors">
             Annuler
           </Link>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Cr\u00e9ation..." : "Cr\u00e9er la formation"}
+            {isSubmitting ? "Création..." : "Créer la formation"}
           </Button>
         </div>
       </form>

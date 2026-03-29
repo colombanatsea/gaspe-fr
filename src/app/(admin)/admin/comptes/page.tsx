@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, type User, type UserRole } from "@/lib/auth/AuthContext";
+import { useAuth, type User, type UserRole, type MembershipStatus, COMPANY_ROLES } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 
 const roleBadge: Record<UserRole, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
@@ -29,12 +29,21 @@ const roleIcons: Record<UserRole, React.ReactNode> = {
   ),
 };
 
+const membershipBadge: Record<MembershipStatus, { label: string; variant: "green" | "warm" | "neutral" }> = {
+  paid: { label: "Payée", variant: "green" },
+  pending: { label: "En cours", variant: "warm" },
+  due: { label: "Due", variant: "neutral" },
+};
+
+type FilterMode = "all" | UserRole | "archived";
+
 export default function AdminComptesPage() {
-  const { user, getAllUsers, approveUser, rejectUser } = useAuth();
+  const { user, getAllUsers, approveUser, rejectUser, updateUser } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
-  const [filter, setFilter] = useState<"all" | UserRole>("all");
+  const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
+  const [membershipFilter, setMembershipFilter] = useState<"all" | MembershipStatus>("all");
 
   const refresh = useCallback(() => {
     setUsers(getAllUsers());
@@ -53,15 +62,46 @@ export default function AdminComptesPage() {
     }
   };
 
+  function handleSetMembership(u: User, status: MembershipStatus) {
+    updateUser({ ...u, membershipStatus: status });
+    refresh();
+  }
+
+  function handleArchive(u: User) {
+    if (!confirm(`Archiver ${u.name} (${u.company}) ? L'adhérent perdra son accès et sera retiré du marquee et de la carte.`)) return;
+    updateUser({ ...u, archived: true, approved: false });
+    refresh();
+  }
+
+  function handleUnarchive(u: User) {
+    updateUser({ ...u, archived: false, approved: true });
+    refresh();
+  }
+
   const filtered = users
-    .filter((u) => filter === "all" || u.role === filter)
+    .filter((u) => {
+      if (filter === "archived") return u.archived;
+      if (filter === "all") return !u.archived;
+      return u.role === filter && !u.archived;
+    })
+    .filter((u) => {
+      if (membershipFilter !== "all" && u.role === "adherent") {
+        const ms = u.membershipStatus ?? "due";
+        return ms === membershipFilter;
+      }
+      return true;
+    })
     .filter((u) => {
       if (!search) return true;
       const s = search.toLowerCase();
       return u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s) || (u.company ?? "").toLowerCase().includes(s);
     });
 
-  const pendingCount = users.filter((u) => u.role === "adherent" && !u.approved).length;
+  const pendingCount = users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length;
+  const archivedCount = users.filter((u) => u.archived).length;
+  const adherentCount = users.filter((u) => u.role === "adherent" && !u.archived).length;
+  const paidCount = users.filter((u) => u.role === "adherent" && !u.archived && u.membershipStatus === "paid").length;
+  const dueCount = users.filter((u) => u.role === "adherent" && !u.archived && (u.membershipStatus === "due" || !u.membershipStatus)).length;
 
   if (!user || user.role !== "admin") return null;
 
@@ -72,7 +112,7 @@ export default function AdminComptesPage() {
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Gestion des comptes</h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            {users.length} compte{users.length > 1 ? "s" : ""}
+            {users.filter((u) => !u.archived).length} compte{users.filter((u) => !u.archived).length > 1 ? "s" : ""} actifs
             {pendingCount > 0 && (
               <span className="ml-2 text-[var(--gaspe-warm-500)] font-semibold">
                 — {pendingCount} en attente
@@ -80,8 +120,6 @@ export default function AdminComptesPage() {
             )}
           </p>
         </div>
-
-        {/* Search */}
         <div className="relative w-full sm:w-72">
           <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -96,10 +134,34 @@ export default function AdminComptesPage() {
         </div>
       </div>
 
+      {/* Adhesion stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
+          <p className="text-2xl font-bold font-heading text-foreground">{adherentCount}</p>
+          <p className="text-xs text-foreground-muted">Adhérents actifs</p>
+        </div>
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
+          <p className="text-2xl font-bold font-heading text-[var(--gaspe-green-500)]">{paidCount}</p>
+          <p className="text-xs text-foreground-muted">Adhésions payées</p>
+        </div>
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
+          <p className="text-2xl font-bold font-heading text-[var(--gaspe-warm-500)]">{dueCount}</p>
+          <p className="text-xs text-foreground-muted">Adhésions dues</p>
+        </div>
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
+          <p className="text-2xl font-bold font-heading text-foreground-muted">{archivedCount}</p>
+          <p className="text-xs text-foreground-muted">Archivés</p>
+        </div>
+      </div>
+
       {/* Role filter pills */}
       <div className="flex flex-wrap gap-2">
-        {(["all", "admin", "adherent", "candidat"] as const).map((f) => {
-          const count = f === "all" ? users.length : users.filter((u) => u.role === f).length;
+        {(["all", "admin", "adherent", "candidat", "archived"] as const).map((f) => {
+          const count = f === "all"
+            ? users.filter((u) => !u.archived).length
+            : f === "archived"
+              ? archivedCount
+              : users.filter((u) => u.role === f && !u.archived).length;
           return (
             <button
               key={f}
@@ -110,7 +172,7 @@ export default function AdminComptesPage() {
                   : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground-muted hover:bg-[var(--gaspe-neutral-50)]"
               }`}
             >
-              {f === "all" ? "Tous" : roleBadge[f].label}
+              {f === "all" ? "Tous" : f === "archived" ? "Archivés" : roleBadge[f].label}
               <span className={`text-xs rounded-lg px-1.5 py-0.5 font-bold ${
                 filter === f ? "bg-white/20 text-white" : "bg-[var(--gaspe-neutral-100)] text-foreground-muted"
               }`}>
@@ -124,13 +186,33 @@ export default function AdminComptesPage() {
         })}
       </div>
 
+      {/* Membership filter (visible when adherent filter) */}
+      {(filter === "adherent" || filter === "all") && (
+        <div className="flex flex-wrap gap-2">
+          <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider self-center mr-1">Adhésion :</span>
+          {(["all", "paid", "pending", "due"] as const).map((ms) => (
+            <button
+              key={ms}
+              onClick={() => setMembershipFilter(ms)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                membershipFilter === ms
+                  ? "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              {ms === "all" ? "Toutes" : membershipBadge[ms].label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* User table */}
       <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] overflow-hidden">
-        {/* Table header */}
-        <div className="hidden sm:grid grid-cols-[1fr_120px_140px_160px] gap-4 px-6 py-3 bg-[var(--gaspe-neutral-50)] border-b border-[var(--gaspe-neutral-200)] text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+        <div className="hidden sm:grid grid-cols-[1fr_100px_100px_100px_200px] gap-4 px-6 py-3 bg-[var(--gaspe-neutral-50)] border-b border-[var(--gaspe-neutral-200)] text-xs font-semibold text-foreground-muted uppercase tracking-wider">
           <span>Utilisateur</span>
           <span>Rôle</span>
           <span>Statut</span>
+          <span>Adhésion</span>
           <span className="text-right">Actions</span>
         </div>
 
@@ -138,71 +220,119 @@ export default function AdminComptesPage() {
           <p className="text-center py-12 text-foreground-muted">Aucun compte trouvé.</p>
         ) : (
           <div className="divide-y divide-[var(--gaspe-neutral-100)]">
-            {filtered.map((u) => (
-              <div key={u.id} className="px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_120px_140px_160px] gap-3 sm:gap-4 sm:items-center hover:bg-[var(--gaspe-neutral-50)]/50 transition-colors">
-                {/* User info */}
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--gaspe-neutral-100)] text-[var(--gaspe-neutral-500)]">
-                    {roleIcons[u.role]}
+            {filtered.map((u) => {
+              const ms = u.membershipStatus ?? "due";
+              const isArchived = u.archived;
+              return (
+                <div key={u.id} className={`px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_100px_100px_100px_200px] gap-3 sm:gap-4 sm:items-center transition-colors ${isArchived ? "bg-[var(--gaspe-neutral-50)] opacity-70" : "hover:bg-[var(--gaspe-neutral-50)]/50"}`}>
+                  {/* User info */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--gaspe-neutral-100)] text-[var(--gaspe-neutral-500)]">
+                      {roleIcons[u.role]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-heading text-sm font-semibold text-foreground truncate">{u.name}</p>
+                      <p className="text-xs text-foreground-muted truncate">{u.email}</p>
+                      {u.company && <p className="text-xs text-foreground-muted truncate">{u.company}</p>}
+                      {u.companyRole && (
+                        <p className="text-xs text-[var(--gaspe-teal-600)]">
+                          {COMPANY_ROLES.find((r) => r.value === u.companyRole)?.label}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-heading text-sm font-semibold text-foreground truncate">{u.name}</p>
-                    <p className="text-xs text-foreground-muted truncate">{u.email}</p>
-                    {u.company && (
-                      <p className="text-xs text-foreground-muted truncate">{u.company}</p>
+
+                  {/* Role */}
+                  <div>
+                    <Badge variant={roleBadge[u.role].variant}>{roleBadge[u.role].label}</Badge>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    {isArchived ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground-muted">
+                        <span className="h-2 w-2 rounded-full bg-[var(--gaspe-neutral-400)]" />
+                        Archivé
+                      </span>
+                    ) : u.role === "adherent" && !u.approved ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gaspe-warm-500)]">
+                        <span className="h-2 w-2 rounded-full bg-[var(--gaspe-warm-400)] animate-pulse" />
+                        En attente
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gaspe-green-500)]">
+                        <span className="h-2 w-2 rounded-full bg-[var(--gaspe-green-400)]" />
+                        Actif
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Membership */}
+                  <div>
+                    {u.role === "adherent" && !isArchived ? (
+                      <select
+                        value={ms}
+                        onChange={(e) => handleSetMembership(u, e.target.value as MembershipStatus)}
+                        className="rounded-lg border border-[var(--gaspe-neutral-200)] px-2 py-1 text-xs font-semibold focus:border-[var(--gaspe-teal-400)] focus:outline-none"
+                      >
+                        <option value="due">Due</option>
+                        <option value="pending">En cours</option>
+                        <option value="paid">Payée</option>
+                      </select>
+                    ) : (
+                      <span className="text-xs text-foreground-muted">—</span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 sm:justify-end flex-wrap">
+                    {isArchived ? (
+                      <button
+                        onClick={() => handleUnarchive(u)}
+                        className="rounded-lg bg-[var(--gaspe-teal-600)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
+                      >
+                        Restaurer
+                      </button>
+                    ) : (
+                      <>
+                        {u.role === "adherent" && !u.approved && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(u.id)}
+                              className="rounded-lg bg-[var(--gaspe-teal-600)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
+                            >
+                              Approuver
+                            </button>
+                            <button
+                              onClick={() => handleReject(u.id)}
+                              className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                            >
+                              Refuser
+                            </button>
+                          </>
+                        )}
+                        {u.role === "adherent" && u.approved && (
+                          <button
+                            onClick={() => handleArchive(u)}
+                            className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-[var(--gaspe-warm-50)] hover:text-[var(--gaspe-warm-600)] hover:border-[var(--gaspe-warm-200)] transition-colors"
+                          >
+                            Archiver
+                          </button>
+                        )}
+                        {u.role !== "admin" && u.approved !== false && (
+                          <button
+                            onClick={() => handleReject(u.id)}
+                            className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
-
-                {/* Role */}
-                <div>
-                  <Badge variant={roleBadge[u.role].variant}>{roleBadge[u.role].label}</Badge>
-                </div>
-
-                {/* Status */}
-                <div>
-                  {u.role === "adherent" && !u.approved ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gaspe-warm-500)]">
-                      <span className="h-2 w-2 rounded-full bg-[var(--gaspe-warm-400)] animate-pulse" />
-                      En attente
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gaspe-green-500)]">
-                      <span className="h-2 w-2 rounded-full bg-[var(--gaspe-green-400)]" />
-                      Actif
-                    </span>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 sm:justify-end">
-                  {u.role === "adherent" && !u.approved && (
-                    <>
-                      <button
-                        onClick={() => handleApprove(u.id)}
-                        className="rounded-lg bg-[var(--gaspe-teal-600)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
-                      >
-                        Approuver
-                      </button>
-                      <button
-                        onClick={() => handleReject(u.id)}
-                        className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
-                      >
-                        Refuser
-                      </button>
-                    </>
-                  )}
-                  {u.role !== "admin" && u.approved !== false && (
-                    <button
-                      onClick={() => handleReject(u.id)}
-                      className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
-                    >
-                      Supprimer
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
