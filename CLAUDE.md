@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**52+ pages** — deployed on Cloudflare Pages (static export)
+**84+ pages** (v2.0.0) — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Dev**: `C:/Dev/gaspe-fr/` (fast, use this for all coding)
@@ -237,23 +237,116 @@ npx wrangler deploy --config workers/wrangler.toml
 ## Adherent profile fields (session 11)
 User type extended with: `companyRole` (8 options), `companyDescription`, `companyLogo` (base64), `companyAddress`, `companyEmail`, `companyPhone`, `vessels[]` (CRUD), `membershipStatus` (due/paid/pending), `archived` (boolean)
 
-## Known issues & gaps (updated session 12)
+## Session 13 completed
+1. ~~**Géolocalisation membres**~~ — DONE: recherche "Autour de moi" sur /nos-adherents (public) et /espace-adherent/annuaire, Haversine distance, rayon 10-500km, badge distance km
+2. ~~**Score matching cartes offres**~~ — DONE: badge % sur chaque JobCard pour candidats connectés, bouton "Trier par compatibilité" dans JobList
+3. ~~**Matching engine V2**~~ — DONE: certifications STCW structurées avec logique `supersedes` (Capitaine 3000 couvre Capitaine 500), fallback fuzzy pour freetext
+4. ~~**Pipeline candidature**~~ — DONE: 6 statuts (envoyée/vue/présélectionné/entretien/acceptée/refusée), barre progression visuelle espace candidat, gestion candidatures adhérent avec dropdown statut + messagerie simple + notifications
+5. ~~**Pages culture entreprise**~~ — DONE: /nos-adherents/[slug] (31 pages SSG), fusion données statiques + profil adhérent, sections: présentation, flotte, offres emploi, infos, contact, localisation
+6. ~~**Certifications STCW**~~ — DONE: 24 certifications dans `maritime-certifications.ts` (pont, machine, sécurité, médical, spécialisé), hiérarchie supersedes, User type étendu (structuredCertifications[], seaService[], preferredZone)
+7. ~~**Boîte à outils**~~ — DONE: /boite-a-outils (public, SEO), modèles CCN 3228 complets (contrats CDI/CDD/remplacement, 6 fiches de poste, politique ISM, checklist audit, attestation embarquement, guide ENIM)
+8. ~~**Version display**~~ — DONE: v2.0.0 dans footer + dashboard admin
+9. ~~**Audit concurrentiel**~~ — DONE: `docs/audit-concurrentiel-2026.md` — 15+ plateformes analysées, 50+ recommandations, roadmap sessions 13-17
 
-### Remaining
-- **Document downloads** — all download links are `#` placeholders (needs R2 storage)
-- **No real email sending** — contact/newsletter stored in localStorage (Worker stub ready)
-- **No file upload to server** — CV upload is filename-only, document/formation attachments are base64 in localStorage
-- **Domain gaspe.fr** — not connected (manual CF Pages config)
-- **Dark mode** — not implemented (CSS variables are light-only, needs full refactoring)
-- **No backend** — CF Worker ready but not deployed (workers/api.ts)
-- **Matching limited** — candidat certifications field is freetext, not connected to maritime-certifications data
-- **Notifications** — no server push, polling localStorage every 5s
+## Architecture — nouveaux fichiers session 13
+
+| Fichier | Rôle |
+|---------|------|
+| `src/lib/geo.ts` | Haversine distance + getCurrentPosition + RADIUS_OPTIONS |
+| `src/data/maritime-certifications.ts` | 24 certifications STCW françaises avec hiérarchie supersedes |
+| `src/app/(public)/nos-adherents/[slug]/page.tsx` | Page server (generateStaticParams) pour 31 membres |
+| `src/app/(public)/nos-adherents/[slug]/MemberDetail.tsx` | Client component page culture entreprise |
+| `src/app/(public)/boite-a-outils/page.tsx` | Boîte à outils publique (modèles documents maritimes) |
+| `docs/audit-concurrentiel-2026.md` | Audit concurrentiel complet avec roadmap |
+
+## Version
+**v2.0.0** — affichée dans le footer et le dashboard admin (src/lib/constants.ts: SITE_VERSION)
+
+## Certifications STCW (session 13)
+24 brevets structurés dans `src/data/maritime-certifications.ts`:
+- **Pont** : Patron côtier, Capitaine 200/500/3000/illimité, Lieutenant long cours
+- **Machine** : Mécanicien 250/750/3000, Chef mécanicien 3000/8000/illimité, OELT
+- **Sécurité** : CFBS, CAEERS, Lutte incendie avancée, SSO, ISM audit, PSMer
+- **Médical** : Certificat aptitude médicale (validité 2 ans, 1 an après 55 ans)
+- **Spécialisé** : CRO, CGO pétrolier/chimiquiers, Formation passagers
+Chaque certification : id, label, shortLabel, stcwCode, category, validityYears, supersedes[], description
+
+## User type extensions (session 13)
+```typescript
+// Candidat extensions
+preferredZone?: string;
+structuredCertifications?: { certId: string; obtainedDate?: string; expiryDate?: string; reference?: string; verified?: boolean; }[];
+seaService?: { id: string; vesselName: string; vesselType?: string; rank: string; startDate: string; endDate?: string; }[];
+applications?: { offerId: string; date: string; status: string; message?: string }[]; // status: sent|viewed|shortlisted|interview|accepted|rejected
+```
+
+## Pipeline candidature (session 13)
+| Statut | Côté candidat | Côté adhérent |
+|--------|---------------|---------------|
+| sent | Barre 1/5 | Nouveau candidat visible |
+| viewed | Barre 2/5 | Marquer comme vu |
+| shortlisted | Barre 3/5 | Présélectionner |
+| interview | Barre 4/5 | Planifier entretien + message |
+| accepted | Barre 5/5 | Accepter + message |
+| rejected | Barre rouge | Refuser + message optionnel |
+Chaque changement déclenche une notification in-app + message optionnel adhérent→candidat.
+
+## Portail du Marin — Résultat recherche
+**Pas d'API publique.** Le système PROMETE est fermé (gov-to-gov only). Intégration impossible.
+→ Modèle déclaratif : candidat sélectionne ses certifications depuis une liste structurée STCW, l'admin peut marquer `verified: true` après vérification manuelle.
+
+## Sécurité — Points d'attention connus
+- **Mots de passe en clair** dans localStorage (`gaspe_passwords`) — acceptable pour démo, CRITIQUE à corriger avant production (migration vers bcrypt + API)
+- **Pas de CSRF** — pas nécessaire tant que pas de backend (tout localStorage)
+- **XSS** — le site n'utilise PAS dangerouslySetInnerHTML sauf dans les pages job detail (contenu HTML statique contrôlé par les admins, pas d'input utilisateur)
+- **Base64 uploads** — limités en taille (500Ko logos, 2Mo pièces jointes) mais stockés en localStorage (risque quota ~5Mo)
+- **localStorage pas chiffré** — données visibles dans DevTools (acceptable pour démo)
+
+## Synchronisation multi-support — Limitations connues
+- **localStorage = device-local** — aucune synchronisation entre appareils (desktop vs mobile = 2 sessions indépendantes)
+- **Multi-onglet** — pas de `storage` event listener, les changements dans un onglet ne se propagent pas en temps réel à l'autre
+- **gaspe_current_user** peut diverger de **gaspe_users** — updateUser synchronise les deux, mais un crash entre les deux écritures pourrait causer une incohérence
+- **Solution** : migration vers le CF Worker backend résoudra tout (D1 database = source unique de vérité)
+
+## Pages totales : 84+
+- 14 pages publiques (accueil, groupement, adhérents, positions, documents, agenda, recrutement, contact, presse, actualités, boîte à outils)
+- 3 pages légales (mentions, confidentialité, CGU)
+- 31 pages entreprise (/nos-adherents/[slug])
+- 10 pages offres (/nos-compagnies-recrutent/[slug])
+- 11 pages admin (dashboard, comptes, membres, offres, formations, positions, agenda, documents, messages, paramètres + 3 /new)
+- 7 pages espace adhérent (dashboard, annuaire, documents, formations, offres, profil)
+- 3 pages espace candidat (dashboard, formations)
+- 3 pages auth (connexion, inscription adhérent, inscription candidat)
+- 2 pages système (robots.txt, sitemap.xml)
+
+## Known issues & gaps (updated session 13)
+
+### Critique (pré-production)
+- **Mots de passe en clair** — localStorage, pas de hachage
+- **Pas de backend déployé** — tout localStorage (CF Worker prêt mais pas déployé)
+- **localStorage non synchronisé** — données per-device, pas de multi-device
+
+### Important
+- **Document downloads** — tous les liens sont `#` ou base64 (needs R2 storage)
+- **Pas d'email réel** — contact/newsletter stocké en localStorage
+- **Upload fichiers serveur** — CV filename-only, pièces jointes base64 en localStorage (quota ~5Mo)
+- **Domaine gaspe.fr** — non connecté (CF Pages custom domain)
+- **Dark mode** — non implémenté (CSS variables light-only)
+
+### Mineur
+- **Notifications** — polling localStorage 5s, pas de push serveur
+- **Certifications candidat** — UI checkboxes structurées pas encore implémentée (data model prêt)
+- **Sea service history** — data model prêt mais UI pas encore implémentée
+- **OG images SVG** — Facebook/LinkedIn préfèrent PNG (conversion à faire)
+- **Boîte à outils** — documents HTML, pas PDF (conversion à faire quand R2 disponible)
 
 ## Next session suggestions
-1. **Deploy CF Worker** + connect gaspe.fr domain
-2. **Dark mode** — add prefers-color-scheme + toggle with CSS variable overrides
-3. **Maritime certifications** — connect checkbox-based certifications to matching engine
-4. **Real file storage** — R2 bucket for documents, CVs, formation attachments
-5. **Lighthouse 95+** — performance audit
-6. **Print styles** — for member directory, job offers
-7. **Accessibility audit** — WCAG AA compliance check
+1. **Deploy CF Worker** + connect gaspe.fr domain + migrate auth vers bcrypt
+2. **UI certifications structurées** — checkboxes STCW dans le profil candidat avec dates expiration
+3. **UI historique navigation** — formulaire sea service dans le profil candidat
+4. **Veille juridique maritime** — section CMS dédiée (haute valeur adhérents)
+5. **Commissions / groupes de travail** — espaces collaboratifs par thématique
+6. **Dark mode** — variables CSS dark + toggle header
+7. **Lighthouse 95+** — audit performance + optimisations
+8. **WCAG AA** — audit accessibilité complet
+9. **Multilingue** — anglais au minimum pour le recrutement

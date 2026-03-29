@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { publishedJobs } from "@/data/jobs";
 import { exportAccountsCsv, exportMembershipsCsv } from "@/lib/export-csv";
+import { SITE_VERSION } from "@/lib/constants";
 
 const FORMATIONS_KEY = "gaspe_formations";
 const POSITIONS_KEY = "gaspe_positions";
@@ -232,8 +233,12 @@ export default function AdminDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--gaspe-teal-400)] mb-2">Infos site</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-white/50">Version</span>
+                <span className="font-semibold text-[var(--gaspe-teal-400)]">v{SITE_VERSION}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-white/50">Pages</span>
-                <span className="font-semibold">46</span>
+                <span className="font-semibold">84+</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/50">Adhérents</span>
