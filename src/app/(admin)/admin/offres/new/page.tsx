@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { members } from "@/data/members";
 import { slugify } from "@/lib/utils";
 import type { Job } from "@/data/jobs";
@@ -119,50 +120,40 @@ export default function AdminNewOffrePage() {
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Description <span className="text-red-500">*</span>
           </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={6}
-            required
+          <RichTextEditor
             value={form.description}
-            onChange={handleChange}
-            placeholder="D&eacute;crivez le poste, les missions..."
-            className={inputClass}
+            onChange={(html) => setForm((prev) => ({ ...prev, description: html }))}
+            placeholder="Décrivez le poste, les missions..."
+            minHeight={200}
           />
         </div>
 
-        {/* Profil recherch&eacute; */}
+        {/* Profil recherché */}
         <div>
-          <label htmlFor="profile" className="block text-sm font-medium text-foreground mb-1">
-            Profil recherch&eacute;
+          <label className="block text-sm font-medium text-foreground mb-1">
+            Profil recherché
           </label>
-          <textarea
-            id="profile"
-            name="profile"
-            rows={4}
+          <RichTextEditor
             value={form.profile}
-            onChange={handleChange}
-            placeholder="Brevets requis, exp&eacute;rience..."
-            className={inputClass}
+            onChange={(html) => setForm((prev) => ({ ...prev, profile: html }))}
+            placeholder="Brevets requis, expérience..."
+            minHeight={150}
           />
         </div>
 
         {/* Conditions */}
         <div>
-          <label htmlFor="conditions" className="block text-sm font-medium text-foreground mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Conditions &amp; avantages
           </label>
-          <textarea
-            id="conditions"
-            name="conditions"
-            rows={4}
+          <RichTextEditor
             value={form.conditions}
-            onChange={handleChange}
-            placeholder="R&eacute;mun&eacute;ration, r&eacute;gime social, rythme..."
-            className={inputClass}
+            onChange={(html) => setForm((prev) => ({ ...prev, conditions: html }))}
+            placeholder="Rémunération, régime social, rythme..."
+            minHeight={150}
           />
         </div>
 

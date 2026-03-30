@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { MediaLibrary } from "@/components/admin/MediaLibrary";
+import { ContentPreview } from "@/components/admin/ContentPreview";
 
 const POSITIONS_KEY = "gaspe_positions";
 
@@ -14,6 +17,8 @@ export default function AdminNewPositionPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMedia, setShowMedia] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -91,10 +96,21 @@ export default function AdminNewPositionPage() {
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-foreground mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Contenu <span className="text-red-500">*</span>
           </label>
-          <textarea id="content" name="content" rows={10} required value={form.content} onChange={handleChange} placeholder="Contenu complet de l'article..." className={inputClass} />
+          <RichTextEditor
+            value={form.content}
+            onChange={(html) => setForm((prev) => ({ ...prev, content: html }))}
+            placeholder="Contenu complet de l'article..."
+            minHeight={250}
+            onMediaLibraryOpen={() => setShowMedia(true)}
+          />
+          {showPreview && form.content && (
+            <div className="mt-4">
+              <ContentPreview html={form.content} title={form.title} />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -136,6 +152,14 @@ export default function AdminNewPositionPage() {
           />
           <label htmlFor="published" className="text-sm font-medium text-foreground">Publier imm&eacute;diatement</label>
         </div>
+
+        <div className="flex items-center gap-3 pt-4 border-t border-border-light">
+          <button type="button" onClick={() => setShowPreview(!showPreview)} className={`rounded-xl px-3 py-2 text-sm font-medium transition-colors ${showPreview ? "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)]" : "text-foreground-muted hover:text-foreground"}`}>
+            {showPreview ? "Masquer l'aperçu" : "Aperçu"}
+          </button>
+        </div>
+
+        <MediaLibrary open={showMedia} onClose={() => setShowMedia(false)} />
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
           <Link href="/admin/positions" className="inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors">
