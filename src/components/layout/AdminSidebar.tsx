@@ -100,7 +100,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (

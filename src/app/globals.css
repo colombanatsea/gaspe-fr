@@ -324,40 +324,15 @@ body {
   transform: translateY(-100%);
 }
 
-/* ── Scrollbar — slim & subtle ── */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--gaspe-neutral-300) transparent;
+/* ── Native select options — fix visibility (CSS vars unsupported in option popups) ── */
+select option {
+  color: #222221;
+  background: #fff;
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--gaspe-neutral-300);
-  border-radius: 3px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--gaspe-neutral-400);
-}
-
-[data-theme="dark"] * {
-  scrollbar-color: var(--gaspe-neutral-700) transparent;
-}
-
-[data-theme="dark"] *::-webkit-scrollbar-thumb {
-  background: var(--gaspe-neutral-700);
-}
-
-[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
-  background: var(--gaspe-neutral-600);
+[data-theme="dark"] select option {
+  color: #F0EDED;
+  background: #242322;
 }
 
 /* ── Mapbox overrides ── */

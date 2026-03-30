@@ -74,7 +74,7 @@ export default function InscriptionAdherentPage() {
         </div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Inscription enregistrée</h1>
         <p className="mt-2 text-sm text-foreground-muted">
-          Votre demande de compte adhérent a été enregistrée. Elle sera validée par l&apos;administrateur GASPE dans les meilleurs délais. Vous recevrez une confirmation par email.
+          Votre demande de compte adhérent a été enregistrée. Elle sera examinée par l&apos;administrateur GASPE dans les meilleurs délais. Vous pourrez ensuite vous connecter avec vos identifiants.
         </p>
         <Link
           href="/connexion"
