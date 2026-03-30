@@ -76,6 +76,7 @@ export function AdminSidebar() {
         {!collapsed && (
           <button
             onClick={() => setCollapsed(true)}
+            aria-label="Réduire la barre latérale"
             className="rounded-lg p-1.5 text-[var(--gaspe-neutral-500)] hover:bg-white/5 hover:text-white transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -86,6 +87,7 @@ export function AdminSidebar() {
         {collapsed && (
           <button
             onClick={() => setCollapsed(false)}
+            aria-label="Agrandir la barre latérale"
             className="absolute left-[68px] top-6 z-50 rounded-full bg-[var(--gaspe-neutral-800)] p-1 text-white/50 hover:text-white shadow-lg border border-white/10 transition-colors"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

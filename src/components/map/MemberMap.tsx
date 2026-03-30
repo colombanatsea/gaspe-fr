@@ -70,7 +70,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         L.control.zoom({ position: "topright" }).addTo(map);
 
         function createIcon(isDomTom: boolean, isAssociate: boolean) {
-          const color = isDomTom ? "#2F72A0" : "#1B7E8A";
+          const color = isDomTom ? "var(--gaspe-blue-600)" : "var(--gaspe-teal-600)";
           const size = isAssociate ? 12 : 16;
           return L.divIcon({
             className: "gaspe-marker",
@@ -95,13 +95,13 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
             ? `<img src="${member.logoUrl}" alt="${member.name}" style="max-height:36px;max-width:130px;object-fit:contain;margin-bottom:8px;" />`
             : "";
           const categoryLabel = member.category === "titulaire" ? "Titulaire" : "Associé";
-          const categoryColor = member.category === "titulaire" ? "#1B7E8A" : "#2F72A0";
+          const categoryColor = member.category === "titulaire" ? "var(--gaspe-teal-600)" : "var(--gaspe-blue-600)";
 
           marker.bindPopup(`
             <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:200px;padding:12px;">
               ${logoHtml}
-              <div style="font-weight:600;font-size:14px;color:#222221;line-height:1.3;">${member.name}</div>
-              <div style="font-size:12px;color:#6B6560;margin-top:4px;">
+              <div style="font-weight:600;font-size:14px;color:var(--gaspe-neutral-900);line-height:1.3;">${member.name}</div>
+              <div style="font-size:12px;color:var(--gaspe-neutral-600);margin-top:4px;">
                 ${member.city} &middot; ${member.region}
               </div>
               <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
@@ -111,9 +111,9 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
                   background:${categoryColor};
                   padding:3px 10px;border-radius:9999px;
                 ">${categoryLabel}</span>
-                ${member.territory === "dom-tom" ? '<span style="display:inline-block;font-size:10px;font-weight:600;color:#222;background:#EFCA8F;padding:3px 10px;border-radius:9999px;">Outre-mer</span>' : ""}
+                ${member.territory === "dom-tom" ? '<span style="display:inline-block;font-size:10px;font-weight:600;color:#222;background:var(--gaspe-warm-300);padding:3px 10px;border-radius:9999px;">Outre-mer</span>' : ""}
               </div>
-              ${member.websiteUrl ? `<a href="${member.websiteUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:#1B7E8A;text-decoration:none;font-weight:500;">Visiter le site &rarr;</a>` : ""}
+              ${member.websiteUrl ? `<a href="${member.websiteUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gaspe-teal-600);text-decoration:none;font-weight:500;">Visiter le site &rarr;</a>` : ""}
             </div>
           `, { closeButton: true, maxWidth: 280 });
 
