@@ -335,7 +335,7 @@ async function handleRegister(request: Request, env: Env, corsHeaders: Record<st
     const token = await signJwt({ sub: id, email: email.trim(), role }, env.JWT_SECRET);
     const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<DbUser>();
     return json(
-      { success: true, user: userRow ? toFrontendUser(userRow) : null },
+      { success: true, token, user: userRow ? toFrontendUser(userRow) : null },
       setTokenCookie(token, corsHeaders),
     );
   }
@@ -372,7 +372,7 @@ async function handleLogin(request: Request, env: Env, corsHeaders: Record<strin
 
   const token = await signJwt({ sub: userRow.id, email: userRow.email, role: userRow.role }, env.JWT_SECRET);
   return json(
-    { success: true, user: toFrontendUser(userRow) },
+    { success: true, token, user: toFrontendUser(userRow) },
     setTokenCookie(token, corsHeaders),
   );
 }

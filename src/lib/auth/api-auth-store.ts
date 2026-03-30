@@ -2,43 +2,62 @@
  * API-backed AuthStore — replaces LocalStorageAuthStore
  *
  * Calls the GASPE API Worker for all auth operations.
- * JWT token is stored in httpOnly cookie (set by server),
- * so credentials: "include" is required on all fetches.
- *
- * The AuthStore interface was designed for synchronous localStorage access,
- * so this implementation caches data locally and syncs with the API.
- * The AuthContext should use the async methods directly when available.
+ * JWT token is stored in localStorage and sent via Authorization header
+ * (cross-origin cookies don't work between pages.dev and workers.dev).
  */
 
 import type { User } from "./types";
 import type { AuthStore } from "./auth-store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const TOKEN_KEY = "gaspe_api_token";
+
+function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...headers,
       ...options?.headers,
     },
   });
   return res.json() as Promise<T>;
 }
 
+interface AuthResponse {
+  success?: boolean;
+  error?: string;
+  user?: User;
+  token?: string;
+  message?: string;
+}
+
 /**
  * API-backed AuthStore for production use with CF Worker backend.
- *
- * Since the AuthStore interface is synchronous (designed for localStorage),
- * this store caches state locally. The AuthContext should prefer the
- * async static methods (ApiAuthStore.login, etc.) for real operations.
  */
 export class ApiAuthStore implements AuthStore {
   private cachedUser: User | null = null;
   private cachedUsers: User[] = [];
-
-  // ── Synchronous interface (cache-based) ──
 
   getUsers(): User[] {
     return this.cachedUsers;
@@ -49,7 +68,6 @@ export class ApiAuthStore implements AuthStore {
   }
 
   getPasswords(): Record<string, string> {
-    // Passwords are server-side only
     return {};
   }
 
@@ -67,19 +85,19 @@ export class ApiAuthStore implements AuthStore {
 
   clearSession(): void {
     this.cachedUser = null;
-    // Fire and forget — clear the httpOnly cookie
-    apiFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setToken(null);
   }
 
   // ── Async API methods (used by AuthContext) ──
 
   static async login(email: string, password: string): Promise<{ success: boolean; error?: string; user?: User }> {
     try {
-      const res = await apiFetch<{ success?: boolean; error?: string; user?: User }>("/api/auth/login", {
+      const res = await apiFetch<AuthResponse>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
       if (res.error) return { success: false, error: res.error };
+      if (res.token) setToken(res.token);
       return { success: true, user: res.user ?? undefined };
     } catch {
       return { success: false, error: "Erreur de connexion au serveur" };
@@ -97,11 +115,12 @@ export class ApiAuthStore implements AuthStore {
     desiredPosition?: string;
   }): Promise<{ success: boolean; error?: string; user?: User }> {
     try {
-      const res = await apiFetch<{ success?: boolean; error?: string; user?: User; message?: string }>("/api/auth/register", {
+      const res = await apiFetch<AuthResponse>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify(data),
       });
       if (res.error) return { success: false, error: res.error };
+      if (res.token) setToken(res.token);
       return { success: true, user: res.user ?? undefined };
     } catch {
       return { success: false, error: "Erreur de connexion au serveur" };
@@ -110,6 +129,7 @@ export class ApiAuthStore implements AuthStore {
 
   static async fetchCurrentUser(): Promise<User | null> {
     try {
+      if (!getToken()) return null;
       const res = await apiFetch<{ user: User | null }>("/api/auth/me");
       return res.user ?? null;
     } catch {
@@ -162,10 +182,6 @@ export class ApiAuthStore implements AuthStore {
   }
 
   static async logout(): Promise<void> {
-    try {
-      await apiFetch("/api/auth/logout", { method: "POST" });
-    } catch {
-      // Cookie will expire anyway
-    }
+    setToken(null);
   }
 }
