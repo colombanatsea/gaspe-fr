@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SITE_NAME } from "@/lib/constants";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navSections = [
   {
@@ -48,11 +48,12 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   // Count pending accounts for badge
-  let pendingCount = 0;
-  try {
-    const users = getAllUsers();
-    pendingCount = users.filter((u) => u.role === "adherent" && !u.approved).length;
-  } catch { /* empty */ }
+  const [pendingCount, setPendingCount] = useState(0);
+  useEffect(() => {
+    getAllUsers().then((users) => {
+      setPendingCount(users.filter((u) => u.role === "adherent" && !u.approved).length);
+    }).catch(() => {});
+  }, [getAllUsers]);
 
   return (
     <aside className={cn(

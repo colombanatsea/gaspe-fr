@@ -28,16 +28,17 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    const users = getAllUsers();
-    setCounts({
-      pending: users.filter((u) => u.role === "adherent" && !u.approved).length,
-      adherents: users.filter((u) => u.role === "adherent" && u.approved).length,
-      candidats: users.filter((u) => u.role === "candidat").length,
-      total: users.length,
-      formations: getStorageCount(FORMATIONS_KEY),
-      positions: getStorageCount(POSITIONS_KEY),
-      events: getStorageCount(AGENDA_KEY),
-      documents: getStorageCount(DOCUMENTS_KEY),
+    getAllUsers().then((users) => {
+      setCounts({
+        pending: users.filter((u) => u.role === "adherent" && !u.approved).length,
+        adherents: users.filter((u) => u.role === "adherent" && u.approved).length,
+        candidats: users.filter((u) => u.role === "candidat").length,
+        total: users.length,
+        formations: getStorageCount(FORMATIONS_KEY),
+        positions: getStorageCount(POSITIONS_KEY),
+        events: getStorageCount(AGENDA_KEY),
+        documents: getStorageCount(DOCUMENTS_KEY),
+      });
     });
   }, [user, router, getAllUsers]);
 
@@ -213,13 +214,13 @@ export default function AdminDashboardPage() {
               <p className="text-[10px] font-semibold uppercase tracking-widest text-foreground-muted mb-2">Exports CSV</p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => exportAccountsCsv(getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
+                  onClick={async () => exportAccountsCsv(await getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
                   className="flex-1 rounded-lg bg-[var(--gaspe-neutral-100)] px-3 py-2 text-xs font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] transition-colors"
                 >
                   Comptes
                 </button>
                 <button
-                  onClick={() => exportMembershipsCsv(getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
+                  onClick={async () => exportMembershipsCsv(await getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
                   className="flex-1 rounded-lg bg-[var(--gaspe-neutral-100)] px-3 py-2 text-xs font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] transition-colors"
                 >
                   Adhésions

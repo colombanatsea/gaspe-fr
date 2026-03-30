@@ -155,10 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true };
   }, [apiMode]);
 
-  const getAllUsers = useCallback(() => {
+  const getAllUsers = useCallback(async () => {
     if (apiMode) {
-      // Return cached users; caller should use refreshUsers() for fresh data
-      return getAuthStore().getUsers();
+      const users = await ApiAuthStore.fetchAllUsers();
+      getAuthStore().setUsers(users);
+      return users;
     }
     return getAuthStore().getUsers();
   }, [apiMode]);

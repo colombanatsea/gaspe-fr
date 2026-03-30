@@ -123,7 +123,7 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
-  getAllUsers: () => User[];
+  getAllUsers: () => Promise<User[]>;
   approveUser: (id: string) => void;
   rejectUser: (id: string) => void;
   updateUser: (updated: User) => void;

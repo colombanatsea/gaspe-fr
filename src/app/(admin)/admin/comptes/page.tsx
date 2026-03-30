@@ -45,8 +45,9 @@ export default function AdminComptesPage() {
   const [search, setSearch] = useState("");
   const [membershipFilter, setMembershipFilter] = useState<"all" | MembershipStatus>("all");
 
-  const refresh = useCallback(() => {
-    setUsers(getAllUsers());
+  const refresh = useCallback(async () => {
+    const all = await getAllUsers();
+    setUsers(all);
   }, [getAllUsers]);
 
   useEffect(() => {
@@ -54,11 +55,11 @@ export default function AdminComptesPage() {
     refresh();
   }, [user, router, refresh]);
 
-  const handleApprove = (id: string) => { approveUser(id); refresh(); };
-  const handleReject = (id: string) => {
+  const handleApprove = async (id: string) => { approveUser(id); await refresh(); };
+  const handleReject = async (id: string) => {
     if (confirm("Supprimer ce compte ? Cette action est irréversible.")) {
       rejectUser(id);
-      refresh();
+      await refresh();
     }
   };
 

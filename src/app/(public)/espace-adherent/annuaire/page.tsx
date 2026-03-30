@@ -42,14 +42,15 @@ export default function AdherentAnnuairePage() {
   }, [user, router]);
 
   useEffect(() => {
-    if (user && user.role === "adherent") {
-      const allUsers = getAllUsers();
+    async function load() {
+      const allUsers = await getAllUsers();
       const adherents = allUsers.filter(
-        (u) => u.role === "adherent" && u.approved && !u.archived && u.id !== user.id
+        (u) => u.role === "adherent" && u.approved && !u.archived && u.id !== user!.id
       );
       setPeers(adherents);
       setMembers(getActiveMembers());
     }
+    if (user && user.role === "adherent") load();
   }, [user, getAllUsers]);
 
   async function handleGeolocate() {

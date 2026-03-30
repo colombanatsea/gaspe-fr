@@ -536,9 +536,13 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
   const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
   const [messageTarget, setMessageTarget] = useState<string | null>(null);
+  const [allUsers, setAllUsers] = useState<import("@/lib/auth/AuthContext").User[]>([]);
+
+  useEffect(() => {
+    getAllUsers().then(setAllUsers).catch(() => {});
+  }, [getAllUsers]);
 
   // Find all candidates who applied to any of these offers
-  const allUsers = getAllUsers();
   const candidates = allUsers.filter((u) => u.role === "candidat" && u.applications && u.applications.length > 0);
 
   function getApplicants(offerId: string) {
@@ -551,8 +555,7 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
   }
 
   function handleStatusChange(candidateId: string, offerId: string, newStatus: ApplicationStatus) {
-    const users = getAllUsers();
-    const candidate = users.find((u) => u.id === candidateId);
+    const candidate = allUsers.find((u) => u.id === candidateId);
     if (!candidate) return;
 
     const updatedApps = (candidate.applications ?? []).map((a) =>
@@ -575,8 +578,7 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
   function handleSendMessage(candidateId: string, offerId: string) {
     if (!messageText.trim()) return;
 
-    const users = getAllUsers();
-    const candidate = users.find((u) => u.id === candidateId);
+    const candidate = allUsers.find((u) => u.id === candidateId);
     if (!candidate) return;
 
     const updatedApps = (candidate.applications ?? []).map((a) =>
