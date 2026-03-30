@@ -1,8 +1,30 @@
-# GASPE Website — Handoff Session 14
+# GASPE Website — Handoff Session 15
 
-## État actuel : v2.0.0 — Build OK, 81 pages, 0 erreurs TypeScript
+## État actuel : v2.1.0 — Build OK, 90 pages, 0 erreurs TypeScript
 
-### Branch : `claude/gaspe-session-14-4ihdz`
+### Branch : `claude/gaspe-session-15-Zgamj`
+
+---
+
+## Résumé session 15
+
+### Features livrées (7 items)
+1. **Dark mode** — ThemeContext + ThemeToggle (soleil/lune) dans Header, CSS variables `[data-theme="dark"]`, localStorage persistence, glass/cards remappés
+2. **Pages formations** — 8 pages détail avec contenu HTML complet + listing avec badges/capacity bars + SSG via `generateStaticParams`
+3. **Score matching détail offre** — JobMatchScore composant (cercle SVG, critères, candidats only)
+4. **UX polish** — border-radius standardisé (rounded-xl/2xl), loading states inscription (spinner), scroll reveal sur 6 pages
+5. **ScrollRevealWrapper** — composant client pour wrapping server pages
+6. **E2E tests** — 22 tests : 5 formations + 17 pages/auth/dark mode
+7. **Navigation** — formations ajouté au menu + footer + sitemap
+
+### Stats
+- 90 pages statiques (81 → 90)
+- 3 commits, 0 erreurs TypeScript
+- 22 E2E tests (12 → 22)
+
+---
+
+## Résumé session 14 (historique)
 
 ---
 
@@ -57,22 +79,56 @@
 | 6 | Connecter API_URL | Éditer `src/lib/api.ts` → Worker URL |
 | 7 | Domaine gaspe.fr | CF Pages → Custom Domain → DNS |
 
-### P1 — Améliorations fonctionnelles
+### P1 — Améliorations restantes
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Dark mode | Toggle CSS variables (nice-to-have) |
-| 2 | E2E tests | Playwright — couvrir 81 pages (12 tests actuels) |
+| 1 | ~~Dark mode~~ | ✅ Session 15 |
+| 2 | ~~E2E tests~~ | ✅ Session 15 (22 tests) |
 | 3 | Lighthouse 95+ | Audit perf, fix remaining issues |
-| 4 | Formations contenu | Pages individuelles formation (actuellement listing) |
+| 4 | ~~Formations contenu~~ | ✅ Session 15 (8 pages détail) |
 | 5 | Agenda dynamique | CMS pour les événements (actuellement 2 seeds) |
 
-### P2 — Polish UX
+### P2 — Polish UX (toutes résolues session 15)
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Standardiser border-radius | `rounded-xl` partout pour les cartes |
-| 2 | Animations documents | Ajouter `.reveal` sur la page documents |
-| 3 | Loading states | Spinner sur save profil candidat |
-| 4 | Matching score détail | Afficher le score STCW sur la page détail offre |
+| 1 | ~~Standardiser border-radius~~ | ✅ `rounded-xl` inputs, `rounded-2xl` cards |
+| 2 | ~~Animations documents~~ | ✅ `.reveal` sur documents, contact, positions, agenda, jobs |
+| 3 | ~~Loading states~~ | ✅ Spinner inscription candidat/adhérent |
+| 4 | ~~Matching score détail~~ | ✅ JobMatchScore sur sidebar job detail |
+
+---
+
+## Fichiers clés modifiés (session 15)
+
+### Créés
+```
+src/lib/theme/ThemeContext.tsx              — Dark mode context + provider
+src/components/ui/ThemeToggle.tsx           — Bouton toggle soleil/lune
+src/components/shared/ScrollRevealWrapper.tsx — Wrapper client pour reveal server pages
+src/components/jobs/JobMatchScore.tsx       — Score matching candidat/offre
+src/data/formations.ts                     — 8 formations avec contenu HTML
+src/app/(public)/formations/page.tsx       — Listing formations
+src/app/(public)/formations/[slug]/page.tsx — Détail formation (SSG)
+e2e/formations.spec.ts                     — 5 tests formations
+e2e/pages.spec.ts                          — 17 tests pages/auth/dark mode
+```
+
+### Modifiés
+```
+src/app/globals.css                        — Dark mode CSS variables
+src/components/shared/Providers.tsx         — ThemeProvider ajouté
+src/components/layout/Header.tsx            — ThemeToggle ajouté
+src/data/navigation.ts                     — Formations dans nav + footer
+src/app/sitemap.ts                         — Formations dans sitemap
+src/app/(auth)/*                           — Border-radius + loading states
+src/app/(public)/contact/page.tsx          — Scroll reveal
+src/app/(public)/documents/page.tsx        — Scroll reveal + rounded-xl
+src/app/(public)/positions/page.tsx        — Scroll reveal + rounded-xl
+src/app/(public)/agenda/page.tsx           — Scroll reveal + rounded-xl
+src/app/(public)/nos-compagnies-recrutent/[slug]/ — Scroll reveal + JobMatchScore
+CLAUDE.md                                  — Session 15 documentation
+HANDOFF.md                                 — Session 15 handoff
+```
 
 ---
 
