@@ -2,72 +2,117 @@
  * GASPE API Worker — Cloudflare Workers
  *
  * Deployment:
- *   npx wrangler deploy workers/api.ts --name gaspe-api
+ *   npx wrangler deploy --config workers/wrangler.toml
  *
  * Bindings needed in wrangler.toml:
  *   - D1: DB (gaspe-db)
  *   - R2: UPLOADS (gaspe-uploads)
- *   - Environment: RESEND_API_KEY, CONTACT_EMAIL
+ *   - Environment: RESEND_API_KEY, CONTACT_EMAIL, JWT_SECRET
  *
- * This worker handles:
- *   POST /api/contact    — send contact email via Resend
- *   POST /api/newsletter — subscribe to newsletter
- *   POST /api/upload     — upload CV/documents to R2
- *   GET  /api/health     — health check
+ * Endpoints:
+ *   POST /api/auth/register    — create account
+ *   POST /api/auth/login       — authenticate → JWT cookie
+ *   POST /api/auth/logout      — clear session
+ *   GET  /api/auth/me          — current user from JWT
+ *   GET  /api/auth/users       — admin: list all users
+ *   PATCH /api/auth/users/:id  — admin: update/approve user
+ *   DELETE /api/auth/users/:id — admin: reject/delete user
+ *   POST /api/contact          — send contact email via Resend
+ *   POST /api/newsletter       — subscribe to newsletter
+ *   POST /api/upload           — upload CV/documents to R2
+ *   GET  /api/health           — health check
  */
+
+import { signJwt, verifyJwt } from "./jwt";
 
 interface Env {
   DB: D1Database;
   UPLOADS: R2Bucket;
   RESEND_API_KEY: string;
   CONTACT_EMAIL: string;
+  JWT_SECRET: string;
 }
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const path = url.pathname;
+// ── User type matching frontend User interface ──
+interface DbUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "adherent" | "candidat";
+  company: string | null;
+  phone: string | null;
+  approved: number;
+  archived: number;
+  company_role: string | null;
+  company_description: string | null;
+  company_logo: string | null;
+  company_address: string | null;
+  company_email: string | null;
+  company_phone: string | null;
+  current_position: string | null;
+  desired_position: string | null;
+  preferred_zone: string | null;
+  experience: string | null;
+  certifications: string | null;
+  cv_filename: string | null;
+  membership_status: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
-    // CORS headers — allow both production and preview URLs
-    const origin = request.headers.get("Origin") ?? "";
-    const allowedOrigins = ["https://gaspe-fr.pages.dev", "https://www.gaspe.fr", "http://localhost:3001"];
-    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": corsOrigin,
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+/** Convert DB row → frontend User shape */
+function toFrontendUser(row: DbUser) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    company: row.company ?? undefined,
+    phone: row.phone ?? undefined,
+    approved: row.approved === 1,
+    archived: row.archived === 1,
+    companyRole: row.company_role ?? undefined,
+    companyDescription: row.company_description ?? undefined,
+    companyLogo: row.company_logo ?? undefined,
+    companyAddress: row.company_address ?? undefined,
+    companyEmail: row.company_email ?? undefined,
+    companyPhone: row.company_phone ?? undefined,
+    currentPosition: row.current_position ?? undefined,
+    desiredPosition: row.desired_position ?? undefined,
+    preferredZone: row.preferred_zone ?? undefined,
+    experience: row.experience ?? undefined,
+    certifications: row.certifications ?? undefined,
+    cvFilename: row.cv_filename ?? undefined,
+    membershipStatus: row.membership_status ?? undefined,
+    createdAt: row.created_at,
+  };
+}
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
+// ── CORS ──
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("Origin") ?? "";
+  const allowedOrigins = [
+    "https://gaspe-fr.pages.dev",
+    "https://www.gaspe.fr",
+    "https://gaspe.fr",
+    "http://localhost:3001",
+    "http://localhost:3000",
+  ];
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
 
-    // Basic rate limiting via CF headers (IP-based)
-    const clientIP = request.headers.get("CF-Connecting-IP") ?? "unknown";
-
-    try {
-      if (path === "/api/health") {
-        return json({ status: "ok", timestamp: new Date().toISOString() }, corsHeaders);
-      }
-
-      if (path === "/api/contact" && request.method === "POST") {
-        return handleContact(request, env, corsHeaders);
-      }
-
-      if (path === "/api/newsletter" && request.method === "POST") {
-        return handleNewsletter(request, env, corsHeaders);
-      }
-
-      if (path === "/api/upload" && request.method === "POST") {
-        return handleUpload(request, env, corsHeaders);
-      }
-
-      return json({ error: "Not found" }, corsHeaders, 404);
-    } catch (err) {
-      return json({ error: "Internal server error" }, corsHeaders, 500);
-    }
-  },
-};
+function json(data: unknown, headers: Record<string, string>, status = 200, extraHeaders?: Record<string, string>) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...headers, ...extraHeaders, "Content-Type": "application/json" },
+  });
+}
 
 // ── Sanitize HTML to prevent XSS ──
 function sanitize(str: string): string {
@@ -77,8 +122,374 @@ function sanitize(str: string): string {
   });
 }
 
-// ── Contact form → Resend email ──
-async function handleContact(request: Request, env: Env, headers: Record<string, string>) {
+// ── bcrypt-compatible password hashing (Web Crypto) ──
+// Uses PBKDF2 with 100k iterations for CF Worker compatibility
+// (bcryptjs not available in Workers runtime)
+async function hashPasswordServer(password: string): Promise<string> {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const hash = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+    keyMaterial,
+    256,
+  );
+  // Store as: pbkdf2$iterations$salt_hex$hash_hex
+  const saltHex = Array.from(salt).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hashHex = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `pbkdf2$100000$${saltHex}$${hashHex}`;
+}
+
+async function verifyPasswordServer(password: string, stored: string): Promise<boolean> {
+  // Handle legacy SHA-256 hashes (64 hex chars) — always accept for migration
+  if (/^[a-f0-9]{64}$/.test(stored)) {
+    // Legacy client-side hash — can't verify without email salt, reject
+    // Users with legacy hashes should reset password
+    return false;
+  }
+
+  const parts = stored.split("$");
+  if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+
+  const iterations = parseInt(parts[1], 10);
+  const saltHex = parts[2];
+  const expectedHash = parts[3];
+
+  const enc = new TextEncoder();
+  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map((h) => parseInt(h, 16)));
+  const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const hash = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    keyMaterial,
+    256,
+  );
+  const hashHex = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashHex === expectedHash;
+}
+
+// ── JWT from cookie or Authorization header ──
+function extractToken(request: Request): string | null {
+  // Try Authorization header first
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+  // Try cookie
+  const cookie = request.headers.get("Cookie") ?? "";
+  const match = cookie.match(/gaspe_token=([^;]+)/);
+  return match?.[1] ?? null;
+}
+
+function setTokenCookie(token: string, corsHeaders: Record<string, string>): Record<string, string> {
+  return {
+    ...corsHeaders,
+    "Set-Cookie": `gaspe_token=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${7 * 24 * 3600}`,
+  };
+}
+
+function clearTokenCookie(corsHeaders: Record<string, string>): Record<string, string> {
+  return {
+    ...corsHeaders,
+    "Set-Cookie": "gaspe_token=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+  };
+}
+
+// ── Magic bytes validation for file uploads ──
+const MAGIC_BYTES: Record<string, Uint8Array[]> = {
+  "application/pdf": [new Uint8Array([0x25, 0x50, 0x44, 0x46])], // %PDF
+  "application/msword": [new Uint8Array([0xd0, 0xcf, 0x11, 0xe0])], // OLE2
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    new Uint8Array([0x50, 0x4b, 0x03, 0x04]), // PK (ZIP)
+  ],
+};
+
+function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean {
+  const signatures = MAGIC_BYTES[declaredType];
+  if (!signatures) return false;
+  const header = new Uint8Array(buffer.slice(0, 4));
+  return signatures.some((sig) => sig.every((byte, i) => header[i] === byte));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Main fetch handler
+// ═══════════════════════════════════════════════════════════
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const corsHeaders = getCorsHeaders(request);
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    try {
+      // ── Health ──
+      if (path === "/api/health") {
+        return json({ status: "ok", timestamp: new Date().toISOString() }, corsHeaders);
+      }
+
+      // ── Auth routes ──
+      if (path === "/api/auth/register" && request.method === "POST") {
+        return handleRegister(request, env, corsHeaders);
+      }
+      if (path === "/api/auth/login" && request.method === "POST") {
+        return handleLogin(request, env, corsHeaders);
+      }
+      if (path === "/api/auth/logout" && request.method === "POST") {
+        return json({ success: true }, clearTokenCookie(corsHeaders));
+      }
+      if (path === "/api/auth/me" && request.method === "GET") {
+        return handleMe(request, env, corsHeaders);
+      }
+      if (path === "/api/auth/users" && request.method === "GET") {
+        return handleListUsers(request, env, corsHeaders);
+      }
+      if (path.startsWith("/api/auth/users/") && request.method === "PATCH") {
+        const userId = path.split("/api/auth/users/")[1];
+        return handleUpdateUser(request, env, corsHeaders, userId);
+      }
+      if (path.startsWith("/api/auth/users/") && request.method === "DELETE") {
+        const userId = path.split("/api/auth/users/")[1];
+        return handleDeleteUser(request, env, corsHeaders, userId);
+      }
+
+      // ── Contact ──
+      if (path === "/api/contact" && request.method === "POST") {
+        return handleContact(request, env, corsHeaders);
+      }
+
+      // ── Newsletter ──
+      if (path === "/api/newsletter" && request.method === "POST") {
+        return handleNewsletter(request, env, corsHeaders);
+      }
+
+      // ── Upload ──
+      if (path === "/api/upload" && request.method === "POST") {
+        return handleUpload(request, env, corsHeaders);
+      }
+
+      return json({ error: "Not found" }, corsHeaders, 404);
+    } catch (err) {
+      console.error("Worker error:", err);
+      return json({ error: "Internal server error" }, corsHeaders, 500);
+    }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  Auth handlers
+// ═══════════════════════════════════════════════════════════
+
+async function handleRegister(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const body = await request.json() as Record<string, string>;
+  const { name, email, password, phone, role, company, currentPosition, desiredPosition } = body;
+
+  // Validate required fields
+  if (!name?.trim() || !email?.trim() || !password || !role) {
+    return json({ error: "Champs requis manquants" }, corsHeaders, 400);
+  }
+
+  if (!["adherent", "candidat"].includes(role)) {
+    return json({ error: "Rôle invalide" }, corsHeaders, 400);
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: "Email invalide" }, corsHeaders, 400);
+  }
+
+  if (password.length < 6) {
+    return json({ error: "Le mot de passe doit contenir au moins 6 caractères" }, corsHeaders, 400);
+  }
+
+  if (role === "adherent" && !company?.trim()) {
+    return json({ error: "La compagnie est requise pour les adhérents" }, corsHeaders, 400);
+  }
+
+  // Check existing email
+  const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").bind(email.trim()).first();
+  if (existing) {
+    return json({ error: "Un compte existe déjà avec cet email" }, corsHeaders, 409);
+  }
+
+  const id = `${role}-${Date.now()}`;
+  const approved = role === "candidat" ? 1 : 0;
+  const passwordHash = await hashPasswordServer(password);
+
+  // Insert user
+  await env.DB.prepare(`
+    INSERT INTO users (id, email, name, role, phone, company, approved, current_position, desired_position, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+  `).bind(
+    id, email.trim(), sanitize(name.trim()), role,
+    phone?.trim() ?? null, company?.trim() ?? null, approved,
+    currentPosition?.trim() ?? null, desiredPosition?.trim() ?? null,
+  ).run();
+
+  // Insert password
+  await env.DB.prepare("INSERT INTO auth (user_id, password_hash) VALUES (?, ?)").bind(id, passwordHash).run();
+
+  // Auto-login for candidats
+  if (role === "candidat") {
+    const token = await signJwt({ sub: id, email: email.trim(), role }, env.JWT_SECRET);
+    const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<DbUser>();
+    return json(
+      { success: true, user: userRow ? toFrontendUser(userRow) : null },
+      setTokenCookie(token, corsHeaders),
+    );
+  }
+
+  return json({ success: true, message: "Compte créé. En attente de validation par l'administrateur." }, corsHeaders);
+}
+
+async function handleLogin(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const body = await request.json() as Record<string, string>;
+  const { email, password } = body;
+
+  if (!email?.trim() || !password) {
+    return json({ error: "Email et mot de passe requis" }, corsHeaders, 400);
+  }
+
+  const userRow = await env.DB.prepare("SELECT * FROM users WHERE email = ? COLLATE NOCASE").bind(email.trim()).first<DbUser>();
+  if (!userRow) {
+    return json({ error: "Aucun compte trouvé avec cet email." }, corsHeaders, 401);
+  }
+
+  const authRow = await env.DB.prepare("SELECT password_hash FROM auth WHERE user_id = ?").bind(userRow.id).first<{ password_hash: string }>();
+  if (!authRow) {
+    return json({ error: "Mot de passe incorrect." }, corsHeaders, 401);
+  }
+
+  const valid = await verifyPasswordServer(password, authRow.password_hash);
+  if (!valid) {
+    return json({ error: "Mot de passe incorrect." }, corsHeaders, 401);
+  }
+
+  if (userRow.role === "adherent" && userRow.approved !== 1) {
+    return json({ error: "Votre compte est en attente de validation par l'administrateur." }, corsHeaders, 403);
+  }
+
+  const token = await signJwt({ sub: userRow.id, email: userRow.email, role: userRow.role }, env.JWT_SECRET);
+  return json(
+    { success: true, user: toFrontendUser(userRow) },
+    setTokenCookie(token, corsHeaders),
+  );
+}
+
+async function handleMe(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) {
+    return json({ user: null }, corsHeaders, 401);
+  }
+
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) {
+    return json({ user: null }, clearTokenCookie(corsHeaders), 401);
+  }
+
+  const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(payload.sub).first<DbUser>();
+  if (!userRow) {
+    return json({ user: null }, clearTokenCookie(corsHeaders), 401);
+  }
+
+  return json({ user: toFrontendUser(userRow) }, corsHeaders);
+}
+
+async function handleListUsers(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  const { results } = await env.DB.prepare("SELECT * FROM users ORDER BY created_at DESC").all<DbUser>();
+  return json({ users: (results ?? []).map(toFrontendUser) }, corsHeaders);
+}
+
+async function handleUpdateUser(request: Request, env: Env, corsHeaders: Record<string, string>, userId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  // Admin can update any user, users can only update themselves
+  if (payload.role !== "admin" && payload.sub !== userId) {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  const body = await request.json() as Record<string, unknown>;
+
+  // Build dynamic update
+  const updates: string[] = [];
+  const values: unknown[] = [];
+
+  const allowedFields: Record<string, string> = {
+    name: "name", phone: "phone", company: "company",
+    approved: "approved", archived: "archived",
+    companyRole: "company_role", companyDescription: "company_description",
+    companyLogo: "company_logo", companyAddress: "company_address",
+    companyEmail: "company_email", companyPhone: "company_phone",
+    currentPosition: "current_position", desiredPosition: "desired_position",
+    preferredZone: "preferred_zone", experience: "experience",
+    certifications: "certifications", cvFilename: "cv_filename",
+    membershipStatus: "membership_status",
+  };
+
+  // Non-admin users can't change role, approved, archived
+  const adminOnly = ["approved", "archived", "role"];
+
+  for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
+    if (frontendKey in body) {
+      if (adminOnly.includes(frontendKey) && payload.role !== "admin") continue;
+      updates.push(`${dbCol} = ?`);
+      // Convert booleans to integers for SQLite
+      const val = body[frontendKey];
+      values.push(typeof val === "boolean" ? (val ? 1 : 0) : val);
+    }
+  }
+
+  if (updates.length === 0) {
+    return json({ error: "Aucun champ à mettre à jour" }, corsHeaders, 400);
+  }
+
+  updates.push("updated_at = datetime('now')");
+  values.push(userId);
+
+  await env.DB.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
+
+  const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first<DbUser>();
+  return json({ success: true, user: userRow ? toFrontendUser(userRow) : null }, corsHeaders);
+}
+
+async function handleDeleteUser(request: Request, env: Env, corsHeaders: Record<string, string>, userId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  // Prevent deleting self
+  if (payload.sub === userId) {
+    return json({ error: "Impossible de supprimer votre propre compte" }, corsHeaders, 400);
+  }
+
+  await env.DB.prepare("DELETE FROM auth WHERE user_id = ?").bind(userId).run();
+  await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
+
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Contact form → Resend email
+// ═══════════════════════════════════════════════════════════
+
+async function handleContact(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const body = await request.json() as Record<string, string>;
   const nom = sanitize((body.nom ?? "").trim());
   const email = (body.email ?? "").trim();
@@ -87,25 +498,21 @@ async function handleContact(request: Request, env: Env, headers: Record<string,
   const message = sanitize((body.message ?? "").trim());
 
   if (!nom || !email || !sujet || !message) {
-    return json({ error: "Champs requis manquants" }, headers, 400);
+    return json({ error: "Champs requis manquants" }, corsHeaders, 400);
   }
 
-  // Validate email format
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json({ error: "Email invalide" }, headers, 400);
+    return json({ error: "Email invalide" }, corsHeaders, 400);
   }
 
-  // Max length validation
   if (nom.length > 200 || email.length > 200 || message.length > 5000) {
-    return json({ error: "Contenu trop long" }, headers, 400);
+    return json({ error: "Contenu trop long" }, corsHeaders, 400);
   }
 
-  // Store in D1
   await env.DB.prepare(
-    "INSERT INTO contact_messages (id, nom, email, societe, sujet, message) VALUES (?, ?, ?, ?, ?, ?)"
+    "INSERT INTO contact_messages (id, nom, email, societe, sujet, message) VALUES (?, ?, ?, ?, ?, ?)",
   ).bind(crypto.randomUUID(), nom, email, societe ?? "", sujet, message).run();
 
-  // Send email via Resend
   if (env.RESEND_API_KEY) {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -131,58 +538,69 @@ async function handleContact(request: Request, env: Env, headers: Record<string,
     });
   }
 
-  return json({ success: true }, headers);
+  return json({ success: true }, corsHeaders);
 }
 
-// ── Newsletter subscription ──
-async function handleNewsletter(request: Request, env: Env, headers: Record<string, string>) {
+// ═══════════════════════════════════════════════════════════
+//  Newsletter subscription
+// ═══════════════════════════════════════════════════════════
+
+async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const body = await request.json() as Record<string, string>;
   const { email } = body;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json({ error: "Email invalide" }, headers, 400);
+    return json({ error: "Email invalide" }, corsHeaders, 400);
   }
 
-  await env.DB.prepare(
-    "INSERT OR IGNORE INTO newsletter (email) VALUES (?)"
-  ).bind(email).run();
+  await env.DB.prepare("INSERT OR IGNORE INTO newsletter (email) VALUES (?)").bind(email).run();
 
-  return json({ success: true }, headers);
+  return json({ success: true }, corsHeaders);
 }
 
-// ── File upload → R2 ──
-async function handleUpload(request: Request, env: Env, headers: Record<string, string>) {
+// ═══════════════════════════════════════════════════════════
+//  File upload → R2 with magic bytes validation
+// ═══════════════════════════════════════════════════════════
+
+async function handleUpload(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const formData = await request.formData();
   const file = formData.get("file") as File;
   const type = formData.get("type") as string; // "cv" | "document"
 
   if (!file) {
-    return json({ error: "Aucun fichier fourni" }, headers, 400);
+    return json({ error: "Aucun fichier fourni" }, corsHeaders, 400);
   }
 
-  // Validate file type
-  const allowed = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+  // Validate MIME type
+  const allowed = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
   if (!allowed.includes(file.type)) {
-    return json({ error: "Type de fichier non autorisé (PDF, DOC, DOCX uniquement)" }, headers, 400);
+    return json({ error: "Type de fichier non autorisé (PDF, DOC, DOCX uniquement)" }, corsHeaders, 400);
   }
 
   // Max 10MB
   if (file.size > 10 * 1024 * 1024) {
-    return json({ error: "Fichier trop volumineux (max 10 Mo)" }, headers, 400);
+    return json({ error: "Fichier trop volumineux (max 10 Mo)" }, corsHeaders, 400);
   }
 
-  const key = `${type}/${crypto.randomUUID()}-${file.name}`;
-  await env.UPLOADS.put(key, file.stream(), {
+  // Magic bytes validation — read first 4 bytes to verify actual file type
+  const buffer = await file.arrayBuffer();
+  if (!validateMagicBytes(buffer, file.type)) {
+    return json(
+      { error: "Le contenu du fichier ne correspond pas au type déclaré. Fichier refusé." },
+      corsHeaders,
+      400,
+    );
+  }
+
+  const key = `${type || "document"}/${crypto.randomUUID()}-${file.name}`;
+  await env.UPLOADS.put(key, buffer, {
     httpMetadata: { contentType: file.type },
     customMetadata: { originalName: file.name, uploadedAt: new Date().toISOString() },
   });
 
-  return json({ success: true, key, filename: file.name }, headers);
-}
-
-function json(data: unknown, headers: Record<string, string>, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...headers, "Content-Type": "application/json" },
-  });
+  return json({ success: true, key, filename: file.name }, corsHeaders);
 }

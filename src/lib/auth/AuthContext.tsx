@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { hashPassword, verifyPassword, isHashed } from "./hash";
-import { getAuthStore, USERS_KEY, CURRENT_KEY } from "./auth-store";
+import { getAuthStore, isApiMode, USERS_KEY, CURRENT_KEY } from "./auth-store";
+import { ApiAuthStore } from "./api-auth-store";
 import { ensureSeeded } from "./storage";
 import { safeParse, usersArraySchema, userSchema } from "@/lib/schemas";
 import type { User, RegisterData, AuthContextValue } from "./types";
@@ -18,25 +19,35 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const apiMode = isApiMode();
 
   // Hydrate on mount
   useEffect(() => {
     async function init() {
-      await ensureSeeded();
-      const store = getAuthStore();
-      const current = store.getCurrentUser();
-      if (current) {
-        const users = store.getUsers();
-        const fresh = users.find((u) => u.id === current.id) ?? null;
-        setUser(fresh);
+      if (apiMode) {
+        // API mode: fetch current user from server (JWT cookie)
+        const currentUser = await ApiAuthStore.fetchCurrentUser();
+        setUser(currentUser);
+      } else {
+        // localStorage mode (dev/demo)
+        await ensureSeeded();
+        const store = getAuthStore();
+        const current = store.getCurrentUser();
+        if (current) {
+          const users = store.getUsers();
+          const fresh = users.find((u) => u.id === current.id) ?? null;
+          setUser(fresh);
+        }
       }
       setReady(true);
     }
     init();
-  }, []);
+  }, [apiMode]);
 
-  // Sync across tabs via storage event
+  // Sync across tabs via storage event (localStorage mode only)
   useEffect(() => {
+    if (apiMode) return;
+
     function handleStorageChange(e: StorageEvent) {
       if (e.key === CURRENT_KEY) {
         if (!e.newValue) { setUser(null); return; }
@@ -52,9 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [user]);
+  }, [user, apiMode]);
 
   const login = useCallback(async (email: string, password: string) => {
+    if (apiMode) {
+      const result = await ApiAuthStore.login(email, password);
+      if (result.success && result.user) {
+        setUser(result.user);
+        getAuthStore().setCurrentUser(result.user);
+      }
+      return { success: result.success, error: result.error };
+    }
+
+    // localStorage mode
     const store = getAuthStore();
     const users = store.getUsers();
     const passwords = store.getPasswords();
@@ -76,14 +97,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(found);
     store.setCurrentUser(found);
     return { success: true };
-  }, []);
+  }, [apiMode]);
 
   const logout = useCallback(() => {
     setUser(null);
+    if (apiMode) {
+      ApiAuthStore.logout();
+    }
     getAuthStore().clearSession();
-  }, []);
+  }, [apiMode]);
 
   const register = useCallback(async (data: RegisterData) => {
+    if (apiMode) {
+      const result = await ApiAuthStore.register(data);
+      if (result.success && result.user) {
+        // Auto-login for candidats
+        setUser(result.user);
+        getAuthStore().setCurrentUser(result.user);
+      }
+      return { success: result.success, error: result.error };
+    }
+
+    // localStorage mode
     const store = getAuthStore();
     const users = store.getUsers();
     const passwords = store.getPasswords();
@@ -118,13 +153,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return { success: true };
-  }, []);
+  }, [apiMode]);
 
   const getAllUsers = useCallback(() => {
+    if (apiMode) {
+      // Return cached users; caller should use refreshUsers() for fresh data
+      return getAuthStore().getUsers();
+    }
     return getAuthStore().getUsers();
-  }, []);
+  }, [apiMode]);
 
-  const approveUser = useCallback((id: string) => {
+  const approveUser = useCallback(async (id: string) => {
+    if (apiMode) {
+      await ApiAuthStore.approveUser(id);
+      // Refresh users list
+      const users = await ApiAuthStore.fetchAllUsers();
+      getAuthStore().setUsers(users);
+      return;
+    }
+
     const store = getAuthStore();
     const users = store.getUsers();
     const idx = users.findIndex((u) => u.id === id);
@@ -134,9 +181,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const current = store.getCurrentUser();
       if (current?.id === id) store.setCurrentUser(users[idx]);
     }
-  }, []);
+  }, [apiMode]);
 
-  const rejectUser = useCallback((id: string) => {
+  const rejectUser = useCallback(async (id: string) => {
+    if (apiMode) {
+      await ApiAuthStore.rejectUser(id);
+      const users = await ApiAuthStore.fetchAllUsers();
+      getAuthStore().setUsers(users);
+      return;
+    }
+
     const store = getAuthStore();
     const users = store.getUsers();
     const passwords = store.getPasswords();
@@ -146,9 +200,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setPasswords(passwords);
     const current = store.getCurrentUser();
     if (current?.id === id) store.clearSession();
-  }, []);
+  }, [apiMode]);
 
-  const updateUser = useCallback((updated: User) => {
+  const updateUser = useCallback(async (updated: User) => {
+    if (apiMode) {
+      const result = await ApiAuthStore.updateUserProfile(updated.id, updated);
+      if (result && user?.id === updated.id) {
+        setUser(result);
+        getAuthStore().setCurrentUser(result);
+      }
+      return;
+    }
+
     const store = getAuthStore();
     const users = store.getUsers();
     const idx = users.findIndex((u) => u.id === updated.id);
@@ -160,7 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setCurrentUser(updated);
       }
     }
-  }, [user]);
+  }, [user, apiMode]);
 
   if (!ready) return null;
 

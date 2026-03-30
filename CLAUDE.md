@@ -54,15 +54,19 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Job offers in `src/data/jobs.ts` (11 offres: DNO, Bacs Gironde, Karu'Ferry)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 
-## Authentication (localStorage, 3 rôles)
+## Authentication (dual-mode, 3 rôles)
 | Rôle | Login | Accès |
 |------|-------|-------|
 | Admin | admin@gaspe.fr / admin123 | Console /admin (8 sections) |
 | Adhérent | Via /inscription/adherent (admin approval needed) | /espace-adherent |
 | Candidat | Via /inscription/candidat (auto-approved) | /espace-candidat |
 
-Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) backed by localStorage.
-Ready for migration to NextAuth + D1 (swap `LocalStorageAuthStore` for an API-backed implementation).
+Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) with two backends:
+- **Dev/demo**: `LocalStorageAuthStore` (default when `NEXT_PUBLIC_API_URL` not set)
+- **Production**: `ApiAuthStore` → CF Worker API (JWT httpOnly cookie, PBKDF2 hashing, D1)
+
+API endpoints in `workers/api.ts`: register, login, logout, me, users CRUD.
+JWT via `workers/jwt.ts` (HMAC-SHA256, 7-day expiry, Web Crypto API).
 
 ## Architecture
 ```
@@ -98,7 +102,7 @@ src/
 ```
 
 ## Testing
-- **Unit tests**: Vitest — 79 tests, 8 spec files (hash, matching, sanitize, geo, utils, schemas, cms-store, members-store)
+- **Unit tests**: Vitest — 97 tests, 10 spec files (hash, matching, sanitize, geo, utils, schemas, cms-store, members-store, jwt, auth-store)
 - **E2E tests**: Playwright — 9 spec files (homepage, auth, recruitment, contact, formations, pages, candidate-space, adherent-space, admin-crud)
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -107,15 +111,13 @@ src/
 - Zod validation on all localStorage reads (safeParse with fallbacks)
 - sanitizeHtml() on all dangerouslySetInnerHTML usage
 - CSP headers via Cloudflare `_headers`
-- File upload validation (PDF/DOC/DOCX, 5 Mo max for CV; image types for logos)
+- File upload validation (PDF/DOC/DOCX, 10 Mo max; magic bytes verification server-side)
 - ErrorBoundary wrapping Globe 3D, Leaflet Map, RichTextEditor
 - AuthStore interface for swappable backend
 
-## Known limitations (require infrastructure)
+## Known limitations (require deployment)
 - **Domain gaspe.fr** — manual CF Pages DNS config
-- **Email réel** — deploy CF Worker + Resend API key
-- **Document PDF uploads** — needs R2 bucket
-- **Upload CV réel** — needs R2 Worker endpoint
+- **Email réel** — deploy CF Worker + Resend API key (worker code ready)
+- **Document PDF uploads** — needs R2 bucket (worker code ready)
 - **CSP unsafe-inline** — required by Next.js hydration (cannot remove client-side)
-- **bcrypt serveur** — SHA-256 client sufficient for demo, needs backend for bcrypt/argon2
-- **Client-side auth** — localStorage roles can be tampered; needs server-side auth for production
+- **Server auth activation** — set `NEXT_PUBLIC_API_URL` + deploy CF Worker (code ready, see HANDOFF.md)

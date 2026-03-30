@@ -81,8 +81,22 @@ class LocalStorageAuthStore implements AuthStore {
 let _store: AuthStore | null = null;
 
 export function getAuthStore(): AuthStore {
-  if (!_store) _store = new LocalStorageAuthStore();
-  return _store;
+  if (!_store) {
+    // Use API store when NEXT_PUBLIC_API_URL is set (production)
+    if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
+      // Dynamic import to avoid bundling ApiAuthStore when not needed
+      const { ApiAuthStore } = require("./api-auth-store");
+      _store = new ApiAuthStore();
+    } else {
+      _store = new LocalStorageAuthStore();
+    }
+  }
+  return _store!;
+}
+
+/** Check if we're running in API mode (server-backed auth) */
+export function isApiMode(): boolean {
+  return typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_API_URL;
 }
 
 /** For testing: inject a mock store */

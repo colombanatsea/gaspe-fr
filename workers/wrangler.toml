@@ -22,3 +22,10 @@ bucket_name = "gaspe-uploads"
 
 [vars]
 CONTACT_EMAIL = "contact@gaspe.fr"
+
+# JWT_SECRET — set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
+# RESEND_API_KEY — set via: npx wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
+
+# D1 migrations
+[migrations]
+migrations_dir = "migrations"
