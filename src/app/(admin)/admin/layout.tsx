@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminMobileNav } from "@/components/layout/AdminMobileNav";
 
@@ -10,6 +10,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const handleClose = useCallback(() => setMobileOpen(false), []);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -19,7 +20,7 @@ export default function AdminLayout({
       </div>
 
       {/* Mobile drawer */}
-      <AdminMobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <AdminMobileNav open={mobileOpen} onClose={handleClose} />
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto bg-surface">
