@@ -62,7 +62,7 @@ async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; e
 /*  Email templates                                                    */
 /* ------------------------------------------------------------------ */
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.gaspe.fr";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gaspe-fr.pages.dev";
 
 const HEADER = `
   <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
