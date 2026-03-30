@@ -9,7 +9,6 @@ export const mainNavigation: NavItem[] = [
   { label: "Boîte à outils", href: "/boite-a-outils" },
   { label: "Agenda", href: "/agenda" },
   { label: "Formations", href: "/formations" },
-  { label: "Boîte à outils", href: "/boite-a-outils" },
   {
     label: "Nos Compagnies Recrutent",
     href: "/nos-compagnies-recrutent",

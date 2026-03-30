@@ -59,9 +59,9 @@ src/
     └── index.ts           # Member, NavItem, StatItem
 ```
 
-## Pages (90 total)
+## Pages (93 total)
 
-### Publiques (23)
+### Publiques (24 + CGU)
 - `/` — Accueil (hero globe, stats, marquee, carte, actualités, CTA)
 - `/notre-groupement` — Présentation, timeline, engagements
 - `/nos-adherents` — Carte interactive + sidebar membres + géolocalisation
@@ -75,23 +75,25 @@ src/
 - `/positions` — Publications & notes de position
 - `/agenda` — Calendrier événements
 - `/contact` — Formulaire de contact
+- `/cgu` — Conditions générales d'utilisation
 - `/mentions-legales` — Mentions légales
 - `/confidentialite` — Politique RGPD
 
-### Auth (4)
+### Auth (3)
 - `/connexion` — Login (3 rôles)
 - `/inscription/candidat` — Inscription candidat (auto-approuvé)
 - `/inscription/adherent` — Inscription adhérent (approbation admin)
 
-### Espaces membres (6)
+### Espaces membres (7)
 - `/espace-candidat` — Dashboard candidat (profil STCW, candidatures pipeline, offres sauvegardées)
 - `/espace-candidat/formations` — Formations accessibles
 - `/espace-adherent` — Dashboard adhérent
-- `/espace-adherent/annuaire` — Annuaire membres
+- `/espace-adherent/profil` — Profil entreprise (logo, navires, rôle)
+- `/espace-adherent/annuaire` — Annuaire membres + contacts par rôle
 - `/espace-adherent/documents` — Documents réservés
-- `/espace-adherent/offres` — Gestion offres d'emploi
+- `/espace-adherent/offres` — Gestion offres d'emploi + candidatures
 
-### Admin (10)
+### Admin (11)
 - `/admin` — Dashboard (stats, CMS, actions rapides)
 - `/admin/comptes` — Gestion comptes (approve/reject)
 - `/admin/offres` — Gestion offres
@@ -99,6 +101,7 @@ src/
 - `/admin/positions` — Gestion publications
 - `/admin/agenda` — Gestion événements
 - `/admin/documents` — Gestion documents
+- `/admin/membres` — Gestion membres CRUD
 - `/admin/messages` — Messages contact
 - `/admin/parametres` — Paramètres site
 

@@ -200,13 +200,14 @@ npx wrangler deploy --config workers/wrangler.toml
 13. ~~**Upload CV validation**~~ — DONE: types PDF/DOC/DOCX + taille max 5 Mo
 14. ~~**API documentation**~~ — DONE: guide déploiement Worker amélioré dans `src/lib/api.ts`
 
-### Architecture v2.1.0 (session 15)
-- **90 pages** statiques (81 → 90 avec 8 formations detail + 1 formations listing)
+### Architecture v2.1.0 (session 15 + merge sessions 11-13)
+- **93 pages** statiques (90 + CGU + profil adhérent + admin membres)
 - **Route groups**: `(public)/`, `(admin)/`, `(auth)/`
-- **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `formations.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
-- **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable
-- **Sécurité**: CSP headers, password hashing, file upload validation, XSS sanitization
+- **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `formations.ts`, `maritime-certifications.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
+- **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable, 8 companyRoles adhérent
+- **Sécurité**: CSP headers, password hashing (y compris admin settings), file upload validation, XSS sanitization, sanitizeHtml
 - **Dark mode**: ThemeContext + ThemeToggle, CSS variables via `[data-theme="dark"]`, localStorage persistence
+- **Features s11-13 récupérées**: profil adhérent, annuaire par rôle, adhésions, admin membres CRUD, notifications, export CSV, formations enrichies, agenda enrichi, CGU, matching engine, members-store
 
 ## Session 15 completed
 1. ~~**UX polish**~~ — DONE: standardisé border-radius (rounded-xl/2xl), loading states inscription, scroll reveal sur 6 pages
@@ -237,9 +238,20 @@ npx wrangler deploy --config workers/wrangler.toml
 - ~~**Loading states inscription**~~ — FIXED: spinner + disabled sur candidat/adhérent
 - ~~**Score matching détail offre**~~ — FIXED: composant JobMatchScore sur sidebar
 
+#### Resolved (audit session 15)
+- ~~**Navigation dupliquée**~~ — FIXED: "Boîte à outils" en double dans mainNavigation
+- ~~**SEO metadata manquant**~~ — FIXED: 9 layout.tsx ajoutés (contact, documents, positions, nos-adherents, boite-a-outils, agenda, cgu, mentions-legales, confidentialite)
+- ~~**Formation XSS**~~ — FIXED: sanitizeHtml() sur formation.content dans dangerouslySetInnerHTML
+- ~~**parseInt sans radix**~~ — FIXED: parseInt(x, 10) dans JobList.tsx
+- ~~**Admin password en clair**~~ — FIXED: hashPassword/verifyPassword dans admin/parametres
+- ~~**Geolocation dupliquée**~~ — FIXED: geo.ts supprimé, consolidé dans geolocation.ts
+- ~~**matching.ts type unsafe**~~ — FIXED: supprimé `as unknown as Record`, accès direct User.certifications
+
 #### Remaining (nécessitent infrastructure)
 - **Domain gaspe.fr** — config DNS manuelle CF Pages
 - **Email réel** — déployer CF Worker + Resend API key
 - **Document PDF uploads** — nécessite R2 bucket
 - **Upload CV réel** — nécessite endpoint R2 du Worker
+- **CSP unsafe-inline** — requis par Next.js hydration (ne peut être retiré côté code)
+- **bcrypt serveur** — SHA-256 client suffisant pour démo, nécessite backend pour bcrypt/argon2
 - **Lighthouse 95+** — audit perf (nice-to-have)

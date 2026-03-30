@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formations } from "@/data/formations";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -106,7 +107,7 @@ export default async function FormationDetailPage({ params }: PageProps) {
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal stagger-2">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
-                dangerouslySetInnerHTML={{ __html: formation.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(formation.content) }}
               />
             </div>
           </div>

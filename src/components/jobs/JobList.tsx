@@ -70,8 +70,8 @@ export function JobList() {
     // Salary filter
     if (selectedSalary) {
       const [minStr, maxStr] = selectedSalary.split("-");
-      const min = parseInt(minStr);
-      const max = maxStr === "Infinity" ? Infinity : parseInt(maxStr);
+      const min = parseInt(minStr, 10);
+      const max = maxStr === "Infinity" ? Infinity : parseInt(maxStr, 10);
       if (!job.salaryMin || job.salaryMin < min || job.salaryMin >= max) return false;
     }
 

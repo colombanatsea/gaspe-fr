@@ -8,7 +8,7 @@ import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
-import { haversineDistance, getCurrentPosition, RADIUS_OPTIONS } from "@/lib/geo";
+import { haversineDistance, getUserPosition, RADIUS_OPTIONS, formatDistance } from "@/lib/geolocation";
 
 type Tab = "members" | "peers";
 type ViewMode = "grid" | "list";
@@ -55,8 +55,8 @@ export default function AdherentAnnuairePage() {
   async function handleGeolocate() {
     setGeoLoading(true);
     try {
-      const pos = await getCurrentPosition();
-      setUserPos(pos);
+      const geo = await getUserPosition();
+      setUserPos([geo.latitude, geo.longitude]);
       setGeoEnabled(true);
     } catch { /* silent */ }
     setGeoLoading(false);

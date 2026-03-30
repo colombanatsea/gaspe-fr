@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hashPassword, verifyPassword } from "@/lib/auth/hash";
 import { Badge } from "@/components/ui/Badge";
 
 const SETTINGS_KEY = "gaspe_settings";
@@ -57,7 +58,7 @@ export default function AdminParametresPage() {
     setPasswordMsg("");
   }
 
-  function changePassword(e: React.FormEvent) {
+  async function changePassword(e: React.FormEvent) {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirm) {
       setPasswordMsg("Les mots de passe ne correspondent pas."); return;
@@ -67,10 +68,12 @@ export default function AdminParametresPage() {
     }
     const raw = localStorage.getItem(PASSWORDS_KEY);
     const passwords: Record<string, string> = raw ? JSON.parse(raw) : {};
-    if (!user || passwords[user.id] !== passwordForm.current) {
+    if (!user) { setPasswordMsg("Utilisateur non connecté."); return; }
+    const isValid = await verifyPassword(passwordForm.current, user.email, passwords[user.id] ?? "");
+    if (!isValid) {
       setPasswordMsg("Mot de passe actuel incorrect."); return;
     }
-    passwords[user!.id] = passwordForm.newPassword;
+    passwords[user.id] = await hashPassword(passwordForm.newPassword, user.email);
     localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
     setPasswordForm({ current: "", newPassword: "", confirm: "" });
     setPasswordMsg("Mot de passe modifié avec succès.");

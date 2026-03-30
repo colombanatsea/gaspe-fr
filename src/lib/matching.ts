@@ -148,12 +148,10 @@ export function computeMatchScore(candidate: User, job: Job): MatchResult {
       matchedLabels = result.matched;
     } else {
       // Fallback to freetext certifications
-      const candidateAny = candidate as unknown as Record<string, unknown>;
       const freeCerts: string[] = [];
-      if (candidateAny.certifications) {
-        const val = candidateAny.certifications;
-        if (typeof val === "string") freeCerts.push(...val.split(",").map((s) => s.trim()).filter(Boolean));
-        else if (Array.isArray(val)) freeCerts.push(...(val as string[]));
+      const rawCerts = candidate.certifications;
+      if (rawCerts && typeof rawCerts === "string") {
+        freeCerts.push(...rawCerts.split(",").map((s) => s.trim()).filter(Boolean));
       }
       if (freeCerts.length > 0) {
         const result = fuzzyBrevetMatch(freeCerts, job.brevet);

@@ -66,7 +66,26 @@
 
 ---
 
-## TODO session suivante
+## Audit technique & fonctionnel (session 15)
+
+### Résultats
+- **Technique** : 31 issues trouvées → 7 corrigées dans cette session (nav, XSS, parseInt, passwords, geo, types, metadata)
+- **Fonctionnel** : 93 pages vérifiées, tous flows (candidat/adhérent/admin/visiteur) fonctionnels
+- **Score technique** : 5.4/10 → ~7/10 après corrections
+- **Score fonctionnel** : complet pour les 3 rôles utilisateur
+
+### Corrections appliquées
+- ~~Navigation dupliquée ("Boîte à outils")~~ ✅
+- ~~SEO metadata manquant (9 pages)~~ ✅ layout.tsx ajoutés
+- ~~Formation content XSS (dangerouslySetInnerHTML sans sanitize)~~ ✅
+- ~~parseInt sans radix~~ ✅
+- ~~Admin password en clair (admin/parametres)~~ ✅ hashPassword/verifyPassword
+- ~~Geolocation utilities dupliquées (geo.ts + geolocation.ts)~~ ✅ consolidé
+- ~~matching.ts type unsafe (as unknown as Record)~~ ✅ accès direct User type
+
+---
+
+## TODO session 16
 
 ### P0 — Infrastructure (nécessite Wrangler CLI + CF Dashboard)
 | # | Tâche | Commande / Action |
@@ -82,19 +101,11 @@
 ### P1 — Améliorations restantes
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | ~~Dark mode~~ | ✅ Session 15 |
-| 2 | ~~E2E tests~~ | ✅ Session 15 (22 tests) |
-| 3 | Lighthouse 95+ | Audit perf, fix remaining issues |
-| 4 | ~~Formations contenu~~ | ✅ Session 15 (8 pages détail) |
-| 5 | Agenda dynamique | CMS pour les événements (actuellement 2 seeds) |
-
-### P2 — Polish UX (toutes résolues session 15)
-| # | Tâche | Détail |
-|---|-------|--------|
-| 1 | ~~Standardiser border-radius~~ | ✅ `rounded-xl` inputs, `rounded-2xl` cards |
-| 2 | ~~Animations documents~~ | ✅ `.reveal` sur documents, contact, positions, agenda, jobs |
-| 3 | ~~Loading states~~ | ✅ Spinner inscription candidat/adhérent |
-| 4 | ~~Matching score détail~~ | ✅ JobMatchScore sur sidebar job detail |
+| 1 | Lighthouse 95+ | Audit perf, lazy-load Three.js/Leaflet, image optimization |
+| 2 | Aria-labels | 40+ icon-only buttons manquent aria-label |
+| 3 | Hardcoded colors | 20+ hex values à remplacer par CSS variables |
+| 4 | CSP nonce-based | Remplacer unsafe-inline/eval (nécessite SSR changes) |
+| 5 | E2E tests complets | Couvrir les 93 pages + sessions 11-13 features |
 
 ---
 
@@ -170,6 +181,39 @@ CLAUDE.md                              — Documentation exhaustive
 
 ---
 
-## Prompt pour lancer la session suivante
+## Prompt pour lancer la session 16
 
-Voir la dernière section de ce document.
+```
+Continue GASPE Website session 16. /init
+
+Voir HANDOFF.md section "TODO session 16" pour les priorités.
+
+Branche : main (ou nouvelle branche session 16)
+
+## Contexte
+- v2.1.0 livrée : 93 pages, 0 erreurs, build OK
+- Sessions 1-15 mergées sur main (y compris sessions 11-13 ACF récupérées)
+- Audits technique + fonctionnel réalisés, corrections appliquées
+- SPECS.md, HANDOFF.md, CLAUDE.md à jour
+
+## Priorité 1 — Déploiement infrastructure
+On va déployer le backend CF Worker ensemble :
+1. `npx wrangler d1 create gaspe-db`
+2. `npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql`
+3. `npx wrangler r2 bucket create gaspe-uploads`
+4. `npx wrangler secret put RESEND_API_KEY`
+5. `npx wrangler deploy --config workers/wrangler.toml`
+6. Mettre à jour `API_URL` dans `src/lib/api.ts`
+7. Connecter domaine gaspe.fr
+
+## Priorité 2 — Performance & accessibilité
+- Lighthouse 95+ (lazy-load Three.js/Leaflet, image optimization)
+- Aria-labels sur 40+ icon-only buttons
+- Remplacer 20+ hex colors hardcodées par CSS variables
+- E2E tests pour les 93 pages
+
+## Priorité 3 — Features
+- Messagerie in-app (remplacer mailto pour les candidatures)
+- Content preview admin (aperçu avant publication)
+- OG images PNG (convertir SVG pour compatibilité Facebook/LinkedIn)
+```

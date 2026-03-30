@@ -33,6 +33,9 @@ export function formatDistance(km: number): string {
   return `${Math.round(km)} km`;
 }
 
+/** Available radius options in km */
+export const RADIUS_OPTIONS = [10, 25, 50, 100, 200, 500] as const;
+
 /** Request user geolocation with timeout */
 export function getUserPosition(): Promise<GeoPosition> {
   return new Promise((resolve, reject) => {
