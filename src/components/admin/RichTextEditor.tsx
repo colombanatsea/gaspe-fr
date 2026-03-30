@@ -157,8 +157,8 @@ export function RichTextEditor({
     setShowTableModal(false);
   }
 
-  const btnBase = "flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-colors hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)]";
-  const btnActive = "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)]";
+  const btnBase = "flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-colors text-[var(--gaspe-neutral-700)] hover:bg-[var(--gaspe-teal-100)] hover:text-[var(--gaspe-teal-700)]";
+  const btnActive = "bg-[var(--color-surface-teal)] text-[var(--color-primary)]";
   const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   const groups = ["format", "heading", "list", "align", "insert"] as const;
@@ -166,10 +166,10 @@ export function RichTextEditor({
   return (
     <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-surface overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-100)] px-2 py-1.5">
         {groups.map((group, gi) => (
           <div key={group} className="flex items-center">
-            {gi > 0 && <div className="mx-1 h-5 w-px bg-[var(--gaspe-neutral-200)]" />}
+            {gi > 0 && <div className="mx-1 h-5 w-px bg-[var(--gaspe-neutral-300)]" />}
             {TOOLBAR.filter((a) => a.group === group).map((action) => (
               <button
                 key={action.id}
@@ -188,11 +188,11 @@ export function RichTextEditor({
         {/* Media library button */}
         {onMediaLibraryOpen && (
           <>
-            <div className="mx-1 h-5 w-px bg-[var(--gaspe-neutral-200)]" />
+            <div className="mx-1 h-5 w-px bg-[var(--gaspe-neutral-300)]" />
             <button
               type="button"
               onClick={onMediaLibraryOpen}
-              className={`${btnBase} px-2 w-auto gap-1 text-[var(--gaspe-teal-600)]`}
+              className={`${btnBase} px-2 w-auto gap-1 text-[var(--color-primary)]`}
               title="Bibliothèque de médias"
               aria-label="Bibliothèque de médias"
             >
