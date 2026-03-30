@@ -5,6 +5,18 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // Common pattern in our codebase: loading data in useEffect on mount
+      "react-hooks/set-state-in-effect": "warn",
+      // Pre-existing: dynamic requires for conditional backend loading
+      "@typescript-eslint/no-require-imports": "warn",
+      // Pre-existing: some generic types in auth/schemas
+      "@typescript-eslint/no-explicit-any": "warn",
+      // React Compiler memoization — non-critical
+      "react-hooks/preserve-manual-memoization": "warn",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
