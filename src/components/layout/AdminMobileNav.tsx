@@ -90,6 +90,7 @@ export function AdminMobileNav({ open, onClose }: AdminMobileNavProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Fermer le menu admin"
             className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--gaspe-neutral-400)] hover:bg-white/10 hover:text-white transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
