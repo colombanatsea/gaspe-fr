@@ -1,230 +1,164 @@
-# GASPE Website — Handoff Session 15
+# GASPE Website — Handoff Session 17
 
-## État actuel : v2.1.0 — Build OK, 90 pages, 0 erreurs TypeScript
+## État actuel : v2.3.0 — Build OK, 94 pages, 0 erreurs TypeScript, 79 tests
 
-### Branch : `claude/gaspe-session-15-Zgamj`
-
----
-
-## Résumé session 15
-
-### Features livrées (7 items)
-1. **Dark mode** — ThemeContext + ThemeToggle (soleil/lune) dans Header, CSS variables `[data-theme="dark"]`, localStorage persistence, glass/cards remappés
-2. **Pages formations** — 8 pages détail avec contenu HTML complet + listing avec badges/capacity bars + SSG via `generateStaticParams`
-3. **Score matching détail offre** — JobMatchScore composant (cercle SVG, critères, candidats only)
-4. **UX polish** — border-radius standardisé (rounded-xl/2xl), loading states inscription (spinner), scroll reveal sur 6 pages
-5. **ScrollRevealWrapper** — composant client pour wrapping server pages
-6. **E2E tests** — 22 tests : 5 formations + 17 pages/auth/dark mode
-7. **Navigation** — formations ajouté au menu + footer + sitemap
-
-### Stats
-- 90 pages statiques (81 → 90)
-- 3 commits, 0 erreurs TypeScript
-- 22 E2E tests (12 → 22)
+### Branch : `main` (merged from `claude/review-project-status-rYy52`)
 
 ---
 
-## Résumé session 14 (historique)
+## Résumé session 17
+
+### Chantier 1 — Tests & CI
+1. **Vitest** — 79 tests unitaires (hash, matching, sanitize-html, geolocation, utils, Zod schemas, cms-store, members-store)
+2. **GitHub Actions CI** — `.github/workflows/ci.yml` : typecheck → lint → test → build
+3. **E2E enrichis** — 3 nouveaux specs Playwright (candidate-space, adherent-space, admin-crud)
+
+### Chantier 2 — Fiabilisation
+4. **Zod validation** — schemas.ts + safeParse() sur tous les localStorage reads (auth, CMS, members)
+5. **ErrorBoundary** — Globe 3D, Leaflet Map, RichTextEditor (fallback gracieux + retry)
+6. **AuthContext refactoré** — types.ts (108L) + storage.ts (62L) + auth-store.ts (AuthStore interface) + AuthContext.tsx (165L)
+7. **AuthStore abstraction** — interface swappable (LocalStorageAuthStore actuel, prêt pour NextAuth + D1)
+
+### Chantier 3 — Consolidation
+8. **Types centralisés** — types/index.ts re-exporte User, Job, Zone, MatchResult, MediaItem, StoredMember
+9. **Design system** — 0 hex hardcodée dans les composants, 3 gradient CSS variables ajoutées
+10. **Aria-labels** — 4 file inputs corrigés, role="dialog" sur toutes les modales
+11. **Perf** — Mapbox supprimé (~500KB), font preload, loading="lazy" systématique
+
+### Chantier 4 — Recrutement ↔ Boîte à outils
+12. **10 guides employeur** — apprentissage, aides France Travail, contrat pro, visite médicale, STCW recyclage, OPCO, DUERP, ENIM, prévoyance, transition énergie
+13. **Liens contextuels** — espace-adherent/offres, admin/offres, nos-compagnies-recrutent, détail offre
+
+### Chantier 5 — Audit & corrections
+14. **Audit sécurité** — XSS fixé (sanitizeHtml sur CMS), session fixation renforcée, CSP documentée
+15. **Audit fonctionnel** — validation email inscription, bg-white → bg-surface, metadata SEO ajoutée
+16. **Audit a11y** — modales role="dialog", alt text, aria-labels complets
 
 ---
 
-## Résumé session 14
+## Audit technique — Résultats
 
-### Features livrées (17 items)
-1. **Boîte à outils CCN 3228** — 6 sections + simulateur salaire interactif
-2. **31 pages culture entreprise** — `/nos-adherents/[slug]` avec SSG
-3. **Pipeline candidature 6 statuts** — barre de progression visuelle
-4. **Score matching offres** — correspondance profil/offre (STCW)
-5. **Version v2.0.0** — footer + admin + package.json
-6. **Géolocalisation "Autour de moi"** — tri par distance Haversine
-7. **Catalogue STCW** — 24 certifications structurées + matching V2
-8. **Sélection STCW** — dropdown structuré + chips dans profil candidat
-9. **Mots de passe hashés** — SHA-256 + migration auto
-10. **Admin configurable** — credentials via localStorage
-11. **CSP headers** — `_headers` Cloudflare
-12. **OG image** — SVG statique + Twitter Card
-13. **Documents UX** — "Bientôt disponible" + toast
-14. **Upload CV validé** — types PDF/DOC + 5 Mo max
-15. **Pages légales** — mentions légales + politique confidentialité RGPD
-16. **Bouton Postuler** — actions candidat sur page détail offre
-17. **Type safety** — User interface étendue (experience, certifications, cvFilename)
+### Résolu (session 17)
+| Sévérité | Issue | Correction |
+|----------|-------|------------|
+| CRITICAL | XSS HeroSection/CTASection | sanitizeHtml() ajouté |
+| HIGH | Mapbox inutilisé (~500KB) | npm uninstall |
+| HIGH | Session connexion sans try/catch | try/catch + optional chaining |
+| HIGH | Metadata manquante | layout.tsx créés |
+| MEDIUM | bg-white dans formulaires | → bg-surface |
+| MEDIUM | Modales sans role="dialog" | role="dialog" aria-modal="true" |
+| MEDIUM | Validation email inscription | regex email check |
+| MEDIUM | Hex hardcodées | → CSS variables |
 
-### Audits réalisés
-
-**Audit fonctionnel :**
-- 81 pages inventoriées et vérifiées
-- Flows utilisateur tracés (candidat, adhérent, admin, visiteur)
-- Cohérence données : 31 membres, 11 offres, 24 certifs STCW, grilles CCN
-- Mobile responsive : breakpoints, touch targets, overflow tables ✓
-- Design system : PageHeader, Badge, gaspe-card, reveal animations ✓
-
-**Audit technique :**
-- Build 81 pages, 0 erreurs TypeScript
-- Sécurité : SHA-256 hashing, CSP, upload validation, XSS sanitization
-- Performance : lazy loading Three.js/Leaflet, DNS prefetch, SW
-- SEO : metadata, sitemap, JSON-LD, robots.txt, OG image
+### Connu mais non résolvable sans infra
+| Sévérité | Issue | Raison |
+|----------|-------|--------|
+| CRITICAL | Passwords en localStorage | Nécessite backend (NextAuth + D1) |
+| CRITICAL | Rôles client-side modifiables | Nécessite server-side auth |
+| HIGH | CSP unsafe-inline/eval | Requis par Next.js hydration |
+| HIGH | File upload sans magic bytes | Nécessite serveur (R2 Worker) |
+| MEDIUM | Pas de CSRF tokens | Nécessite backend stateful |
 
 ---
 
-## Audit technique & fonctionnel (session 15)
+## Tests automatisés
 
-### Résultats
-- **Technique** : 31 issues trouvées → 7 corrigées dans cette session (nav, XSS, parseInt, passwords, geo, types, metadata)
-- **Fonctionnel** : 93 pages vérifiées, tous flows (candidat/adhérent/admin/visiteur) fonctionnels
-- **Score technique** : 5.4/10 → ~7/10 après corrections
-- **Score fonctionnel** : complet pour les 3 rôles utilisateur
+### Unit tests (Vitest) — 79 tests, 8 fichiers
+| Fichier | Tests | Couvre |
+|---------|-------|-------|
+| hash.test.ts | 12 | SHA-256 hashing, vérification, détection plaintext |
+| matching.test.ts | 10 | Score matching STCW, supersedes, zone, catégorie |
+| sanitize-html.test.ts | 11 | XSS, scripts, event handlers, javascript: URLs |
+| geolocation.test.ts | 8 | Haversine, formatDistance |
+| utils.test.ts | 8 | slugify, formatDate |
+| schemas.test.ts | 18 | Zod schemas User/Media/Page/Member, safeParse |
+| cms-store.test.ts | 5 | CRUD media + pages |
+| members-store.test.ts | 5 | Seeding, archivage, fallback corrupted data |
 
-### Corrections appliquées
-- ~~Navigation dupliquée ("Boîte à outils")~~ ✅
-- ~~SEO metadata manquant (9 pages)~~ ✅ layout.tsx ajoutés
-- ~~Formation content XSS (dangerouslySetInnerHTML sans sanitize)~~ ✅
-- ~~parseInt sans radix~~ ✅
-- ~~Admin password en clair (admin/parametres)~~ ✅ hashPassword/verifyPassword
-- ~~Geolocation utilities dupliquées (geo.ts + geolocation.ts)~~ ✅ consolidé
-- ~~matching.ts type unsafe (as unknown as Record)~~ ✅ accès direct User type
-
----
-
-## Session 16 completed
-1. ~~**Aria-labels**~~ — DONE: 3 boutons icon-only corrigés (AdminSidebar, AdminMobileNav)
-2. ~~**Design system colors**~~ — DONE: 12 hex hardcodées → CSS variables (MemberMap, HeroSection, GaspeGlobe)
-3. ~~**CSS variable**~~ — DONE: --gaspe-neutral-950 (#0a1520) pour fond hero/globe
-4. ~~**E2E tests**~~ — DONE: 40+ tests couvrant pages publiques, SSG, auth, dark mode, SEO
-5. ~~**OG images PNG**~~ — DONE: 4 SVG → PNG via sharp, metadata mise à jour (Facebook/LinkedIn compat)
-6. ~~**Lazy-loading**~~ — VÉRIFIÉ: Three.js (dynamic + await import), Leaflet (page-specific)
-7. ~~**CMS complet**~~ — DONE: RichTextEditor WYSIWYG (gras, italique, titres, listes, liens, images, tableaux, colonnes, citations), MediaLibrary (upload drag-drop, thumbnails, filtres), ContentPreview (aperçu temps réel), /admin/pages (éditeur centralisé), cms-store.ts
-8. ~~**Admin forms**~~ — DONE: positions/new + offres/new utilisent RichTextEditor
+### E2E tests (Playwright) — 9 fichiers
+| Fichier | Tests | Couvre |
+|---------|-------|-------|
+| pages.spec.ts | 40+ | Toutes pages publiques, SSG, auth, dark mode, SEO |
+| auth.spec.ts | 4 | Login, inscription |
+| homepage.spec.ts | 3 | Hero, sections, navigation |
+| recruitment.spec.ts | 3 | Filtres, cartes offres |
+| contact.spec.ts | 2 | Formulaire, validation |
+| formations.spec.ts | 5 | Listing, pages détail |
+| candidate-space.spec.ts | 3 | Dashboard, formations, redirect auth |
+| adherent-space.spec.ts | 5 | Dashboard, profil, annuaire, documents, offres |
+| admin-crud.spec.ts | 11 | Toutes les routes admin |
 
 ---
 
-## TODO session 17
+## Tests manuels à effectuer
+
+### Parcours critique
+- [ ] **Connexion admin** : admin@gaspe.fr / admin123 → dashboard
+- [ ] **Inscription candidat** : formulaire → auto-login → dashboard candidat
+- [ ] **Inscription adhérent** : formulaire → message "en attente" → admin approve → login
+- [ ] **Publier une offre** (adhérent) : espace-adherent/offres → nouvelle offre → visible sur /nos-compagnies-recrutent
+- [ ] **Postuler** (candidat) : détail offre → bouton Postuler → pipeline candidature
+
+### Navigation & UX
+- [ ] **Homepage** : globe 3D charge, stats animées, marquee défile, carte preview
+- [ ] **Carte adhérents** : markers cliquables, popups, géolocalisation "Autour de moi"
+- [ ] **Dark mode** : toggle dans header, toutes les pages restent lisibles
+- [ ] **Mobile** : menu hamburger, sidebar admin, formulaires, touch targets
+- [ ] **Boîte à outils** : 7 onglets fonctionnels, simulateur salaire, guides employeur (liens externes)
+
+### Sécurité
+- [ ] **XSS test** : dans CMS admin/pages, insérer `<script>alert(1)</script>` → doit être strippé à l'affichage
+- [ ] **Validation email** : inscription avec "abc" → erreur format
+- [ ] **Upload CV** : uploader un .exe → doit être refusé
+- [ ] **Rôle admin** : en mode déconnecté, aller sur /admin → doit rediriger vers /connexion
+
+### Performance
+- [ ] **Lighthouse** : lancer audit sur / et /nos-compagnies-recrutent (cibles : perf >85, a11y >90, SEO >90)
+- [ ] **Offline** : couper le réseau → page offline.html doit s'afficher
+- [ ] **Temps de chargement** : première visite < 3s sur 4G
+
+---
+
+## TODO session 18
 
 ### P0 — Infrastructure (nécessite Wrangler CLI + CF Dashboard)
-| # | Tâche | Commande / Action |
-|---|-------|-------------------|
-| 1 | Créer D1 database | `npx wrangler d1 create gaspe-db` |
-| 2 | Exécuter schema SQL | `npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql` |
-| 3 | Créer R2 bucket | `npx wrangler r2 bucket create gaspe-uploads` |
-| 4 | Configurer Resend API key | `npx wrangler secret put RESEND_API_KEY` |
-| 5 | Déployer Worker | `npx wrangler deploy --config workers/wrangler.toml` |
-| 6 | Connecter API_URL | Éditer `src/lib/api.ts` → Worker URL |
-| 7 | Domaine gaspe.fr | CF Pages → Custom Domain → DNS |
-
-### P1 — Améliorations restantes
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Lighthouse 95+ | Audit perf, lazy-load Three.js/Leaflet, image optimization |
-| 2 | Aria-labels | 40+ icon-only buttons manquent aria-label |
-| 3 | Hardcoded colors | 20+ hex values à remplacer par CSS variables |
-| 4 | CSP nonce-based | Remplacer unsafe-inline/eval (nécessite SSR changes) |
-| 5 | E2E tests complets | Couvrir les 93 pages + sessions 11-13 features |
+| 1 | Migrer auth vers serveur | NextAuth + D1 (résout CRITICAL: roles client-side) |
+| 2 | Déployer CF Worker | D1 + R2 + Resend (email réel, upload CV, documents) |
+| 3 | Domaine gaspe.fr | CF Pages Custom Domain → DNS |
+
+### P1 — Améliorations
+| # | Tâche | Détail |
+|---|-------|--------|
+| 1 | CSP nonce-based | Remplacer unsafe-inline (si possible avec Next.js) |
+| 2 | File upload magic bytes | Validation server-side via R2 Worker |
+| 3 | Lighthouse 95+ | Audit perf, critical CSS, image optimization |
+| 4 | Messagerie in-app | Notifications temps réel entre admin/adhérents |
+
+### P2 — Features
+| # | Tâche | Détail |
+|---|-------|--------|
+| 1 | Analytics dashboard admin | Graphiques visites, candidatures, offres |
+| 2 | Blog SEO | Articles avec markdown, catégories, recherche |
+| 3 | Chatbot maritime IA | Assistant FAQ basé sur les données CCN/STCW |
 
 ---
 
-## Fichiers clés modifiés (session 15)
-
-### Créés
-```
-src/lib/theme/ThemeContext.tsx              — Dark mode context + provider
-src/components/ui/ThemeToggle.tsx           — Bouton toggle soleil/lune
-src/components/shared/ScrollRevealWrapper.tsx — Wrapper client pour reveal server pages
-src/components/jobs/JobMatchScore.tsx       — Score matching candidat/offre
-src/data/formations.ts                     — 8 formations avec contenu HTML
-src/app/(public)/formations/page.tsx       — Listing formations
-src/app/(public)/formations/[slug]/page.tsx — Détail formation (SSG)
-e2e/formations.spec.ts                     — 5 tests formations
-e2e/pages.spec.ts                          — 17 tests pages/auth/dark mode
-```
-
-### Modifiés
-```
-src/app/globals.css                        — Dark mode CSS variables
-src/components/shared/Providers.tsx         — ThemeProvider ajouté
-src/components/layout/Header.tsx            — ThemeToggle ajouté
-src/data/navigation.ts                     — Formations dans nav + footer
-src/app/sitemap.ts                         — Formations dans sitemap
-src/app/(auth)/*                           — Border-radius + loading states
-src/app/(public)/contact/page.tsx          — Scroll reveal
-src/app/(public)/documents/page.tsx        — Scroll reveal + rounded-xl
-src/app/(public)/positions/page.tsx        — Scroll reveal + rounded-xl
-src/app/(public)/agenda/page.tsx           — Scroll reveal + rounded-xl
-src/app/(public)/nos-compagnies-recrutent/[slug]/ — Scroll reveal + JobMatchScore
-CLAUDE.md                                  — Session 15 documentation
-HANDOFF.md                                 — Session 15 handoff
-```
-
----
-
-## Fichiers clés modifiés (session 14)
-
-### Créés
-```
-src/data/ccn3228.ts                    — Données CCN 3228
-src/data/stcw.ts                       — Catalogue STCW 24 certifs
-src/lib/geolocation.ts                 — Haversine + getUserPosition
-src/lib/auth/hash.ts                   — SHA-256 hashing
-src/app/(public)/boite-a-outils/       — Page boîte à outils
-src/app/(public)/nos-adherents/[slug]/ — Pages culture entreprise
-src/app/(public)/mentions-legales/     — Mentions légales
-src/app/(public)/confidentialite/      — Politique confidentialité
-src/components/jobs/JobDetailActions.tsx — Actions candidat détail offre
-public/_headers                        — CSP headers Cloudflare
-public/og-image.svg                    — OG image statique
-```
-
-### Modifiés
-```
-src/lib/auth/AuthContext.tsx            — Types, hashing, admin configurable
-src/components/jobs/JobCard.tsx         — Score matching badge
-src/components/jobs/JobList.tsx         — Matching STCW + import
-src/app/(public)/nos-adherents/page.tsx — Géolocalisation
-src/app/(public)/espace-candidat/      — STCW selector, pipeline, type safety
-src/app/(public)/documents/page.tsx    — Toast "bientôt disponible"
-src/app/(public)/nos-compagnies-recrutent/[slug]/ — JobDetailActions
-src/app/(admin)/admin/page.tsx         — Version v2.0.0
-src/components/layout/Footer.tsx       — Version v2.0.0
-src/data/navigation.ts                 — Boîte à outils
-src/app/layout.tsx                     — OG image + Twitter Card
-src/app/sitemap.ts                     — Nouvelles pages
-src/app/globals.css                    — fadeInUp animation
-package.json                           — v2.0.0
-CLAUDE.md                              — Documentation exhaustive
-```
-
----
-
-## Prompt pour lancer la session 17
+## Prompt pour lancer la session 18
 
 ```
-Continue GASPE Website session 17. /init
+Continue GASPE Website session 18. Voir HANDOFF.md section "TODO session 18" pour les priorités.
 
-Voir HANDOFF.md section "TODO session 17" pour les priorités.
+Contexte :
+- v2.3.0, 94 pages, 0 erreurs TS, 79 tests unitaires, 9 specs E2E
+- CI GitHub Actions actif
+- AuthStore interface prête pour migration NextAuth
+- Zod validation sur tous les localStorage reads
+- Audit sécurité + fonctionnel complété, corrections appliquées
+- Sessions 1-17 mergées sur main
 
-Branche : main (ou nouvelle branche session 17)
-
-## Contexte
-- v2.1.0 livrée : 93 pages, 0 erreurs, build OK
-- Sessions 1-16 complètes sur main
-- Audits technique + fonctionnel réalisés, toutes corrections P1 appliquées
-- OG images PNG, design system nettoyé, E2E 40+ tests, aria-labels
-- SPECS.md, HANDOFF.md, CLAUDE.md à jour
-
-## Priorité 1 — Déploiement infrastructure (interactif)
-1. `npx wrangler d1 create gaspe-db`
-2. `npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql`
-3. `npx wrangler r2 bucket create gaspe-uploads`
-4. `npx wrangler secret put RESEND_API_KEY`
-5. `npx wrangler deploy --config workers/wrangler.toml`
-6. Mettre à jour `API_URL` dans `src/lib/api.ts`
-7. Connecter domaine gaspe.fr
-
-## Priorité 2 — Features avancées
-- Messagerie in-app (remplacer mailto pour les candidatures)
-- Content preview admin (aperçu avant publication)
-- Lighthouse 95+ audit et optimisations
-
-## Priorité 3 — Nice-to-have
-- Analytics dashboard (stats recrutement pour adhérents)
-- Blog SEO (articles attractivité métiers maritimes)
-- Chatbot maritime IA (questions CCN/STCW)
+Priorité P0 : migration auth serveur + déploiement CF Worker
+Priorité P1 : CSP, upload validation, Lighthouse
+Priorité P2 : analytics, blog, chatbot
 ```
