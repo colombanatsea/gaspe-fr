@@ -1,4 +1,4 @@
-# GASPE Website — Spécifications techniques v2.3.0
+# GASPE Website — Spécifications techniques v2.5.0
 
 ## Vue d'ensemble
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau). Plateforme web : vitrine institutionnelle, recrutement maritime, espace membres, outils CCN 3228, console d'administration.
@@ -17,7 +17,8 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 | Tests E2E | Playwright | latest |
 | CI | GitHub Actions | ci.yml |
 | Déploiement | Cloudflare Pages | static export |
-| Backend (stub) | Cloudflare Workers + D1 + R2 | prêt, non déployé |
+| Backend | Cloudflare Workers + D1 + R2 | deployed |
+| Email | Brevo (transactional API) | via CF Worker proxy |
 
 ## Architecture
 ```
@@ -70,10 +71,20 @@ src/
 
 ## Système d'authentification
 - **Interface**: `AuthStore` (auth-store.ts) — abstraction pour swap de backend
-- **Implémentation**: `LocalStorageAuthStore` (localStorage + SHA-256)
+- **Dev/demo**: `LocalStorageAuthStore` (localStorage + SHA-256)
+- **Production**: `ApiAuthStore` → CF Worker API (JWT httpOnly cookie, PBKDF2 hashing, D1)
+- **Switching**: `NEXT_PUBLIC_API_URL` env var (unset = localStorage, set = API mode)
 - **Validation**: Zod schemas sur tous les reads localStorage
 - **Rôles**: admin, adhérent (approval admin), candidat (auto-approved)
 - **Pipeline candidature**: 6 statuts (pending → viewed → shortlisted → interview → accepted/rejected)
+- **JWT**: HMAC-SHA256, 7-day expiry, Web Crypto API (`workers/jwt.ts`)
+
+## Email transactionnel (Brevo)
+- **Endpoint**: `POST /api/email` dans CF Worker → proxy vers Brevo API
+- **Inscription adhérent** → notification email à l'admin (CONTACT_EMAIL)
+- **Approbation/rejet adhérent** → notification email à l'adhérent
+- **Secret**: `BREVO_API_KEY` (CF Worker secret)
+- **Config**: `CONTACT_EMAIL` (CF Worker env variable)
 
 ## Design System
 - Tous les tokens couleur définis en CSS variables (`--gaspe-*`)
@@ -91,7 +102,7 @@ src/
 - role="dialog" + aria-modal sur toutes les modales
 
 ## Tests
-- **79 tests unitaires Vitest** : auth/hash, matching engine, sanitize-html, geolocation, utils, Zod schemas, cms-store, members-store
+- **139 tests unitaires Vitest** (13 fichiers) : hash, matching, sanitize-html, geolocation, utils, schemas, cms-store, members-store, jwt, auth-store, export-csv, notifications, validations
 - **9 specs E2E Playwright** : pages publiques, SSG, auth, formations, dark mode, SEO, candidate-space, adherent-space, admin CRUD
 - **CI GitHub Actions** : typecheck → lint → test → build sur chaque PR
 

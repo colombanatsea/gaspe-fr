@@ -12,7 +12,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 79 tests)
+npm run test         # unit tests (Vitest, 139 tests)
 npm run test:watch   # unit tests in watch mode
 npm run lint         # ESLint
 git push origin main # auto-deploy to CF Pages (~1 min)
@@ -68,6 +68,13 @@ Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) with two backends
 API endpoints in `workers/api.ts`: register, login, logout, me, users CRUD.
 JWT via `workers/jwt.ts` (HMAC-SHA256, 7-day expiry, Web Crypto API).
 
+## Email (Brevo transactional)
+- CF Worker endpoint: `POST /api/email` → Brevo API proxy
+- **Adherent registration** → email notification to admin (CONTACT_EMAIL)
+- **Account approval/rejection** → email notification to adherent
+- Worker secret: `BREVO_API_KEY`
+- Worker env: `CONTACT_EMAIL` (admin recipient address)
+
 ## Architecture
 ```
 src/
@@ -102,7 +109,7 @@ src/
 ```
 
 ## Testing
-- **Unit tests**: Vitest — 97 tests, 10 spec files (hash, matching, sanitize, geo, utils, schemas, cms-store, members-store, jwt, auth-store)
+- **Unit tests**: Vitest — 139 tests, 13 spec files (hash, matching, sanitize-html, geolocation, utils, schemas, cms-store, members-store, jwt, auth-store, export-csv, notifications, validations)
 - **E2E tests**: Playwright — 9 spec files (homepage, auth, recruitment, contact, formations, pages, candidate-space, adherent-space, admin-crud)
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -117,7 +124,7 @@ src/
 
 ## Known limitations (require deployment)
 - **Domain gaspe.fr** — manual CF Pages DNS config
-- **Email réel** — deploy CF Worker + Resend API key (worker code ready)
+- **Email réel** — Brevo integration deployed (BREVO_API_KEY set), test full flow end-to-end
 - **Document PDF uploads** — needs R2 bucket (worker code ready)
 - **CSP unsafe-inline** — required by Next.js hydration (cannot remove client-side)
-- **Server auth activation** — set `NEXT_PUBLIC_API_URL` + deploy CF Worker (code ready, see HANDOFF.md)
+- **Server auth activation** — set `NEXT_PUBLIC_API_URL` + deploy CF Worker (deployed with D1, R2, JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL)
