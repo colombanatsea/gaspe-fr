@@ -2,203 +2,12 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { hashPassword, verifyPassword, isHashed } from "./hash";
+import { readStore, writeStore, ensureSeeded, USERS_KEY, PASSWORDS_KEY, CURRENT_KEY } from "./storage";
+import type { User, RegisterData, AuthContextValue } from "./types";
 
-/* ---------- Types ---------- */
-
-export type UserRole = "admin" | "adherent" | "candidat";
-
-export type ApplicationStatus =
-  | "pending"      // Envoyée
-  | "viewed"       // Vue par l'entreprise
-  | "shortlisted"  // Présélectionnée
-  | "interview"    // Entretien planifié
-  | "accepted"     // Acceptée
-  | "rejected";    // Refusée
-
-export const APPLICATION_STATUS_CONFIG: Record<ApplicationStatus, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral"; icon: string }> = {
-  pending:     { label: "Envoyée",        variant: "neutral", icon: "clock" },
-  viewed:      { label: "Vue",            variant: "blue",    icon: "eye" },
-  shortlisted: { label: "Présélectionnée", variant: "teal",   icon: "star" },
-  interview:   { label: "Entretien",      variant: "warm",    icon: "calendar" },
-  accepted:    { label: "Acceptée",       variant: "green",   icon: "check" },
-  rejected:    { label: "Refusée",        variant: "neutral",  icon: "x" },
-};
-
-export type CompanyRole =
-  | "dirigeant"
-  | "exploitation"
-  | "armement"
-  | "paie"
-  | "technique"
-  | "logistique"
-  | "achats"
-  | "formation";
-
-export const COMPANY_ROLES: { value: CompanyRole; label: string }[] = [
-  { value: "dirigeant", label: "Dirigeant" },
-  { value: "exploitation", label: "Exploitation" },
-  { value: "armement", label: "Armement" },
-  { value: "paie", label: "Paie" },
-  { value: "technique", label: "Technique" },
-  { value: "logistique", label: "Logistique" },
-  { value: "achats", label: "Achats" },
-  { value: "formation", label: "Formation" },
-];
-
-export interface Vessel {
-  id: string;
-  name: string;
-  imo?: string;
-  ums?: string;
-  size?: string;
-}
-
-export type MembershipStatus = "due" | "paid" | "pending";
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  company?: string;
-  phone?: string;
-  approved?: boolean;
-  archived?: boolean;
-  /** Adherent-specific */
-  companyRole?: CompanyRole;
-  companyDescription?: string;
-  companyLogo?: string; // base64 data URL
-  companyAddress?: string;
-  companyEmail?: string;
-  companyPhone?: string;
-  vessels?: Vessel[];
-  membershipStatus?: MembershipStatus;
-  /** Candidat-specific */
-  currentPosition?: string;
-  desiredPosition?: string;
-  preferredZone?: string;
-  savedOffers?: string[];
-  applications?: { offerId: string; date: string; status: ApplicationStatus; message?: string }[];
-  experience?: string;
-  certifications?: string;
-  cvFilename?: string;
-  /** Structured certifications (replaces freetext) */
-  structuredCertifications?: {
-    certId: string;
-    obtainedDate?: string;
-    expiryDate?: string;
-    reference?: string;
-    verified?: boolean;
-  }[];
-  /** Sea service history */
-  seaService?: {
-    id: string;
-    vesselName: string;
-    vesselType?: string;
-    rank: string;
-    startDate: string;
-    endDate?: string;
-  }[];
-  createdAt: string;
-}
-
-interface AuthContextValue {
-  user: User | null;
-  isAuthenticated: boolean;
-  role: UserRole | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
-  getAllUsers: () => User[];
-  approveUser: (id: string) => void;
-  rejectUser: (id: string) => void;
-  updateUser: (updated: User) => void;
-}
-
-export type RegisterData = {
-  role: "adherent";
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  company: string;
-} | {
-  role: "candidat";
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  currentPosition?: string;
-  desiredPosition?: string;
-};
-
-/* ---------- Storage helpers ---------- */
-
-const USERS_KEY = "gaspe_users";
-const PASSWORDS_KEY = "gaspe_passwords";
-const CURRENT_KEY = "gaspe_current_user";
-
-function readStore<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStore(key: string, value: unknown) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-/* ---------- Seed admin ---------- */
-
-const ADMIN_SETTINGS_KEY = "gaspe_admin_settings";
-
-interface AdminSettings {
-  email: string;
-  name: string;
-}
-
-function getAdminSettings(): AdminSettings {
-  const stored = readStore<AdminSettings | null>(ADMIN_SETTINGS_KEY, null);
-  return stored ?? { email: "admin@gaspe.fr", name: "Administrateur GASPE" };
-}
-
-const ADMIN_SEED: User = {
-  id: "admin-001",
-  email: getAdminSettings().email,
-  name: getAdminSettings().name,
-  role: "admin",
-  approved: true,
-  createdAt: "2025-01-01T00:00:00.000Z",
-};
-
-async function ensureSeeded() {
-  const users = readStore<User[]>(USERS_KEY, []);
-  const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
-  if (!users.find((u) => u.id === ADMIN_SEED.id)) {
-    users.push(ADMIN_SEED);
-    // Hash the default password
-    const hashed = await hashPassword("admin123", ADMIN_SEED.email);
-    passwords[ADMIN_SEED.id] = hashed;
-    writeStore(USERS_KEY, users);
-    writeStore(PASSWORDS_KEY, passwords);
-  } else {
-    // Migrate plaintext passwords to hashed
-    let changed = false;
-    for (const user of users) {
-      const pwd = passwords[user.id];
-      if (pwd && !isHashed(pwd)) {
-        passwords[user.id] = await hashPassword(pwd, user.email);
-        changed = true;
-      }
-    }
-    if (changed) writeStore(PASSWORDS_KEY, passwords);
-  }
-}
+// Re-export all types and constants so existing imports from AuthContext keep working
+export type { User, UserRole, ApplicationStatus, CompanyRole, MembershipStatus, Vessel, RegisterData, AuthContextValue } from "./types";
+export { APPLICATION_STATUS_CONFIG, COMPANY_ROLES } from "./types";
 
 /* ---------- Context ---------- */
 
@@ -231,12 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try { setUser(JSON.parse(e.newValue) as User); } catch { /* ignore */ }
       }
       if (e.key === USERS_KEY && user) {
-        // Re-read fresh user data if users array changed (e.g. admin approved/archived)
         try {
           const users = JSON.parse(e.newValue ?? "[]") as User[];
           const fresh = users.find((u) => u.id === user.id);
           if (fresh) { setUser(fresh); writeStore(CURRENT_KEY, fresh); }
-          else { setUser(null); localStorage.removeItem(CURRENT_KEY); } // user was deleted
+          else { setUser(null); localStorage.removeItem(CURRENT_KEY); }
         } catch { /* ignore */ }
       }
     }
@@ -321,7 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (idx >= 0) {
       users[idx].approved = true;
       writeStore(USERS_KEY, users);
-      // Update current_user if it's the same user (e.g. they're logged in another tab)
       const current = readStore<User | null>(CURRENT_KEY, null);
       if (current?.id === id) writeStore(CURRENT_KEY, users[idx]);
     }
@@ -334,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     delete passwords[id];
     writeStore(USERS_KEY, filtered);
     writeStore(PASSWORDS_KEY, passwords);
-    // Clear current_user if the rejected user is logged in
     const current = readStore<User | null>(CURRENT_KEY, null);
     if (current?.id === id) localStorage.removeItem(CURRENT_KEY);
   }, []);

@@ -375,7 +375,7 @@ export default function AdherentAnnuairePage() {
                   <Card key={peer.id} className="flex flex-col">
                     <div className="flex items-start gap-3">
                       {peer.companyLogo ? (
-                        <img src={peer.companyLogo} alt="" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                        <img src={peer.companyLogo} alt={`Logo ${peer.company ?? peer.name}`} loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
                       ) : (
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
                           <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">

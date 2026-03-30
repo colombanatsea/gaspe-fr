@@ -20,8 +20,9 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
       <div className="absolute inset-0">
         <img
           src={HERO_IMAGE}
-          alt=""
+          alt="Navire maritime en service"
           className="h-full w-full object-cover"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-900)] via-[var(--gaspe-neutral-900)]/85 to-[var(--gaspe-neutral-900)]/50" />
       </div>

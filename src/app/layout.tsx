@@ -1,8 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SITE_NAME, SITE_FULL_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/shared/SEOJsonLd";
 import { Providers } from "@/components/shared/Providers";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#1B7E8A",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -46,8 +52,7 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1B7E8A" />
-        <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+<link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />

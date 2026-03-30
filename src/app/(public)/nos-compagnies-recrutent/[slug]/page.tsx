@@ -104,7 +104,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       {/* Hero banner */}
       <div className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
         <div className="absolute inset-0">
-          <img src={jobImage} alt="" className="h-full w-full object-cover opacity-30" />
+          <img src={jobImage} alt={`${job.title} — ${job.company}`} className="h-full w-full object-cover opacity-30" fetchPriority="high" />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--gaspe-neutral-900)] via-[var(--gaspe-neutral-900)]/70 to-transparent" />
         </div>
 
@@ -271,7 +271,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               <div className="flex items-center gap-3 mb-4">
                 {member?.logoUrl ? (
                   <div className="h-12 w-12 rounded-xl bg-white border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden p-1">
-                    <img src={member.logoUrl} alt={job.company} className="max-w-full max-h-full object-contain" />
+                    <img src={member.logoUrl} alt={job.company} loading="lazy" className="max-w-full max-h-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-12 w-12 rounded-xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-100)] flex items-center justify-center">

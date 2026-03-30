@@ -62,7 +62,8 @@ export function NewsCard({
           <div className="mb-4 overflow-hidden rounded-md">
             <img
               src={coverImageUrl}
-              alt=""
+              alt={title}
+              loading="lazy"
               className="h-40 w-full object-cover transition-transform group-hover:scale-105"
             />
           </div>

@@ -195,7 +195,7 @@ export default function AdminPagesPage() {
                       className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
                     />
                     {section.content && (
-                      <img src={section.content} alt="" className="max-h-32 rounded-xl object-contain" />
+                      <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
                     )}
                     <button
                       type="button"
