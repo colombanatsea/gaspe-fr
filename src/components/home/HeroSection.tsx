@@ -10,14 +10,14 @@ const GaspeGlobe = dynamic(
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[#0a1520] min-h-[85vh] flex items-center">
+    <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
       {/* Globe as background */}
       <div className="absolute inset-0">
         <GaspeGlobe className="w-full h-full" />
       </div>
 
       {/* Gradient overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0a1520]/90 via-[#0a1520]/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/90 via-[var(--gaspe-neutral-950)]/60 to-transparent" />
 
       {/* Decorative floating particles */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -93,7 +93,7 @@ export function HeroSection() {
       </div>
 
       {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a1520] to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--gaspe-neutral-950)] to-transparent" />
     </section>
   );
 }

@@ -376,7 +376,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
     return (
       <div className={cn("flex items-center justify-center", className)}>
         <div className="relative">
-          <div className="h-48 w-48 rounded-full bg-gradient-to-br from-[#42B3D5] via-[#6DAAAC] to-[#5AA89A] animate-pulse opacity-60" />
+          <div className="h-48 w-48 rounded-full gaspe-gradient-animated opacity-60" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
             <span className="font-heading text-3xl font-bold">28</span>
             <span className="text-xs uppercase tracking-wider opacity-80">compagnies</span>
@@ -392,7 +392,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
 
       {/* Loading overlay */}
       {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#0a1520]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--gaspe-neutral-950)]">
           <div className="text-center">
             <div className="h-8 w-8 mx-auto border-2 border-[var(--gaspe-teal-400)] border-t-transparent rounded-full animate-spin" />
             <p className="mt-3 text-xs text-white/40 uppercase tracking-wider">Chargement du globe...</p>
