@@ -53,6 +53,7 @@ async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; e
       return { success: false, error: msg };
     }
 
+    console.log("[Brevo] Email envoyé avec succès à:", params.to.map(t => t.email).join(", "));
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";
