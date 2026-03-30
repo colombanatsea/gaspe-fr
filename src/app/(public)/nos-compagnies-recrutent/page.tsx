@@ -15,11 +15,11 @@ export const metadata: Metadata = {
       "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
     images: [
       {
-        url: "/og-recrutement.svg",
+        url: "/og-recrutement.png",
         width: 1200,
         height: 630,
         alt: "GASPE — Nos Compagnies Recrutent",
-        type: "image/svg+xml",
+        type: "image/png",
       },
     ],
   },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: "Nos Compagnies Recrutent | GASPE",
     description:
       "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
-    images: ["/og-recrutement.svg"],
+    images: ["/og-recrutement.png"],
   },
 };
 

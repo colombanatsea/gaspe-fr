@@ -223,6 +223,7 @@ npx wrangler deploy --config workers/wrangler.toml
 - ~~**Mots de passe en clair**~~ — FIXED: SHA-256 hashing + migration auto
 - ~~**Admin hardcodé**~~ — FIXED: configurable via localStorage
 - ~~**OG images**~~ — FIXED: SVG statique + metadata
+- ~~**OG images PNG**~~ — FIXED: conversion SVG → PNG pour compatibilité Facebook/LinkedIn
 - ~~**CSP headers**~~ — FIXED: Cloudflare `_headers` file
 - ~~**Document downloads UX**~~ — FIXED: état "bientôt disponible" + toast
 - ~~**Pages légales manquantes**~~ — FIXED: mentions légales + politique confidentialité RGPD

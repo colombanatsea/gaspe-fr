@@ -19,11 +19,11 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: `${SITE_URL}/og-image.svg`,
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: `${SITE_NAME} – ${SITE_FULL_NAME}`,
-        type: "image/svg+xml",
+        type: "image/png",
       },
     ],
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
     description: SITE_DESCRIPTION,
-    images: [`${SITE_URL}/og-image.svg`],
+    images: [`${SITE_URL}/og-image.png`],
   },
   robots: { index: true, follow: true },
   alternates: { canonical: SITE_URL },

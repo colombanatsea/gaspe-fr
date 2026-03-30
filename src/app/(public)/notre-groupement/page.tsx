@@ -13,11 +13,11 @@ export const metadata: Metadata = {
       "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
     images: [
       {
-        url: "/og-groupement.svg",
+        url: "/og-groupement.png",
         width: 1200,
         height: 630,
         alt: "GASPE — Notre Groupement",
-        type: "image/svg+xml",
+        type: "image/png",
       },
     ],
   },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: "Notre Groupement | GASPE",
     description:
       "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
-    images: ["/og-groupement.svg"],
+    images: ["/og-groupement.png"],
   },
 };
 

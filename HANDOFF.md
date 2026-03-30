@@ -85,7 +85,17 @@
 
 ---
 
-## TODO session 16
+## Session 16 completed
+1. ~~**Aria-labels**~~ — DONE: 3 boutons icon-only corrigés (AdminSidebar, AdminMobileNav)
+2. ~~**Design system colors**~~ — DONE: 12 hex hardcodées → CSS variables (MemberMap, HeroSection, GaspeGlobe)
+3. ~~**CSS variable**~~ — DONE: --gaspe-neutral-950 (#0a1520) pour fond hero/globe
+4. ~~**E2E tests**~~ — DONE: 40+ tests couvrant pages publiques, SSG, auth, dark mode, SEO
+5. ~~**OG images PNG**~~ — DONE: 4 SVG → PNG via sharp, metadata mise à jour (Facebook/LinkedIn compat)
+6. ~~**Lazy-loading**~~ — VÉRIFIÉ: Three.js (dynamic + await import), Leaflet (page-specific)
+
+---
+
+## TODO session 17
 
 ### P0 — Infrastructure (nécessite Wrangler CLI + CF Dashboard)
 | # | Tâche | Commande / Action |
@@ -181,23 +191,23 @@ CLAUDE.md                              — Documentation exhaustive
 
 ---
 
-## Prompt pour lancer la session 16
+## Prompt pour lancer la session 17
 
 ```
-Continue GASPE Website session 16. /init
+Continue GASPE Website session 17. /init
 
-Voir HANDOFF.md section "TODO session 16" pour les priorités.
+Voir HANDOFF.md section "TODO session 17" pour les priorités.
 
-Branche : main (ou nouvelle branche session 16)
+Branche : main (ou nouvelle branche session 17)
 
 ## Contexte
 - v2.1.0 livrée : 93 pages, 0 erreurs, build OK
-- Sessions 1-15 mergées sur main (y compris sessions 11-13 ACF récupérées)
-- Audits technique + fonctionnel réalisés, corrections appliquées
+- Sessions 1-16 complètes sur main
+- Audits technique + fonctionnel réalisés, toutes corrections P1 appliquées
+- OG images PNG, design system nettoyé, E2E 40+ tests, aria-labels
 - SPECS.md, HANDOFF.md, CLAUDE.md à jour
 
-## Priorité 1 — Déploiement infrastructure
-On va déployer le backend CF Worker ensemble :
+## Priorité 1 — Déploiement infrastructure (interactif)
 1. `npx wrangler d1 create gaspe-db`
 2. `npx wrangler d1 execute gaspe-db --file=src/lib/db/schema-design.sql`
 3. `npx wrangler r2 bucket create gaspe-uploads`
@@ -206,14 +216,13 @@ On va déployer le backend CF Worker ensemble :
 6. Mettre à jour `API_URL` dans `src/lib/api.ts`
 7. Connecter domaine gaspe.fr
 
-## Priorité 2 — Performance & accessibilité
-- Lighthouse 95+ (lazy-load Three.js/Leaflet, image optimization)
-- Aria-labels sur 40+ icon-only buttons
-- Remplacer 20+ hex colors hardcodées par CSS variables
-- E2E tests pour les 93 pages
-
-## Priorité 3 — Features
+## Priorité 2 — Features avancées
 - Messagerie in-app (remplacer mailto pour les candidatures)
 - Content preview admin (aperçu avant publication)
-- OG images PNG (convertir SVG pour compatibilité Facebook/LinkedIn)
+- Lighthouse 95+ audit et optimisations
+
+## Priorité 3 — Nice-to-have
+- Analytics dashboard (stats recrutement pour adhérents)
+- Blog SEO (articles attractivité métiers maritimes)
+- Chatbot maritime IA (questions CCN/STCW)
 ```
