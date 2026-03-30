@@ -74,7 +74,7 @@ export default function AdminNewFormationPage() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -85,7 +85,7 @@ export default function AdminNewFormationPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-6">
+      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-[var(--gaspe-neutral-200)] bg-surface p-6">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
             Titre <span className="text-red-500">*</span>

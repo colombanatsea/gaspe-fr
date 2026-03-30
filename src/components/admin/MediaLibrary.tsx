@@ -83,7 +83,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="rounded-2xl bg-white shadow-2xl w-[90vw] max-w-4xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-200)] px-6 py-4">

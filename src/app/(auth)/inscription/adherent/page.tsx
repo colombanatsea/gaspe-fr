@@ -34,6 +34,11 @@ export default function InscriptionAdherentPage() {
     e.preventDefault();
     setError("");
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError("Veuillez entrer une adresse email valide.");
+      return;
+    }
+
     if (form.password.length < 6) {
       setError("Le mot de passe doit contenir au moins 6 caractères.");
       return;

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export function CTASection() {
   const ref = useScrollReveal();
@@ -64,7 +65,7 @@ export function CTASection() {
               {cmsTitle || "Rejoignez le service public maritime"}
             </h2>
             {cmsDesc ? (
-              <div className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed prose prose-invert" dangerouslySetInnerHTML={{ __html: cmsDesc }} />
+              <div className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed prose prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cmsDesc) }} />
             ) : (
               <p className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed">
                 Nos compagnies recrutent des profils variés : officiers, matelots,

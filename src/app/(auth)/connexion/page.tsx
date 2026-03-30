@@ -27,13 +27,15 @@ export default function ConnexionPage() {
     }
 
     // Redirect based on role - read from localStorage since state may not have updated yet
-    const stored = localStorage.getItem("gaspe_current_user");
-    if (stored) {
-      const u = JSON.parse(stored);
-      if (u.role === "admin") router.push("/admin");
-      else if (u.role === "adherent") router.push("/espace-adherent");
-      else router.push("/espace-candidat");
-    }
+    try {
+      const stored = localStorage.getItem("gaspe_current_user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u?.role === "admin") router.push("/admin");
+        else if (u?.role === "adherent") router.push("/espace-adherent");
+        else router.push("/espace-candidat");
+      }
+    } catch { router.push("/"); }
   };
 
   return (

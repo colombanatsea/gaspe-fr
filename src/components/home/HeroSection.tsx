@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 const GaspeGlobe = dynamic(
@@ -47,7 +48,7 @@ export function HeroSection() {
           </div>
 
           {cmsTitle ? (
-            <h1 className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]" dangerouslySetInnerHTML={{ __html: cmsTitle }} />
+            <h1 className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cmsTitle) }} />
           ) : (
             <h1 className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]">
               Fédérer et représenter{" "}

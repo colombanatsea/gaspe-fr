@@ -39,7 +39,7 @@ function validate(data: FormData): FormErrors {
   return errors;
 }
 
-const inputBase = "w-full rounded-xl border bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-1 transition-colors";
+const inputBase = "w-full rounded-xl border bg-surface px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-1 transition-colors";
 const inputOk = inputBase + " border-[var(--gaspe-neutral-200)] focus:border-[var(--gaspe-teal-400)] focus:ring-[var(--gaspe-teal-400)]";
 const inputErr = inputBase + " border-red-300 focus:border-red-400 focus:ring-red-400";
 
@@ -87,7 +87,7 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           {/* Form */}
           <div className="lg:col-span-2 reveal">
-            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 sm:p-8">
+            <div className="rounded-2xl bg-surface border border-[var(--gaspe-neutral-200)] p-6 sm:p-8">
               {status === "success" && (
                 <div className="mb-6 rounded-xl border border-[var(--gaspe-green-200)] bg-[var(--gaspe-green-50)] p-5 flex items-start gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-green-200)]">
@@ -196,7 +196,7 @@ export default function ContactPage() {
 
           {/* Sidebar */}
           <div className="space-y-5 reveal stagger-2">
-            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6">
+            <div className="rounded-2xl bg-surface border border-[var(--gaspe-neutral-200)] p-6">
               <h3 className="font-heading text-base font-semibold text-foreground mb-5 flex items-center gap-2">
                 <svg className="h-5 w-5 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />

@@ -140,13 +140,13 @@ export default function AdminOffresPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par titre, entreprise, lieu..."
-            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white pl-10 pr-4 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface pl-10 pr-4 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
           />
         </div>
         <select
           value={filterContract}
           onChange={(e) => setFilterContract(e.target.value)}
-          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
         >
           <option value="">Tous les contrats</option>
           {contractTypes.map((ct) => (
@@ -156,7 +156,7 @@ export default function AdminOffresPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
         >
           <option value="">Tous les statuts</option>
           <option value="published">Publié</option>
@@ -178,7 +178,7 @@ export default function AdminOffresPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--gaspe-neutral-200)] bg-surface">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] text-left">

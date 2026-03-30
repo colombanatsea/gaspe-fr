@@ -159,12 +159,12 @@ export function RichTextEditor({
 
   const btnBase = "flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-colors hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)]";
   const btnActive = "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)]";
-  const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
+  const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   const groups = ["format", "heading", "list", "align", "insert"] as const;
 
   return (
-    <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white overflow-hidden">
+    <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-surface overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] px-2 py-1.5">
         {groups.map((group, gi) => (
@@ -218,7 +218,7 @@ export function RichTextEditor({
 
       {/* Link Modal */}
       {showLinkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowLinkModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" role="dialog" aria-modal="true" onClick={() => setShowLinkModal(false)}>
           <div className="rounded-2xl bg-white p-6 shadow-xl w-96" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-heading text-lg font-semibold text-foreground mb-4">Insérer un lien</h3>
             <div className="space-y-3">
@@ -241,7 +241,7 @@ export function RichTextEditor({
 
       {/* Image Modal */}
       {showImageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowImageModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" role="dialog" aria-modal="true" onClick={() => setShowImageModal(false)}>
           <div className="rounded-2xl bg-white p-6 shadow-xl w-96" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-heading text-lg font-semibold text-foreground mb-4">Insérer une image</h3>
             <div className="space-y-3">
@@ -274,7 +274,7 @@ export function RichTextEditor({
 
       {/* Table Modal */}
       {showTableModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowTableModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" role="dialog" aria-modal="true" onClick={() => setShowTableModal(false)}>
           <div className="rounded-2xl bg-white p-6 shadow-xl w-80" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-heading text-lg font-semibold text-foreground mb-4">Insérer un tableau</h3>
             <div className="space-y-3">
