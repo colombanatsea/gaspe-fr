@@ -34,7 +34,7 @@ const SEED_EVENTS: AgendaEvent[] = [
   {
     id: "event-seed-1",
     title: "AGE du GASPE",
-    description: "Assemblée Générale Extraordinaire du GASPE, réunissant l\u2019ensemble des adhérents pour les décisions statutaires et stratégiques du groupement.",
+    description: "Assemblée Générale Extraordinaire du GASPE, réunissant l'ensemble des adhérents pour les décisions statutaires et stratégiques du groupement.",
     startDate: "2026-05-19",
     endDate: "2026-05-19",
     location: "Nantes",
@@ -45,7 +45,7 @@ const SEED_EVENTS: AgendaEvent[] = [
   {
     id: "event-seed-2",
     title: "Assises de la Mer",
-    description: "Les Assises de l\u2019économie de la mer sont le rendez-vous annuel majeur des acteurs de l\u2019économie maritime française, organisé par Le Marin et le Cluster Maritime Français.",
+    description: "Les Assises de l'économie de la mer sont le rendez-vous annuel majeur des acteurs de l'économie maritime française, organisé par Le Marin et le Cluster Maritime Français.",
     startDate: "2026-11-24",
     endDate: "2026-11-25",
     location: "La Rochelle",

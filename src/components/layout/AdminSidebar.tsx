@@ -18,7 +18,7 @@ const navSections = [
   {
     title: "Contenu",
     items: [
-      { label: "Offres d\u2019emploi", href: "/admin/offres", icon: BriefcaseIcon },
+      { label: "Offres d'emploi", href: "/admin/offres", icon: BriefcaseIcon },
       { label: "Formations", href: "/admin/formations", icon: GraduationIcon },
       { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon },
       { label: "Pages", href: "/admin/pages", icon: PagesIcon },

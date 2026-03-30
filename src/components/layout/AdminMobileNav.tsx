@@ -22,7 +22,7 @@ const navItems = [
   {
     section: "Contenu",
     items: [
-      { label: "Offres d\u2019emploi", href: "/admin/offres", icon: "M2 7h20v14H2zM16 7V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v3" },
+      { label: "Offres d'emploi", href: "/admin/offres", icon: "M2 7h20v14H2zM16 7V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v3" },
       { label: "Formations", href: "/admin/formations", icon: "M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c0 2 4 3 6 3s6-1 6-3v-5" },
       { label: "Positions & Presse", href: "/admin/positions", icon: "M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2" },
     ],

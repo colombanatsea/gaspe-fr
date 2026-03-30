@@ -202,7 +202,7 @@ export default function AdminOffresPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={job.published ? "green" : "warm"}>
-                      {job.published ? "Publi\u00e9" : "Brouillon"}
+                      {job.published ? "Publié" : "Brouillon"}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-foreground-muted hidden md:table-cell">{formatDate(job.publishedAt)}</td>

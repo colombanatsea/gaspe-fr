@@ -19,12 +19,12 @@ interface Document {
 
 const DOCUMENTS_KEY = "gaspe_documents";
 
-const CATEGORIES = ["Tous", "Institutionnels", "Social", "R\u00e9glementaire", "Rapports"];
+const CATEGORIES = ["Tous", "Institutionnels", "Social", "Réglementaire", "Rapports"];
 
 const categoryVariant: Record<string, "teal" | "blue" | "warm" | "green" | "neutral"> = {
   Institutionnels: "teal",
   Social: "blue",
-  "R\u00e9glementaire": "warm",
+  "Réglementaire": "warm",
   Rapports: "green",
 };
 
@@ -71,11 +71,11 @@ export default function AdherentDocumentsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
         <Link href="/espace-adherent" className="text-sm text-primary hover:underline mb-1 inline-block">
-          &larr; Retour \u00e0 l&apos;espace adh\u00e9rent
+          &larr; Retour à l&apos;espace adhérent
         </Link>
         <h1 className="font-heading text-2xl font-bold text-foreground">Documents</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          Acc\u00e9dez aux documents institutionnels et r\u00e9glementaires r\u00e9serv\u00e9s aux adh\u00e9rents.
+          Accédez aux documents institutionnels et réglementaires réservés aux adhérents.
         </p>
       </div>
 
@@ -116,8 +116,8 @@ export default function AdherentDocumentsPage() {
         <Card>
           <p className="text-center py-6 text-foreground-muted">
             {documents.length === 0
-              ? "Aucun document disponible pour le moment. Les documents sont ajout\u00e9s par l\u2019administrateur."
-              : "Aucun document ne correspond \u00e0 vos crit\u00e8res de recherche."}
+              ? "Aucun document disponible pour le moment. Les documents sont ajoutés par l'administrateur."
+              : "Aucun document ne correspond à vos critères de recherche."}
           </p>
         </Card>
       ) : (
@@ -134,14 +134,14 @@ export default function AdherentDocumentsPage() {
                     {doc.category}
                   </Badge>
                   {doc.isPrivate && (
-                    <Badge variant="warm">Priv\u00e9</Badge>
+                    <Badge variant="warm">Privé</Badge>
                   )}
                   <span className="text-xs text-foreground-muted">{doc.date}</span>
                 </div>
               </div>
               <button
                 className="shrink-0 flex items-center gap-1 text-primary hover:text-primary-hover transition-colors text-sm font-heading font-semibold"
-                title="T\u00e9l\u00e9charger"
+                title="Télécharger"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

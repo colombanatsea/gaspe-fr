@@ -26,7 +26,7 @@ function validate(data: FormData): FormErrors {
   const errors: FormErrors = {};
   if (!data.nom.trim()) errors.nom = "Le nom est requis.";
   if (!data.email.trim()) {
-    errors.email = "L\u2019email est requis.";
+    errors.email = "L'email est requis.";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = "Veuillez entrer un email valide.";
   }

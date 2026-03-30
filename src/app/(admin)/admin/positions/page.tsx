@@ -14,7 +14,7 @@ interface Position {
   title: string;
   excerpt: string;
   content: string;
-  category: "Position" | "Communiqu\u00e9 de presse" | "Actualit\u00e9";
+  category: "Position" | "Communiqué de presse" | "Actualité";
   date: string;
   coverImageUrl: string;
   published: boolean;
@@ -71,8 +71,8 @@ export default function AdminPositionsPage() {
 
   const catVariant: Record<string, "teal" | "blue" | "warm"> = {
     Position: "teal",
-    "Communiqu\u00e9 de presse": "blue",
-    "Actualit\u00e9": "warm",
+    "Communiqué de presse": "blue",
+    "Actualité": "warm",
   };
 
   return (
@@ -148,7 +148,7 @@ export default function AdminPositionsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={p.published ? "green" : "warm"}>
-                      {p.published ? "Publi\u00e9" : "Brouillon"}
+                      {p.published ? "Publié" : "Brouillon"}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
@@ -157,7 +157,7 @@ export default function AdminPositionsPage() {
                         onClick={() => togglePublish(p.id)}
                         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
                       >
-                        {p.published ? "D\u00e9publier" : "Publier"}
+                        {p.published ? "Dépublier" : "Publier"}
                       </button>
                       <button
                         onClick={() => deletePosition(p.id)}

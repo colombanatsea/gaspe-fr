@@ -107,7 +107,7 @@ export default function EspaceCandidatPage() {
 
   const dashboardCards = [
     {
-      title: "Offres d\u2019emploi",
+      title: "Offres d'emploi",
       href: "/nos-compagnies-recrutent",
       count: publishedJobs.length,
       description: "Parcourir les offres disponibles",
@@ -133,7 +133,7 @@ export default function EspaceCandidatPage() {
       ),
     },
     {
-      title: "Offres sauvegard\u00e9es",
+      title: "Offres sauvegardées",
       href: "#saved",
       count: savedOffers.length,
       description: "Mes offres favorites",
@@ -147,7 +147,7 @@ export default function EspaceCandidatPage() {
       title: "Formations disponibles",
       href: "/espace-candidat/formations",
       count: formationsCount,
-      description: "D\u00e9couvrir les formations",
+      description: "Découvrir les formations",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
           <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
@@ -214,7 +214,7 @@ export default function EspaceCandidatPage() {
               {/* Completion bar */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-foreground">Profil compl\u00e9t\u00e9</span>
+                  <span className="text-sm font-medium text-foreground">Profil complété</span>
                   <span className="text-sm font-bold text-primary">{completion}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-surface overflow-hidden">
@@ -228,7 +228,7 @@ export default function EspaceCandidatPage() {
               {editing ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-foreground">T\u00e9l\u00e9phone</label>
+                    <label className="block text-sm font-medium text-foreground">Téléphone</label>
                     <input
                       type="tel"
                       value={form.phone}
@@ -246,7 +246,7 @@ export default function EspaceCandidatPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground">Poste recherch\u00e9</label>
+                    <label className="block text-sm font-medium text-foreground">Poste recherché</label>
                     <input
                       type="text"
                       value={form.desiredPosition}
@@ -255,13 +255,13 @@ export default function EspaceCandidatPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground">Exp\u00e9rience professionnelle</label>
+                    <label className="block text-sm font-medium text-foreground">Expérience professionnelle</label>
                     <textarea
                       rows={3}
                       value={form.experience}
                       onChange={(e) => setForm((p) => ({ ...p, experience: e.target.value }))}
                       className={inputClass}
-                      placeholder="D\u00e9crivez votre exp\u00e9rience maritime..."
+                      placeholder="Décrivez votre expérience maritime..."
                     />
                   </div>
                   <div>
@@ -338,7 +338,7 @@ export default function EspaceCandidatPage() {
                     </div>
                     {form.cvFilename && (
                       <p className="text-xs text-foreground-muted mt-1">
-                        Fichier s\u00e9lectionn\u00e9 : {form.cvFilename}
+                        Fichier sélectionné : {form.cvFilename}
                       </p>
                     )}
                   </div>
@@ -358,23 +358,23 @@ export default function EspaceCandidatPage() {
                     <p className="text-sm text-foreground">{user.email}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">T\u00e9l\u00e9phone</p>
-                    <p className="text-sm text-foreground">{user.phone || "Non renseign\u00e9"}</p>
+                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Téléphone</p>
+                    <p className="text-sm text-foreground">{user.phone || "Non renseigné"}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Poste actuel</p>
-                    <p className="text-sm text-foreground">{user.currentPosition || "Non renseign\u00e9"}</p>
+                    <p className="text-sm text-foreground">{user.currentPosition || "Non renseigné"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Poste recherch\u00e9</p>
-                    <p className="text-sm text-foreground">{user.desiredPosition || "Non renseign\u00e9"}</p>
+                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Poste recherché</p>
+                    <p className="text-sm text-foreground">{user.desiredPosition || "Non renseigné"}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">CV</p>
                     <p className="text-sm text-foreground">
                       {user.cvFilename
                         ? user.cvFilename
-                        : "Non charg\u00e9"}
+                        : "Non chargé"}
                     </p>
                   </div>
                 </div>
@@ -385,13 +385,13 @@ export default function EspaceCandidatPage() {
           {/* Saved offers */}
           <section id="saved">
             <h2 className="font-heading text-xl font-semibold text-foreground mb-4">
-              Offres sauvegard\u00e9es
+              Offres sauvegardées
               {savedOffers.length > 0 && <Badge variant="teal" className="ml-2">{savedOffers.length}</Badge>}
             </h2>
             {savedOffers.length === 0 ? (
               <Card>
                 <p className="text-center py-6 text-foreground-muted">
-                  Vous n&apos;avez pas encore sauvegard\u00e9 d&apos;offres.
+                  Vous n&apos;avez pas encore sauvegardé d&apos;offres.
                 </p>
                 <div className="text-center">
                   <Link href="/nos-compagnies-recrutent">
@@ -448,7 +448,7 @@ export default function EspaceCandidatPage() {
             {applications.length === 0 ? (
               <Card>
                 <p className="text-center py-6 text-foreground-muted">
-                  Vous n&apos;avez pas encore postul\u00e9 \u00e0 des offres.
+                  Vous n&apos;avez pas encore postulé à des offres.
                 </p>
                 <div className="text-center">
                   <Link href="/nos-compagnies-recrutent">
@@ -473,10 +473,10 @@ export default function EspaceCandidatPage() {
                             {job ? job.title : `Offre #${app.offerId}`}
                           </p>
                           {job && (
-                            <p className="text-xs text-foreground-muted">{job.company} \u00b7 {job.location}</p>
+                            <p className="text-xs text-foreground-muted">{job.company} · {job.location}</p>
                           )}
                           <p className="text-xs text-foreground-muted mt-0.5">
-                            Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
+                            Postulé le {new Date(app.date).toLocaleDateString("fr-FR")}
                           </p>
                         </div>
                         <Badge variant={config.variant}>{config.label}</Badge>
@@ -527,10 +527,10 @@ export default function EspaceCandidatPage() {
             <CardTitle>Liens rapides</CardTitle>
             <nav className="mt-3 space-y-1">
               {[
-                { label: "Toutes les offres d\u2019emploi", href: "/nos-compagnies-recrutent" },
+                { label: "Toutes les offres d'emploi", href: "/nos-compagnies-recrutent" },
                 { label: "Formations", href: "/espace-candidat/formations" },
-                { label: "Nos adh\u00e9rents", href: "/nos-adherents" },
-                { label: "Actualit\u00e9s", href: "/actualites" },
+                { label: "Nos adhérents", href: "/nos-adherents" },
+                { label: "Actualités", href: "/actualites" },
                 { label: "Contact", href: "/contact" },
               ].map((link) => (
                 <Link
@@ -579,7 +579,7 @@ export default function EspaceCandidatPage() {
           <Card>
             <CardTitle>Besoin d&apos;aide ?</CardTitle>
             <CardDescription>
-              Contactez l&apos;\u00e9quipe GASPE pour toute question relative \u00e0 votre candidature ou aux offres d&apos;emploi.
+              Contactez l&apos;équipe GASPE pour toute question relative à votre candidature ou aux offres d&apos;emploi.
             </CardDescription>
             <Link href="/contact" className="mt-3 inline-block">
               <Button variant="secondary">Nous contacter</Button>

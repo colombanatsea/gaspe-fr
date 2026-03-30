@@ -31,7 +31,7 @@ const documents: DocumentItem[] = [
   // Convention Collective et Accords de Branche
   {
     title:
-      "Convention Collective Nationale du personnel navigant des passages d\u2019eau (CCN 3228 / IDCC 3228)",
+      "Convention Collective Nationale du personnel navigant des passages d'eau (CCN 3228 / IDCC 3228)",
     category: "Convention Collective et Accords de Branche",
     date: "Mars 2026",
     sortKey: "2026-03",
@@ -45,7 +45,7 @@ const documents: DocumentItem[] = [
     href: "#",
   },
   {
-    title: "Accord de branche sur la pr\u00e9voyance compl\u00e9mentaire",
+    title: "Accord de branche sur la prévoyance complémentaire",
     category: "Convention Collective et Accords de Branche",
     date: "Novembre 2025",
     sortKey: "2025-11",
@@ -73,12 +73,12 @@ const documents: DocumentItem[] = [
     href: "#",
   },
   {
-    title: "R\u00e8glement int\u00e9rieur",
+    title: "Règlement intérieur",
     category: "Documents Institutionnels",
     href: "#",
   },
   {
-    title: "Rapport d\u2019activit\u00e9 2025",
+    title: "Rapport d'activité 2025",
     category: "Documents Institutionnels",
     date: "Mars 2026",
     sortKey: "2026-03",
@@ -94,28 +94,28 @@ const documents: DocumentItem[] = [
 
   // Publications et Notes de Position
   {
-    title: "Transition \u00e9nerg\u00e9tique des flottes",
+    title: "Transition énergétique des flottes",
     category: "Publications et Notes de Position",
-    date: "F\u00e9vrier 2026",
+    date: "Février 2026",
     sortKey: "2026-02",
     href: "#",
   },
   {
-    title: "Accessibilit\u00e9 PMR sur les liaisons maritimes",
+    title: "Accessibilité PMR sur les liaisons maritimes",
     category: "Publications et Notes de Position",
     date: "Janvier 2026",
     sortKey: "2026-01",
     href: "#",
   },
   {
-    title: "Continuit\u00e9 territoriale et service public",
+    title: "Continuité territoriale et service public",
     category: "Publications et Notes de Position",
-    date: "D\u00e9cembre 2025",
+    date: "Décembre 2025",
     sortKey: "2025-12",
     href: "#",
   },
   {
-    title: "Formation et attractivit\u00e9 des m\u00e9tiers maritimes",
+    title: "Formation et attractivité des métiers maritimes",
     category: "Publications et Notes de Position",
     date: "Novembre 2025",
     sortKey: "2025-11",

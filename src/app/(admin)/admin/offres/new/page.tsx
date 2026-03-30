@@ -17,8 +17,8 @@ const categories = [
   "Pont",
   "Machine",
   "Technique",
-  "Personnel h\u00f4telier",
-  "Personnel \u00e0 terre",
+  "Personnel hôtelier",
+  "Personnel à terre",
   "Direction",
   "Autre",
 ];
@@ -291,7 +291,7 @@ export default function AdminNewOffrePage() {
             Annuler
           </Link>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Publication..." : "Publier l\u2019offre"}
+            {isSubmitting ? "Publication..." : "Publier l'offre"}
           </Button>
         </div>
       </form>

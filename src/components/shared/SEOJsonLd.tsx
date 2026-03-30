@@ -24,7 +24,7 @@ export function OrganizationJsonLd() {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: "GASPE",
-        legalName: "Groupement des Armateurs de Services Publics Maritimes de Passages d\u2019Eau",
+        legalName: "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
         url: "https://www.gaspe.fr",
         foundingDate: "1951",
         description:

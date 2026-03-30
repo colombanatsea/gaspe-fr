@@ -78,7 +78,7 @@ export default function EspaceAdherentPage() {
 
   const dashboardCards = [
     {
-      title: "Mes offres d\u2019emploi",
+      title: "Mes offres d'emploi",
       count: offersCount,
       href: "/espace-adherent/offres",
       description: `${activeOffersCount} offre${activeOffersCount !== 1 ? "s" : ""} active${activeOffersCount !== 1 ? "s" : ""}`,
@@ -102,10 +102,10 @@ export default function EspaceAdherentPage() {
       ),
     },
     {
-      title: "Documents priv\u00e9s",
+      title: "Documents privés",
       count: documentsCount,
       href: "/espace-adherent/documents",
-      description: "Documents institutionnels et r\u00e9glementaires",
+      description: "Documents institutionnels et réglementaires",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -120,7 +120,7 @@ export default function EspaceAdherentPage() {
       title: "Annuaire membres",
       count: null,
       href: "/espace-adherent/annuaire",
-      description: "R\u00e9pertoire complet des adh\u00e9rents",
+      description: "Répertoire complet des adhérents",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -137,7 +137,7 @@ export default function EspaceAdherentPage() {
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-bold text-foreground">
-          Espace Adh\u00e9rent
+          Espace Adhérent
         </h1>
         <p className="mt-1 text-foreground-muted">
           Bienvenue, <span className="font-semibold text-foreground">{user.name}</span>
@@ -155,11 +155,11 @@ export default function EspaceAdherentPage() {
         </div>
         <div className="rounded-lg bg-background p-4 shadow-sm border-l-[3px] border-l-[var(--gaspe-blue-600)]">
           <p className="text-2xl font-bold font-heading text-foreground">{applicationsCount}</p>
-          <p className="text-sm text-foreground-muted">Candidatures re\u00e7ues</p>
+          <p className="text-sm text-foreground-muted">Candidatures reçues</p>
         </div>
         <div className="rounded-lg bg-background p-4 shadow-sm border-l-[3px] border-l-[var(--gaspe-green-300)]">
           <p className="text-2xl font-bold font-heading text-foreground">{profileCompletion}%</p>
-          <p className="text-sm text-foreground-muted">Profil compl\u00e9t\u00e9</p>
+          <p className="text-sm text-foreground-muted">Profil complété</p>
         </div>
       </div>
 
@@ -240,7 +240,7 @@ export default function EspaceAdherentPage() {
             <CardTitle>Liens rapides</CardTitle>
             <nav className="mt-3 space-y-1">
               {[
-                { label: "Offres d\u2019emploi", href: "/nos-compagnies-recrutent" },
+                { label: "Offres d'emploi", href: "/nos-compagnies-recrutent" },
                 { label: "Documents publics", href: "/documents" },
                 { label: "Agenda", href: "/agenda" },
                 { label: "Contact GASPE", href: "/contact" },

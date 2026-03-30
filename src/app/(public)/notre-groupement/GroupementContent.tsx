@@ -75,7 +75,7 @@ const engagements = [
 const bureauMembers = [
   { name: "Baudouin PAPPENS", role: "Président", company: "Compagnie Yeu Continent" },
   { name: "Guillaume du FONTENIOUX", role: "Vice-président", company: "Compagnie des Bacs de Loire" },
-  { name: "Marc L\u2019Alexandre", role: "Vice-président", company: "Groupe LHD" },
+  { name: "Marc L'Alexandre", role: "Vice-président", company: "Groupe LHD" },
   { name: "Nelly DEPARDIEU", role: "Secrétaire", company: "Compagnie maritime DNO (Manche Iles Express)" },
   { name: "Franck LAUSSEL", role: "Secrétaire adjoint", company: undefined },
   { name: "Thomas CREPY", role: "Trésorier", company: "Compagnie Océane" },

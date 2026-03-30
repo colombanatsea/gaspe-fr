@@ -14,7 +14,7 @@ const inputClass =
 
 const categoryBadge: Record<string, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   titulaire: { label: "Titulaire", variant: "teal" },
-  associe: { label: "Associ\u00e9", variant: "blue" },
+  associe: { label: "Associé", variant: "blue" },
 };
 
 type FilterMode = "all" | "titulaire" | "associe" | "archived";
@@ -120,7 +120,7 @@ export default function AdminMembresPage() {
     } else {
       // check duplicate slug
       if (list.some((m) => m.slug === slug)) {
-        alert("Un membre avec ce slug existe d\u00e9j\u00e0.");
+        alert("Un membre avec ce slug existe déjà.");
         return;
       }
       list.push(entry);
@@ -144,7 +144,7 @@ export default function AdminMembresPage() {
   }
 
   function handleDelete(m: StoredMember) {
-    if (!confirm(`Supprimer d\u00e9finitivement ${m.name} ? Cette action est irr\u00e9versible.`)) return;
+    if (!confirm(`Supprimer définitivement ${m.name} ? Cette action est irréversible.`)) return;
     const list = getStoredMembers().filter((x) => x.slug !== m.slug);
     saveMembers(list);
     refresh();
@@ -166,7 +166,7 @@ export default function AdminMembresPage() {
             {activeCount} membre{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}
             {archivedCount > 0 && (
               <span className="ml-2 text-foreground-muted">
-                — {archivedCount} archiv\u00e9{archivedCount > 1 ? "s" : ""}
+                — {archivedCount} archivé{archivedCount > 1 ? "s" : ""}
               </span>
             )}
           </p>
@@ -214,11 +214,11 @@ export default function AdminMembresPage() {
         </div>
         <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
           <p className="text-2xl font-bold font-heading text-[var(--gaspe-blue-500)]">{associeCount}</p>
-          <p className="text-xs text-foreground-muted">Associ\u00e9s</p>
+          <p className="text-xs text-foreground-muted">Associés</p>
         </div>
         <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
           <p className="text-2xl font-bold font-heading text-foreground-muted">{archivedCount}</p>
-          <p className="text-xs text-foreground-muted">Archiv\u00e9s</p>
+          <p className="text-xs text-foreground-muted">Archivés</p>
         </div>
       </div>
 
@@ -234,7 +234,7 @@ export default function AdminMembresPage() {
                   ? titulaireCount
                   : associeCount;
           const label =
-            f === "all" ? "Tous" : f === "archived" ? "Archiv\u00e9s" : categoryBadge[f].label + "s";
+            f === "all" ? "Tous" : f === "archived" ? "Archivés" : categoryBadge[f].label + "s";
           return (
             <button
               key={f}
@@ -263,16 +263,16 @@ export default function AdminMembresPage() {
         <div className="hidden lg:grid grid-cols-[1fr_120px_140px_80px_80px_80px_80px_180px] gap-4 px-6 py-3 bg-[var(--gaspe-neutral-50)] border-b border-[var(--gaspe-neutral-200)] text-xs font-semibold text-foreground-muted uppercase tracking-wider">
           <span>Membre</span>
           <span>Ville</span>
-          <span>R\u00e9gion</span>
-          <span>Cat\u00e9gorie</span>
+          <span>Région</span>
+          <span>Catégorie</span>
           <span>Navires</span>
-          <span>Employ\u00e9s</span>
+          <span>Employés</span>
           <span>Statut</span>
           <span className="text-right">Actions</span>
         </div>
 
         {filtered.length === 0 ? (
-          <p className="text-center py-12 text-foreground-muted">Aucun membre trouv\u00e9.</p>
+          <p className="text-center py-12 text-foreground-muted">Aucun membre trouvé.</p>
         ) : (
           <div className="divide-y divide-[var(--gaspe-neutral-100)]">
             {filtered.map((m) => (
@@ -305,7 +305,7 @@ export default function AdminMembresPage() {
 
                 {/* Region */}
                 <div className="text-sm text-foreground-muted truncate">
-                  <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">R\u00e9gion :</span>
+                  <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">Région :</span>
                   {m.region}
                 </div>
 
@@ -324,7 +324,7 @@ export default function AdminMembresPage() {
 
                 {/* Employee count */}
                 <div className="text-sm text-foreground">
-                  <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">Employ\u00e9s :</span>
+                  <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">Employés :</span>
                   {m.employeeCount ?? "—"}
                 </div>
 
@@ -333,7 +333,7 @@ export default function AdminMembresPage() {
                   {m.archived ? (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground-muted">
                       <span className="h-2 w-2 rounded-full bg-[var(--gaspe-neutral-400)]" />
-                      Archiv\u00e9
+                      Archivé
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gaspe-green-500)]">
@@ -439,12 +439,12 @@ export default function AdminMembresPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">R\u00e9gion *</label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">Région *</label>
                   <input
                     className={inputClass}
                     value={form.region}
                     onChange={(e) => updateField("region", e.target.value)}
-                    placeholder="R\u00e9gion"
+                    placeholder="Région"
                   />
                 </div>
               </div>
@@ -482,19 +482,19 @@ export default function AdminMembresPage() {
                     value={form.territory}
                     onChange={(e) => updateField("territory", e.target.value as "metropole" | "dom-tom")}
                   >
-                    <option value="metropole">M\u00e9tropole</option>
+                    <option value="metropole">Métropole</option>
                     <option value="dom-tom">Outre-mer</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Cat\u00e9gorie</label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">Catégorie</label>
                   <select
                     className={inputClass}
                     value={form.category}
                     onChange={(e) => updateField("category", e.target.value as "titulaire" | "associe")}
                   >
                     <option value="titulaire">Titulaire</option>
-                    <option value="associe">Associ\u00e9</option>
+                    <option value="associe">Associé</option>
                   </select>
                 </div>
               </div>
@@ -522,7 +522,7 @@ export default function AdminMembresPage() {
               {/* Employee count + Ship count */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Nombre d&apos;employ\u00e9s</label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">Nombre d&apos;employés</label>
                   <input
                     type="number"
                     className={inputClass}

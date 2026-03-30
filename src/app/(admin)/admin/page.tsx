@@ -193,12 +193,12 @@ export default function AdminDashboardPage() {
           </h2>
           <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] divide-y divide-[var(--gaspe-neutral-100)]">
             {[
-              { label: "Nouvelle offre d\u2019emploi", href: "/admin/offres/new", icon: "+" },
+              { label: "Nouvelle offre d'emploi", href: "/admin/offres/new", icon: "+" },
               { label: "Nouvelle formation", href: "/admin/formations/new", icon: "+" },
               { label: "Nouveau contenu", href: "/admin/positions/new", icon: "+" },
-              { label: "Gérer les membres", href: "/admin/membres", icon: "\u2192" },
-              { label: "Gérer les comptes", href: "/admin/comptes", icon: "\u2192" },
-              { label: "Paramètres du site", href: "/admin/parametres", icon: "\u2192" },
+              { label: "Gérer les membres", href: "/admin/membres", icon: "→" },
+              { label: "Gérer les comptes", href: "/admin/comptes", icon: "→" },
+              { label: "Paramètres du site", href: "/admin/parametres", icon: "→" },
             ].map((action) => (
               <Link
                 key={action.label}

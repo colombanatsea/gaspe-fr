@@ -80,11 +80,11 @@ function writeOffers(offers: JobOffer[]) {
 const statusLabel: Record<string, { text: string; variant: "teal" | "warm" | "neutral" }> = {
   active: { text: "Active", variant: "teal" },
   draft: { text: "Brouillon", variant: "neutral" },
-  closed: { text: "Cl\u00f4tur\u00e9e", variant: "warm" },
+  closed: { text: "Clôturée", variant: "warm" },
 };
 
 const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance"];
-const categories = ["Pont", "Machine", "Personnel h\u00f4telier", "Personnel \u00e0 terre", "Direction", "Autre"];
+const categories = ["Pont", "Machine", "Personnel hôtelier", "Personnel à terre", "Direction", "Autre"];
 
 const inputClass =
   "mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
@@ -208,11 +208,11 @@ export default function AdherentOffresPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/espace-adherent" className="text-sm text-primary hover:underline mb-1 inline-block">
-            &larr; Retour \u00e0 l&apos;espace adh\u00e9rent
+            &larr; Retour à l&apos;espace adhérent
           </Link>
           <h1 className="font-heading text-2xl font-bold text-foreground">Mes offres d&apos;emploi</h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            G\u00e9rez les offres d&apos;emploi de <span className="font-medium">{user.company}</span>.
+            Gérez les offres d&apos;emploi de <span className="font-medium">{user.company}</span>.
           </p>
         </div>
         {!showForm && (
@@ -251,13 +251,13 @@ export default function AdherentOffresPage() {
       {/* Create / Edit form */}
       {showForm && (
         <Card className="mb-6">
-          <CardTitle>{editingId ? "Modifier l\u2019offre" : "Nouvelle offre d\u2019emploi"}</CardTitle>
+          <CardTitle>{editingId ? "Modifier l'offre" : "Nouvelle offre d'emploi"}</CardTitle>
           <p className="text-sm text-foreground-muted mt-1 mb-4">
             Compagnie : <span className="font-medium text-foreground">{user.company}</span>
           </p>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground">Intitul\u00e9 du poste *</label>
+              <label className="block text-sm font-medium text-foreground">Intitulé du poste *</label>
               <input
                 type="text"
                 required
@@ -275,7 +275,7 @@ export default function AdherentOffresPage() {
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 className={inputClass}
-                placeholder="D\u00e9crivez le poste, les missions principales..."
+                placeholder="Décrivez le poste, les missions principales..."
               />
             </div>
 
@@ -321,7 +321,7 @@ export default function AdherentOffresPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground">Cat\u00e9gorie</label>
+                <label className="block text-sm font-medium text-foreground">Catégorie</label>
                 <select
                   value={form.category}
                   onChange={(e) => update("category", e.target.value)}
@@ -352,7 +352,7 @@ export default function AdherentOffresPage() {
                   value={form.salaryRange}
                   onChange={(e) => update("salaryRange", e.target.value)}
                   className={inputClass}
-                  placeholder="Ex: 3 500 - 4 500 \u20ac/mois"
+                  placeholder="Ex: 3 500 - 4 500 €/mois"
                 />
               </div>
             </div>
@@ -369,13 +369,13 @@ export default function AdherentOffresPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground">Profil recherch\u00e9</label>
+              <label className="block text-sm font-medium text-foreground">Profil recherché</label>
               <textarea
                 rows={3}
                 value={form.profile}
                 onChange={(e) => update("profile", e.target.value)}
                 className={inputClass}
-                placeholder="Brevets requis, exp\u00e9rience, comp\u00e9tences..."
+                placeholder="Brevets requis, expérience, compétences..."
               />
             </div>
 
@@ -386,13 +386,13 @@ export default function AdherentOffresPage() {
                 value={form.conditions}
                 onChange={(e) => update("conditions", e.target.value)}
                 className={inputClass}
-                placeholder="Contrat, r\u00e9mun\u00e9ration, r\u00e9gime social..."
+                placeholder="Contrat, rémunération, régime social..."
               />
             </div>
 
             <div className="flex gap-3 pt-2">
               <Button onClick={() => handleSave(false)}>
-                {editingId ? "Enregistrer" : "Publier l\u2019offre"}
+                {editingId ? "Enregistrer" : "Publier l'offre"}
               </Button>
               {!editingId && (
                 <Button variant="secondary" onClick={() => handleSave(true)}>
@@ -409,7 +409,7 @@ export default function AdherentOffresPage() {
       {offers.length === 0 && !showForm && (
         <Card>
           <p className="text-center py-6 text-foreground-muted">
-            Aucune offre publi\u00e9e pour le moment.
+            Aucune offre publiée pour le moment.
           </p>
           <div className="text-center">
             <Button onClick={() => setShowForm(true)}>Publier une offre</Button>
@@ -464,9 +464,9 @@ export default function AdherentOffresPage() {
                         <button
                           onClick={() => handleToggleStatus(offer)}
                           className="rounded-lg border border-border-light px-3 py-1.5 text-xs font-heading font-semibold text-foreground hover:bg-surface transition-colors"
-                          title={offer.status === "active" ? "Cl\u00f4turer" : "R\u00e9activer"}
+                          title={offer.status === "active" ? "Clôturer" : "Réactiver"}
                         >
-                          {offer.status === "active" ? "Cl\u00f4turer" : "Activer"}
+                          {offer.status === "active" ? "Clôturer" : "Activer"}
                         </button>
                         <button
                           onClick={() => handleDelete(offer.id)}
@@ -496,7 +496,7 @@ export default function AdherentOffresPage() {
                 <p className="text-sm text-foreground-muted">
                   {offer.location && <>{offer.location} — </>}{offer.contractType}
                   <span className="ml-2 text-xs">
-                    Publi\u00e9e le {new Date(offer.createdAt).toLocaleDateString("fr-FR")}
+                    Publiée le {new Date(offer.createdAt).toLocaleDateString("fr-FR")}
                   </span>
                 </p>
                 <p className="text-sm text-foreground-muted">
@@ -508,7 +508,7 @@ export default function AdherentOffresPage() {
                     onClick={() => handleToggleStatus(offer)}
                     className="rounded-lg border-2 border-primary px-4 py-2 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors"
                   >
-                    {offer.status === "active" ? "Cl\u00f4turer" : "Activer"}
+                    {offer.status === "active" ? "Clôturer" : "Activer"}
                   </button>
                   <button
                     onClick={() => handleDelete(offer.id)}

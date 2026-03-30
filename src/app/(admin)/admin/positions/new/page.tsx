@@ -11,7 +11,7 @@ import { ContentPreview } from "@/components/admin/ContentPreview";
 
 const POSITIONS_KEY = "gaspe_positions";
 
-const categoryOptions = ["Position", "Communiqu\u00e9 de presse", "Actualit\u00e9"];
+const categoryOptions = ["Position", "Communiqué de presse", "Actualité"];
 
 export default function AdminNewPositionPage() {
   const { user } = useAuth();

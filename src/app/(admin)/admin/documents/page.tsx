@@ -22,7 +22,7 @@ interface GaspeDocument {
 const CATEGORIES = [
   "Documents institutionnels",
   "Social (CCN 3228, accords de branche)",
-  "R\u00e9glementaire",
+  "Réglementaire",
   "Rapports",
 ];
 
@@ -39,7 +39,7 @@ const SEED_DOCUMENTS: GaspeDocument[] = [
   {
     id: "doc-seed-2",
     title: "Accord de branche - Salaires 2026",
-    description: "Accord de branche relatif aux salaires minima pour l\u2019ann\u00e9e 2026",
+    description: "Accord de branche relatif aux salaires minima pour l'année 2026",
     category: "Social (CCN 3228, accords de branche)",
     fileUrl: "#",
     uploadDate: "2026-02-01",
@@ -48,7 +48,7 @@ const SEED_DOCUMENTS: GaspeDocument[] = [
   {
     id: "doc-seed-3",
     title: "Statuts du GASPE",
-    description: "Statuts de l\u2019association GASPE mis \u00e0 jour lors de la derni\u00e8re AGE",
+    description: "Statuts de l'association GASPE mis à jour lors de la dernière AGE",
     category: "Documents institutionnels",
     fileUrl: "#",
     uploadDate: "2025-06-15",
@@ -56,8 +56,8 @@ const SEED_DOCUMENTS: GaspeDocument[] = [
   },
   {
     id: "doc-seed-4",
-    title: "R\u00e8glement int\u00e9rieur",
-    description: "R\u00e8glement int\u00e9rieur du GASPE",
+    title: "Règlement intérieur",
+    description: "Règlement intérieur du GASPE",
     category: "Documents institutionnels",
     fileUrl: "#",
     uploadDate: "2025-06-15",
@@ -226,7 +226,7 @@ export default function AdminDocumentsPage() {
             <button type="button" onClick={resetForm} className="rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors">
               Annuler
             </button>
-            <Button type="submit">{editId ? "Mettre \u00e0 jour" : "Cr\u00e9er"}</Button>
+            <Button type="submit">{editId ? "Mettre à jour" : "Créer"}</Button>
           </div>
         </form>
       )}
@@ -246,7 +246,7 @@ export default function AdminDocumentsPage() {
                       <FileIcon className="h-4 w-4 text-primary shrink-0" />
                       <h3 className="font-heading text-sm font-semibold text-foreground">{doc.title}</h3>
                       <Badge variant={doc.isPublic ? "green" : "neutral"}>
-                        {doc.isPublic ? "Public" : "Adh\u00e9rents"}
+                        {doc.isPublic ? "Public" : "Adhérents"}
                       </Badge>
                     </div>
                     <p className="text-xs text-foreground-muted ml-6">{doc.description}</p>

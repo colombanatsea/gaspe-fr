@@ -59,7 +59,7 @@ function TypeIcon({ type }: { type: NotificationType }) {
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "À l\u2019instant";
+  if (minutes < 1) return "À l'instant";
   if (minutes < 60) return `Il y a ${minutes} min`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `Il y a ${hours} h`;

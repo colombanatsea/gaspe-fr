@@ -80,11 +80,11 @@ export default function CandidatFormationsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
         <Link href="/espace-candidat" className="text-sm text-primary hover:underline mb-1 inline-block">
-          &larr; Retour \u00e0 l&apos;espace candidat
+          &larr; Retour à l&apos;espace candidat
         </Link>
         <h1 className="font-heading text-2xl font-bold text-foreground">Formations</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          D\u00e9couvrez les formations disponibles et inscrivez-vous.
+          Découvrez les formations disponibles et inscrivez-vous.
         </p>
       </div>
 
@@ -136,7 +136,7 @@ export default function CandidatFormationsPage() {
                     onClick={() => handleUnregister(f.id)}
                     className="rounded-lg border-2 border-red-300 px-4 py-2 text-sm font-heading font-semibold text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    Se d\u00e9sinscrire
+                    Se désinscrire
                   </button>
                 </div>
               </Card>
@@ -156,13 +156,13 @@ export default function CandidatFormationsPage() {
               Aucune formation disponible pour le moment.
             </p>
             <p className="text-center text-sm text-foreground-muted">
-              Les formations sont organis\u00e9es par le GASPE et ses partenaires. Revenez bient\u00f4t.
+              Les formations sont organisées par le GASPE et ses partenaires. Revenez bientôt.
             </p>
           </Card>
         ) : availableFormations.length === 0 ? (
           <Card>
             <p className="text-center py-6 text-foreground-muted">
-              Vous \u00eates inscrit \u00e0 toutes les formations disponibles.
+              Vous êtes inscrit à toutes les formations disponibles.
             </p>
           </Card>
         ) : (
