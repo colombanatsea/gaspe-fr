@@ -200,14 +200,23 @@ npx wrangler deploy --config workers/wrangler.toml
 13. ~~**Upload CV validation**~~ — DONE: types PDF/DOC/DOCX + taille max 5 Mo
 14. ~~**API documentation**~~ — DONE: guide déploiement Worker amélioré dans `src/lib/api.ts`
 
-### Architecture v2.0.0
-- **81 pages** statiques (48 → 81 avec les 31 pages culture + 2 pages légales)
+### Architecture v2.1.0 (session 15)
+- **90 pages** statiques (81 → 90 avec 8 formations detail + 1 formations listing)
 - **Route groups**: `(public)/`, `(admin)/`, `(auth)/`
-- **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
+- **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `formations.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
 - **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable
 - **Sécurité**: CSP headers, password hashing, file upload validation, XSS sanitization
+- **Dark mode**: ThemeContext + ThemeToggle, CSS variables via `[data-theme="dark"]`, localStorage persistence
 
-### Known issues & gaps (audited end of session 14)
+## Session 15 completed
+1. ~~**UX polish**~~ — DONE: standardisé border-radius (rounded-xl/2xl), loading states inscription, scroll reveal sur 6 pages
+2. ~~**Score matching détail offre**~~ — DONE: JobMatchScore composant (cercle SVG progressif, candidats uniquement)
+3. ~~**Dark mode**~~ — DONE: ThemeContext + ThemeToggle dans Header, variables CSS dark, glass/cards remappés
+4. ~~**Pages formations**~~ — DONE: `src/data/formations.ts` (8 formations avec contenu HTML complet), `/formations` listing + `/formations/[slug]` detail (SSG)
+5. ~~**E2E tests**~~ — DONE: formations.spec.ts (5 tests) + pages.spec.ts (17 tests: smoke tests pages publiques + auth + dark mode)
+6. ~~**ScrollRevealWrapper**~~ — DONE: composant client pour ajouter reveal aux pages server
+
+### Known issues & gaps (audited end of session 15)
 
 #### Resolved (session 14)
 - ~~**Mots de passe en clair**~~ — FIXED: SHA-256 hashing + migration auto
@@ -219,11 +228,18 @@ npx wrangler deploy --config workers/wrangler.toml
 - ~~**Postuler détail offre**~~ — FIXED: JobDetailActions (save + apply pour candidats connectés)
 - ~~**Type safety User**~~ — FIXED: experience, certifications, cvFilename dans l'interface User
 
+#### Resolved (session 15)
+- ~~**Dark mode**~~ — FIXED: toggle optionnel dans Header + CSS variables
+- ~~**E2E tests**~~ — FIXED: 22 tests couvrant pages publiques, auth, formations, dark mode
+- ~~**Formations vides**~~ — FIXED: 8 pages individuelles avec contenu complet
+- ~~**Border-radius incohérent**~~ — FIXED: standardisé rounded-xl/2xl
+- ~~**Scroll reveal manquant**~~ — FIXED: ajouté sur contact, documents, positions, agenda, job detail
+- ~~**Loading states inscription**~~ — FIXED: spinner + disabled sur candidat/adhérent
+- ~~**Score matching détail offre**~~ — FIXED: composant JobMatchScore sur sidebar
+
 #### Remaining (nécessitent infrastructure)
 - **Domain gaspe.fr** — config DNS manuelle CF Pages
 - **Email réel** — déployer CF Worker + Resend API key
 - **Document PDF uploads** — nécessite R2 bucket
 - **Upload CV réel** — nécessite endpoint R2 du Worker
-- **Dark mode** — toggle optionnel (nice-to-have)
 - **Lighthouse 95+** — audit perf (nice-to-have)
-- **E2E tests mis à jour** — couvrir nouvelles pages (81 pages vs 12 tests)
