@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**46 pages** — deployed on Cloudflare Pages (static export)
+**90 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Dev**: `C:/Dev/gaspe-fr/` (fast, use this for all coding)

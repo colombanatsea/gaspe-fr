@@ -1,4 +1,4 @@
-# GASPE Website — Spécifications techniques v2.0.0
+# GASPE Website — Spécifications techniques v2.1.0
 
 ## Vue d'ensemble
 
@@ -22,7 +22,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```
 src/
 ├── app/
-│   ├── (public)/          # 21 routes publiques
+│   ├── (public)/          # 23 routes publiques (+ formations)
 │   ├── (admin)/           # 11 routes admin
 │   ├── (auth)/            # 4 routes auth
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
@@ -30,16 +30,17 @@ src/
 │   └── sitemap.ts         # Sitemap dynamique
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
-│   ├── jobs/              # JobCard, JobList, JobFilters, JobDetailActions, RecruitHero
-│   ├── layout/            # Header, Footer, AdminSidebar
+│   ├── jobs/              # JobCard, JobList, JobFilters, JobDetailActions, JobMatchScore, RecruitHero
+│   ├── layout/            # Header, Footer, AdminSidebar, AdminMobileNav
 │   ├── map/               # MemberMap (Leaflet)
-│   ├── shared/            # PageHeader, Badge, MemberLogo, SEOJsonLd, Providers
-│   └── ui/                # Badge, Button, Card
+│   ├── shared/            # PageHeader, Badge, MemberLogo, SEOJsonLd, Providers, ScrollRevealWrapper
+│   └── ui/                # Badge, Button, Card, ThemeToggle
 ├── data/
 │   ├── members.ts         # 31 membres (lat/lon, région, catégorie)
 │   ├── jobs.ts            # 11 offres (3 compagnies)
 │   ├── ccn3228.ts         # CCN 3228 (grilles, congés, ENIM, accords, classifications)
 │   ├── stcw.ts            # 24 certifications STCW
+│   ├── formations.ts      # 8 formations (contenu HTML complet)
 │   ├── navigation.ts      # Navigation principale + footer
 │   ├── routes.ts          # Définitions routes
 │   └── stats.ts           # Statistiques clés
@@ -47,6 +48,8 @@ src/
 │   ├── auth/
 │   │   ├── AuthContext.tsx # Auth provider (3 rôles, 6 statuts candidature)
 │   │   └── hash.ts        # SHA-256 password hashing
+│   ├── theme/
+│   │   └── ThemeContext.tsx # Dark mode (system/light/dark + localStorage)
 │   ├── api.ts             # Client API (Worker + localStorage fallback)
 │   ├── geolocation.ts     # Haversine distance + getUserPosition
 │   ├── useScrollReveal.ts # IntersectionObserver hook
@@ -56,15 +59,17 @@ src/
     └── index.ts           # Member, NavItem, StatItem
 ```
 
-## Pages (81 total)
+## Pages (90 total)
 
-### Publiques (21)
+### Publiques (23)
 - `/` — Accueil (hero globe, stats, marquee, carte, actualités, CTA)
 - `/notre-groupement` — Présentation, timeline, engagements
 - `/nos-adherents` — Carte interactive + sidebar membres + géolocalisation
 - `/nos-adherents/[slug]` — 31 pages culture entreprise (SSG)
 - `/nos-compagnies-recrutent` — Plateforme emploi (7 filtres)
-- `/nos-compagnies-recrutent/[slug]` — Détail offre + actions candidat
+- `/nos-compagnies-recrutent/[slug]` — Détail offre + actions candidat + score matching
+- `/formations` — Listing formations (8 formations, badges, capacity bars)
+- `/formations/[slug]` — 8 pages détail formation (SSG, contenu HTML complet)
 - `/boite-a-outils` — CCN 3228 (6 sections + simulateur salaire)
 - `/documents` — Bibliothèque documentaire
 - `/positions` — Publications & notes de position
@@ -120,8 +125,10 @@ src/
 | Foreground | `#222221` (neutral-900) | Texte principal |
 | Heading font | Exo 2 | `font-heading` |
 | Body font | DM Sans | `font-body` |
-| Cards | `rounded-xl` + border neutral-200 | `gaspe-card-hover` |
+| Cards | `rounded-2xl` + border neutral-200 | `gaspe-card-hover` |
+| Inputs | `rounded-xl` | Forms, selects |
 | Gradient | 135° #42B3D5 → #6DAAAC → #5AA89A | Headers, sections sombres |
+| Dark mode | `[data-theme="dark"]` CSS variables | Toggle dans Header |
 
 ## Sécurité
 
@@ -134,7 +141,7 @@ src/
 
 ## Performance
 
-- Static export (SSG) — 81 pages pré-rendues
+- Static export (SSG) — 90 pages pré-rendues
 - Three.js + Leaflet chargés en lazy (dynamic import)
 - DNS prefetch pour Unsplash, CartoDB
 - Font preconnect pour Google Fonts

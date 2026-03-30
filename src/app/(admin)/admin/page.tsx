@@ -229,7 +229,7 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
                 <span className="text-white/50">Version</span>
-                <span className="font-semibold text-[var(--gaspe-teal-400)]">v2.0.0</span>
+                <span className="font-semibold text-[var(--gaspe-teal-400)]">v2.1.0</span>
               </div>
             </div>
           </div>
