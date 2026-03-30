@@ -5,6 +5,7 @@
 
 import { members as staticMembers } from "@/data/members";
 import type { Member } from "@/types";
+import { safeParse, membersArraySchema } from "./schemas";
 
 export const MEMBERS_KEY = "gaspe_members";
 
@@ -21,7 +22,7 @@ export function getStoredMembers(): StoredMember[] {
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
     return seeded;
   }
-  try { return JSON.parse(raw); } catch { return staticMembers; }
+  return safeParse(membersArraySchema, raw, staticMembers as StoredMember[]);
 }
 
 /** Get only active (non-archived) members. */

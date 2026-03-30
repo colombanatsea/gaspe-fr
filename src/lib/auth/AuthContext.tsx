@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { hashPassword, verifyPassword, isHashed } from "./hash";
-import { readStore, writeStore, ensureSeeded, USERS_KEY, PASSWORDS_KEY, CURRENT_KEY } from "./storage";
+import { getAuthStore, USERS_KEY, CURRENT_KEY } from "./auth-store";
+import { ensureSeeded } from "./storage";
+import { safeParse, usersArraySchema, userSchema } from "@/lib/schemas";
 import type { User, RegisterData, AuthContextValue } from "./types";
 
 // Re-export all types and constants so existing imports from AuthContext keep working
@@ -21,9 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function init() {
       await ensureSeeded();
-      const current = readStore<User | null>(CURRENT_KEY, null);
+      const store = getAuthStore();
+      const current = store.getCurrentUser();
       if (current) {
-        const users = readStore<User[]>(USERS_KEY, []);
+        const users = store.getUsers();
         const fresh = users.find((u) => u.id === current.id) ?? null;
         setUser(fresh);
       }
@@ -37,15 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     function handleStorageChange(e: StorageEvent) {
       if (e.key === CURRENT_KEY) {
         if (!e.newValue) { setUser(null); return; }
-        try { setUser(JSON.parse(e.newValue) as User); } catch { /* ignore */ }
+        const parsed = safeParse(userSchema.nullable(), e.newValue, null);
+        setUser(parsed);
       }
       if (e.key === USERS_KEY && user) {
-        try {
-          const users = JSON.parse(e.newValue ?? "[]") as User[];
-          const fresh = users.find((u) => u.id === user.id);
-          if (fresh) { setUser(fresh); writeStore(CURRENT_KEY, fresh); }
-          else { setUser(null); localStorage.removeItem(CURRENT_KEY); }
-        } catch { /* ignore */ }
+        const users = safeParse(usersArraySchema, e.newValue, []);
+        const fresh = users.find((u) => u.id === user.id);
+        if (fresh) { setUser(fresh); getAuthStore().setCurrentUser(fresh); }
+        else { setUser(null); getAuthStore().clearSession(); }
       }
     }
     window.addEventListener("storage", handleStorageChange);
@@ -53,38 +55,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const users = readStore<User[]>(USERS_KEY, []);
-    const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
+    const store = getAuthStore();
+    const users = store.getUsers();
+    const passwords = store.getPasswords();
     const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (!found) return { success: false, error: "Aucun compte trouvé avec cet email." };
     const storedPwd = passwords[found.id];
     if (!storedPwd) return { success: false, error: "Mot de passe incorrect." };
-    // Support both hashed and legacy plaintext during migration
     const valid = isHashed(storedPwd)
       ? await verifyPassword(password, found.email, storedPwd)
       : storedPwd === password;
     if (!valid) return { success: false, error: "Mot de passe incorrect." };
-    // Migrate plaintext to hashed on successful login
     if (!isHashed(storedPwd)) {
       passwords[found.id] = await hashPassword(password, found.email);
-      writeStore(PASSWORDS_KEY, passwords);
+      store.setPasswords(passwords);
     }
     if (found.role === "adherent" && !found.approved) {
       return { success: false, error: "Votre compte est en attente de validation par l'administrateur." };
     }
     setUser(found);
-    writeStore(CURRENT_KEY, found);
+    store.setCurrentUser(found);
     return { success: true };
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    if (typeof window !== "undefined") localStorage.removeItem(CURRENT_KEY);
+    getAuthStore().clearSession();
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {
-    const users = readStore<User[]>(USERS_KEY, []);
-    const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
+    const store = getAuthStore();
+    const users = store.getUsers();
+    const passwords = store.getPasswords();
 
     if (users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
       return { success: false, error: "Un compte existe déjà avec cet email." };
@@ -107,58 +109,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     users.push(newUser);
     passwords[id] = await hashPassword(data.password, data.email);
-    writeStore(USERS_KEY, users);
-    writeStore(PASSWORDS_KEY, passwords);
+    store.setUsers(users);
+    store.setPasswords(passwords);
 
-    // Auto-login candidat
     if (data.role === "candidat") {
       setUser(newUser);
-      writeStore(CURRENT_KEY, newUser);
+      store.setCurrentUser(newUser);
     }
 
     return { success: true };
   }, []);
 
   const getAllUsers = useCallback(() => {
-    return readStore<User[]>(USERS_KEY, []);
+    return getAuthStore().getUsers();
   }, []);
 
   const approveUser = useCallback((id: string) => {
-    const users = readStore<User[]>(USERS_KEY, []);
+    const store = getAuthStore();
+    const users = store.getUsers();
     const idx = users.findIndex((u) => u.id === id);
     if (idx >= 0) {
       users[idx].approved = true;
-      writeStore(USERS_KEY, users);
-      const current = readStore<User | null>(CURRENT_KEY, null);
-      if (current?.id === id) writeStore(CURRENT_KEY, users[idx]);
+      store.setUsers(users);
+      const current = store.getCurrentUser();
+      if (current?.id === id) store.setCurrentUser(users[idx]);
     }
   }, []);
 
   const rejectUser = useCallback((id: string) => {
-    const users = readStore<User[]>(USERS_KEY, []);
-    const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
+    const store = getAuthStore();
+    const users = store.getUsers();
+    const passwords = store.getPasswords();
     const filtered = users.filter((u) => u.id !== id);
     delete passwords[id];
-    writeStore(USERS_KEY, filtered);
-    writeStore(PASSWORDS_KEY, passwords);
-    const current = readStore<User | null>(CURRENT_KEY, null);
-    if (current?.id === id) localStorage.removeItem(CURRENT_KEY);
+    store.setUsers(filtered);
+    store.setPasswords(passwords);
+    const current = store.getCurrentUser();
+    if (current?.id === id) store.clearSession();
   }, []);
 
   const updateUser = useCallback((updated: User) => {
-    const users = readStore<User[]>(USERS_KEY, []);
+    const store = getAuthStore();
+    const users = store.getUsers();
     const idx = users.findIndex((u) => u.id === updated.id);
     if (idx >= 0) {
       users[idx] = updated;
-      writeStore(USERS_KEY, users);
+      store.setUsers(users);
       if (user?.id === updated.id) {
         setUser(updated);
-        writeStore(CURRENT_KEY, updated);
+        store.setCurrentUser(updated);
       }
     }
   }, [user]);
 
-  // Don't render children until hydrated to prevent mismatch
   if (!ready) return null;
 
   return (

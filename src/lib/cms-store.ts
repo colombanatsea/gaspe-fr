@@ -2,29 +2,19 @@
 /*  CMS Store — localStorage-based content management                  */
 /* ------------------------------------------------------------------ */
 
+import { safeParse, mediaArraySchema, pagesRecordSchema, type mediaItemSchema } from "./schemas";
+import type { z } from "zod";
+
 const MEDIA_KEY = "gaspe_media_library";
 const PAGES_KEY = "gaspe_page_content";
 
 /* ── Media Library ── */
 
-export interface MediaItem {
-  id: string;
-  name: string;
-  type: string;
-  data: string;
-  size: number;
-  uploadedAt: string;
-  alt?: string;
-}
+export type MediaItem = z.infer<typeof mediaItemSchema>;
 
 export function getMedia(): MediaItem[] {
   if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(MEDIA_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  return safeParse(mediaArraySchema, localStorage.getItem(MEDIA_KEY), []);
 }
 
 export function saveMedia(items: MediaItem[]) {
@@ -58,19 +48,13 @@ export interface PageContent {
 
 export function getPageContent(pageId: string): PageContent | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(PAGES_KEY);
-    const all: Record<string, PageContent> = raw ? JSON.parse(raw) : {};
-    return all[pageId] ?? null;
-  } catch {
-    return null;
-  }
+  const all = safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
+  return all[pageId] ?? null;
 }
 
 export function savePageContent(page: PageContent) {
   try {
-    const raw = localStorage.getItem(PAGES_KEY);
-    const all: Record<string, PageContent> = raw ? JSON.parse(raw) : {};
+    const all = safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
     all[page.pageId] = { ...page, updatedAt: new Date().toISOString() };
     localStorage.setItem(PAGES_KEY, JSON.stringify(all));
   } catch { /* storage full */ }
@@ -78,12 +62,7 @@ export function savePageContent(page: PageContent) {
 
 export function getAllPageContent(): Record<string, PageContent> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(PAGES_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  return safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
 }
 
 /* ── Page definitions (what's editable per page) ── */

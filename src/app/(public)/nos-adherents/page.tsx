@@ -5,6 +5,7 @@ import Link from "next/link";
 import { members, titulaires, associes } from "@/data/members";
 import { MemberMap } from "@/components/map/MemberMap";
 import type { MemberMapHandle } from "@/components/map/MemberMap";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
 import { getUserPosition, haversineDistance, formatDistance, type GeoPosition } from "@/lib/geolocation";
@@ -110,7 +111,13 @@ export default function NosAdherentsPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       {/* Map — 70% on desktop */}
       <div className="flex-1 lg:w-[70%]">
-        <MemberMap ref={mapRef} members={members} className="h-[50vh] lg:h-full" />
+        <ErrorBoundary name="Leaflet Map" fallback={
+          <div className="flex h-[50vh] lg:h-full items-center justify-center bg-[var(--gaspe-neutral-100)]">
+            <p className="text-sm text-foreground-muted">La carte est temporairement indisponible.</p>
+          </div>
+        }>
+          <MemberMap ref={mapRef} members={members} className="h-[50vh] lg:h-full" />
+        </ErrorBoundary>
       </div>
 
       {/* Sidebar — 30% on desktop */}

@@ -1,34 +1,30 @@
 import { describe, it, expect, vi } from "vitest";
 import { getStoredMembers, getActiveMembers, saveMembers, MEMBERS_KEY } from "../members-store";
 
-// Mock the static members data
+// Mock the static members data — must match Member schema (types/index.ts)
 vi.mock("@/data/members", () => ({
   members: [
     {
-      id: "1",
       name: "Compagnie A",
       slug: "compagnie-a",
-      shortName: "Cie A",
-      description: "Test",
+      city: "Granville",
+      latitude: 48.8,
+      longitude: -1.6,
       region: "Normandie",
-      type: "maritime",
-      routes: [],
-      fleet: [],
-      lat: 48.8,
-      lng: -1.6,
+      territory: "metropole",
+      category: "titulaire",
+      description: "Test A",
     },
     {
-      id: "2",
       name: "Compagnie B",
       slug: "compagnie-b",
-      shortName: "Cie B",
-      description: "Test",
+      city: "Brest",
+      latitude: 48.1,
+      longitude: -3.0,
       region: "Bretagne",
-      type: "maritime",
-      routes: [],
-      fleet: [],
-      lat: 48.1,
-      lng: -3.0,
+      territory: "metropole",
+      category: "associe",
+      description: "Test B",
     },
   ],
 }));
@@ -39,13 +35,12 @@ describe("members-store", () => {
     expect(members).toHaveLength(2);
     expect(members[0].name).toBe("Compagnie A");
     expect(members[0].archived).toBe(false);
-    // Should have been written to localStorage
     expect(localStorage.getItem(MEMBERS_KEY)).not.toBeNull();
   });
 
   it("returns cached data on subsequent calls", () => {
     getStoredMembers(); // seeds
-    const members = getStoredMembers(); // reads from LS
+    const members = getStoredMembers(); // reads from LS with Zod validation
     expect(members).toHaveLength(2);
   });
 
@@ -67,5 +62,12 @@ describe("members-store", () => {
     const active = getActiveMembers();
     expect(active).toHaveLength(1);
     expect(active[0].name).toBe("Compagnie A");
+  });
+
+  it("falls back to static data on corrupted localStorage", () => {
+    localStorage.setItem(MEMBERS_KEY, "not valid json {{{");
+    const members = getStoredMembers();
+    expect(members).toHaveLength(2);
+    expect(members[0].name).toBe("Compagnie A");
   });
 });

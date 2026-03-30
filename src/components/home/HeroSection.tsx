@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 const GaspeGlobe = dynamic(
   () => import("@/components/globe/GaspeGlobe").then((m) => m.GaspeGlobe),
@@ -18,7 +19,9 @@ export function HeroSection() {
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
       {/* Globe as background */}
       <div className="absolute inset-0">
-        <GaspeGlobe className="w-full h-full" />
+        <ErrorBoundary name="Globe 3D" fallback={<div className="h-full w-full bg-[var(--gaspe-neutral-950)]" />}>
+          <GaspeGlobe className="w-full h-full" />
+        </ErrorBoundary>
       </div>
 
       {/* Gradient overlay for readability */}

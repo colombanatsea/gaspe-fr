@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import {
   PAGE_DEFINITIONS,
   getPageContent,
@@ -179,12 +180,14 @@ export default function AdminPagesPage() {
               </div>
               <div className="p-4">
                 {section.type === "richtext" ? (
-                  <RichTextEditor
-                    value={section.content}
-                    onChange={(html) => updateSection(section.id, html)}
-                    minHeight={200}
-                    onMediaLibraryOpen={() => setShowMediaLibrary(true)}
-                  />
+                  <ErrorBoundary name="RichTextEditor">
+                    <RichTextEditor
+                      value={section.content}
+                      onChange={(html) => updateSection(section.id, html)}
+                      minHeight={200}
+                      onMediaLibraryOpen={() => setShowMediaLibrary(true)}
+                    />
+                  </ErrorBoundary>
                 ) : section.type === "image" ? (
                   <div className="space-y-3">
                     <input

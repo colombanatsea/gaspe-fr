@@ -1,3 +1,12 @@
+/* ------------------------------------------------------------------ */
+/*  Centralized type exports                                           */
+/*  Import from "@/types" for all shared types across the app.         */
+/*  Domain-specific types still live in their source files but are     */
+/*  re-exported here for convenience.                                  */
+/* ------------------------------------------------------------------ */
+
+/* ── Core domain types (defined here) ── */
+
 export interface Member {
   name: string;
   slug: string;
@@ -26,3 +35,31 @@ export interface StatItem {
   label: string;
   suffix?: string;
 }
+
+/* ── Auth types (re-exported from auth module) ── */
+
+export type {
+  User,
+  UserRole,
+  ApplicationStatus,
+  CompanyRole,
+  MembershipStatus,
+  Vessel,
+  RegisterData,
+} from "@/lib/auth/types";
+
+/* ── Job types (re-exported from data) ── */
+
+export type { Job, Zone } from "@/data/jobs";
+
+/* ── Matching types (re-exported from lib) ── */
+
+export type { MatchResult } from "@/lib/matching";
+
+/* ── CMS types (re-exported from store) ── */
+
+export type { MediaItem, PageSection, PageContent } from "@/lib/cms-store";
+
+/* ── Members store types ── */
+
+export type { StoredMember } from "@/lib/members-store";
