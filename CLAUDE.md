@@ -200,14 +200,27 @@ npx wrangler deploy --config workers/wrangler.toml
 13. ~~**Upload CV validation**~~ — DONE: types PDF/DOC/DOCX + taille max 5 Mo
 14. ~~**API documentation**~~ — DONE: guide déploiement Worker amélioré dans `src/lib/api.ts`
 
-### Architecture v2.1.0 (session 15 + merge sessions 11-13)
-- **93 pages** statiques (90 + CGU + profil adhérent + admin membres)
+### Architecture v2.2.0 (session 16 — CMS complet)
+- **94 pages** statiques (93 + /admin/pages)
 - **Route groups**: `(public)/`, `(admin)/`, `(auth)/`
 - **Données structurées**: `members.ts`, `jobs.ts`, `ccn3228.ts`, `stcw.ts`, `formations.ts`, `maritime-certifications.ts`, `routes.ts`, `stats.ts`, `navigation.ts`
+- **CMS**: RichTextEditor (WYSIWYG contentEditable), MediaLibrary (upload base64), ContentPreview (aperçu temps réel), /admin/pages (éditeur centralisé)
 - **Auth**: localStorage avec SHA-256 hashing, 6 statuts candidature, admin configurable, 8 companyRoles adhérent
 - **Sécurité**: CSP headers, password hashing (y compris admin settings), file upload validation, XSS sanitization, sanitizeHtml
 - **Dark mode**: ThemeContext + ThemeToggle, CSS variables via `[data-theme="dark"]`, localStorage persistence
 - **Features s11-13 récupérées**: profil adhérent, annuaire par rôle, adhésions, admin membres CRUD, notifications, export CSV, formations enrichies, agenda enrichi, CGU, matching engine, members-store
+
+## Session 16 completed
+1. ~~**Aria-labels**~~ — DONE: 3 boutons icon-only corrigés (AdminSidebar, AdminMobileNav)
+2. ~~**Design system colors**~~ — DONE: 12 hex hardcodées → CSS variables (MemberMap, HeroSection, GaspeGlobe) + --gaspe-neutral-950
+3. ~~**E2E tests**~~ — DONE: 40+ tests couvrant toutes les pages publiques, SSG, auth, dark mode, SEO
+4. ~~**OG images PNG**~~ — DONE: 4 SVG → PNG via sharp, metadata mise à jour pour Facebook/LinkedIn
+5. ~~**CMS RichTextEditor**~~ — DONE: WYSIWYG contentEditable (gras, italique, titres H2-H4, listes, liens, images, tableaux NxM, colonnes, citations, alignement, HR)
+6. ~~**MediaLibrary**~~ — DONE: upload drag-and-drop, grille thumbnails, filtres images/documents, suppression, sélection pour insertion
+7. ~~**ContentPreview**~~ — DONE: aperçu temps réel avec styles publics (classes prose)
+8. ~~**Admin Pages Editor**~~ — DONE: /admin/pages — éditeur centralisé par page (Accueil, Groupement, Contact, Footer) avec sections éditables
+9. ~~**cms-store.ts**~~ — DONE: Store localStorage pour contenu pages + bibliothèque médias
+10. ~~**Admin forms améliorés**~~ — DONE: positions/new et offres/new utilisent RichTextEditor au lieu de textareas
 
 ## Session 15 completed
 1. ~~**UX polish**~~ — DONE: standardisé border-radius (rounded-xl/2xl), loading states inscription, scroll reveal sur 6 pages

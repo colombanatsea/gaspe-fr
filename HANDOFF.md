@@ -92,6 +92,8 @@
 4. ~~**E2E tests**~~ — DONE: 40+ tests couvrant pages publiques, SSG, auth, dark mode, SEO
 5. ~~**OG images PNG**~~ — DONE: 4 SVG → PNG via sharp, metadata mise à jour (Facebook/LinkedIn compat)
 6. ~~**Lazy-loading**~~ — VÉRIFIÉ: Three.js (dynamic + await import), Leaflet (page-specific)
+7. ~~**CMS complet**~~ — DONE: RichTextEditor WYSIWYG (gras, italique, titres, listes, liens, images, tableaux, colonnes, citations), MediaLibrary (upload drag-drop, thumbnails, filtres), ContentPreview (aperçu temps réel), /admin/pages (éditeur centralisé), cms-store.ts
+8. ~~**Admin forms**~~ — DONE: positions/new + offres/new utilisent RichTextEditor
 
 ---
 

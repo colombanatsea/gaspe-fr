@@ -59,7 +59,7 @@ src/
     └── index.ts           # Member, NavItem, StatItem
 ```
 
-## Pages (93 total)
+## Pages (94 total)
 
 ### Publiques (24 + CGU)
 - `/` — Accueil (hero globe, stats, marquee, carte, actualités, CTA)
@@ -93,7 +93,7 @@ src/
 - `/espace-adherent/documents` — Documents réservés
 - `/espace-adherent/offres` — Gestion offres d'emploi + candidatures
 
-### Admin (11)
+### Admin (12)
 - `/admin` — Dashboard (stats, CMS, actions rapides)
 - `/admin/comptes` — Gestion comptes (approve/reject)
 - `/admin/offres` — Gestion offres
@@ -102,6 +102,7 @@ src/
 - `/admin/agenda` — Gestion événements
 - `/admin/documents` — Gestion documents
 - `/admin/membres` — Gestion membres CRUD
+- `/admin/pages` — Éditeur de pages CMS (RichTextEditor, MediaLibrary, Preview)
 - `/admin/messages` — Messages contact
 - `/admin/parametres` — Paramètres site
 

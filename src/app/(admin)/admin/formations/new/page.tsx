@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import type { FormationModality, FormationDay } from "../page";
 
 const FORMATIONS_KEY = "gaspe_formations";
@@ -96,7 +97,12 @@ export default function AdminNewFormationPage() {
           <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
             Description <span className="text-red-500">*</span>
           </label>
-          <textarea id="description" name="description" rows={4} required value={form.description} onChange={handleChange} placeholder="Contenu de la formation..." className={inputClass} />
+          <RichTextEditor
+            value={form.description}
+            onChange={(html) => setForm((prev) => ({ ...prev, description: html }))}
+            placeholder="Contenu de la formation..."
+            minHeight={200}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

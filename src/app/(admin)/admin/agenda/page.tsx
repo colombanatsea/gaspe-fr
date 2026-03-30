@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
@@ -214,7 +215,12 @@ export default function AdminAgendaPage() {
           </div>
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">Description</label>
-            <textarea id="description" name="description" rows={3} value={form.description} onChange={handleChange} className={inputClass} />
+            <RichTextEditor
+              value={form.description}
+              onChange={(html) => setForm((prev) => ({ ...prev, description: html }))}
+              placeholder="Description de l'événement..."
+              minHeight={150}
+            />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>

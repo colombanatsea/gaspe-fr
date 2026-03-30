@@ -2,9 +2,12 @@
 
 import { Button } from "@/components/ui/Button";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
 
 export function CTASection() {
   const ref = useScrollReveal();
+  const cmsTitle = useCmsContent("homepage", "cta-title");
+  const cmsDesc = useCmsContent("homepage", "cta-description");
 
   return (
     <section ref={ref} className="relative overflow-hidden">
@@ -58,12 +61,16 @@ export function CTASection() {
             </div>
 
             <h2 className="font-heading text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-              Rejoignez le service public maritime
+              {cmsTitle || "Rejoignez le service public maritime"}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed">
-              Nos compagnies recrutent des profils variés : officiers, matelots,
-              mécaniciens, personnels à terre. Découvrez les opportunités.
-            </p>
+            {cmsDesc ? (
+              <div className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed prose prose-invert" dangerouslySetInnerHTML={{ __html: cmsDesc }} />
+            ) : (
+              <p className="mx-auto mt-5 max-w-2xl text-lg text-white/85 leading-relaxed">
+                Nos compagnies recrutent des profils variés : officiers, matelots,
+                mécaniciens, personnels à terre. Découvrez les opportunités.
+              </p>
+            )}
           </div>
 
           <div className="reveal stagger-2 mt-10 flex flex-wrap justify-center gap-4">
