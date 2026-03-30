@@ -7,6 +7,7 @@ export const mainNavigation: NavItem[] = [
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
   { label: "Agenda", href: "/agenda" },
+  { label: "Formations", href: "/formations" },
   { label: "Boîte à outils", href: "/boite-a-outils" },
   {
     label: "Nos Compagnies Recrutent",
@@ -32,6 +33,7 @@ export const footerNavigation = {
     { label: "Positions", href: "/positions" },
     { label: "Documents", href: "/documents" },
     { label: "Boîte à outils CCN 3228", href: "/boite-a-outils" },
+    { label: "Formations", href: "/formations" },
     { label: "Agenda", href: "/agenda" },
   ],
   legal: [

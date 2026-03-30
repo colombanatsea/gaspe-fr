@@ -78,6 +78,21 @@
   --color-border-light: var(--gaspe-neutral-200);
 }
 
+/* ── Dark mode overrides ── */
+[data-theme="dark"] {
+  --color-primary: var(--gaspe-teal-400);
+  --color-primary-hover: var(--gaspe-teal-300);
+  --color-primary-decorative: var(--gaspe-teal-500);
+  --color-secondary: var(--gaspe-blue-400);
+  --color-foreground: #F0EDED;
+  --color-foreground-muted: #9E9893;
+  --color-background: #1A1918;
+  --color-surface: #242322;
+  --color-surface-teal: #0B3E44;
+  --color-border: #3A3632;
+  --color-border-light: #2E2B28;
+}
+
 @theme inline {
   --color-background: var(--color-background);
   --color-foreground: var(--color-foreground);
@@ -107,6 +122,19 @@ body {
   font-family: var(--font-sans);
 }
 
+/* ── Dark mode: remap white backgrounds to card surface ── */
+[data-theme="dark"] .bg-white {
+  background-color: var(--color-background) !important;
+}
+
+[data-theme="dark"] .bg-red-50 { background-color: #2D1B1B !important; }
+[data-theme="dark"] .bg-amber-50 { background-color: #2D2718 !important; }
+[data-theme="dark"] .border-red-200 { border-color: #5C2929 !important; }
+[data-theme="dark"] .border-amber-200 { border-color: #5C4A1A !important; }
+[data-theme="dark"] .text-red-700,
+[data-theme="dark"] .text-red-600 { color: #F87171 !important; }
+[data-theme="dark"] .text-amber-800 { color: #FCD34D !important; }
+
 /* ── Gradient signature GASPE ── */
 .gaspe-gradient {
   background: linear-gradient(135deg, #42B3D5, #6DAAAC, #5AA89A);
@@ -117,6 +145,11 @@ body {
   background: var(--color-background);
   border-left: 3px solid var(--gaspe-teal-600);
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.06);
+}
+
+[data-theme="dark"] .gaspe-card {
+  border-left-color: var(--gaspe-teal-400);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
 }
 
 .gaspe-encart {
@@ -252,6 +285,10 @@ body {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(26, 25, 24, 0.85);
 }
 
 .glass-dark {
