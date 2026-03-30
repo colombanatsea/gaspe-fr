@@ -7,6 +7,7 @@ import { ApiAuthStore } from "./api-auth-store";
 import { ensureSeeded } from "./storage";
 import { safeParse, usersArraySchema, userSchema } from "@/lib/schemas";
 import type { User, RegisterData, AuthContextValue } from "./types";
+import { sendNewAdherentNotification, sendApprovalNotification, sendRejectionNotification } from "@/lib/email";
 
 // Re-export all types and constants so existing imports from AuthContext keep working
 export type { User, UserRole, ApplicationStatus, CompanyRole, MembershipStatus, Vessel, RegisterData, AuthContextValue } from "./types";
@@ -152,6 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setCurrentUser(newUser);
     }
 
+    // Notify admin of new adherent registration (fire & forget)
+    if (data.role === "adherent") {
+      sendNewAdherentNotification({ name: data.name, email: data.email, company: data.company });
+    }
+
     return { success: true };
   }, [apiMode]);
 
@@ -181,6 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setUsers(users);
       const current = store.getCurrentUser();
       if (current?.id === id) store.setCurrentUser(users[idx]);
+      // Notify adherent their account was approved (fire & forget)
+      sendApprovalNotification({ name: users[idx].name, email: users[idx].email });
     }
   }, [apiMode]);
 
@@ -195,12 +203,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = getAuthStore();
     const users = store.getUsers();
     const passwords = store.getPasswords();
+    const rejected = users.find((u) => u.id === id);
     const filtered = users.filter((u) => u.id !== id);
     delete passwords[id];
     store.setUsers(filtered);
     store.setPasswords(passwords);
     const current = store.getCurrentUser();
     if (current?.id === id) store.clearSession();
+    // Notify rejected adherent (fire & forget)
+    if (rejected && rejected.role === "adherent") {
+      sendRejectionNotification({ name: rejected.name, email: rejected.email });
+    }
   }, [apiMode]);
 
   const updateUser = useCallback(async (updated: User) => {
