@@ -220,6 +220,34 @@ export default function AdherentOffresPage() {
         )}
       </div>
 
+      {/* Contextual help — Boîte à outils */}
+      {!showForm && (
+        <div className="mb-6 rounded-xl border border-[var(--gaspe-teal-400)]/20 bg-[var(--gaspe-teal-600)]/5 p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/10 text-[var(--gaspe-teal-600)]">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+              </svg>
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-heading text-sm font-semibold text-foreground">Ressources pour le recrutement</p>
+              <p className="text-xs text-foreground-muted mt-0.5 mb-2">Consultez les guides employeur : aides à l&apos;embauche, apprentissage maritime, obligations réglementaires.</p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/boite-a-outils#guides-employeur" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">
+                  Guides employeur →
+                </Link>
+                <Link href="/boite-a-outils#simulateur-salaire" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">
+                  Simulateur de salaire →
+                </Link>
+                <Link href="/boite-a-outils#classifications" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">
+                  Classifications CCN →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create / Edit form */}
       {showForm && (
         <Card className="mb-6">

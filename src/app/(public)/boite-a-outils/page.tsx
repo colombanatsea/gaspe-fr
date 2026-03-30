@@ -17,6 +17,8 @@ import {
   SALARY_DISCLAIMER,
   LAST_UPDATED,
   CATEGORY_LABELS,
+  EMPLOYER_GUIDES,
+  EMPLOYER_GUIDE_CATEGORIES,
   type ServiceCategory,
 } from "@/data/ccn3228";
 
@@ -76,6 +78,12 @@ function SectionIcon({ icon, className }: { icon: string; className?: string }) 
       return (
         <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM5.25 20.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+      );
+    case "briefcase":
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
         </svg>
       );
     default:
@@ -506,6 +514,126 @@ function ResultCard({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Section: Guides employeur                                          */
+/* ------------------------------------------------------------------ */
+
+const GUIDE_CATEGORY_ICONS: Record<string, string> = {
+  embauche: "💼",
+  formation: "🎓",
+  social: "🛡️",
+  reglementation: "📋",
+};
+
+function GuidesEmployeur() {
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  const categories = Object.entries(EMPLOYER_GUIDE_CATEGORIES);
+  const filtered =
+    activeCategory === "all"
+      ? EMPLOYER_GUIDES
+      : EMPLOYER_GUIDES.filter((g) => g.category === activeCategory);
+
+  return (
+    <div>
+      {/* Category filters */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveCategory("all")}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+            activeCategory === "all"
+              ? "bg-[var(--gaspe-teal-600)] text-white"
+              : "bg-white text-foreground-muted hover:bg-[var(--gaspe-teal-600)]/10 border border-border-light"
+          }`}
+        >
+          Tout ({EMPLOYER_GUIDES.length})
+        </button>
+        {categories.map(([key, label]) => {
+          const count = EMPLOYER_GUIDES.filter((g) => g.category === key).length;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveCategory(key)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                activeCategory === key
+                  ? "bg-[var(--gaspe-teal-600)] text-white"
+                  : "bg-white text-foreground-muted hover:bg-[var(--gaspe-teal-600)]/10 border border-border-light"
+              }`}
+            >
+              {GUIDE_CATEGORY_ICONS[key]} {label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Guide cards */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {filtered.map((guide) => (
+          <a
+            key={guide.id}
+            href={guide.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="reveal gaspe-card gaspe-card-hover rounded-xl p-5 group block"
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/10 text-lg">
+                {GUIDE_CATEGORY_ICONS[guide.category]}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-heading text-sm font-bold text-foreground group-hover:text-[var(--gaspe-teal-600)] transition-colors">
+                  {guide.title}
+                </h3>
+                <p className="text-xs text-foreground-muted mt-0.5">{EMPLOYER_GUIDE_CATEGORIES[guide.category]}</p>
+              </div>
+              <svg className="h-4 w-4 shrink-0 text-foreground-muted group-hover:text-[var(--gaspe-teal-600)] transition-colors mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <p className="text-sm text-foreground-muted leading-relaxed mb-3">
+              {guide.description}
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-wrap gap-1">
+                {guide.tags.slice(0, 3).map((tag) => (
+                  <Badge key={tag} variant="neutral" className="text-[10px]">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              <span className="text-[10px] text-foreground-muted">{guide.source}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      {/* CTA vers recrutement */}
+      <div className="reveal mt-8 rounded-xl border-2 border-dashed border-[var(--gaspe-teal-400)]/30 bg-[var(--gaspe-teal-600)]/5 p-6 text-center">
+        <p className="font-heading text-base font-bold text-foreground mb-2">
+          Vous recrutez ?
+        </p>
+        <p className="text-sm text-foreground-muted mb-4">
+          Consultez les offres en cours de nos adhérents ou publiez votre propre annonce depuis votre espace adhérent.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/nos-compagnies-recrutent"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
+          >
+            Voir les offres
+          </Link>
+          <Link
+            href="/espace-adherent/offres"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-teal-600)] px-5 py-2.5 text-sm font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-600)]/5 transition-colors"
+          >
+            Publier une offre
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Section Tab Navigation                                             */
 /* ------------------------------------------------------------------ */
 
@@ -564,6 +692,8 @@ function SectionContent({ activeId }: { activeId: string }) {
       return <Classifications />;
     case "simulateur-salaire":
       return <SimulateurSalaire />;
+    case "guides-employeur":
+      return <GuidesEmployeur />;
     default:
       return null;
   }

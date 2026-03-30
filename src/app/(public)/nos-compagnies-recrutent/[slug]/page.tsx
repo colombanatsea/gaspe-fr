@@ -300,6 +300,35 @@ export default async function JobDetailPage({ params }: PageProps) {
               )}
             </div>
 
+            {/* Toolkit encart */}
+            <div className="rounded-2xl bg-[var(--gaspe-teal-600)]/5 border border-[var(--gaspe-teal-400)]/20 p-5">
+              <h3 className="font-heading text-sm font-semibold text-foreground mb-2">Boîte à outils</h3>
+              <ul className="space-y-1.5 text-sm">
+                {job.brevet && (
+                  <li>
+                    <Link href="/boite-a-outils#classifications" className="text-[var(--gaspe-teal-600)] hover:underline">
+                      Classifications & brevets requis
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link href="/boite-a-outils#grilles-salariales" className="text-[var(--gaspe-teal-600)] hover:underline">
+                    Grilles salariales CCN 3228
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/boite-a-outils#simulateur-salaire" className="text-[var(--gaspe-teal-600)] hover:underline">
+                    Simulateur de salaire
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/formations" className="text-[var(--gaspe-teal-600)] hover:underline">
+                    Formations maritimes
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
             {/* Back link */}
             <Link
               href="/nos-compagnies-recrutent"

@@ -117,6 +117,18 @@ export default function AdminOffresPage() {
         </Button>
       </div>
 
+      {/* Toolkit quick links */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl bg-[var(--gaspe-teal-600)]/5 border border-[var(--gaspe-teal-400)]/20 px-4 py-3">
+        <span className="text-xs font-semibold text-foreground-muted">Boîte à outils :</span>
+        <Link href="/boite-a-outils#guides-employeur" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">Guides employeur</Link>
+        <span className="text-[var(--gaspe-neutral-300)]">·</span>
+        <Link href="/boite-a-outils#grilles-salariales" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">Grilles salariales</Link>
+        <span className="text-[var(--gaspe-neutral-300)]">·</span>
+        <Link href="/boite-a-outils#simulateur-salaire" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">Simulateur</Link>
+        <span className="text-[var(--gaspe-neutral-300)]">·</span>
+        <Link href="/boite-a-outils#classifications" className="text-xs font-semibold text-[var(--gaspe-teal-600)] hover:underline">Classifications</Link>
+      </div>
+
       {/* Search & Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[240px]">

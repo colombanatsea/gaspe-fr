@@ -49,6 +49,16 @@ export interface BranchAgreement {
   status: "en vigueur" | "en négociation";
 }
 
+export interface EmployerGuide {
+  id: string;
+  title: string;
+  description: string;
+  category: "embauche" | "formation" | "social" | "reglementation";
+  externalUrl: string;
+  source: string;
+  tags: string[];
+}
+
 export interface ToolkitSection {
   id: string;
   label: string;
@@ -95,6 +105,124 @@ export const TOOLKIT_SECTIONS: ToolkitSection[] = [
     label: "Simulateur",
     icon: "calculator",
     description: "Estimez le salaire brut et net selon la classification",
+  },
+  {
+    id: "guides-employeur",
+    label: "Guides employeur",
+    icon: "briefcase",
+    description: "Aides à l'embauche, apprentissage, obligations réglementaires et ressources pratiques",
+  },
+];
+
+// --- Guides employeur --------------------------------------------------
+
+export const EMPLOYER_GUIDE_CATEGORIES = {
+  embauche: "Aides à l'embauche",
+  formation: "Formation & certifications",
+  social: "Protection sociale",
+  reglementation: "Réglementation maritime",
+} as const;
+
+export const EMPLOYER_GUIDES: EmployerGuide[] = [
+  {
+    id: "apprentissage-maritime",
+    title: "Recruter un apprenti dans le maritime",
+    description:
+      "L'aide aux employeurs qui recrutent en apprentissage permet de financer une partie de la rémunération. Elle s'applique aux contrats d'apprentissage signés dans les entreprises maritimes, avec des spécificités liées au régime ENIM.",
+    category: "embauche",
+    externalUrl: "https://travail-emploi.gouv.fr/laide-aux-employeurs-qui-recrutent-en-apprentissage",
+    source: "Ministère du Travail",
+    tags: ["apprentissage", "aide financière", "jeunes"],
+  },
+  {
+    id: "aides-france-travail",
+    title: "Aides France Travail à l'embauche",
+    description:
+      "Panorama des aides mobilisables pour recruter : aide à l'embauche des demandeurs d'emploi, contrats d'insertion, aide à la mobilité géographique (utile pour les postes en zones insulaires et outre-mer).",
+    category: "embauche",
+    externalUrl: "https://entreprise.francetravail.fr/aides-aux-entreprises/",
+    source: "France Travail",
+    tags: ["aide financière", "insertion", "mobilité"],
+  },
+  {
+    id: "contrat-professionnalisation",
+    title: "Contrat de professionnalisation maritime",
+    description:
+      "Le contrat de professionnalisation permet de former un salarié en alternance pour l'obtention d'un titre professionnel maritime (Capitaine 200, Mécanicien 750 kW…). L'OPCO Mobilités finance la formation.",
+    category: "embauche",
+    externalUrl: "https://www.opcomobilites.fr/entreprises/financer-la-formation/contrat-de-professionnalisation",
+    source: "OPCO Mobilités",
+    tags: ["alternance", "formation", "OPCO"],
+  },
+  {
+    id: "visite-medicale-gens-de-mer",
+    title: "Aptitude médicale des gens de mer",
+    description:
+      "Tout navigant doit détenir un certificat d'aptitude médicale délivré par le Service de Santé des Gens de Mer (SSGM). La visite initiale et les visites périodiques sont obligatoires avant tout embarquement.",
+    category: "reglementation",
+    externalUrl: "https://www.mer.gouv.fr/aptitude-medicale-des-gens-de-mer",
+    source: "Ministère de la Mer",
+    tags: ["médical", "aptitude", "embarquement"],
+  },
+  {
+    id: "stcw-recyclage",
+    title: "Recyclage des brevets STCW",
+    description:
+      "Les brevets et certificats STCW ont une validité de 5 ans. L'employeur doit s'assurer que ses navigants sont à jour de leurs recyclages (CFBS, médical, sûreté). Les formations de revalidation sont éligibles au plan de développement des compétences.",
+    category: "formation",
+    externalUrl: "https://www.ecologie.gouv.fr/politiques-publiques/formation-maritime",
+    source: "Ministère de la Transition Écologique",
+    tags: ["STCW", "recyclage", "brevets", "sécurité"],
+  },
+  {
+    id: "plan-formation-opco",
+    title: "Financer le plan de formation via l'OPCO",
+    description:
+      "L'OPCO Mobilités finance les actions de formation des entreprises du transport maritime de passagers (- 50 salariés). Cela inclut les formations obligatoires (ISM, ISPS), les bilans de compétences et la VAE.",
+    category: "formation",
+    externalUrl: "https://www.opcomobilites.fr/entreprises/financer-la-formation/plan-de-developpement-des-competences",
+    source: "OPCO Mobilités",
+    tags: ["formation", "financement", "OPCO", "ISM"],
+  },
+  {
+    id: "duerp-maritime",
+    title: "Document Unique (DUERP) en milieu maritime",
+    description:
+      "Le DUERP est obligatoire pour tout armateur employant au moins un salarié. Il doit identifier les risques spécifiques au milieu maritime : travail en mer, conditions météo, espaces confinés, manutention de charges.",
+    category: "reglementation",
+    externalUrl: "https://www.mer.gouv.fr/prevention-des-risques-professionnels-maritimes",
+    source: "Ministère de la Mer",
+    tags: ["sécurité", "prévention", "risques", "DUERP"],
+  },
+  {
+    id: "declaration-effectifs-enim",
+    title: "Déclaration d'effectifs et cotisations ENIM",
+    description:
+      "Les armateurs doivent déclarer mensuellement les effectifs embarqués et les rôles d'équipage auprès de l'ENIM. Les cotisations sont calculées sur la base des salaires forfaitaires par catégorie.",
+    category: "social",
+    externalUrl: "https://www.enim.eu/employeurs",
+    source: "ENIM",
+    tags: ["ENIM", "cotisations", "déclaration", "armateur"],
+  },
+  {
+    id: "regime-prevoyance-maritime",
+    title: "Prévoyance et complémentaire santé maritime",
+    description:
+      "La CCN 3228 prévoit une couverture de prévoyance obligatoire (incapacité, invalidité, décès) et une complémentaire santé. L'employeur finance au minimum 50 % de la mutuelle collective.",
+    category: "social",
+    externalUrl: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000035527118",
+    source: "Légifrance — CCN 3228",
+    tags: ["prévoyance", "mutuelle", "CCN 3228"],
+  },
+  {
+    id: "transition-energetique-navires",
+    title: "Aides à la transition énergétique des flottes",
+    description:
+      "Le plan France 2030 et l'ADEME proposent des aides pour la décarbonation des flottes maritimes : motorisation hybride, électrique, hydrogène. Ces investissements peuvent nécessiter de former les équipages à de nouvelles compétences.",
+    category: "reglementation",
+    externalUrl: "https://www.ecologie.gouv.fr/politiques-publiques/transition-energetique-transport-maritime",
+    source: "Ministère de la Transition Écologique",
+    tags: ["transition", "énergie", "décarbonation", "aide"],
   },
 ];
 

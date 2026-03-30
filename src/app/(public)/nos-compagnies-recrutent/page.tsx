@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { JobList } from "@/components/jobs/JobList";
@@ -83,6 +84,33 @@ export default function NosCompagniesRecrutentPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Toolkit links */}
+            <div className="mt-4 rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-5">
+              <h3 className="font-heading text-sm font-semibold text-foreground mb-3">Boîte à outils</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/boite-a-outils#grilles-salariales" className="flex items-center gap-2 text-[var(--gaspe-teal-600)] hover:underline">
+                    <span>💰</span> Grilles salariales
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/boite-a-outils#simulateur-salaire" className="flex items-center gap-2 text-[var(--gaspe-teal-600)] hover:underline">
+                    <span>🧮</span> Simulateur de salaire
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/boite-a-outils#classifications" className="flex items-center gap-2 text-[var(--gaspe-teal-600)] hover:underline">
+                    <span>📋</span> Classifications CCN
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/boite-a-outils#guides-employeur" className="flex items-center gap-2 text-[var(--gaspe-teal-600)] hover:underline">
+                    <span>💼</span> Guides employeur
+                  </Link>
+                </li>
+              </ul>
             </div>
           </aside>
 
