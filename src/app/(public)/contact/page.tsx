@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { submitContact } from "@/lib/api";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 
 interface FormErrors {
   nom?: string;
@@ -20,13 +20,7 @@ interface FormData {
   message: string;
 }
 
-const initialForm: FormData = {
-  nom: "",
-  email: "",
-  societe: "",
-  sujet: "",
-  message: "",
-};
+const initialForm: FormData = { nom: "", email: "", societe: "", sujet: "", message: "" };
 
 function validate(data: FormData): FormErrors {
   const errors: FormErrors = {};
@@ -45,45 +39,33 @@ function validate(data: FormData): FormErrors {
   return errors;
 }
 
-const inputClass =
-  "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary";
-
-const inputErrorClass =
-  "w-full rounded-md border border-red-400 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500";
+const inputBase = "w-full rounded-xl border bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-1 transition-colors";
+const inputOk = inputBase + " border-[var(--gaspe-neutral-200)] focus:border-[var(--gaspe-teal-400)] focus:ring-[var(--gaspe-teal-400)]";
+const inputErr = inputBase + " border-red-300 focus:border-red-400 focus:ring-red-400";
 
 export default function ContactPage() {
+  const revealRef = useScrollReveal();
   const [form, setForm] = useState<FormData>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [submitting, setSubmitting] = useState(false);
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    // Clear field error on change
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
+    if (errors[name as keyof FormErrors]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("idle");
-
     const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
+    if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
     setSubmitting(true);
     setErrors({});
-
-    // Simulate server action (real implementation in Phase 3)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const result = await submitContact(form);
+      if (!result.success) throw new Error("Submit failed");
       setStatus("success");
       setForm(initialForm);
     } catch {
@@ -97,192 +79,167 @@ export default function ContactPage() {
     <>
       <PageHeader
         title="Contact"
-        description="Une question ? N&apos;h&eacute;sitez pas &agrave; nous contacter."
+        description="Une question ? N'hésitez pas à nous contacter."
         breadcrumbs={[{ label: "Contact" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+      <div ref={revealRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           {/* Form */}
-          <div className="lg:col-span-2">
-            <Card accent={false} className="p-8">
+          <div className="lg:col-span-2 reveal">
+            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 sm:p-8">
               {status === "success" && (
-                <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-                  <p className="font-semibold">Message envoy&eacute; !</p>
-                  <p className="mt-1">
-                    Merci pour votre message. Nous vous r&eacute;pondrons dans
-                    les meilleurs d&eacute;lais.
-                  </p>
+                <div className="mb-6 rounded-xl border border-[var(--gaspe-green-200)] bg-[var(--gaspe-green-50)] p-5 flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-green-200)]">
+                    <svg className="h-4 w-4 text-[var(--gaspe-green-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-heading text-sm font-semibold text-[var(--gaspe-green-600)]">Message envoyé !</p>
+                    <p className="mt-1 text-sm text-[var(--gaspe-green-600)]/80">
+                      Merci pour votre message. Nous vous répondrons dans les meilleurs délais.
+                    </p>
+                  </div>
                 </div>
               )}
 
               {status === "error" && (
-                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                  <p className="font-semibold">Erreur</p>
-                  <p className="mt-1">
-                    Une erreur est survenue. Veuillez r&eacute;essayer.
-                  </p>
+                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-5 flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-200">
+                    <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-heading text-sm font-semibold text-red-700">Erreur</p>
+                    <p className="mt-1 text-sm text-red-600">Une erreur est survenue. Veuillez réessayer.</p>
+                  </div>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} noValidate className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {/* Nom */}
+              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <div>
-                    <label
-                      htmlFor="nom"
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                    >
-                      Nom <span className="text-red-500">*</span>
+                    <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-1.5">
+                      Nom <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      id="nom"
-                      name="nom"
-                      type="text"
-                      value={form.nom}
-                      onChange={handleChange}
-                      className={errors.nom ? inputErrorClass : inputClass}
-                      placeholder="Votre nom"
-                    />
-                    {errors.nom && (
-                      <p className="mt-1 text-xs text-red-600">{errors.nom}</p>
-                    )}
+                    <input id="nom" name="nom" type="text" value={form.nom} onChange={handleChange} className={errors.nom ? inputErr : inputOk} placeholder="Votre nom" />
+                    {errors.nom && <p className="mt-1.5 text-xs text-red-500">{errors.nom}</p>}
                   </div>
-
-                  {/* Email */}
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-foreground mb-1.5"
-                    >
-                      Email <span className="text-red-500">*</span>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
+                      Email <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      className={errors.email ? inputErrorClass : inputClass}
-                      placeholder="votre@email.fr"
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {errors.email}
-                      </p>
-                    )}
+                    <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={errors.email ? inputErr : inputOk} placeholder="votre@email.fr" />
+                    {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>}
                   </div>
                 </div>
 
-                {/* Société */}
-                <div>
-                  <label
-                    htmlFor="societe"
-                    className="block text-sm font-medium text-foreground mb-1.5"
-                  >
-                    Soci&eacute;t&eacute; / Organisation
-                  </label>
-                  <input
-                    id="societe"
-                    name="societe"
-                    type="text"
-                    value={form.societe}
-                    onChange={handleChange}
-                    className={inputClass}
-                    placeholder="Optionnel"
-                  />
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="societe" className="block text-sm font-medium text-foreground mb-1.5">
+                      Société / Organisation
+                    </label>
+                    <input id="societe" name="societe" type="text" value={form.societe} onChange={handleChange} className={inputOk} placeholder="Optionnel" />
+                  </div>
+                  <div>
+                    <label htmlFor="sujet" className="block text-sm font-medium text-foreground mb-1.5">
+                      Sujet <span className="text-red-400">*</span>
+                    </label>
+                    <select id="sujet" name="sujet" value={form.sujet} onChange={handleChange} className={errors.sujet ? inputErr : inputOk}>
+                      <option value="">Sélectionnez un sujet...</option>
+                      <option value="Question générale">Question générale</option>
+                      <option value="Adhésion au GASPE">Adhésion au GASPE</option>
+                      <option value="Recrutement">Recrutement</option>
+                      <option value="Formations">Formations</option>
+                      <option value="Presse / Média">Presse / Média</option>
+                      <option value="Autre">Autre</option>
+                    </select>
+                    {errors.sujet && <p className="mt-1.5 text-xs text-red-500">{errors.sujet}</p>}
+                  </div>
                 </div>
 
-                {/* Sujet */}
                 <div>
-                  <label
-                    htmlFor="sujet"
-                    className="block text-sm font-medium text-foreground mb-1.5"
-                  >
-                    Sujet <span className="text-red-500">*</span>
+                  <label htmlFor="message" className="block text-sm font-medium text-foreground mb-1.5">
+                    Message <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    id="sujet"
-                    name="sujet"
-                    type="text"
-                    value={form.sujet}
-                    onChange={handleChange}
-                    className={errors.sujet ? inputErrorClass : inputClass}
-                    placeholder="Objet de votre message"
-                  />
-                  {errors.sujet && (
-                    <p className="mt-1 text-xs text-red-600">{errors.sujet}</p>
+                  <textarea id="message" name="message" rows={5} value={form.message} onChange={handleChange} className={(errors.message ? inputErr : inputOk) + " resize-y"} placeholder="Votre message..." />
+                  {errors.message && <p className="mt-1.5 text-xs text-red-500">{errors.message}</p>}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--gaspe-teal-600)] px-7 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {submitting ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                      </svg>
+                      Envoyer le message
+                    </>
                   )}
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-foreground mb-1.5"
-                  >
-                    Message <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={5}
-                    value={form.message}
-                    onChange={handleChange}
-                    className={
-                      errors.message
-                        ? inputErrorClass + " resize-y"
-                        : inputClass + " resize-y"
-                    }
-                    placeholder="Votre message"
-                  />
-                  {errors.message && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {errors.message}
-                    </p>
-                  )}
-                </div>
-
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Envoi en cours\u2026" : "Envoyer le message"}
-                </Button>
+                </button>
               </form>
-            </Card>
+            </div>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <h3 className="font-heading text-lg font-semibold text-foreground mb-4">
-                Coordonn&eacute;es
+          <div className="space-y-5 reveal stagger-2">
+            <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6">
+              <h3 className="font-heading text-base font-semibold text-foreground mb-5 flex items-center gap-2">
+                <svg className="h-5 w-5 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+                Coordonnées
               </h3>
-              <div className="space-y-4 text-sm text-foreground-muted">
-                <div>
-                  <p className="font-medium text-foreground">Adresse</p>
-                  <p>Maison de la Mer - Daniel Gilard</p>
-                  <p>Quai de la Fosse</p>
-                  <p>44 000 Nantes</p>
+              <div className="space-y-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <svg className="h-4 w-4 text-[var(--gaspe-teal-600)] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                  </svg>
+                  <div className="text-foreground-muted">
+                    <p className="font-medium text-foreground">Adresse</p>
+                    <p>Maison de la Mer — Daniel Gilard</p>
+                    <p>Quai de la Fosse</p>
+                    <p>44 000 Nantes</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">Email</p>
-                  <a
-                    href="mailto:contact@gaspe.fr"
-                    className="text-primary hover:text-primary-hover transition-colors"
-                  >
-                    contact@gaspe.fr
-                  </a>
+                <div className="flex items-start gap-3">
+                  <svg className="h-4 w-4 text-[var(--gaspe-teal-600)] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-foreground">Email</p>
+                    <a href="mailto:contact@gaspe.fr" className="text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors">
+                      contact@gaspe.fr
+                    </a>
+                  </div>
                 </div>
               </div>
-            </Card>
+            </div>
 
-            <div className="gaspe-encart rounded-lg p-6">
-              <h3 className="font-heading text-sm font-semibold text-foreground mb-2">
-                Engag&eacute; depuis 1951
+            <div className="rounded-2xl bg-gradient-to-br from-[var(--gaspe-teal-50)] to-[var(--gaspe-blue-50)] border border-[var(--gaspe-teal-100)] p-6">
+              <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <svg className="h-4 w-4 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                Engagé depuis 1951
               </h3>
-              <p className="text-sm text-foreground-muted">
-                Le GASPE f&eacute;d&egrave;re les armateurs de services publics
-                maritimes de passages d&apos;eau et accompagne la profession
-                dans ses d&eacute;fis quotidiens.
+              <p className="text-sm text-foreground-muted leading-relaxed">
+                Le GASPE fédère les armateurs de services publics
+                maritimes et accompagne la profession dans ses défis quotidiens.
               </p>
             </div>
           </div>

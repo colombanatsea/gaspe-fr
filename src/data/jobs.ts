@@ -1,3 +1,16 @@
+export type Zone = 'normandie' | 'bretagne' | 'nouvelle-aquitaine' | 'pays-de-la-loire' | 'occitanie' | 'paca' | 'ile-de-france' | 'dom-tom';
+
+export const ZONE_LABELS: Record<Zone, string> = {
+  'normandie': 'Normandie',
+  'bretagne': 'Bretagne',
+  'nouvelle-aquitaine': 'Nouvelle-Aquitaine',
+  'pays-de-la-loire': 'Pays de la Loire',
+  'occitanie': 'Occitanie',
+  'paca': 'PACA',
+  'ile-de-france': 'Île-de-France',
+  'dom-tom': 'Outre-mer',
+};
+
 export interface Job {
   id: string;
   slug: string;
@@ -5,14 +18,17 @@ export interface Job {
   company: string;
   companySlug: string;
   location: string;
+  zone: Zone;
   contractType: 'CDI' | 'CDD' | 'Saisonnier';
   category: string;
+  brevet?: string;
   description: string;
   profile: string;
   conditions: string;
   contactEmail: string;
   contactName?: string;
   salaryRange?: string;
+  salaryMin?: number;
   publishedAt: string;
   expiresAt?: string;
   published: boolean;
@@ -29,8 +45,10 @@ export const jobs: Job[] = [
     company: 'Manche Iles Express',
     companySlug: 'manche-iles-express',
     location: 'Granville / Barneville-Carteret / Diélette',
+    zone: 'normandie',
     contractType: 'CDD',
     category: 'Machine',
+    brevet: 'Chef Mécanicien 3000 kW (STCW III/3)',
     description: `
       <h3>Présentation de la compagnie</h3>
       <p>Manche Iles Express, compagnie maritime de la Direction Normande de l'Océan (DNO), assure les liaisons entre la Normandie et les Îles Anglo-Normandes (Jersey, Guernesey, Sercq) à bord de Navires à Grande Vitesse (HSC). Nos navires opèrent au départ de Granville, Barneville-Carteret et Diélette.</p>
@@ -72,6 +90,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'recrutement@manche-iles.com',
     salaryRange: '4 500 €/mois',
+    salaryMin: 4500,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -86,8 +105,10 @@ export const jobs: Job[] = [
     company: 'Direction des Transports Maritimes de la Gironde',
     companySlug: 'direction-transports-maritimes-gironde',
     location: 'Le Verdon-sur-Mer / Royan',
+    zone: 'nouvelle-aquitaine',
     contractType: 'Saisonnier',
     category: 'Pont',
+    brevet: 'Capitaine 3000 (brevet illimité)',
     description: `
       <h3>Présentation</h3>
       <p>La Direction des Transports Maritimes de la Gironde exploite les bacs girondins, véritables maillons du réseau de transport public départemental. Les ferries <strong>L'Estuaire</strong> (3705 UMS) et <strong>La Gironde</strong> (3684 UMS), d'une longueur de 78 mètres, sont équipés d'une propulsion <strong>Voith Schneider</strong> et assurent la traversée de l'estuaire de la Gironde entre Le Verdon-sur-Mer et Royan.</p>
@@ -126,6 +147,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'y.roussel@gironde.fr',
     contactName: 'Yannick ROUSSEL',
+    salaryMin: 5000,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -136,8 +158,10 @@ export const jobs: Job[] = [
     company: 'Direction des Transports Maritimes de la Gironde',
     companySlug: 'direction-transports-maritimes-gironde',
     location: 'Blaye / Lamarque',
+    zone: 'nouvelle-aquitaine',
     contractType: 'Saisonnier',
     category: 'Pont',
+    brevet: 'Capitaine 3000 UMS',
     description: `
       <h3>Présentation</h3>
       <p>La Direction des Transports Maritimes de la Gironde exploite la ligne Blaye – Lamarque avec le bac <strong>Sébastien Vauban</strong> (1024 UMS), équipé d'une propulsion <strong>Schottel</strong>. Cette traversée fluviale historique relie le Médoc à la rive droite de la Gironde.</p>
@@ -174,6 +198,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'y.roussel@gironde.fr',
     contactName: 'Yannick ROUSSEL',
+    salaryMin: 4000,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -184,8 +209,10 @@ export const jobs: Job[] = [
     company: 'Direction des Transports Maritimes de la Gironde',
     companySlug: 'direction-transports-maritimes-gironde',
     location: 'Le Verdon-sur-Mer / Royan',
+    zone: 'nouvelle-aquitaine',
     contractType: 'Saisonnier',
     category: 'Machine',
+    brevet: 'Chef Mécanicien 8000 kW (STCW III/2)',
     description: `
       <h3>Présentation</h3>
       <p>La Direction des Transports Maritimes de la Gironde recrute un Chef Mécanicien pour ses ferries <strong>L'Estuaire</strong> et <strong>La Gironde</strong>, navires de 78 mètres équipés d'une puissance totale de <strong>4 820 kW</strong> et d'une propulsion <strong>Voith Schneider</strong>. Ces bacs assurent la traversée Le Verdon-sur-Mer – Royan.</p>
@@ -224,6 +251,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'y.roussel@gironde.fr',
     contactName: 'Yannick ROUSSEL',
+    salaryMin: 5500,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -234,8 +262,10 @@ export const jobs: Job[] = [
     company: 'Direction des Transports Maritimes de la Gironde',
     companySlug: 'direction-transports-maritimes-gironde',
     location: 'Blaye / Lamarque',
+    zone: 'nouvelle-aquitaine',
     contractType: 'Saisonnier',
     category: 'Machine',
+    brevet: 'Chef Mécanicien 3000 kW (STCW III/3)',
     description: `
       <h3>Présentation</h3>
       <p>La Direction des Transports Maritimes de la Gironde recrute un Chef Mécanicien pour le bac <strong>Sébastien Vauban</strong> (1024 UMS), équipé d'une puissance de <strong>2 139 kW</strong> et d'une propulsion <strong>Schottel</strong>, sur la ligne Blaye – Lamarque.</p>
@@ -272,6 +302,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'y.roussel@gironde.fr',
     contactName: 'Yannick ROUSSEL',
+    salaryMin: 4500,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -282,8 +313,10 @@ export const jobs: Job[] = [
     company: 'Direction des Transports Maritimes de la Gironde',
     companySlug: 'direction-transports-maritimes-gironde',
     location: 'Le Verdon-sur-Mer / Royan',
+    zone: 'nouvelle-aquitaine',
     contractType: 'Saisonnier',
     category: 'Machine',
+    brevet: 'Mécanicien 750 kW',
     description: `
       <h3>Présentation</h3>
       <p>La Direction des Transports Maritimes de la Gironde recrute un Maître Machine pour ses ferries <strong>L'Estuaire</strong> et <strong>La Gironde</strong> (4 820 kW, propulsion Voith Schneider) sur la traversée Le Verdon-sur-Mer – Royan.</p>
@@ -323,6 +356,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'y.roussel@gironde.fr',
     contactName: 'Yannick ROUSSEL',
+    salaryMin: 3200,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -337,6 +371,7 @@ export const jobs: Job[] = [
     company: "Karu\u2019Ferry / Step Group",
     companySlug: 'karu-ferry',
     location: 'Baie-Mahault, Guadeloupe',
+    zone: 'dom-tom',
     contractType: 'CDI',
     category: 'Technique',
     description: `
@@ -380,6 +415,7 @@ export const jobs: Job[] = [
       </ul>
     `,
     contactEmail: 'service.rh@stepgroup.gp',
+    salaryMin: 5000,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -390,8 +426,10 @@ export const jobs: Job[] = [
     company: "Karu\u2019Ferry / Step Group",
     companySlug: 'karu-ferry',
     location: 'Guadeloupe',
+    zone: 'dom-tom',
     contractType: 'CDI',
     category: 'Machine',
+    brevet: 'Chef Mécanicien 3000 kW (STCW III/3)',
     description: `
       <h3>Présentation</h3>
       <p>Karu'Ferry, filiale du groupe Step Group, recrute un Chef Mécanicien embarqué pour ses navires à passagers assurant la desserte des Saintes et de Marie-Galante au départ de la Guadeloupe.</p>
@@ -430,6 +468,7 @@ export const jobs: Job[] = [
       </ul>
     `,
     contactEmail: 'service.rh@stepgroup.gp',
+    salaryMin: 4500,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -440,8 +479,10 @@ export const jobs: Job[] = [
     company: "Karu\u2019Ferry / Step Group",
     companySlug: 'karu-ferry',
     location: 'Guadeloupe',
+    zone: 'dom-tom',
     contractType: 'CDI',
     category: 'Machine',
+    brevet: 'Chef Mécanicien 8000 kW (STCW III/2)',
     description: `
       <h3>Présentation</h3>
       <p>Karu'Ferry, filiale du groupe Step Group, recrute un Chef Mécanicien 8000 kW embarqué pour ses navires les plus puissants : catamarans rapides et ferries assurant les liaisons inter-îles en Guadeloupe.</p>
@@ -480,6 +521,7 @@ export const jobs: Job[] = [
       </ul>
     `,
     contactEmail: 'service.rh@stepgroup.gp',
+    salaryMin: 5500,
     publishedAt: '2026-03-26',
     published: true,
   },
@@ -490,8 +532,10 @@ export const jobs: Job[] = [
     company: "Karu\u2019Ferry / Step Group",
     companySlug: 'karu-ferry',
     location: 'Guadeloupe',
+    zone: 'dom-tom',
     contractType: 'CDI',
     category: 'Pont',
+    brevet: 'Capitaine 500',
     description: `
       <h3>Présentation</h3>
       <p>Karu'Ferry, filiale du groupe Step Group, recrute un Capitaine 500 pour ses navires à passagers assurant la desserte des îles de Guadeloupe (Les Saintes, Marie-Galante) dans les eaux caribéennes.</p>
@@ -531,6 +575,7 @@ export const jobs: Job[] = [
     `,
     contactEmail: 'service.rh@stepgroup.gp',
     salaryRange: '2 998,91 €/mois sur 13 mois',
+    salaryMin: 3000,
     publishedAt: '2026-03-26',
     published: true,
   },

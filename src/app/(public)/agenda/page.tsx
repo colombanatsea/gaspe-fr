@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 
 export const metadata: Metadata = {
   title: "Agenda",
@@ -35,15 +36,15 @@ export default function AgendaPage() {
         breadcrumbs={[{ label: "Agenda" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <ScrollRevealWrapper className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="space-y-4">
           {events.map((event, i) => (
             <article
               key={i}
-              className="flex gap-6 rounded-lg bg-background p-6 shadow-sm border-l-[3px] border-l-primary"
+              className={`flex gap-6 rounded-xl bg-background p-6 shadow-sm border-l-[3px] border-l-primary reveal stagger-${i + 1}`}
             >
               {/* Date block */}
-              <div className="hidden sm:flex shrink-0 flex-col items-center justify-center w-20 h-20 rounded-lg bg-primary/10">
+              <div className="hidden sm:flex shrink-0 flex-col items-center justify-center w-20 h-20 rounded-xl bg-primary/10">
                 <span className="font-heading text-2xl font-bold text-primary leading-tight">
                   {event.dateShort.day}
                 </span>
@@ -69,7 +70,7 @@ export default function AgendaPage() {
             </article>
           ))}
         </div>
-      </div>
+      </ScrollRevealWrapper>
     </>
   );
 }

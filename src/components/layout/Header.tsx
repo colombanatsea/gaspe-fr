@@ -9,6 +9,7 @@ import { SITE_NAME } from "@/lib/constants";
 import { MobileNav } from "./MobileNav";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const roleBadge = {
   admin: { label: "Admin", variant: "teal" as const },
@@ -71,7 +72,8 @@ export function Header() {
             </Link>
           ))}
 
-          {/* Auth buttons */}
+          {/* Theme toggle + Auth buttons */}
+          <ThemeToggle />
           {isAuthenticated && user ? (
             <div className="relative ml-2" ref={menuRef}>
               <button
@@ -119,6 +121,7 @@ export function Header() {
 
         {/* Mobile hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle />
           {isAuthenticated && user && (
             <Badge variant={roleBadge[user.role].variant}>
               {roleBadge[user.role].label}
@@ -126,7 +129,7 @@ export function Header() {
           )}
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-md text-foreground-muted hover:bg-surface"
+            className="p-2.5 -mr-1 rounded-lg text-foreground-muted hover:bg-surface"
             aria-label="Ouvrir le menu"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -145,7 +145,7 @@ export default function AdminAgendaPage() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary";
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   return (
     <div className="space-y-6">
@@ -164,7 +164,7 @@ export default function AdminAgendaPage() {
 
       {/* Inline form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-lg border-l-[3px] border-l-primary bg-background p-6 shadow-sm space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--gaspe-neutral-200)] border-l-[3px] border-l-[var(--gaspe-teal-600)] bg-white p-6 shadow-sm space-y-4">
           <h2 className="font-heading text-lg font-semibold text-foreground">
             {editId ? "Modifier l'\u00e9v\u00e9nement" : "Nouvel \u00e9v\u00e9nement"}
           </h2>
@@ -195,10 +195,10 @@ export default function AdminAgendaPage() {
             <input id="eventUrl" name="eventUrl" type="url" value={form.eventUrl} onChange={handleChange} placeholder="https://..." className={inputClass} />
           </div>
           <div className="flex items-center gap-3">
-            <input id="published" name="published" type="checkbox" checked={form.published} onChange={handleChange} className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary" />
+            <input id="published" name="published" type="checkbox" checked={form.published} onChange={handleChange} className="h-4 w-4 rounded border-[var(--gaspe-neutral-300)] text-[var(--gaspe-teal-600)] focus:ring-[var(--gaspe-teal-400)]" />
             <label htmlFor="published" className="text-sm font-medium text-foreground">Publi&eacute;</label>
           </div>
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--gaspe-neutral-100)]">
             <button type="button" onClick={resetForm} className="rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors">
               Annuler
             </button>
@@ -209,7 +209,7 @@ export default function AdminAgendaPage() {
 
       {/* Events list */}
       {events.length === 0 ? (
-        <div className="rounded-lg border border-border-light bg-background p-12 text-center">
+        <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-12 text-center">
           <h3 className="font-heading text-lg font-semibold text-foreground">Aucun &eacute;v&eacute;nement</h3>
           <p className="mt-2 text-sm text-foreground-muted">Cr&eacute;ez votre premier &eacute;v&eacute;nement.</p>
         </div>
@@ -218,7 +218,7 @@ export default function AdminAgendaPage() {
           {events
             .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
             .map((ev) => (
-              <div key={ev.id} className="flex items-start justify-between rounded-lg border-l-[3px] border-l-primary bg-background p-5 shadow-sm">
+              <div key={ev.id} className="flex items-start justify-between rounded-2xl border border-[var(--gaspe-neutral-200)] border-l-[3px] border-l-[var(--gaspe-teal-600)] bg-white p-5 shadow-sm">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-heading text-base font-semibold text-foreground">{ev.title}</h3>
@@ -233,11 +233,11 @@ export default function AdminAgendaPage() {
                   </div>
                 </div>
                 <div className="ml-4 flex items-center gap-2 shrink-0">
-                  <button onClick={() => startEdit(ev)} className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors">Modifier</button>
-                  <button onClick={() => togglePublish(ev.id)} className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors">
+                  <button onClick={() => startEdit(ev)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors">Modifier</button>
+                  <button onClick={() => togglePublish(ev.id)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors">
                     {ev.published ? "D\u00e9publier" : "Publier"}
                   </button>
-                  <button onClick={() => deleteEvent(ev.id)} className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">Supprimer</button>
+                  <button onClick={() => deleteEvent(ev.id)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 transition-colors">Supprimer</button>
                 </div>
               </div>
             ))}

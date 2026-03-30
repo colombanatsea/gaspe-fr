@@ -1,28 +1,86 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { publishedJobs } from "@/data/jobs";
+import { useEffect, useState } from "react";
+import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { matchCertifications } from "@/data/stcw";
+
+const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
+const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
+
+function getAllPublishedJobs(): Job[] {
+  const base = [...publishedJobs];
+  if (typeof window === "undefined") return base;
+  try {
+    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
+    const admin: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
+    base.push(...admin.filter((j) => j.published));
+  } catch { /* empty */ }
+  try {
+    const adhRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
+    const adh: any[] = adhRaw ? JSON.parse(adhRaw) : [];
+    // Adherent offers use "status" not "published"
+    base.push(...adh
+      .filter((j: any) => j.status === "active")
+      .map((j: any) => ({
+        ...j,
+        slug: j.slug || j.id,
+        companySlug: j.companySlug || "",
+        zone: j.zone || "normandie",
+        publishedAt: j.createdAt || new Date().toISOString(),
+        published: true,
+      } as Job))
+    );
+  } catch { /* empty */ }
+  // Deduplicate by id
+  const seen = new Set<string>();
+  return base.filter((j) => {
+    if (seen.has(j.id)) return false;
+    seen.add(j.id);
+    return true;
+  }).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
 
 export function JobList() {
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
+  const [allJobs, setAllJobs] = useState(publishedJobs);
+
+  useEffect(() => {
+    setAllJobs(getAllPublishedJobs());
+  }, []);
 
   const selectedContracts = searchParams.getAll("contrat");
   const selectedCategories = searchParams.getAll("categorie");
   const selectedCompany = searchParams.get("entreprise") ?? "";
+  const selectedZone = searchParams.get("zone") ?? "";
+  const selectedBrevet = searchParams.get("brevet") ?? "";
+  const selectedSalary = searchParams.get("salaire") ?? "";
+  const searchQuery = (searchParams.get("q") ?? "").toLowerCase();
 
-  const filtered = publishedJobs.filter((job) => {
-    if (selectedContracts.length > 0 && !selectedContracts.includes(job.contractType)) {
-      return false;
+  const filtered = allJobs.filter((job) => {
+    if (selectedContracts.length > 0 && !selectedContracts.includes(job.contractType)) return false;
+    if (selectedCategories.length > 0 && !selectedCategories.includes(job.category)) return false;
+    if (selectedCompany && job.company !== selectedCompany) return false;
+    if (selectedZone && job.zone !== selectedZone) return false;
+    if (selectedBrevet && job.brevet !== selectedBrevet) return false;
+
+    // Salary filter
+    if (selectedSalary) {
+      const [minStr, maxStr] = selectedSalary.split("-");
+      const min = parseInt(minStr);
+      const max = maxStr === "Infinity" ? Infinity : parseInt(maxStr);
+      if (!job.salaryMin || job.salaryMin < min || job.salaryMin >= max) return false;
     }
-    if (selectedCategories.length > 0 && !selectedCategories.includes(job.category)) {
-      return false;
+
+    // Text search
+    if (searchQuery) {
+      const haystack = `${job.title} ${job.company} ${job.location} ${job.category} ${job.brevet ?? ""}`.toLowerCase();
+      if (!haystack.includes(searchQuery)) return false;
     }
-    if (selectedCompany && job.company !== selectedCompany) {
-      return false;
-    }
+
     return true;
   });
 
@@ -30,27 +88,68 @@ export function JobList() {
   const savedOffers = user?.savedOffers ?? [];
   const applications = user?.applications ?? [];
 
+  // Matching score computation for candidates
+  const computeMatchScore = (job: Job): number => {
+    if (!isCandidatLoggedIn || !user) return 0;
+    let score = 0;
+    let factors = 0;
+
+    // Desired position match (40 pts)
+    const desired = (user.desiredPosition ?? "").toLowerCase();
+    if (desired) {
+      factors += 40;
+      const title = job.title.toLowerCase();
+      if (title.includes(desired) || desired.includes(title.split(" ")[0])) {
+        score += 40;
+      } else if (
+        desired.split(" ").some((w) => w.length > 3 && title.includes(w))
+      ) {
+        score += 25;
+      }
+    }
+
+    // Category match (20 pts)
+    const currentPos = (user.currentPosition ?? "").toLowerCase();
+    if (currentPos) {
+      factors += 20;
+      const cat = job.category.toLowerCase();
+      if (currentPos.includes(cat) || currentPos.includes("pont") && cat === "pont" ||
+          currentPos.includes("machine") && cat === "machine" ||
+          currentPos.includes("mécanicien") && cat === "machine" ||
+          currentPos.includes("capitaine") && cat === "pont") {
+        score += 20;
+      }
+    }
+
+    // Certifications match via STCW (30 pts)
+    const certs = user.certifications ?? "";
+    if (certs && job.brevet) {
+      factors += 30;
+      const { score: certScore } = matchCertifications(certs, job.brevet);
+      score += Math.round((certScore / 100) * 30);
+    }
+
+    // Contract type bonus (10 pts — everyone gets a baseline)
+    factors += 10;
+    score += 10;
+
+    return factors > 0 ? Math.round((score / factors) * 100) : 0;
+  };
+
   const handleSave = (slug: string) => {
     if (!user || user.role !== "candidat") return;
     const currentSaved = user.savedOffers ?? [];
     if (currentSaved.includes(slug)) {
-      // Unsave
-      updateUser({
-        ...user,
-        savedOffers: currentSaved.filter((s) => s !== slug),
-      });
+      updateUser({ ...user, savedOffers: currentSaved.filter((s) => s !== slug) });
     } else {
-      updateUser({
-        ...user,
-        savedOffers: [...currentSaved, slug],
-      });
+      updateUser({ ...user, savedOffers: [...currentSaved, slug] });
     }
   };
 
   const handleApply = (slug: string) => {
     if (!user || user.role !== "candidat") return;
     const currentApps = user.applications ?? [];
-    if (currentApps.find((a) => a.offerId === slug)) return; // Already applied
+    if (currentApps.find((a) => a.offerId === slug)) return;
     updateUser({
       ...user,
       applications: [
@@ -60,22 +159,47 @@ export function JobList() {
     });
   };
 
+  // Active filters summary
+  const activeFilters: string[] = [];
+  if (selectedZone) activeFilters.push(ZONE_LABELS[selectedZone as keyof typeof ZONE_LABELS]);
+  if (selectedBrevet) activeFilters.push(selectedBrevet);
+  selectedContracts.forEach((c) => activeFilters.push(c));
+  selectedCategories.forEach((c) => activeFilters.push(c));
+  if (selectedCompany) activeFilters.push(selectedCompany);
+  if (searchQuery) activeFilters.push(`"${searchQuery}"`);
+
   return (
     <div>
-      <p className="mb-4 text-sm font-medium text-foreground-muted">
-        {filtered.length} offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
-      </p>
+      <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
+        <p className="text-sm font-medium text-foreground-muted">
+          <span className="font-heading text-lg font-bold text-foreground">{filtered.length}</span>{" "}
+          offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
+        </p>
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {activeFilters.map((f) => (
+              <span key={f} className="rounded-lg bg-[var(--gaspe-teal-50)] px-2.5 py-1 text-xs font-medium text-[var(--gaspe-teal-600)]">
+                {f}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-border-light bg-background p-12 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-teal">
-            <AnchorIcon className="h-8 w-8 text-primary" />
+        <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gaspe-teal-50)]">
+            <svg className="h-8 w-8 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <circle cx="12" cy="5" r="3" />
+              <line x1="12" y1="22" x2="12" y2="8" />
+              <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
+            </svg>
           </div>
           <h3 className="font-heading text-lg font-semibold text-foreground">
-            Aucune offre ne correspond à vos critères
+            Aucune offre ne correspond
           </h3>
           <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
-            Essayez de modifier vos filtres pour voir plus de résultats.
+            Essayez de modifier vos filtres ou votre recherche.
           </p>
         </div>
       ) : (
@@ -91,6 +215,7 @@ export function JobList() {
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
+              matchScore={isCandidatLoggedIn ? computeMatchScore(job) : undefined}
               isCandidatLoggedIn={isCandidatLoggedIn}
               isLoggedIn={!!user}
               isSaved={savedOffers.includes(job.slug)}
@@ -102,15 +227,5 @@ export function JobList() {
         </div>
       )}
     </div>
-  );
-}
-
-function AnchorIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="12" cy="5" r="3" />
-      <line x1="12" y1="22" x2="12" y2="8" />
-      <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
-    </svg>
   );
 }

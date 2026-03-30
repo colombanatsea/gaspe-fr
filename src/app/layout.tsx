@@ -17,6 +17,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
     description: SITE_DESCRIPTION,
+    images: [{ url: `${SITE_URL}/og-image.svg`, width: 1200, height: 630, alt: `${SITE_NAME} – ${SITE_FULL_NAME}` }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
+    description: SITE_DESCRIPTION,
+    images: [`${SITE_URL}/og-image.svg`],
   },
   robots: { index: true, follow: true },
   alternates: { canonical: SITE_URL },
@@ -30,6 +37,12 @@ export default function RootLayout({
   return (
     <html lang="fr" className="h-full antialiased">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1B7E8A" />
+        <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -41,6 +54,14 @@ export default function RootLayout({
         <OrganizationJsonLd />
         <WebSiteJsonLd />
         <Providers>{children}</Providers>
+        {/* Service Worker registration */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+          }
+        ` }} />
       </body>
     </html>
   );

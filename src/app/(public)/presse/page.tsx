@@ -18,7 +18,7 @@ export default function PressePage() {
       </p>
       <Link
         href="/positions"
-        className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+        className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
       >
         Voir les Positions &rarr;
       </Link>

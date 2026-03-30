@@ -119,17 +119,22 @@ export default function AdminOffresPage() {
 
       {/* Search & Filters */}
       <div className="flex flex-wrap gap-3">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher par titre, entreprise, lieu..."
-          className="flex-1 min-w-[240px] rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
-        />
+        <div className="relative flex-1 min-w-[240px]">
+          <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher par titre, entreprise, lieu..."
+            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white pl-10 pr-4 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+          />
+        </div>
         <select
           value={filterContract}
           onChange={(e) => setFilterContract(e.target.value)}
-          className="rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
         >
           <option value="">Tous les contrats</option>
           {contractTypes.map((ct) => (
@@ -139,10 +144,10 @@ export default function AdminOffresPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+          className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
         >
           <option value="">Tous les statuts</option>
-          <option value="published">Publi&eacute;</option>
+          <option value="published">Publié</option>
           <option value="draft">Brouillon</option>
         </select>
       </div>
@@ -161,25 +166,25 @@ export default function AdminOffresPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border-light bg-background">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-light text-left">
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Titre</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Entreprise</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Lieu</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Contrat</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Statut</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Date</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Actions</th>
+              <tr className="border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] text-left">
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Titre</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Entreprise</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider hidden lg:table-cell">Lieu</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Contrat</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Statut</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider hidden md:table-cell">Date</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((job) => (
-                <tr key={job.id} className="border-b border-border-light last:border-0 hover:bg-surface/50">
-                  <td className="px-4 py-3 font-medium text-foreground">{job.title}</td>
+                <tr key={job.id} className="border-b border-[var(--gaspe-neutral-100)] last:border-0 hover:bg-[var(--gaspe-neutral-50)]/50 transition-colors">
+                  <td className="px-4 py-3 font-heading text-sm font-semibold text-foreground">{job.title}</td>
                   <td className="px-4 py-3 text-foreground-muted">{job.company}</td>
-                  <td className="px-4 py-3 text-foreground-muted">{job.location}</td>
+                  <td className="px-4 py-3 text-foreground-muted hidden lg:table-cell">{job.location}</td>
                   <td className="px-4 py-3">
                     <Badge variant="neutral">{job.contractType}</Badge>
                   </td>
@@ -188,19 +193,18 @@ export default function AdminOffresPage() {
                       {job.published ? "Publi\u00e9" : "Brouillon"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-foreground-muted">{formatDate(job.publishedAt)}</td>
+                  <td className="px-4 py-3 text-foreground-muted hidden md:table-cell">{formatDate(job.publishedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => togglePublish(job.id)}
-                        className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors"
-                        title={job.published ? "D\u00e9publier" : "Publier"}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
                       >
-                        {job.published ? "D\u00e9publier" : "Publier"}
+                        {job.published ? "Dépublier" : "Publier"}
                       </button>
                       <button
                         onClick={() => deleteOffer(job.id)}
-                        className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 transition-colors"
                       >
                         Supprimer
                       </button>

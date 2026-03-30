@@ -159,7 +159,7 @@ export default function AdminDocumentsPage() {
   const filtered = documents.filter((d) => !filterCat || d.category === filterCat);
 
   const inputClass =
-    "w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary";
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   return (
     <div className="space-y-6">
@@ -191,7 +191,7 @@ export default function AdminDocumentsPage() {
 
       {/* Inline form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-lg border-l-[3px] border-l-primary bg-background p-6 shadow-sm space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--gaspe-neutral-200)] border-l-[3px] border-l-[var(--gaspe-teal-600)] bg-white p-6 shadow-sm space-y-4">
           <h2 className="font-heading text-lg font-semibold text-foreground">
             {editId ? "Modifier le document" : "Nouveau document"}
           </h2>
@@ -219,10 +219,10 @@ export default function AdminDocumentsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <input id="isPublic" name="isPublic" type="checkbox" checked={form.isPublic} onChange={handleChange} className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary" />
+            <input id="isPublic" name="isPublic" type="checkbox" checked={form.isPublic} onChange={handleChange} className="h-4 w-4 rounded border-[var(--gaspe-neutral-300)] text-[var(--gaspe-teal-600)] focus:ring-[var(--gaspe-teal-400)]" />
             <label htmlFor="isPublic" className="text-sm font-medium text-foreground">Visible par tous (sinon adh&eacute;rents uniquement)</label>
           </div>
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--gaspe-neutral-100)]">
             <button type="button" onClick={resetForm} className="rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors">
               Annuler
             </button>
@@ -240,7 +240,7 @@ export default function AdminDocumentsPage() {
             <h2 className="font-heading text-lg font-semibold text-foreground mb-3">{cat}</h2>
             <div className="space-y-2">
               {catDocs.map((doc) => (
-                <div key={doc.id} className="flex items-start justify-between rounded-lg border-l-[3px] border-l-primary bg-background p-4 shadow-sm">
+                <div key={doc.id} className="flex items-start justify-between rounded-2xl border border-[var(--gaspe-neutral-200)] border-l-[3px] border-l-[var(--gaspe-teal-600)] bg-white p-4 shadow-sm">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <FileIcon className="h-4 w-4 text-primary shrink-0" />
@@ -253,8 +253,8 @@ export default function AdminDocumentsPage() {
                     <p className="text-xs text-foreground-muted ml-6 mt-1">Ajout&eacute; le {formatDate(doc.uploadDate)}</p>
                   </div>
                   <div className="ml-4 flex items-center gap-2 shrink-0">
-                    <button onClick={() => startEdit(doc)} className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors">Modifier</button>
-                    <button onClick={() => deleteDocument(doc.id)} className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">Supprimer</button>
+                    <button onClick={() => startEdit(doc)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors">Modifier</button>
+                    <button onClick={() => deleteDocument(doc.id)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 transition-colors">Supprimer</button>
                   </div>
                 </div>
               ))}
@@ -264,7 +264,7 @@ export default function AdminDocumentsPage() {
       })}
 
       {filtered.length === 0 && (
-        <div className="rounded-lg border border-border-light bg-background p-12 text-center">
+        <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-12 text-center">
           <h3 className="font-heading text-lg font-semibold text-foreground">Aucun document</h3>
           <p className="mt-2 text-sm text-foreground-muted">Ajoutez votre premier document.</p>
         </div>

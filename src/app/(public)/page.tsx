@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { SearchBar } from "@/components/home/SearchBar";
 import { StatsSection } from "@/components/home/StatsSection";
 import { MapPreview } from "@/components/home/MapPreview";
+import { MembersMarquee } from "@/components/home/MembersMarquee";
 import { LatestNews } from "@/components/home/LatestNews";
 import { CTASection } from "@/components/home/CTASection";
 
@@ -15,6 +16,7 @@ export default function HomePage() {
         </div>
       </section>
       <StatsSection />
+      <MembersMarquee />
       <MapPreview />
       <LatestNews />
       <CTASection />

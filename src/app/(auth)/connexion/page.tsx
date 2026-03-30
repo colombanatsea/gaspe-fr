@@ -14,12 +14,12 @@ export default function ConnexionPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (!result.success) {
       setError(result.error ?? "Erreur de connexion.");
       setLoading(false);
@@ -37,14 +37,14 @@ export default function ConnexionPage() {
   };
 
   return (
-    <div className="rounded-lg bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
+    <div className="rounded-2xl bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
       <h1 className="font-heading text-2xl font-bold text-foreground">Connexion</h1>
       <p className="mt-1 text-sm text-foreground-muted">
         Accédez à votre espace personnel GASPE.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -60,7 +60,7 @@ export default function ConnexionPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="mt-1 block w-full rounded-xl border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="vous@exemple.fr"
           />
         </div>
@@ -75,7 +75,7 @@ export default function ConnexionPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="mt-1 block w-full rounded-xl border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Votre mot de passe"
           />
         </div>
@@ -90,13 +90,13 @@ export default function ConnexionPage() {
         <div className="flex gap-3">
           <Link
             href="/inscription/adherent"
-            className="flex-1 inline-flex items-center justify-center rounded-lg border-2 border-primary px-4 py-2.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors text-center"
+            className="flex-1 inline-flex items-center justify-center rounded-xl border-2 border-primary px-4 py-2.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors text-center"
           >
             Espace Adhérent
           </Link>
           <Link
             href="/inscription/candidat"
-            className="flex-1 inline-flex items-center justify-center rounded-lg border-2 border-primary px-4 py-2.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors text-center"
+            className="flex-1 inline-flex items-center justify-center rounded-xl border-2 border-primary px-4 py-2.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors text-center"
           >
             Espace Candidat
           </Link>

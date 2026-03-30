@@ -5,80 +5,181 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SITE_NAME } from "@/lib/constants";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useState } from "react";
 
-const navItems = [
-  { label: "Tableau de bord", href: "/admin", icon: LayoutDashboardIcon },
-  { label: "Comptes", href: "/admin/comptes", icon: ShieldIcon },
-  { label: "Offres d\u2019emploi", href: "/admin/offres", icon: BriefcaseIcon },
-  { label: "Formations", href: "/admin/formations", icon: GraduationIcon },
-  { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon },
-  { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon },
-  { label: "Documents", href: "/admin/documents", icon: FileIcon },
-  { label: "Param\u00e8tres", href: "/admin/parametres", icon: SettingsIcon },
+const navSections = [
+  {
+    title: "Général",
+    items: [
+      { label: "Tableau de bord", href: "/admin", icon: LayoutDashboardIcon },
+      { label: "Comptes", href: "/admin/comptes", icon: ShieldIcon, badge: "pending" as const },
+    ],
+  },
+  {
+    title: "Contenu",
+    items: [
+      { label: "Offres d\u2019emploi", href: "/admin/offres", icon: BriefcaseIcon },
+      { label: "Formations", href: "/admin/formations", icon: GraduationIcon },
+      { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon },
+    ],
+  },
+  {
+    title: "Organisation",
+    items: [
+      { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon },
+      { label: "Documents", href: "/admin/documents", icon: FileIcon },
+      { label: "Messages", href: "/admin/messages", icon: MailIcon },
+    ],
+  },
+  {
+    title: "Système",
+    items: [
+      { label: "Paramètres", href: "/admin/parametres", icon: SettingsIcon },
+    ],
+  },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout, getAllUsers } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Count pending accounts for badge
+  let pendingCount = 0;
+  try {
+    const users = getAllUsers();
+    pendingCount = users.filter((u) => u.role === "adherent" && !u.approved).length;
+  } catch { /* empty */ }
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-[var(--gaspe-neutral-900)] text-white">
+    <aside className={cn(
+      "flex h-screen flex-col bg-[var(--gaspe-neutral-900)] text-white transition-all duration-300",
+      collapsed ? "w-[68px]" : "w-64",
+    )}>
       {/* Logo */}
-      <div className="flex items-center gap-2 px-5 py-6 border-b border-[var(--gaspe-neutral-800)]">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md gaspe-gradient">
-          <span className="font-heading text-sm font-bold text-white">A</span>
+      <div className="flex items-center justify-between px-4 py-5 border-b border-white/5">
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl gaspe-gradient shadow-lg shadow-[var(--gaspe-teal-600)]/20">
+            <span className="font-heading text-sm font-bold text-white">G</span>
+          </div>
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="font-heading text-sm font-bold leading-tight">{SITE_NAME}</span>
+              <span className="text-[10px] font-medium uppercase tracking-widest text-[var(--gaspe-teal-400)]">
+                Console Admin
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex flex-col">
-          <span className="font-heading text-sm font-bold">{SITE_NAME}</span>
-          <span className="text-[10px] uppercase tracking-wider text-[var(--gaspe-neutral-400)]">
-            Administration
-          </span>
-        </div>
+        {!collapsed && (
+          <button
+            onClick={() => setCollapsed(true)}
+            className="rounded-lg p-1.5 text-[var(--gaspe-neutral-500)] hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+        )}
+        {collapsed && (
+          <button
+            onClick={() => setCollapsed(false)}
+            className="absolute left-[68px] top-6 z-50 rounded-full bg-[var(--gaspe-neutral-800)] p-1 text-white/50 hover:text-white shadow-lg border border-white/10 transition-colors"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
-          const Icon = item.icon;
+      <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto scrollbar-thin">
+        {navSections.map((section) => (
+          <div key={section.title}>
+            {!collapsed && (
+              <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--gaspe-neutral-500)]">
+                {section.title}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive =
+                  item.href === "/admin"
+                    ? pathname === "/admin"
+                    : pathname.startsWith(item.href);
+                const Icon = item.icon;
+                const showBadge = item.badge === "pending" && pendingCount > 0;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-white"
-                  : "text-[var(--gaspe-neutral-300)] hover:bg-[var(--gaspe-neutral-800)] hover:text-white",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all relative",
+                      collapsed && "justify-center px-2",
+                      isActive
+                        ? "bg-[var(--gaspe-teal-600)] text-white shadow-lg shadow-[var(--gaspe-teal-600)]/25"
+                        : "text-[var(--gaspe-neutral-400)] hover:bg-white/5 hover:text-white",
+                    )}
+                  >
+                    <Icon className="h-[18px] w-[18px] shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                    {showBadge && (
+                      <span className={cn(
+                        "flex items-center justify-center rounded-full bg-[var(--gaspe-warm-400)] text-[var(--gaspe-neutral-900)] font-bold",
+                        collapsed ? "absolute -top-1 -right-1 h-4 w-4 text-[9px]" : "ml-auto h-5 min-w-5 px-1.5 text-[10px]",
+                      )}>
+                        {pendingCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* Sign out */}
-      <div className="px-3 py-4 border-t border-[var(--gaspe-neutral-800)]">
+      {/* User + sign out */}
+      <div className="border-t border-white/5 px-3 py-4">
+        {!collapsed && user && (
+          <div className="mb-3 px-3">
+            <p className="text-xs font-semibold text-white truncate">{user.name}</p>
+            <p className="text-[10px] text-[var(--gaspe-neutral-500)] truncate">{user.email}</p>
+          </div>
+        )}
         <button
           onClick={() => { logout(); router.push("/connexion"); }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--gaspe-neutral-400)] hover:bg-[var(--gaspe-neutral-800)] hover:text-white transition-colors"
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gaspe-neutral-500)] hover:bg-red-500/10 hover:text-red-400 transition-colors",
+            collapsed && "justify-center px-2",
+          )}
         >
-          <LogOutIcon className="h-4 w-4 shrink-0" />
-          Se d&eacute;connecter
+          <LogOutIcon className="h-[18px] w-[18px] shrink-0" />
+          {!collapsed && "Se déconnecter"}
         </button>
+
+        {!collapsed && (
+          <Link
+            href="/"
+            target="_blank"
+            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2 text-xs text-[var(--gaspe-neutral-500)] hover:text-[var(--gaspe-teal-400)] transition-colors"
+          >
+            <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Voir le site
+          </Link>
+        )}
       </div>
     </aside>
   );
 }
 
-/* ---------- Inline SVG icons (avoids external dependency) ---------- */
+/* ---------- Inline SVG icons ---------- */
 
 function LayoutDashboardIcon({ className }: { className?: string }) {
   return (
@@ -134,6 +235,15 @@ function FileIcon({ className }: { className?: string }) {
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
       <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  );
+}
+
+function MailIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   );
 }

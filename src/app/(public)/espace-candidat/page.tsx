@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, type User } from "@/lib/auth/AuthContext";
+import { STCW_CERTIFICATIONS, STCW_CATEGORY_LABELS, type STCWCategory } from "@/data/stcw";
+import { useAuth, type User, type ApplicationStatus, APPLICATION_STATUS_CONFIG } from "@/lib/auth/AuthContext";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -40,9 +41,9 @@ export default function EspaceCandidatPage() {
       currentPosition: user.currentPosition ?? "",
       desiredPosition: user.desiredPosition ?? "",
       phone: user.phone ?? "",
-      experience: (user as unknown as Record<string, unknown>).experience as string ?? "",
-      certifications: (user as unknown as Record<string, unknown>).certifications as string ?? "",
-      cvFilename: (user as unknown as Record<string, unknown>).cvFilename as string ?? "",
+      experience: user.experience ?? "",
+      certifications: user.certifications ?? "",
+      cvFilename: user.cvFilename ?? "",
     });
 
     // Count formations
@@ -59,16 +60,33 @@ export default function EspaceCandidatPage() {
       currentPosition: form.currentPosition,
       desiredPosition: form.desiredPosition,
       phone: form.phone,
-      ...({ experience: form.experience, certifications: form.certifications, cvFilename: form.cvFilename } as Record<string, string>),
+      experience: form.experience,
+      certifications: form.certifications,
+      cvFilename: form.cvFilename,
     } as User);
     setEditing(false);
   }, [user, form, updateUser]);
 
+  const [cvError, setCvError] = useState("");
+
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setForm((p) => ({ ...p, cvFilename: file.name }));
+    setCvError("");
+    if (!file) return;
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      setCvError("Format accepté : PDF, DOC ou DOCX uniquement.");
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setCvError("Le fichier ne doit pas dépasser 5 Mo.");
+      return;
+    }
+    setForm((p) => ({ ...p, cvFilename: file.name }));
   };
 
   if (!user || user.role !== "candidat") return null;
@@ -246,13 +264,59 @@ export default function EspaceCandidatPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground">Certifications (STCW, brevets, etc.)</label>
-                    <textarea
-                      rows={3}
+                    <label className="block text-sm font-medium text-foreground mb-2">Certifications STCW &amp; brevets</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {form.certifications.split(",").filter(Boolean).map((cert) => {
+                        const trimmed = cert.trim();
+                        return (
+                          <span key={trimmed} className="inline-flex items-center gap-1 rounded-full bg-[var(--gaspe-teal-50)] px-3 py-1 text-xs font-medium text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]">
+                            {trimmed}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const certs = form.certifications.split(",").map(c => c.trim()).filter(c => c && c !== trimmed);
+                                setForm((p) => ({ ...p, certifications: certs.join(", ") }));
+                              }}
+                              className="hover:text-[var(--gaspe-teal-800)] cursor-pointer"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <select
+                      className={inputClass}
+                      value=""
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) return;
+                        const existing = form.certifications.split(",").map(c => c.trim()).filter(Boolean);
+                        if (!existing.includes(val)) {
+                          setForm((p) => ({ ...p, certifications: [...existing, val].join(", ") }));
+                        }
+                      }}
+                    >
+                      <option value="">+ Ajouter une certification...</option>
+                      {(["pont", "machine", "securite", "radio"] as STCWCategory[]).map((cat) => (
+                        <optgroup key={cat} label={STCW_CATEGORY_LABELS[cat]}>
+                          {STCW_CERTIFICATIONS.filter(c => c.category === cat).map((cert) => (
+                            <option key={cert.code} value={cert.frenchName}>
+                              {cert.frenchName} ({cert.stcwRef})
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-foreground-muted">Sélectionnez vos certifications dans la liste ou saisissez-les ci-dessous.</p>
+                    <input
+                      type="text"
                       value={form.certifications}
                       onChange={(e) => setForm((p) => ({ ...p, certifications: e.target.value }))}
-                      className={inputClass}
-                      placeholder="CFBS, Capitaine 500, STCW II/3..."
+                      className={`${inputClass} mt-1`}
+                      placeholder="Saisie libre : CFBS, Capitaine 500..."
                     />
                   </div>
                   <div>
@@ -306,8 +370,8 @@ export default function EspaceCandidatPage() {
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">CV</p>
                     <p className="text-sm text-foreground">
-                      {(user as unknown as Record<string, unknown>).cvFilename
-                        ? String((user as unknown as Record<string, unknown>).cvFilename)
+                      {user.cvFilename
+                        ? user.cvFilename
                         : "Non charg\u00e9"}
                     </p>
                   </div>
@@ -379,25 +443,56 @@ export default function EspaceCandidatPage() {
                 </div>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {applications.map((app, i) => {
                   const job = publishedJobs.find((j) => j.slug === app.offerId || j.id === app.offerId);
+                  const status = (app.status as ApplicationStatus) || "pending";
+                  const config = APPLICATION_STATUS_CONFIG[status] ?? APPLICATION_STATUS_CONFIG.pending;
+                  const PIPELINE_STEPS: ApplicationStatus[] = ["pending", "viewed", "shortlisted", "interview", "accepted"];
+                  const stepIdx = PIPELINE_STEPS.indexOf(status);
+                  const isRejected = status === "rejected";
                   return (
-                    <Card key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-heading font-semibold text-foreground">
-                          {job ? job.title : `Offre #${app.offerId}`}
-                        </p>
-                        {job && (
-                          <p className="text-xs text-foreground-muted">{job.company}</p>
-                        )}
-                        <p className="text-xs text-foreground-muted">
-                          Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
-                        </p>
+                    <Card key={i}>
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                          <p className="font-heading font-semibold text-foreground">
+                            {job ? job.title : `Offre #${app.offerId}`}
+                          </p>
+                          {job && (
+                            <p className="text-xs text-foreground-muted">{job.company} \u00b7 {job.location}</p>
+                          )}
+                          <p className="text-xs text-foreground-muted mt-0.5">
+                            Postul\u00e9 le {new Date(app.date).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                        <Badge variant={config.variant}>{config.label}</Badge>
                       </div>
-                      <Badge variant={app.status === "accepted" ? "green" : app.status === "rejected" ? "warm" : "neutral"}>
-                        {app.status === "accepted" ? "Accept\u00e9e" : app.status === "rejected" ? "Refus\u00e9e" : "En attente"}
-                      </Badge>
+                      {/* Pipeline progress bar */}
+                      {!isRejected ? (
+                        <div className="flex items-center gap-1 mt-2">
+                          {PIPELINE_STEPS.map((step, si) => {
+                            const stepConfig = APPLICATION_STATUS_CONFIG[step];
+                            const isActive = si <= stepIdx;
+                            const isCurrent = si === stepIdx;
+                            return (
+                              <div key={step} className="flex-1 flex flex-col items-center gap-1">
+                                <div
+                                  className={`h-1.5 w-full rounded-full transition-colors ${
+                                    isActive
+                                      ? "bg-[var(--gaspe-teal-600)]"
+                                      : "bg-[var(--gaspe-neutral-200)]"
+                                  }`}
+                                />
+                                <span className={`text-[9px] hidden sm:block ${isCurrent ? "font-semibold text-[var(--gaspe-teal-600)]" : "text-foreground-muted"}`}>
+                                  {stepConfig.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--gaspe-neutral-200)]" />
+                      )}
                     </Card>
                   );
                 })}

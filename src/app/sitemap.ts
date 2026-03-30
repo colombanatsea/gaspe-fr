@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { formations } from "@/data/formations";
 
 export const dynamic = "force-static";
 
@@ -21,7 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/positions`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/presse`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/agenda`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE_URL}/documents`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/boite-a-outils`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/formations`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
+    { url: `${BASE_URL}/mentions-legales`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE_URL}/confidentialite`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   // TODO: When DB is connected, add dynamic pages:
@@ -29,5 +35,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   //   .from(jobsTable).where(eq(jobsTable.published, true));
   // const jobPages = jobs.map(j => ({ url: `${BASE_URL}/nos-compagnies-recrutent/${j.slug}`, lastModified: j.updatedAt }));
 
-  return [...staticPages];
+  // Formation detail pages
+  const formationPages: MetadataRoute.Sitemap = formations.map((f) => ({
+    url: `${BASE_URL}/formations/${f.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...formationPages];
 }

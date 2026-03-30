@@ -11,6 +11,9 @@ const GASPE_MEMBERS = [
   "Autre (préciser)",
 ];
 
+const inputClass =
+  "mt-1 block w-full rounded-xl border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
 export default function InscriptionAdherentPage() {
   const { register } = useAuth();
   const [form, setForm] = useState({
@@ -22,11 +25,12 @@ export default function InscriptionAdherentPage() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -35,7 +39,9 @@ export default function InscriptionAdherentPage() {
       return;
     }
 
-    const result = register({
+    setSubmitting(true);
+
+    const result = await register({
       role: "adherent",
       name: form.name,
       email: form.email,
@@ -46,6 +52,7 @@ export default function InscriptionAdherentPage() {
 
     if (!result.success) {
       setError(result.error ?? "Erreur lors de l'inscription.");
+      setSubmitting(false);
       return;
     }
 
@@ -54,7 +61,7 @@ export default function InscriptionAdherentPage() {
 
   if (success) {
     return (
-      <div className="rounded-lg bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
+      <div className="rounded-2xl bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-teal mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
             <path d="M20 6 9 17l-5-5" />
@@ -66,7 +73,7 @@ export default function InscriptionAdherentPage() {
         </p>
         <Link
           href="/connexion"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-heading font-semibold text-sm text-white hover:bg-primary-hover transition-colors"
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-heading font-semibold text-sm text-white hover:bg-primary-hover transition-colors"
         >
           Retour à la connexion
         </Link>
@@ -75,18 +82,18 @@ export default function InscriptionAdherentPage() {
   }
 
   return (
-    <div className="rounded-lg bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
+    <div className="rounded-2xl bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
       <h1 className="font-heading text-2xl font-bold text-foreground">Inscription Adhérent</h1>
       <p className="mt-1 text-sm text-foreground-muted">
         Créez un compte pour votre compagnie membre du GASPE.
       </p>
 
-      <div className="mt-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+      <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
         Votre compte sera validé par l&apos;administrateur avant activation.
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -101,7 +108,7 @@ export default function InscriptionAdherentPage() {
             required
             value={form.company}
             onChange={(e) => update("company", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
           >
             <option value="">Sélectionnez votre compagnie</option>
             {GASPE_MEMBERS.map((m) => (
@@ -120,7 +127,7 @@ export default function InscriptionAdherentPage() {
             required
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Jean Dupont"
           />
         </div>
@@ -135,7 +142,7 @@ export default function InscriptionAdherentPage() {
             required
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="contact@compagnie.fr"
           />
         </div>
@@ -150,7 +157,7 @@ export default function InscriptionAdherentPage() {
             required
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="01 23 45 67 89"
           />
         </div>
@@ -166,13 +173,23 @@ export default function InscriptionAdherentPage() {
             minLength={6}
             value={form.password}
             onChange={(e) => update("password", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Minimum 6 caractères"
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Créer mon compte adhérent
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? (
+            <span className="inline-flex items-center gap-2">
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Inscription en cours...
+            </span>
+          ) : (
+            "Créer mon compte adhérent"
+          )}
         </Button>
       </form>
 

@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 
+const inputClass =
+  "mt-1 block w-full rounded-xl border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
 export default function InscriptionCandidatPage() {
   const { register } = useAuth();
   const router = useRouter();
@@ -18,11 +21,12 @@ export default function InscriptionCandidatPage() {
     desiredPosition: "",
   });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -31,7 +35,9 @@ export default function InscriptionCandidatPage() {
       return;
     }
 
-    const result = register({
+    setSubmitting(true);
+
+    const result = await register({
       role: "candidat",
       name: form.name,
       email: form.email,
@@ -43,6 +49,7 @@ export default function InscriptionCandidatPage() {
 
     if (!result.success) {
       setError(result.error ?? "Erreur lors de l'inscription.");
+      setSubmitting(false);
       return;
     }
 
@@ -50,14 +57,14 @@ export default function InscriptionCandidatPage() {
   };
 
   return (
-    <div className="rounded-lg bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
+    <div className="rounded-2xl bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
       <h1 className="font-heading text-2xl font-bold text-foreground">Inscription Candidat</h1>
       <p className="mt-1 text-sm text-foreground-muted">
         Créez votre profil pour postuler aux offres d&apos;emploi maritime.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -73,7 +80,7 @@ export default function InscriptionCandidatPage() {
             required
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Jean Dupont"
           />
         </div>
@@ -88,7 +95,7 @@ export default function InscriptionCandidatPage() {
             required
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="vous@exemple.fr"
           />
         </div>
@@ -102,7 +109,7 @@ export default function InscriptionCandidatPage() {
             type="tel"
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="06 12 34 56 78"
           />
         </div>
@@ -116,7 +123,7 @@ export default function InscriptionCandidatPage() {
             type="text"
             value={form.currentPosition}
             onChange={(e) => update("currentPosition", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Ex: Matelot, Officier mécanicien..."
           />
         </div>
@@ -130,7 +137,7 @@ export default function InscriptionCandidatPage() {
             type="text"
             value={form.desiredPosition}
             onChange={(e) => update("desiredPosition", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Ex: Capitaine, Second mécanicien..."
           />
         </div>
@@ -146,13 +153,23 @@ export default function InscriptionCandidatPage() {
             minLength={6}
             value={form.password}
             onChange={(e) => update("password", e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={inputClass}
             placeholder="Minimum 6 caractères"
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Créer mon compte
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? (
+            <span className="inline-flex items-center gap-2">
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Inscription en cours...
+            </span>
+          ) : (
+            "Créer mon compte"
+          )}
         </Button>
       </form>
 

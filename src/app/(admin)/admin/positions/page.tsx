@@ -96,7 +96,7 @@ export default function AdminPositionsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher..."
-          className="flex-1 min-w-[240px] rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:ring-1 focus:ring-primary"
+          className="flex-1 min-w-[240px] rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
         />
         <select
           value={filterCat}
@@ -111,7 +111,7 @@ export default function AdminPositionsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-border-light bg-background p-12 text-center">
+        <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-12 text-center">
           <h3 className="font-heading text-lg font-semibold text-foreground">Aucun article</h3>
           <p className="mt-2 text-sm text-foreground-muted">Cr&eacute;ez votre premier article.</p>
           <div className="mt-6">
@@ -119,21 +119,21 @@ export default function AdminPositionsPage() {
           </div>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border-light bg-background">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-light text-left">
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Titre</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Cat&eacute;gorie</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Date</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Tags</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Statut</th>
-                <th className="px-4 py-3 font-heading font-semibold text-foreground">Actions</th>
+              <tr className="border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] text-left">
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Titre</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Cat&eacute;gorie</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Tags</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Statut</th>
+                <th className="px-4 py-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border-light last:border-0 hover:bg-surface/50">
+                <tr key={p.id} className="border-b border-[var(--gaspe-neutral-100)] last:border-0 hover:bg-[var(--gaspe-neutral-50)]/50 transition-colors">
                   <td className="px-4 py-3 font-medium text-foreground">{p.title}</td>
                   <td className="px-4 py-3">
                     <Badge variant={catVariant[p.category] || "neutral"}>{p.category}</Badge>
@@ -155,13 +155,13 @@ export default function AdminPositionsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => togglePublish(p.id)}
-                        className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-surface-teal transition-colors"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
                       >
                         {p.published ? "D\u00e9publier" : "Publier"}
                       </button>
                       <button
                         onClick={() => deletePosition(p.id)}
-                        className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 transition-colors"
                       >
                         Supprimer
                       </button>
