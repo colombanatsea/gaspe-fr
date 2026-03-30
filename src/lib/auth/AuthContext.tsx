@@ -116,6 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(result.user);
         getAuthStore().setCurrentUser(result.user);
       }
+      // Notify admin of new adherent registration (fire & forget)
+      if (result.success && data.role === "adherent") {
+        sendNewAdherentNotification({ name: data.name, email: data.email, company: data.company });
+      }
       return { success: result.success, error: result.error };
     }
 
@@ -172,10 +176,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const approveUser = useCallback(async (id: string) => {
     if (apiMode) {
+      // Get user info before approving (for email notification)
+      const allUsers = getAuthStore().getUsers();
+      const target = allUsers.find((u) => u.id === id);
       await ApiAuthStore.approveUser(id);
       // Refresh users list
       const users = await ApiAuthStore.fetchAllUsers();
       getAuthStore().setUsers(users);
+      // Notify adherent their account was approved (fire & forget)
+      if (target && target.role === "adherent") {
+        sendApprovalNotification({ name: target.name, email: target.email });
+      }
       return;
     }
 
@@ -194,9 +205,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const rejectUser = useCallback(async (id: string) => {
     if (apiMode) {
+      // Get user info before rejecting (for email notification)
+      const allUsers = getAuthStore().getUsers();
+      const target = allUsers.find((u) => u.id === id);
       await ApiAuthStore.rejectUser(id);
       const users = await ApiAuthStore.fetchAllUsers();
       getAuthStore().setUsers(users);
+      // Notify rejected adherent (fire & forget)
+      if (target && target.role === "adherent") {
+        sendRejectionNotification({ name: target.name, email: target.email });
+      }
       return;
     }
 
