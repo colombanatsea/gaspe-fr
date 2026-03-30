@@ -72,7 +72,7 @@ function getDocuments(): GaspeDocument[] {
     localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(SEED_DOCUMENTS));
     return SEED_DOCUMENTS;
   }
-  return JSON.parse(raw);
+  try { return JSON.parse(raw); } catch { return []; }
 }
 
 export default function AdminDocumentsPage() {

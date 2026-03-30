@@ -24,6 +24,37 @@ export const APPLICATION_STATUS_CONFIG: Record<ApplicationStatus, { label: strin
   rejected:    { label: "Refusée",        variant: "neutral",  icon: "x" },
 };
 
+export type CompanyRole =
+  | "dirigeant"
+  | "exploitation"
+  | "armement"
+  | "paie"
+  | "technique"
+  | "logistique"
+  | "achats"
+  | "formation";
+
+export const COMPANY_ROLES: { value: CompanyRole; label: string }[] = [
+  { value: "dirigeant", label: "Dirigeant" },
+  { value: "exploitation", label: "Exploitation" },
+  { value: "armement", label: "Armement" },
+  { value: "paie", label: "Paie" },
+  { value: "technique", label: "Technique" },
+  { value: "logistique", label: "Logistique" },
+  { value: "achats", label: "Achats" },
+  { value: "formation", label: "Formation" },
+];
+
+export interface Vessel {
+  id: string;
+  name: string;
+  imo?: string;
+  ums?: string;
+  size?: string;
+}
+
+export type MembershipStatus = "due" | "paid" | "pending";
+
 export interface User {
   id: string;
   email: string;
@@ -32,14 +63,42 @@ export interface User {
   company?: string;
   phone?: string;
   approved?: boolean;
+  archived?: boolean;
+  /** Adherent-specific */
+  companyRole?: CompanyRole;
+  companyDescription?: string;
+  companyLogo?: string; // base64 data URL
+  companyAddress?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  vessels?: Vessel[];
+  membershipStatus?: MembershipStatus;
   /** Candidat-specific */
   currentPosition?: string;
   desiredPosition?: string;
+  preferredZone?: string;
   savedOffers?: string[];
-  applications?: { offerId: string; date: string; status: ApplicationStatus }[];
+  applications?: { offerId: string; date: string; status: ApplicationStatus; message?: string }[];
   experience?: string;
   certifications?: string;
   cvFilename?: string;
+  /** Structured certifications (replaces freetext) */
+  structuredCertifications?: {
+    certId: string;
+    obtainedDate?: string;
+    expiryDate?: string;
+    reference?: string;
+    verified?: boolean;
+  }[];
+  /** Sea service history */
+  seaService?: {
+    id: string;
+    vesselName: string;
+    vesselType?: string;
+    rank: string;
+    startDate: string;
+    endDate?: string;
+  }[];
   createdAt: string;
 }
 
@@ -164,6 +223,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
+  // Sync across tabs via storage event
+  useEffect(() => {
+    function handleStorageChange(e: StorageEvent) {
+      if (e.key === CURRENT_KEY) {
+        if (!e.newValue) { setUser(null); return; }
+        try { setUser(JSON.parse(e.newValue) as User); } catch { /* ignore */ }
+      }
+      if (e.key === USERS_KEY && user) {
+        // Re-read fresh user data if users array changed (e.g. admin approved/archived)
+        try {
+          const users = JSON.parse(e.newValue ?? "[]") as User[];
+          const fresh = users.find((u) => u.id === user.id);
+          if (fresh) { setUser(fresh); writeStore(CURRENT_KEY, fresh); }
+          else { setUser(null); localStorage.removeItem(CURRENT_KEY); } // user was deleted
+        } catch { /* ignore */ }
+      }
+    }
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     const users = readStore<User[]>(USERS_KEY, []);
     const passwords = readStore<Record<string, string>>(PASSWORDS_KEY, {});
@@ -241,6 +321,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (idx >= 0) {
       users[idx].approved = true;
       writeStore(USERS_KEY, users);
+      // Update current_user if it's the same user (e.g. they're logged in another tab)
+      const current = readStore<User | null>(CURRENT_KEY, null);
+      if (current?.id === id) writeStore(CURRENT_KEY, users[idx]);
     }
   }, []);
 
@@ -251,6 +334,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     delete passwords[id];
     writeStore(USERS_KEY, filtered);
     writeStore(PASSWORDS_KEY, passwords);
+    // Clear current_user if the rejected user is logged in
+    const current = readStore<User | null>(CURRENT_KEY, null);
+    if (current?.id === id) localStorage.removeItem(CURRENT_KEY);
   }, []);
 
   const updateUser = useCallback((updated: User) => {

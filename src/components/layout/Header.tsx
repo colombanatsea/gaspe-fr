@@ -10,6 +10,7 @@ import { MobileNav } from "./MobileNav";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import NotificationBell from "@/components/shared/NotificationBell";
 
 const roleBadge = {
   admin: { label: "Admin", variant: "teal" as const },
@@ -75,6 +76,8 @@ export function Header() {
           {/* Theme toggle + Auth buttons */}
           <ThemeToggle />
           {isAuthenticated && user ? (
+            <>
+            <NotificationBell />
             <div className="relative ml-2" ref={menuRef}>
               <button
                 onClick={() => setUserMenuOpen((prev) => !prev)}
@@ -109,6 +112,7 @@ export function Header() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <Link
               href="/connexion"
@@ -123,9 +127,12 @@ export function Header() {
         <div className="flex items-center gap-2 lg:hidden">
           <ThemeToggle />
           {isAuthenticated && user && (
-            <Badge variant={roleBadge[user.role].variant}>
-              {roleBadge[user.role].label}
-            </Badge>
+            <>
+              <NotificationBell />
+              <Badge variant={roleBadge[user.role].variant}>
+                {roleBadge[user.role].label}
+              </Badge>
+            </>
           )}
           <button
             onClick={() => setMobileOpen(true)}

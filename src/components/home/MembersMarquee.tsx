@@ -1,12 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { members } from "@/data/members";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 
 export function MembersMarquee() {
   const ref = useScrollReveal();
-  const titulaires = members.filter((m) => m.category === "titulaire");
+  const [titulaires, setTitulaires] = useState<StoredMember[]>([]);
+
+  useEffect(() => {
+    setTitulaires(getActiveMembers().filter((m) => m.category === "titulaire"));
+  }, []);
 
   return (
     <section ref={ref} className="relative bg-[var(--gaspe-neutral-900)] py-16 overflow-hidden">

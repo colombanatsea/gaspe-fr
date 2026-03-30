@@ -9,6 +9,27 @@ export const metadata: Metadata = {
   title: "Nos Compagnies Recrutent",
   description:
     "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
+  openGraph: {
+    title: "Nos Compagnies Recrutent | GASPE",
+    description:
+      "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
+    images: [
+      {
+        url: "/og-recrutement.svg",
+        width: 1200,
+        height: 630,
+        alt: "GASPE — Nos Compagnies Recrutent",
+        type: "image/svg+xml",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nos Compagnies Recrutent | GASPE",
+    description:
+      "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
+    images: ["/og-recrutement.svg"],
+  },
 };
 
 export default function NosCompagniesRecrutentPage() {

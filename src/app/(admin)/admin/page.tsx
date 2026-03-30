@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { publishedJobs } from "@/data/jobs";
+import { exportAccountsCsv, exportMembershipsCsv } from "@/lib/export-csv";
+import { SITE_VERSION } from "@/lib/constants";
 
 const FORMATIONS_KEY = "gaspe_formations";
 const POSITIONS_KEY = "gaspe_positions";
@@ -193,6 +195,7 @@ export default function AdminDashboardPage() {
               { label: "Nouvelle offre d\u2019emploi", href: "/admin/offres/new", icon: "+" },
               { label: "Nouvelle formation", href: "/admin/formations/new", icon: "+" },
               { label: "Nouveau contenu", href: "/admin/positions/new", icon: "+" },
+              { label: "Gérer les membres", href: "/admin/membres", icon: "\u2192" },
               { label: "Gérer les comptes", href: "/admin/comptes", icon: "\u2192" },
               { label: "Paramètres du site", href: "/admin/parametres", icon: "\u2192" },
             ].map((action) => (
@@ -205,6 +208,24 @@ export default function AdminDashboardPage() {
                 <span className="text-[var(--gaspe-teal-600)] font-bold">{action.icon}</span>
               </Link>
             ))}
+            {/* CSV Export buttons */}
+            <div className="border-t border-[var(--gaspe-neutral-100)] px-5 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-foreground-muted mb-2">Exports CSV</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => exportAccountsCsv(getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
+                  className="flex-1 rounded-lg bg-[var(--gaspe-neutral-100)] px-3 py-2 text-xs font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] transition-colors"
+                >
+                  Comptes
+                </button>
+                <button
+                  onClick={() => exportMembershipsCsv(getAllUsers() as import("@/lib/export-csv").ExportableUser[])}
+                  className="flex-1 rounded-lg bg-[var(--gaspe-neutral-100)] px-3 py-2 text-xs font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] transition-colors"
+                >
+                  Adhésions
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Site info */}
@@ -212,8 +233,12 @@ export default function AdminDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--gaspe-teal-400)] mb-2">Infos site</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-white/50">Version</span>
+                <span className="font-semibold text-[var(--gaspe-teal-400)]">v{SITE_VERSION}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-white/50">Pages</span>
-                <span className="font-semibold">46</span>
+                <span className="font-semibold">84+</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/50">Adhérents</span>

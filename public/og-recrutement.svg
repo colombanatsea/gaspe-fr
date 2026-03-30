@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B7E8A"/>
+      <stop offset="50%" stop-color="#42B3D5"/>
+      <stop offset="100%" stop-color="#5AA89A"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#156A74" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1B7E8A" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <path d="M0,480 C200,440 400,520 600,480 C800,440 1000,520 1200,480 L1200,630 L0,630 Z" fill="url(#wave)"/>
+  <path d="M0,520 C300,490 500,550 700,510 C900,470 1100,540 1200,520 L1200,630 L0,630 Z" fill="#156A74" fill-opacity="0.2"/>
+  <circle cx="150" cy="120" r="80" fill="white" fill-opacity="0.06"/>
+  <circle cx="1050" cy="200" r="120" fill="white" fill-opacity="0.05"/>
+  <!-- Anchor icon -->
+  <g transform="translate(560, 80)" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+    <circle cx="20" cy="8" r="4"/>
+    <line x1="20" y1="12" x2="20" y2="52"/>
+    <path d="M4,36 A16,16 0 0,0 20,52 A16,16 0 0,0 36,36"/>
+    <line x1="20" y1="12" x2="28" y2="20"/>
+    <line x1="20" y1="12" x2="12" y2="20"/>
+  </g>
+  <!-- Title -->
+  <text x="600" y="200" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="white">Nos Compagnies</text>
+  <text x="600" y="280" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="white">Recrutent</text>
+  <rect x="500" y="310" width="200" height="2" rx="1" fill="white" fill-opacity="0.4"/>
+  <!-- Subtitle -->
+  <text x="600" y="370" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.9">Offres d'emploi des compagnies maritimes</text>
+  <text x="600" y="410" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.9">adhérentes du GASPE</text>
+  <!-- GASPE small -->
+  <text x="600" y="560" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="24" fill="white" fill-opacity="0.6" letter-spacing="4">GASPE</text>
+</svg>

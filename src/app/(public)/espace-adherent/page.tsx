@@ -58,11 +58,23 @@ export default function EspaceAdherentPage() {
 
   if (!user || user.role !== "adherent") return null;
 
-  // Profile completion
-  const profileFields = [user.name, user.email, user.phone, user.company];
-  const profileCompletion = Math.round(
-    (profileFields.filter((f) => f && f.trim() !== "").length / profileFields.length) * 100
-  );
+  // Profile completion (weighted — same logic as profil page)
+  const profileWeights = [
+    { filled: !!user.name, weight: 10 },
+    { filled: !!user.email, weight: 10 },
+    { filled: !!user.phone, weight: 5 },
+    { filled: !!user.company, weight: 10 },
+    { filled: !!user.companyRole, weight: 15 },
+    { filled: !!user.companyDescription, weight: 15 },
+    { filled: !!user.companyEmail, weight: 5 },
+    { filled: !!user.companyPhone, weight: 5 },
+    { filled: !!user.companyAddress, weight: 10 },
+    { filled: !!user.companyLogo, weight: 5 },
+    { filled: (user.vessels ?? []).length > 0, weight: 10 },
+  ];
+  const totalWeight = profileWeights.reduce((s, w) => s + w.weight, 0);
+  const filledWeight = profileWeights.reduce((s, w) => s + (w.filled ? w.weight : 0), 0);
+  const profileCompletion = Math.round((filledWeight / totalWeight) * 100);
 
   const dashboardCards = [
     {
@@ -185,24 +197,39 @@ export default function EspaceAdherentPage() {
         <div className="space-y-6">
           {/* Company profile */}
           <Card>
-            <CardTitle>Mon entreprise</CardTitle>
+            <div className="flex items-start justify-between">
+              <CardTitle>Mon entreprise</CardTitle>
+              <Link href="/espace-adherent/profil" className="text-xs font-semibold text-primary hover:underline">
+                Modifier
+              </Link>
+            </div>
             <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Compagnie</p>
-                <p className="text-sm font-semibold text-foreground">{user.company ?? "Non renseign\u00e9"}</p>
+              <div className="flex items-center gap-3">
+                {user.companyLogo ? (
+                  <img src={user.companyLogo} alt="Logo" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
+                    <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">{(user.company ?? "?").charAt(0)}</span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{user.company ?? "Non renseigné"}</p>
+                  {user.companyRole && (
+                    <Badge variant="teal">{user.companyRole.charAt(0).toUpperCase() + user.companyRole.slice(1)}</Badge>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Contact</p>
                 <p className="text-sm text-foreground">{user.name}</p>
+                <p className="text-xs text-foreground-muted">{user.email}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Email</p>
-                <p className="text-sm text-foreground">{user.email}</p>
-              </div>
-              {user.phone && (
+              {user.membershipStatus && (
                 <div>
-                  <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">T\u00e9l\u00e9phone</p>
-                  <p className="text-sm text-foreground">{user.phone}</p>
+                  <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Adhésion</p>
+                  <Badge variant={user.membershipStatus === "paid" ? "green" : user.membershipStatus === "pending" ? "warm" : "neutral"}>
+                    {user.membershipStatus === "paid" ? "Payée" : user.membershipStatus === "pending" ? "En cours" : "Due"}
+                  </Badge>
                 </div>
               )}
             </div>

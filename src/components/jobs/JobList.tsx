@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { matchCertifications } from "@/data/stcw";
+import { computeMatchScore, type MatchResult } from "@/lib/matching";
 
 const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
@@ -87,54 +87,20 @@ export function JobList() {
   const isCandidatLoggedIn = user?.role === "candidat";
   const savedOffers = user?.savedOffers ?? [];
   const applications = user?.applications ?? [];
+  const [sortByMatch, setSortByMatch] = useState(false);
 
-  // Matching score computation for candidates
-  const computeMatchScore = (job: Job): number => {
-    if (!isCandidatLoggedIn || !user) return 0;
-    let score = 0;
-    let factors = 0;
-
-    // Desired position match (40 pts)
-    const desired = (user.desiredPosition ?? "").toLowerCase();
-    if (desired) {
-      factors += 40;
-      const title = job.title.toLowerCase();
-      if (title.includes(desired) || desired.includes(title.split(" ")[0])) {
-        score += 40;
-      } else if (
-        desired.split(" ").some((w) => w.length > 3 && title.includes(w))
-      ) {
-        score += 25;
-      }
+  // Compute match scores for logged-in candidates
+  const matchScores = new Map<string, MatchResult>();
+  if (isCandidatLoggedIn && user) {
+    for (const job of filtered) {
+      matchScores.set(job.id, computeMatchScore(user, job));
     }
+  }
 
-    // Category match (20 pts)
-    const currentPos = (user.currentPosition ?? "").toLowerCase();
-    if (currentPos) {
-      factors += 20;
-      const cat = job.category.toLowerCase();
-      if (currentPos.includes(cat) || currentPos.includes("pont") && cat === "pont" ||
-          currentPos.includes("machine") && cat === "machine" ||
-          currentPos.includes("mécanicien") && cat === "machine" ||
-          currentPos.includes("capitaine") && cat === "pont") {
-        score += 20;
-      }
-    }
-
-    // Certifications match via STCW (30 pts)
-    const certs = user.certifications ?? "";
-    if (certs && job.brevet) {
-      factors += 30;
-      const { score: certScore } = matchCertifications(certs, job.brevet);
-      score += Math.round((certScore / 100) * 30);
-    }
-
-    // Contract type bonus (10 pts — everyone gets a baseline)
-    factors += 10;
-    score += 10;
-
-    return factors > 0 ? Math.round((score / factors) * 100) : 0;
-  };
+  // Sort by match if enabled
+  const sortedJobs = sortByMatch && matchScores.size > 0
+    ? [...filtered].sort((a, b) => (matchScores.get(b.id)?.score ?? 0) - (matchScores.get(a.id)?.score ?? 0))
+    : filtered;
 
   const handleSave = (slug: string) => {
     if (!user || user.role !== "candidat") return;
@@ -171,10 +137,24 @@ export function JobList() {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
-        <p className="text-sm font-medium text-foreground-muted">
-          <span className="font-heading text-lg font-bold text-foreground">{filtered.length}</span>{" "}
-          offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-medium text-foreground-muted">
+            <span className="font-heading text-lg font-bold text-foreground">{filtered.length}</span>{" "}
+            offre{filtered.length !== 1 ? "s" : ""} disponible{filtered.length !== 1 ? "s" : ""}
+          </p>
+          {isCandidatLoggedIn && (
+            <button
+              onClick={() => setSortByMatch((p) => !p)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                sortByMatch
+                  ? "bg-[var(--gaspe-teal-600)] text-white"
+                  : "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-100)]"
+              }`}
+            >
+              Trier par compatibilité
+            </button>
+          )}
+        </div>
         {activeFilters.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {activeFilters.map((f) => (
@@ -204,18 +184,19 @@ export function JobList() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((job) => (
+          {sortedJobs.map((job) => (
             <JobCard
               key={job.id}
               title={job.title}
               company={job.company}
+              companySlug={job.companySlug}
               location={job.location}
               contractType={job.contractType}
               category={job.category}
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
-              matchScore={isCandidatLoggedIn ? computeMatchScore(job) : undefined}
+              matchScore={matchScores.get(job.id)}
               isCandidatLoggedIn={isCandidatLoggedIn}
               isLoggedIn={!!user}
               isSaved={savedOffers.includes(job.slug)}

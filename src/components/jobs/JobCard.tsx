@@ -3,17 +3,20 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import type { MatchResult } from "@/lib/matching";
+import { MATCH_COLORS } from "@/lib/matching";
 
 interface JobCardProps {
   title: string;
   company: string;
+  companySlug?: string;
   location: string;
   contractType: string;
   category: string;
   date: string;
   slug: string;
   salaryRange?: string;
-  matchScore?: number;
+  matchScore?: MatchResult;
   isCandidatLoggedIn?: boolean;
   isLoggedIn?: boolean;
   isSaved?: boolean;
@@ -58,6 +61,7 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
 export function JobCard({
   title,
   company,
+  companySlug,
   location,
   contractType,
   category,
@@ -72,6 +76,7 @@ export function JobCard({
   onSave,
   onApply,
 }: JobCardProps) {
+  const matchColor = matchScore ? MATCH_COLORS[matchScore.level] : null;
   const colors = categoryColors[category] ?? { bg: "var(--gaspe-neutral-100)", text: "var(--gaspe-neutral-700)" };
 
   return (
@@ -94,22 +99,16 @@ export function JobCard({
                 </h3>
                 <p className="mt-1 text-sm font-medium text-foreground-muted">{company}</p>
               </div>
-              <div className="flex gap-2">
-                {matchScore != null && matchScore > 0 && (
+              <div className="flex gap-2 items-center">
+                {matchScore && matchScore.score > 0 && matchColor && (
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold font-heading ${
-                      matchScore >= 80
-                        ? "bg-[var(--gaspe-green-50)] text-[var(--gaspe-green-600)]"
-                        : matchScore >= 50
-                        ? "bg-[var(--gaspe-warm-100)] text-[var(--gaspe-warm-600)]"
-                        : "bg-[var(--gaspe-neutral-100)] text-[var(--gaspe-neutral-600)]"
-                    }`}
-                    title="Score de correspondance avec votre profil"
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold font-heading ${matchColor.bg} ${matchColor.text}`}
+                    title={matchScore.details.join(" · ")}
                   >
                     <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
-                    {matchScore}%
+                    {matchScore.score}%
                   </span>
                 )}
                 <Badge variant={contractBadgeVariant[contractType] ?? "neutral"}>

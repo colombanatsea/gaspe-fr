@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#222221"/>
+      <stop offset="100%" stop-color="#1B7E8A"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#42B3D5" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#6DAAAC" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <path d="M0,480 C200,440 400,520 600,480 C800,440 1000,520 1200,480 L1200,630 L0,630 Z" fill="url(#wave)"/>
+  <path d="M0,520 C300,490 500,550 700,510 C900,470 1100,540 1200,520 L1200,630 L0,630 Z" fill="#6DAAAC" fill-opacity="0.15"/>
+  <circle cx="200" cy="150" r="100" fill="#42B3D5" fill-opacity="0.08"/>
+  <circle cx="1000" cy="250" r="140" fill="#6DAAAC" fill-opacity="0.06"/>
+  <!-- GASPE brand -->
+  <text x="600" y="180" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="64" fill="#6DAAAC" letter-spacing="6">GASPE</text>
+  <rect x="500" y="200" width="200" height="2" rx="1" fill="#6DAAAC" fill-opacity="0.4"/>
+  <!-- Title -->
+  <text x="600" y="280" text-anchor="middle" font-family="'Exo 2', 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="68" fill="white">Notre Groupement</text>
+  <!-- Description -->
+  <text x="600" y="360" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.85">Histoire, mission de service public,</text>
+  <text x="600" y="400" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="28" fill="white" fill-opacity="0.85">valeurs et engagements depuis 1951</text>
+  <!-- Tagline -->
+  <text x="600" y="480" text-anchor="middle" font-family="'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="26" fill="#6DAAAC" letter-spacing="1">Localement ancrés. Socialement engagés.</text>
+</svg>

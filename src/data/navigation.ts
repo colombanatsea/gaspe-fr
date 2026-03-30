@@ -6,6 +6,7 @@ export const mainNavigation: NavItem[] = [
   { label: "Nos Adhérents", href: "/nos-adherents" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
+  { label: "Boîte à outils", href: "/boite-a-outils" },
   { label: "Agenda", href: "/agenda" },
   { label: "Formations", href: "/formations" },
   { label: "Boîte à outils", href: "/boite-a-outils" },
@@ -38,6 +39,7 @@ export const footerNavigation = {
   ],
   legal: [
     { label: "Mentions légales", href: "/mentions-legales" },
-    { label: "Politique de confidentialité", href: "/confidentialite" },
+    { label: "Confidentialité", href: "/confidentialite" },
+    { label: "CGU", href: "/cgu" },
   ],
 };

@@ -9,7 +9,22 @@ import { formatDate } from "@/lib/utils";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
-interface Formation {
+export type FormationModality = "presentiel" | "distanciel" | "hybride";
+
+export interface FormationDay {
+  date: string;
+  location?: string; // lieu physique
+  visioLink?: string; // lien visio
+}
+
+export interface FormationAttachment {
+  id: string;
+  name: string;
+  data: string; // base64
+  type: string;
+}
+
+export interface Formation {
   id: string;
   title: string;
   description: string;
@@ -25,6 +40,10 @@ interface Formation {
   price: string;
   contactEmail: string;
   status: "open" | "closed" | "full";
+  modality?: FormationModality;
+  schedule?: FormationDay[];
+  attachments?: FormationAttachment[];
+  registrations?: string[];
 }
 
 const SEED_FORMATIONS: Formation[] = [
@@ -44,6 +63,14 @@ const SEED_FORMATIONS: Formation[] = [
     price: "1 200 €",
     contactEmail: "formation@ensm.fr",
     status: "open",
+    modality: "presentiel",
+    schedule: [
+      { date: "2026-05-12", location: "ENSM Le Havre — Salle A" },
+      { date: "2026-05-13", location: "ENSM Le Havre — Salle A" },
+      { date: "2026-05-14", location: "ENSM Le Havre — Bassin" },
+      { date: "2026-05-15", location: "ENSM Le Havre — Bassin" },
+      { date: "2026-05-16", location: "ENSM Le Havre — Salle A" },
+    ],
   },
   {
     id: "form-capitaine-200",
@@ -61,6 +88,7 @@ const SEED_FORMATIONS: Formation[] = [
     price: "4 500 €",
     contactEmail: "formation@ensm.fr",
     status: "full",
+    modality: "presentiel",
   },
   {
     id: "form-mecanicien-750",
@@ -78,6 +106,7 @@ const SEED_FORMATIONS: Formation[] = [
     price: "4 200 €",
     contactEmail: "formation@ensm.fr",
     status: "open",
+    modality: "presentiel",
   },
   {
     id: "form-ism",
@@ -95,6 +124,12 @@ const SEED_FORMATIONS: Formation[] = [
     price: "1 800 €",
     contactEmail: "marine.training@bureauveritas.com",
     status: "open",
+    modality: "hybride",
+    schedule: [
+      { date: "2026-04-22", location: "Bureau Veritas Paris", visioLink: "https://meet.example.com/ism-j1" },
+      { date: "2026-04-23", location: "Bureau Veritas Paris", visioLink: "https://meet.example.com/ism-j2" },
+      { date: "2026-04-24", visioLink: "https://meet.example.com/ism-j3" },
+    ],
   },
   {
     id: "form-transition-energetique",
@@ -112,6 +147,7 @@ const SEED_FORMATIONS: Formation[] = [
     price: "Gratuit pour les adhérents GASPE",
     contactEmail: "contact@gaspe.fr",
     status: "open",
+    modality: "presentiel",
   },
   {
     id: "form-secours-mer",
@@ -129,6 +165,7 @@ const SEED_FORMATIONS: Formation[] = [
     price: "650 €",
     contactEmail: "maritime@croix-rouge.fr",
     status: "full",
+    modality: "presentiel",
   },
   {
     id: "form-management-equipes",
@@ -146,6 +183,12 @@ const SEED_FORMATIONS: Formation[] = [
     price: "2 100 €",
     contactEmail: "maritime@cnam.fr",
     status: "open",
+    modality: "distanciel",
+    schedule: [
+      { date: "2026-10-06", visioLink: "https://teams.example.com/management-j1" },
+      { date: "2026-10-07", visioLink: "https://teams.example.com/management-j2" },
+      { date: "2026-10-08", visioLink: "https://teams.example.com/management-j3" },
+    ],
   },
   {
     id: "form-ccn-3228",
@@ -163,6 +206,7 @@ const SEED_FORMATIONS: Formation[] = [
     price: "Gratuit pour les adhérents GASPE",
     contactEmail: "contact@gaspe.fr",
     status: "open",
+    modality: "presentiel",
   },
 ];
 
@@ -170,18 +214,30 @@ function getFormations(): Formation[] {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(FORMATIONS_KEY);
   if (!raw) {
-    // Seed on first load
     localStorage.setItem(FORMATIONS_KEY, JSON.stringify(SEED_FORMATIONS));
     return SEED_FORMATIONS;
   }
-  return JSON.parse(raw);
+  try { return JSON.parse(raw); } catch { return SEED_FORMATIONS; }
 }
+
+const modalityLabel: Record<FormationModality, string> = {
+  presentiel: "Présentiel",
+  distanciel: "Distanciel",
+  hybride: "Hybride",
+};
+
+const modalityVariant: Record<FormationModality, "teal" | "blue" | "warm"> = {
+  presentiel: "teal",
+  distanciel: "blue",
+  hybride: "warm",
+};
 
 export default function AdminFormationsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [formations, setFormations] = useState<Formation[]>([]);
   const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
@@ -194,21 +250,49 @@ export default function AdminFormationsPage() {
     (f) => !search || f.title.toLowerCase().includes(search.toLowerCase()) || f.organizer.toLowerCase().includes(search.toLowerCase()),
   );
 
-  function deleteFormation(id: string) {
-    if (!confirm("Supprimer cette formation ?")) return;
-    const updated = formations.filter((f) => f.id !== id);
+  function saveFormations(updated: Formation[]) {
     localStorage.setItem(FORMATIONS_KEY, JSON.stringify(updated));
     setFormations(updated);
   }
 
+  function deleteFormation(id: string) {
+    if (!confirm("Supprimer cette formation ?")) return;
+    saveFormations(formations.filter((f) => f.id !== id));
+  }
+
   function toggleStatus(id: string) {
-    const updated = formations.map((f) => {
+    saveFormations(formations.map((f) => {
       if (f.id !== id) return f;
       const next: Record<string, Formation["status"]> = { open: "closed", closed: "full", full: "open" };
       return { ...f, status: next[f.status] || "open" };
-    });
-    localStorage.setItem(FORMATIONS_KEY, JSON.stringify(updated));
-    setFormations(updated);
+    }));
+  }
+
+  function handleAttachmentUpload(formationId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2_000_000) { alert("Le fichier ne doit pas dépasser 2 Mo."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      saveFormations(formations.map((f) => {
+        if (f.id !== formationId) return f;
+        const att: FormationAttachment = {
+          id: `att-${Date.now()}`,
+          name: file.name,
+          data: reader.result as string,
+          type: file.type,
+        };
+        return { ...f, attachments: [...(f.attachments ?? []), att] };
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeAttachment(formationId: string, attId: string) {
+    saveFormations(formations.map((f) => {
+      if (f.id !== formationId) return f;
+      return { ...f, attachments: (f.attachments ?? []).filter((a) => a.id !== attId) };
+    }));
   }
 
   const statusVariant: Record<string, "green" | "warm" | "neutral"> = { open: "green", closed: "warm", full: "neutral" };
@@ -270,13 +354,19 @@ export default function AdminFormationsPage() {
           {filtered.map((f) => {
             const enrolled = f.enrolled ?? 0;
             const pct = f.capacity > 0 ? Math.round((enrolled / f.capacity) * 100) : 0;
+            const isExpanded = expanded === f.id;
 
             return (
               <div key={f.id} className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 hover:border-[var(--gaspe-teal-200)] transition-colors">
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <h3 className="font-heading text-sm font-semibold text-foreground leading-tight">{f.title}</h3>
-                  <Badge variant={statusVariant[f.status]}>{statusLabel[f.status]}</Badge>
+                  <div className="flex gap-1.5 shrink-0">
+                    {f.modality && (
+                      <Badge variant={modalityVariant[f.modality]}>{modalityLabel[f.modality]}</Badge>
+                    )}
+                    <Badge variant={statusVariant[f.status]}>{statusLabel[f.status]}</Badge>
+                  </div>
                 </div>
 
                 <p className="text-xs text-foreground-muted mb-4 line-clamp-2">{f.description}</p>
@@ -314,8 +404,57 @@ export default function AdminFormationsPage() {
                   </div>
                 </div>
 
+                {/* Expanded section: schedule + attachments */}
+                {isExpanded && (
+                  <div className="mb-4 space-y-3 border-t border-[var(--gaspe-neutral-100)] pt-3">
+                    {/* Schedule */}
+                    {f.schedule && f.schedule.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-foreground mb-2">Calendrier par jour</p>
+                        <div className="space-y-1">
+                          {f.schedule.map((day, i) => (
+                            <div key={i} className="flex items-center gap-3 text-xs rounded-lg bg-[var(--gaspe-neutral-50)] px-3 py-2">
+                              <span className="font-medium text-foreground w-24 shrink-0">{formatDate(day.date)}</span>
+                              {day.location && <span className="text-foreground-muted">{day.location}</span>}
+                              {day.visioLink && (
+                                <a href={day.visioLink} target="_blank" rel="noopener noreferrer" className="text-[var(--gaspe-blue-600)] hover:underline ml-auto">
+                                  Visio
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Attachments */}
+                    <div>
+                      <p className="text-xs font-semibold text-foreground mb-2">Pièces jointes ({(f.attachments ?? []).length})</p>
+                      {(f.attachments ?? []).map((att) => (
+                        <div key={att.id} className="flex items-center justify-between text-xs rounded-lg bg-[var(--gaspe-neutral-50)] px-3 py-2 mb-1">
+                          <a href={att.data} download={att.name} className="text-primary hover:underline truncate">{att.name}</a>
+                          <button onClick={() => removeAttachment(f.id, att.id)} className="text-red-500 hover:underline ml-2 shrink-0">Supprimer</button>
+                        </div>
+                      ))}
+                      <label className="inline-flex items-center gap-1.5 mt-1 cursor-pointer text-xs text-[var(--gaspe-teal-600)] hover:underline">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Ajouter un fichier
+                        <input type="file" className="hidden" onChange={(e) => handleAttachmentUpload(f.id, e)} />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-3 border-t border-[var(--gaspe-neutral-100)]">
+                  <button
+                    onClick={() => setExpanded(isExpanded ? null : f.id)}
+                    className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                  >
+                    {isExpanded ? "Réduire" : "Détails"}
+                  </button>
                   <button
                     onClick={() => toggleStatus(f.id)}
                     className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"

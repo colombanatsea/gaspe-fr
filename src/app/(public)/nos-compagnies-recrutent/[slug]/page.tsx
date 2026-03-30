@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { JobDetailActions } from "@/components/jobs/JobDetailActions";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import { jobs } from "@/data/jobs";
 import { members } from "@/data/members";
 import { formatDate } from "@/lib/utils";
@@ -159,7 +160,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
-                dangerouslySetInnerHTML={{ __html: job.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.description) }}
               />
             </div>
 
@@ -167,7 +168,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal stagger-2">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
-                dangerouslySetInnerHTML={{ __html: job.profile }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.profile) }}
               />
             </div>
 
@@ -175,7 +176,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             <div className="rounded-2xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-100)] p-8 reveal stagger-3">
               <div
                 className="prose prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground-muted prose-li:text-foreground-muted prose-strong:text-foreground prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 max-w-none"
-                dangerouslySetInnerHTML={{ __html: job.conditions }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.conditions) }}
               />
             </div>
           </div>
