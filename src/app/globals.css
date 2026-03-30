@@ -59,6 +59,11 @@
   --gaspe-green-500: #6FA05A;
   --gaspe-green-600: #578040;
 
+  /* ── Gradient signature GASPE ── */
+  --gaspe-gradient-start: #42B3D5;
+  --gaspe-gradient-mid: #6DAAAC;
+  --gaspe-gradient-end: #5AA89A;
+
   /* ── Sémantiques ── */
   --gaspe-success: #16A34A;
   --gaspe-warning: #D97706;
@@ -138,7 +143,7 @@ body {
 
 /* ── Gradient signature GASPE ── */
 .gaspe-gradient {
-  background: linear-gradient(135deg, #42B3D5, #6DAAAC, #5AA89A);
+  background: linear-gradient(135deg, var(--gaspe-gradient-start), var(--gaspe-gradient-mid), var(--gaspe-gradient-end));
 }
 
 /* ── Card style from design system ── */
@@ -259,7 +264,7 @@ body {
 
 /* ── Gradient text ── */
 .gaspe-gradient-text {
-  background: linear-gradient(135deg, #42B3D5, #6DAAAC, #5AA89A);
+  background: linear-gradient(135deg, var(--gaspe-gradient-start), var(--gaspe-gradient-mid), var(--gaspe-gradient-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -267,7 +272,7 @@ body {
 
 /* ── Animated gradient background ── */
 .gaspe-gradient-animated {
-  background: linear-gradient(135deg, #42B3D5, #6DAAAC, #5AA89A, #42B3D5);
+  background: linear-gradient(135deg, var(--gaspe-gradient-start), var(--gaspe-gradient-mid), var(--gaspe-gradient-end), var(--gaspe-gradient-start));
   background-size: 300% 300%;
   animation: gradient-shift 6s ease infinite;
 }

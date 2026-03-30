@@ -111,7 +111,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
                   background:${categoryColor};
                   padding:3px 10px;border-radius:9999px;
                 ">${categoryLabel}</span>
-                ${member.territory === "dom-tom" ? '<span style="display:inline-block;font-size:10px;font-weight:600;color:#222;background:var(--gaspe-warm-300);padding:3px 10px;border-radius:9999px;">Outre-mer</span>' : ""}
+                ${member.territory === "dom-tom" ? '<span style="display:inline-block;font-size:10px;font-weight:600;color:var(--gaspe-neutral-900);background:var(--gaspe-warm-300);padding:3px 10px;border-radius:9999px;">Outre-mer</span>' : ""}
               </div>
               ${member.websiteUrl ? `<a href="${member.websiteUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gaspe-teal-600);text-decoration:none;font-weight:500;">Visiter le site &rarr;</a>` : ""}
             </div>

@@ -231,6 +231,7 @@ export default function AdherentProfilPage() {
                           type="file"
                           accept="image/*"
                           onChange={handleLogoUpload}
+                          aria-label="Charger le logo de l'entreprise"
                           className="text-sm text-foreground-muted file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--gaspe-teal-50)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[var(--gaspe-teal-600)] hover:file:bg-[var(--gaspe-teal-100)]"
                         />
                         <p className="text-xs text-foreground-muted mt-1">Max 500 Ko, JPG/PNG</p>

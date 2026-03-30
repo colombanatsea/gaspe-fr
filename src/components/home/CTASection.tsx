@@ -26,9 +26,9 @@ export function CTASection() {
           />
           <defs>
             <linearGradient id="cta-gradient" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#42B3D5" />
-              <stop offset="0.5" stopColor="#6DAAAC" />
-              <stop stopColor="#5AA89A" offset="1" />
+              <stop stopColor="var(--gaspe-gradient-start)" />
+              <stop offset="0.5" stopColor="var(--gaspe-gradient-mid)" />
+              <stop stopColor="var(--gaspe-gradient-end)" offset="1" />
             </linearGradient>
           </defs>
         </svg>

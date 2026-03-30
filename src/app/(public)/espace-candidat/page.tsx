@@ -329,6 +329,7 @@ export default function EspaceCandidatPage() {
                           accept=".pdf,.doc,.docx"
                           onChange={handleCvChange}
                           className="hidden"
+                          aria-label="Charger votre CV"
                         />
                         <span className="text-sm text-foreground-muted">
                           {form.cvFilename || "Cliquez pour charger votre CV (PDF, DOC)"}

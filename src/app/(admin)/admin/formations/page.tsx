@@ -441,7 +441,7 @@ export default function AdminFormationsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         Ajouter un fichier
-                        <input type="file" className="hidden" onChange={(e) => handleAttachmentUpload(f.id, e)} />
+                        <input type="file" className="hidden" aria-label="Ajouter une pièce jointe" onChange={(e) => handleAttachmentUpload(f.id, e)} />
                       </label>
                     </div>
                   </div>

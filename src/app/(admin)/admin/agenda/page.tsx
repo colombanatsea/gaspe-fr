@@ -314,7 +314,7 @@ export default function AdminAgendaPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                       </svg>
                       Ajouter fichier
-                      <input type="file" className="hidden" onChange={(e) => handleAttachmentUpload(ev.id, e)} />
+                      <input type="file" className="hidden" aria-label="Ajouter un fichier joint" onChange={(e) => handleAttachmentUpload(ev.id, e)} />
                     </label>
                   </div>
                 </div>

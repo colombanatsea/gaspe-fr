@@ -131,7 +131,7 @@ export function RichTextEditor({
 
   function insertImage() {
     if (!imageUrl) return;
-    const html = `<figure><img src="${imageUrl}" alt="${imageAlt}" style="max-width:100%;border-radius:8px;" />${imageAlt ? `<figcaption style="text-align:center;font-size:0.875rem;color:#6B6560;margin-top:0.5rem;">${imageAlt}</figcaption>` : ""}</figure>`;
+    const html = `<figure><img src="${imageUrl}" alt="${imageAlt}" style="max-width:100%;border-radius:8px;" />${imageAlt ? `<figcaption style="text-align:center;font-size:0.875rem;color:var(--gaspe-neutral-600);margin-top:0.5rem;">${imageAlt}</figcaption>` : ""}</figure>`;
     exec("insertHTML", html);
     setShowImageModal(false);
   }
@@ -141,14 +141,14 @@ export function RichTextEditor({
     // Header
     html += "<thead><tr>";
     for (let c = 0; c < tableCols; c++) {
-      html += `<th style="border:1px solid #DCD5CC;padding:8px 12px;background:#F5F3F0;text-align:left;font-weight:600;">En-tête ${c + 1}</th>`;
+      html += `<th style="border:1px solid var(--gaspe-neutral-300);padding:8px 12px;background:var(--gaspe-neutral-100);text-align:left;font-weight:600;">En-tête ${c + 1}</th>`;
     }
     html += "</tr></thead><tbody>";
     // Body rows
     for (let r = 0; r < tableRows - 1; r++) {
       html += "<tr>";
       for (let c = 0; c < tableCols; c++) {
-        html += '<td style="border:1px solid #DCD5CC;padding:8px 12px;">Cellule</td>';
+        html += '<td style="border:1px solid var(--gaspe-neutral-300);padding:8px 12px;">Cellule</td>';
       }
       html += "</tr>";
     }
