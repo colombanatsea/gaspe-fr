@@ -29,6 +29,7 @@ interface Env {
   DB: D1Database;
   UPLOADS: R2Bucket;
   RESEND_API_KEY: string;
+  BREVO_API_KEY: string;
   CONTACT_EMAIL: string;
   JWT_SECRET: string;
 }
@@ -253,6 +254,11 @@ export default {
       if (path.startsWith("/api/auth/users/") && request.method === "DELETE") {
         const userId = path.split("/api/auth/users/")[1];
         return handleDeleteUser(request, env, corsHeaders, userId);
+      }
+
+      // ── Email (Brevo proxy) ──
+      if (path === "/api/email" && request.method === "POST") {
+        return handleEmail(request, env, corsHeaders);
       }
 
       // ── Contact ──
@@ -483,6 +489,66 @@ async function handleDeleteUser(request: Request, env: Env, corsHeaders: Record<
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
 
   return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Email sending → Brevo proxy
+// ═══════════════════════════════════════════════════════════
+
+async function handleEmail(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  if (!env.BREVO_API_KEY) {
+    return json({ error: "Clé API Brevo non configurée sur le serveur" }, corsHeaders, 500);
+  }
+
+  const body = await request.json() as {
+    to: { email: string; name?: string }[];
+    subject: string;
+    htmlContent: string;
+    textContent?: string;
+    sender?: { name: string; email: string };
+  };
+
+  if (!body.to?.length || !body.subject || !body.htmlContent) {
+    return json({ error: "Champs requis: to, subject, htmlContent" }, corsHeaders, 400);
+  }
+
+  // Validate email addresses
+  for (const recipient of body.to) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient.email)) {
+      return json({ error: `Email invalide: ${recipient.email}` }, corsHeaders, 400);
+    }
+  }
+
+  const sender = body.sender ?? { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" };
+
+  try {
+    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender,
+        to: body.to,
+        subject: body.subject,
+        htmlContent: body.htmlContent,
+        textContent: body.textContent,
+      }),
+    });
+
+    if (!brevoRes.ok) {
+      const err = await brevoRes.json().catch(() => ({})) as { message?: string };
+      console.error("[Brevo] Error:", err);
+      return json({ error: err.message ?? `Brevo HTTP ${brevoRes.status}` }, corsHeaders, 502);
+    }
+
+    return json({ success: true }, corsHeaders);
+  } catch (err) {
+    console.error("[Brevo] Network error:", err);
+    return json({ error: "Erreur de connexion à Brevo" }, corsHeaders, 502);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

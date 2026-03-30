@@ -1,17 +1,13 @@
 /* ------------------------------------------------------------------ */
-/*  Brevo (ex-Sendinblue) transactional email service                  */
-/*  Uses Brevo SMTP API v3 — called client-side in demo mode,          */
-/*  or via CF Worker proxy in production.                               */
+/*  Transactional email service — via CF Worker proxy to Brevo         */
+/*  The API key stays server-side. Client sends to /api/email.         */
 /* ------------------------------------------------------------------ */
 
-const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function getConfig() {
-  const apiKey = process.env.NEXT_PUBLIC_BREVO_API_KEY ?? "";
-  const senderEmail = process.env.NEXT_PUBLIC_BREVO_SENDER_EMAIL ?? "ne-pas-repondre@gaspe.fr";
-  const senderName = process.env.NEXT_PUBLIC_BREVO_SENDER_NAME ?? "GASPE";
   const adminEmail = process.env.NEXT_PUBLIC_BREVO_ADMIN_EMAIL ?? "admin@gaspe.fr";
-  return { apiKey, senderEmail, senderName, adminEmail };
+  return { adminEmail };
 }
 
 interface SendEmailParams {
@@ -22,23 +18,23 @@ interface SendEmailParams {
 }
 
 async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
-  const { apiKey, senderEmail, senderName } = getConfig();
+  const endpoint = API_URL ? `${API_URL}/api/email` : "/api/email";
 
-  if (!apiKey) {
-    console.warn("[Brevo] Pas de clé API configurée — email non envoyé");
-    return { success: false, error: "Clé API Brevo non configurée" };
+  if (!API_URL) {
+    console.warn("[Email] Pas d'API_URL configurée — email non envoyé (mode localStorage)");
+    return { success: false, error: "API_URL non configurée" };
   }
 
   try {
-    const res = await fetch(BREVO_API_URL, {
+    // Get auth token for the request
+    const token = typeof window !== "undefined" ? localStorage.getItem("gaspe_api_token") : null;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": apiKey,
-      },
+      headers,
       body: JSON.stringify({
-        sender: { name: senderName, email: senderEmail },
         to: params.to,
         subject: params.subject,
         htmlContent: params.htmlContent,
@@ -48,16 +44,16 @@ async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; e
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      const msg = (body as { message?: string }).message ?? `HTTP ${res.status}`;
-      console.error("[Brevo] Erreur envoi email:", msg);
+      const msg = (body as { error?: string }).error ?? `HTTP ${res.status}`;
+      console.error("[Email] Erreur envoi:", msg);
       return { success: false, error: msg };
     }
 
-    console.log("[Brevo] Email envoyé avec succès à:", params.to.map(t => t.email).join(", "));
+    console.log("[Email] Envoyé avec succès à:", params.to.map(t => t.email).join(", "));
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error("[Brevo] Erreur réseau:", msg);
+    console.error("[Email] Erreur réseau:", msg);
     return { success: false, error: msg };
   }
 }
