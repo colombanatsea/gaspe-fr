@@ -148,20 +148,75 @@ npx wrangler deploy --config workers/wrangler.toml
 
 ---
 
+## Plan architecture : Multi-contacts + Newsletter + Notifications
+
+### Contexte
+Le GASPE demande un tableau "CONTACTS et LISTES DE DIFFUSION" par compagnie avec :
+- Plusieurs contacts par compagnie (DPA, Directeur, Technique, Finance...)
+- 10 catégories de newsletter avec opt-in/out individuel
+- Un responsable par compagnie qui gère son équipe
+
+### Décisions validées
+- Admin GASPE valide le 1er contact → il devient responsable → gère les suivants via invitations
+- Candidats ont aussi des préférences newsletter (sous-ensemble : Emploi, Formations, Actualités)
+- Veilles ADF = relais de contenus externes, pas de rédaction GASPE
+
+### Modèle cible
+```
+organizations (compagnies) 1:N → users (contacts) 1:1 → newsletter_preferences
+                                  ├─ is_primary (responsable)
+                                  ├─ invited_by
+                                  └─ organization_id (FK)
+```
+
+### 3 niveaux de gestion
+1. Admin GASPE → approuve compagnies, cotisations, envoie newsletters
+2. Responsable compagnie (is_primary) → invite/valide contacts, gère infos compagnie
+3. Contact compagnie → profil perso + préférences newsletter
+
+### 10 catégories newsletter
+1. Informations Générales (GASPE) — adhérents
+2. AG (GASPE) — adhérents
+3. Emploi/CV (auto + GASPE) — adhérents + candidats
+4. Formation & OPCO (auto + GASPE) — adhérents + candidats
+5. Veille Juridique (relais ADF) — adhérents
+6. Veille Sociale (relais ADF) — adhérents
+7. Veille Sûreté Sécurité (relais ADF) — adhérents
+8. Veille Data (relais ADF) — adhérents
+9. Veille Environnement (relais ADF) — adhérents
+10. Actualités GASPE (GASPE) — adhérents + candidats
+
+### Phases d'implémentation
+| Session | Phase | Contenu |
+|---------|-------|---------|
+| 21 | 1+4 | DB schema (organizations, newsletter_prefs, invitations) + API endpoints + migration 31 compagnies |
+| 22 | 2a | Inscription révisée + page invitation + flux is_primary |
+| 23 | 2b | Espace responsable (équipe) + admin organisations |
+| 24 | 2c+3a | Préférences newsletter + page admin newsletter |
+| 25 | 3b | Tous les emails transactionnels |
+
+Plan détaillé complet : voir fichier `/root/.claude/plans/graceful-hatching-bubble.md`
+
+---
+
 ## Prompt pour lancer la session 21
 
 ```
-Continue GASPE Website session 21. Voir HANDOFF.md section "TODO session 21".
+Continue GASPE Website session 21. Voir HANDOFF.md section "Plan architecture" et "TODO session 21".
 
 Contexte :
 - v2.6.0, 96 pages, 0 erreurs TS, 139 tests unitaires, 9 specs E2E
 - CI green (dead deps removed: better-sqlite3, drizzle, next-auth, bcryptjs)
 - Password reset flow implemented (forgot-password + reset-password endpoints)
-- Overlay click-blocking fixed (pointer-events-none, z-index normalized)
+- Audit exhaustif fait : dark mode corrigé, sécurité upload/email, 404 enrichie
 - CF Worker déployé (D1, R2, JWT_SECRET, BREVO_API_KEY)
-- Sessions 1-20 mergées sur main
+- Sessions 1-20 sur branch claude/gaspe-session-20-PqfYj (à merger sur main)
 
-Priorité P0 : merge session 20, deploy + test password reset
-Priorité P1 : rate limiting /api/email, next/font, error boundaries
-Priorité P2 : analytics, blog, custom domain
+Priorité P0 session 21 :
+1. Merger session 20 → main
+2. Phase 1 du plan multi-contacts : migration DB (organizations, newsletter_prefs, invitations)
+3. Phase 1 : endpoints Worker API (10 nouveaux endpoints)
+4. Phase 4 : migration données (seed 31 compagnies, lier users existants)
+
+Architecture : voir "Plan architecture" dans HANDOFF.md
 ```
