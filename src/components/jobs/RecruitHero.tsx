@@ -17,7 +17,7 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
   return (
     <section ref={ref} className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
       {/* Background image with overlay */}
-      <div className="absolute inset-0">
+      <div className="pointer-events-none absolute inset-0">
         <img
           src={HERO_IMAGE}
           alt="Navire maritime en service"

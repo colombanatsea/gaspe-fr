@@ -103,7 +103,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       {/* Hero banner */}
       <div className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
-        <div className="absolute inset-0">
+        <div className="pointer-events-none absolute inset-0">
           <img src={jobImage} alt={`${job.title} — ${job.company}`} className="h-full w-full object-cover opacity-30" fetchPriority="high" />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--gaspe-neutral-900)] via-[var(--gaspe-neutral-900)]/70 to-transparent" />
         </div>

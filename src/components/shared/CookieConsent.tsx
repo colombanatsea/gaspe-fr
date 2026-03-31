@@ -46,8 +46,8 @@ export function CookieConsent() {
   if (consent !== "pending") return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 sm:p-6">
-      <div className="mx-auto max-w-4xl rounded-2xl bg-[var(--gaspe-neutral-900)] border border-white/10 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
+    <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-[60] p-4 sm:p-6">
+      <div className="pointer-events-auto mx-auto max-w-4xl rounded-2xl bg-[var(--gaspe-neutral-900)] border border-white/10 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">

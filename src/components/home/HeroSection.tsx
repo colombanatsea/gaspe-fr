@@ -19,14 +19,14 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
       {/* Globe as background */}
-      <div className="absolute inset-0">
+      <div className="pointer-events-none absolute inset-0">
         <ErrorBoundary name="Globe 3D" fallback={<div className="h-full w-full bg-[var(--gaspe-neutral-950)]" />}>
           <GaspeGlobe className="w-full h-full" />
         </ErrorBoundary>
       </div>
 
       {/* Gradient overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/90 via-[var(--gaspe-neutral-950)]/60 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/90 via-[var(--gaspe-neutral-950)]/60 to-transparent" />
 
       {/* Decorative floating particles */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

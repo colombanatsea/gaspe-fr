@@ -1,4 +1,4 @@
-export const SITE_VERSION = "2.0.0";
+export const SITE_VERSION = "2.6.0";
 export const SITE_NAME = "GASPE";
 export const SITE_FULL_NAME =
   "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau";

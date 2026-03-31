@@ -184,4 +184,30 @@ export class ApiAuthStore implements AuthStore {
   static async logout(): Promise<void> {
     setToken(null);
   }
+
+  static async forgotPassword(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<AuthResponse>("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      if (res.error) return { success: false, error: res.error };
+      return { success: true };
+    } catch {
+      return { success: false, error: "Erreur de connexion au serveur" };
+    }
+  }
+
+  static async resetPassword(token: string, password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<AuthResponse>("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      });
+      if (res.error) return { success: false, error: res.error };
+      return { success: true };
+    } catch {
+      return { success: false, error: "Erreur de connexion au serveur" };
+    }
+  }
 }

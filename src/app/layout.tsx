@@ -49,22 +49,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="h-full antialiased">
+    <html lang="fr" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-<link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+        <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Exo+2:ital,wght@0,300..900;1,300..900&display=swap"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Exo+2:ital,wght@0,300..900;1,300..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
       </head>

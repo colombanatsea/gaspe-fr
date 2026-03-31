@@ -25,21 +25,23 @@ export default function AdminDashboardPage() {
     pending: 0, adherents: 0, candidats: 0, total: 0,
     formations: 0, positions: 0, events: 0, documents: 0,
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
+    setLoading(true);
     getAllUsers().then((users) => {
       setCounts({
-        pending: users.filter((u) => u.role === "adherent" && !u.approved).length,
-        adherents: users.filter((u) => u.role === "adherent" && u.approved).length,
-        candidats: users.filter((u) => u.role === "candidat").length,
-        total: users.length,
+        pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,
+        adherents: users.filter((u) => u.role === "adherent" && u.approved && !u.archived).length,
+        candidats: users.filter((u) => u.role === "candidat" && !u.archived).length,
+        total: users.filter((u) => !u.archived).length,
         formations: getStorageCount(FORMATIONS_KEY),
         positions: getStorageCount(POSITIONS_KEY),
         events: getStorageCount(AGENDA_KEY),
         documents: getStorageCount(DOCUMENTS_KEY),
       });
-    });
+    }).finally(() => setLoading(false));
   }, [user, router, getAllUsers]);
 
   if (!user || user.role !== "admin") return null;
@@ -239,7 +241,7 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-white/50">Pages</span>
-                <span className="font-semibold">84+</span>
+                <span className="font-semibold">96</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/50">Adhérents</span>
@@ -254,8 +256,8 @@ export default function AdminDashboardPage() {
                 <span className="font-semibold">{counts.total}</span>
               </div>
               <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
-                <span className="text-white/50">Version</span>
-                <span className="font-semibold text-[var(--gaspe-teal-400)]">v2.1.0</span>
+                <span className="text-white/50">Déploiement</span>
+                <span className="font-semibold text-[var(--gaspe-teal-400)]">Cloudflare Pages</span>
               </div>
             </div>
           </div>

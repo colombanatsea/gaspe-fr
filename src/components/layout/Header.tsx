@@ -43,7 +43,7 @@ export function Header() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-[9999] bg-background/95 backdrop-blur-sm border-b border-border-light">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border-light">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
