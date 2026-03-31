@@ -632,6 +632,12 @@ async function handleResetPassword(request: Request, env: Env, corsHeaders: Reco
 // ═══════════════════════════════════════════════════════════
 
 async function handleEmail(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  // Require authentication to prevent open relay abuse
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
   if (!env.BREVO_API_KEY) {
     return json({ error: "Clé API Brevo non configurée sur le serveur" }, corsHeaders, 500);
   }
@@ -765,6 +771,12 @@ async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<
 // ═══════════════════════════════════════════════════════════
 
 async function handleUpload(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  // Require authentication
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
   const formData = await request.formData();
   const file = formData.get("file") as File;
   const type = formData.get("type") as string; // "cv" | "document"
