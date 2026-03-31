@@ -184,7 +184,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
                   {/* Delete button */}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                    className="absolute top-1.5 right-1.5 rounded-lg bg-white/90 p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
+                    className="absolute top-1.5 right-1.5 rounded-lg bg-background/90 p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
                     aria-label="Supprimer"
                   >
                     <svg className="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

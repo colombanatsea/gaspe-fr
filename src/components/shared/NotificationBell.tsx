@@ -128,7 +128,7 @@ export default function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative rounded-xl p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2"
+        className="relative rounded-xl p-2 text-foreground-muted transition-colors hover:bg-surface hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
         aria-label={`Notifications${unread > 0 ? ` (${unread} non lues)` : ""}`}
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -143,10 +143,10 @@ export default function NotificationBell() {
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg sm:w-96">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-border-light bg-background shadow-lg sm:w-96">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-            <h3 className="font-heading text-sm font-semibold text-neutral-900">
+          <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
+            <h3 className="font-heading text-sm font-semibold text-foreground">
               Notifications
             </h3>
             {unread > 0 && (
@@ -162,7 +162,7 @@ export default function NotificationBell() {
           {/* List */}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-neutral-400">
+              <div className="px-4 py-8 text-center text-sm text-foreground-muted">
                 Aucune notification
               </div>
             ) : (
@@ -171,7 +171,7 @@ export default function NotificationBell() {
                   <li key={notif.id}>
                     <button
                       onClick={() => handleNotificationClick(notif)}
-                      className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-50 ${
+                      className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-surface ${
                         !notif.read ? "bg-teal-50/40" : ""
                       }`}
                     >
@@ -191,13 +191,13 @@ export default function NotificationBell() {
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-900">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {notif.title}
                         </p>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">
+                        <p className="mt-0.5 line-clamp-2 text-xs text-foreground-muted">
                           {notif.message}
                         </p>
-                        <p className="mt-1 text-[11px] text-neutral-400">
+                        <p className="mt-1 text-[11px] text-foreground-muted">
                           {timeAgo(notif.createdAt)}
                         </p>
                       </div>
