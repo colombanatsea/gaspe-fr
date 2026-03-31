@@ -46,7 +46,13 @@ export type {
   MembershipStatus,
   Vessel,
   RegisterData,
+  Organization,
+  NewsletterCategory,
+  NewsletterPreferences,
+  Invitation,
 } from "@/lib/auth/types";
+
+export { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
 
 /* ── Job types (re-exported from data) ── */
 

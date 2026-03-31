@@ -6,7 +6,7 @@
  * (cross-origin cookies don't work between pages.dev and workers.dev).
  */
 
-import type { User } from "./types";
+import type { User, Organization, NewsletterPreferences, Invitation } from "./types";
 import type { AuthStore } from "./auth-store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
@@ -209,5 +209,82 @@ export class ApiAuthStore implements AuthStore {
     } catch {
       return { success: false, error: "Erreur de connexion au serveur" };
     }
+  }
+
+  // ── Organizations ──
+
+  static async fetchOrganizations(): Promise<Organization[]> {
+    try {
+      const res = await apiFetch<{ organizations?: Organization[] }>("/api/organizations");
+      return res.organizations ?? [];
+    } catch { return []; }
+  }
+
+  static async fetchOrganization(orgId: string): Promise<{ org: Organization | null; contacts: User[] }> {
+    try {
+      const res = await apiFetch<{ organization?: Organization; contacts?: User[] }>(`/api/organizations/${orgId}`);
+      return { org: res.organization ?? null, contacts: res.contacts ?? [] };
+    } catch { return { org: null, contacts: [] }; }
+  }
+
+  static async updateOrganization(orgId: string, data: Partial<Organization>): Promise<boolean> {
+    try {
+      const res = await apiFetch<{ success?: boolean }>(`/api/organizations/${orgId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+      return !!res.success;
+    } catch { return false; }
+  }
+
+  // ── Invitations ──
+
+  static async inviteContact(orgId: string, data: { email: string; name?: string; orgRole?: string }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<AuthResponse>(`/api/organizations/${orgId}/invite`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      if (res.error) return { success: false, error: res.error };
+      return { success: true };
+    } catch { return { success: false, error: "Erreur de connexion" }; }
+  }
+
+  static async fetchInvitations(orgId: string): Promise<Invitation[]> {
+    try {
+      const res = await apiFetch<{ invitations?: Invitation[] }>(`/api/organizations/${orgId}/invitations`);
+      return res.invitations ?? [];
+    } catch { return []; }
+  }
+
+  static async acceptInvitation(token: string, data: { name: string; password: string; phone?: string }): Promise<{ success: boolean; error?: string; user?: User }> {
+    try {
+      const res = await apiFetch<AuthResponse>(`/api/invitations/${token}/accept`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      if (res.error) return { success: false, error: res.error };
+      if (res.token) setToken(res.token);
+      return { success: true, user: res.user ?? undefined };
+    } catch { return { success: false, error: "Erreur de connexion" }; }
+  }
+
+  // ── Newsletter Preferences ──
+
+  static async fetchPreferences(): Promise<NewsletterPreferences | null> {
+    try {
+      const res = await apiFetch<{ preferences?: NewsletterPreferences }>("/api/preferences");
+      return res.preferences ?? null;
+    } catch { return null; }
+  }
+
+  static async updatePreferences(prefs: Partial<NewsletterPreferences>): Promise<boolean> {
+    try {
+      const res = await apiFetch<{ success?: boolean }>("/api/preferences", {
+        method: "PATCH",
+        body: JSON.stringify(prefs),
+      });
+      return !!res.success;
+    } catch { return false; }
   }
 }

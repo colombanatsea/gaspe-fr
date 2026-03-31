@@ -19,6 +19,14 @@
  *   DELETE /api/auth/users/:id — admin: reject/delete user
  *   POST /api/auth/forgot-password — request password reset email
  *   POST /api/auth/reset-password  — reset password with token
+ *   GET  /api/organizations       — list all organizations
+ *   GET  /api/organizations/:id   — org details + contacts
+ *   PATCH /api/organizations/:id  — update org (primary/admin)
+ *   POST /api/organizations/:id/invite — invite contact (primary/admin)
+ *   GET  /api/organizations/:id/invitations — list invitations
+ *   POST /api/invitations/:token/accept — accept invitation
+ *   GET  /api/preferences         — get newsletter preferences
+ *   PATCH /api/preferences        — update newsletter preferences
  *   POST /api/contact          — send contact email via Resend
  *   POST /api/newsletter       — subscribe to newsletter
  *   POST /api/upload           — upload CV/documents to R2
@@ -59,6 +67,9 @@ interface DbUser {
   certifications: string | null;
   cv_filename: string | null;
   membership_status: string | null;
+  organization_id: string | null;
+  is_primary: number;
+  invited_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -87,6 +98,9 @@ function toFrontendUser(row: DbUser) {
     certifications: row.certifications ?? undefined,
     cvFilename: row.cv_filename ?? undefined,
     membershipStatus: row.membership_status ?? undefined,
+    organizationId: row.organization_id ?? undefined,
+    isPrimary: row.is_primary === 1,
+    invitedBy: row.invited_by ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -269,6 +283,39 @@ export default {
       // ── Email (Brevo proxy) ──
       if (path === "/api/email" && request.method === "POST") {
         return handleEmail(request, env, corsHeaders);
+      }
+
+      // ── Organizations ──
+      if (path === "/api/organizations" && request.method === "GET") {
+        return handleListOrganizations(env, corsHeaders);
+      }
+      if (path.match(/^\/api\/organizations\/[^/]+$/) && request.method === "GET") {
+        const orgId = path.split("/api/organizations/")[1];
+        return handleGetOrganization(request, env, corsHeaders, orgId);
+      }
+      if (path.match(/^\/api\/organizations\/[^/]+$/) && request.method === "PATCH") {
+        const orgId = path.split("/api/organizations/")[1];
+        return handleUpdateOrganization(request, env, corsHeaders, orgId);
+      }
+      if (path.match(/^\/api\/organizations\/[^/]+\/invite$/) && request.method === "POST") {
+        const orgId = path.replace("/api/organizations/", "").replace("/invite", "");
+        return handleInviteContact(request, env, corsHeaders, orgId);
+      }
+      if (path.match(/^\/api\/organizations\/[^/]+\/invitations$/) && request.method === "GET") {
+        const orgId = path.replace("/api/organizations/", "").replace("/invitations", "");
+        return handleListInvitations(request, env, corsHeaders, orgId);
+      }
+      if (path.match(/^\/api\/invitations\/[^/]+\/accept$/) && request.method === "POST") {
+        const token = path.replace("/api/invitations/", "").replace("/accept", "");
+        return handleAcceptInvitation(request, env, corsHeaders, token);
+      }
+
+      // ── Newsletter Preferences ──
+      if (path === "/api/preferences" && request.method === "GET") {
+        return handleGetPreferences(request, env, corsHeaders);
+      }
+      if (path === "/api/preferences" && request.method === "PATCH") {
+        return handleUpdatePreferences(request, env, corsHeaders);
       }
 
       // ── Contact ──
@@ -691,6 +738,311 @@ async function handleEmail(request: Request, env: Env, corsHeaders: Record<strin
     console.error("[Brevo] Network error:", err);
     return json({ error: "Erreur de connexion à Brevo" }, corsHeaders, 502);
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Organizations
+// ═══════════════════════════════════════════════════════════
+
+interface DbOrganization {
+  id: string; slug: string; name: string; category: string;
+  territory: string | null; region: string | null; city: string | null;
+  latitude: number | null; longitude: number | null;
+  logo_url: string | null; website_url: string | null;
+  address: string | null; email: string | null; phone: string | null;
+  description: string | null;
+  employee_count: number | null; ship_count: number | null;
+  membership_status: string | null;
+  created_at: string; updated_at: string;
+}
+
+function toFrontendOrg(row: DbOrganization) {
+  return {
+    id: row.id, slug: row.slug, name: row.name, category: row.category,
+    territory: row.territory ?? undefined, region: row.region ?? undefined,
+    city: row.city ?? undefined,
+    latitude: row.latitude ?? undefined, longitude: row.longitude ?? undefined,
+    logoUrl: row.logo_url ?? undefined, websiteUrl: row.website_url ?? undefined,
+    address: row.address ?? undefined, email: row.email ?? undefined,
+    phone: row.phone ?? undefined, description: row.description ?? undefined,
+    employeeCount: row.employee_count ?? undefined, shipCount: row.ship_count ?? undefined,
+    membershipStatus: row.membership_status ?? undefined,
+    createdAt: row.created_at, updatedAt: row.updated_at,
+  };
+}
+
+async function handleListOrganizations(env: Env, corsHeaders: Record<string, string>) {
+  const { results } = await env.DB.prepare("SELECT * FROM organizations ORDER BY name").all<DbOrganization>();
+  return json({ organizations: (results ?? []).map(toFrontendOrg) }, corsHeaders);
+}
+
+async function handleGetOrganization(request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const org = await env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(orgId).first<DbOrganization>();
+  if (!org) return json({ error: "Organisation introuvable" }, corsHeaders, 404);
+
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM users WHERE organization_id = ? AND archived = 0 ORDER BY is_primary DESC, name"
+  ).bind(orgId).all<DbUser>();
+
+  return json({
+    organization: toFrontendOrg(org),
+    contacts: (results ?? []).map(toFrontendUser),
+  }, corsHeaders);
+}
+
+async function handleUpdateOrganization(request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  // Only admin or primary contact of this org can update
+  if (payload.role !== "admin") {
+    const user = await env.DB.prepare("SELECT is_primary, organization_id FROM users WHERE id = ?").bind(payload.sub).first<{ is_primary: number; organization_id: string | null }>();
+    if (!user || user.organization_id !== orgId || user.is_primary !== 1) {
+      return json({ error: "Accès refusé" }, corsHeaders, 403);
+    }
+  }
+
+  const body = await request.json() as Record<string, unknown>;
+  const allowedFields: Record<string, string> = {
+    logoUrl: "logo_url", websiteUrl: "website_url", address: "address",
+    email: "email", phone: "phone", description: "description",
+    employeeCount: "employee_count", shipCount: "ship_count",
+    membershipStatus: "membership_status",
+  };
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
+    if (frontendKey in body) {
+      // membershipStatus can only be changed by admin
+      if (frontendKey === "membershipStatus" && payload.role !== "admin") continue;
+      updates.push(`${dbCol} = ?`);
+      values.push(body[frontendKey]);
+    }
+  }
+
+  if (updates.length === 0) return json({ error: "Aucun champ à mettre à jour" }, corsHeaders, 400);
+  updates.push("updated_at = datetime('now')");
+  values.push(orgId);
+
+  await env.DB.prepare(`UPDATE organizations SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Invitations
+// ═══════════════════════════════════════════════════════════
+
+async function handleInviteContact(request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  // Only primary contact or admin can invite
+  if (payload.role !== "admin") {
+    const user = await env.DB.prepare("SELECT is_primary, organization_id FROM users WHERE id = ?").bind(payload.sub).first<{ is_primary: number; organization_id: string | null }>();
+    if (!user || user.organization_id !== orgId || user.is_primary !== 1) {
+      return json({ error: "Seul le responsable de la compagnie peut inviter" }, corsHeaders, 403);
+    }
+  }
+
+  const body = await request.json() as Record<string, string>;
+  const { email, name, orgRole } = body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: "Email invalide" }, corsHeaders, 400);
+  }
+
+  // Check if email is already registered
+  const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").bind(email.trim()).first();
+  if (existing) {
+    return json({ error: "Un compte existe déjà avec cet email" }, corsHeaders, 409);
+  }
+
+  // Check if invitation already pending
+  const pendingInvite = await env.DB.prepare(
+    "SELECT id FROM invitations WHERE email = ? COLLATE NOCASE AND organization_id = ? AND accepted = 0 AND expires_at > datetime('now')"
+  ).bind(email.trim(), orgId).first();
+  if (pendingInvite) {
+    return json({ error: "Une invitation est déjà en cours pour cet email" }, corsHeaders, 409);
+  }
+
+  // Generate invitation token
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const inviteToken = Array.from(tokenBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+  const inviteId = `invite-${Date.now()}`;
+
+  await env.DB.prepare(
+    "INSERT INTO invitations (id, organization_id, invited_by, email, name, org_role, token, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(inviteId, orgId, payload.sub, email.trim(), name?.trim() ?? null, orgRole ?? null, inviteToken, expiresAt).run();
+
+  // Send invitation email via Brevo
+  if (env.BREVO_API_KEY) {
+    const org = await env.DB.prepare("SELECT name FROM organizations WHERE id = ?").bind(orgId).first<{ name: string }>();
+    const inviter = await env.DB.prepare("SELECT name FROM users WHERE id = ?").bind(payload.sub).first<{ name: string }>();
+    const inviteUrl = `${SITE_URL}/inscription/invitation?token=${inviteToken}`;
+
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
+      body: JSON.stringify({
+        sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
+        to: [{ email: email.trim(), name: name?.trim() ?? email }],
+        subject: `Invitation à rejoindre ${org?.name ?? "votre compagnie"} sur GASPE`,
+        htmlContent: `
+          <!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+          <body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+          <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+              <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
+            </div>
+            <div style="padding:32px;">
+              <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Vous êtes invité(e)</h2>
+              <p style="color:#222221;font-size:15px;">${sanitize(inviter?.name ?? "Un responsable")} vous invite à rejoindre l'espace <strong>${sanitize(org?.name ?? "")}</strong> sur la plateforme GASPE.</p>
+              <p style="margin:24px 0;"><a href="${inviteUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accepter l'invitation</a></p>
+              <p style="color:#6B6560;font-size:13px;">Ce lien est valide pendant 7 jours.</p>
+            </div>
+          </div></body></html>`,
+        textContent: `Vous êtes invité(e) à rejoindre ${org?.name ?? ""} sur GASPE. Acceptez l'invitation : ${inviteUrl}`,
+      }),
+    });
+  }
+
+  return json({ success: true }, corsHeaders);
+}
+
+async function handleListInvitations(request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM invitations WHERE organization_id = ? ORDER BY created_at DESC"
+  ).bind(orgId).all();
+
+  return json({ invitations: results ?? [] }, corsHeaders);
+}
+
+async function handleAcceptInvitation(request: Request, env: Env, corsHeaders: Record<string, string>, inviteToken: string) {
+  const invite = await env.DB.prepare(
+    "SELECT * FROM invitations WHERE token = ? AND accepted = 0"
+  ).bind(inviteToken).first<{ id: string; organization_id: string; email: string; name: string | null; org_role: string | null; expires_at: string }>();
+
+  if (!invite) return json({ error: "Invitation invalide ou déjà utilisée" }, corsHeaders, 400);
+  if (new Date(invite.expires_at) < new Date()) return json({ error: "Cette invitation a expiré" }, corsHeaders, 400);
+
+  const body = await request.json() as Record<string, string>;
+  const { name, password, phone } = body;
+
+  if (!name?.trim() || !password || password.length < 6) {
+    return json({ error: "Nom et mot de passe (6+ caractères) requis" }, corsHeaders, 400);
+  }
+
+  // Check email not already registered
+  const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").bind(invite.email).first();
+  if (existing) return json({ error: "Un compte existe déjà avec cet email" }, corsHeaders, 409);
+
+  const userId = `adherent-${Date.now()}`;
+  const passwordHash = await hashPasswordServer(password);
+
+  // Create user, pre-approved and linked to organization
+  await env.DB.prepare(`
+    INSERT INTO users (id, email, name, role, phone, company, approved, organization_id, is_primary, invited_by, company_role, created_at, updated_at)
+    VALUES (?, ?, ?, 'adherent', ?, (SELECT name FROM organizations WHERE id = ?), 1, ?, 0, ?, ?, datetime('now'), datetime('now'))
+  `).bind(
+    userId, invite.email, sanitize(name.trim()), phone?.trim() ?? null,
+    invite.organization_id, invite.organization_id, invite.id, invite.org_role ?? null,
+  ).run();
+
+  await env.DB.prepare("INSERT INTO auth (user_id, password_hash) VALUES (?, ?)").bind(userId, passwordHash).run();
+
+  // Create default newsletter preferences
+  await env.DB.prepare("INSERT INTO newsletter_preferences (user_id) VALUES (?)").bind(userId).run();
+
+  // Mark invitation as accepted
+  await env.DB.prepare("UPDATE invitations SET accepted = 1 WHERE id = ?").bind(invite.id).run();
+
+  // Auto-login
+  const jwtToken = await signJwt({ sub: userId, email: invite.email, role: "adherent" }, env.JWT_SECRET);
+  const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first<DbUser>();
+
+  return json(
+    { success: true, token: jwtToken, user: userRow ? toFrontendUser(userRow) : null },
+    setTokenCookie(jwtToken, corsHeaders),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Newsletter Preferences
+// ═══════════════════════════════════════════════════════════
+
+const NEWSLETTER_COLUMNS = [
+  "info_generales", "ag", "emploi", "formation_opco",
+  "veille_juridique", "veille_sociale", "veille_surete",
+  "veille_data", "veille_environnement", "actualites_gaspe",
+] as const;
+
+async function handleGetPreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  let row = await env.DB.prepare("SELECT * FROM newsletter_preferences WHERE user_id = ?").bind(payload.sub).first();
+  if (!row) {
+    // Create default preferences
+    await env.DB.prepare("INSERT INTO newsletter_preferences (user_id) VALUES (?)").bind(payload.sub).run();
+    row = await env.DB.prepare("SELECT * FROM newsletter_preferences WHERE user_id = ?").bind(payload.sub).first();
+  }
+
+  const prefs: Record<string, boolean> = {};
+  for (const col of NEWSLETTER_COLUMNS) {
+    prefs[col] = (row as Record<string, unknown>)?.[col] === 1;
+  }
+
+  return json({ preferences: prefs }, corsHeaders);
+}
+
+async function handleUpdatePreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const body = await request.json() as Record<string, boolean>;
+  const updates: string[] = [];
+  const values: unknown[] = [];
+
+  for (const col of NEWSLETTER_COLUMNS) {
+    if (col in body) {
+      updates.push(`${col} = ?`);
+      values.push(body[col] ? 1 : 0);
+    }
+  }
+
+  if (updates.length === 0) return json({ error: "Aucune préférence à modifier" }, corsHeaders, 400);
+
+  // Ensure row exists
+  const existing = await env.DB.prepare("SELECT user_id FROM newsletter_preferences WHERE user_id = ?").bind(payload.sub).first();
+  if (!existing) {
+    await env.DB.prepare("INSERT INTO newsletter_preferences (user_id) VALUES (?)").bind(payload.sub).run();
+  }
+
+  updates.push("updated_at = datetime('now')");
+  values.push(payload.sub);
+
+  await env.DB.prepare(`UPDATE newsletter_preferences SET ${updates.join(", ")} WHERE user_id = ?`).bind(...values).run();
+  return json({ success: true }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════

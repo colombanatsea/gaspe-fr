@@ -52,6 +52,65 @@ export interface Vessel {
 
 export type MembershipStatus = "due" | "paid" | "pending";
 
+/* ── Organization (company entity) ── */
+
+export interface Organization {
+  id: string;
+  slug: string;
+  name: string;
+  category: "titulaire" | "associe";
+  territory?: "metropole" | "dom-tom";
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  logoUrl?: string;
+  websiteUrl?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  description?: string;
+  employeeCount?: number;
+  shipCount?: number;
+  membershipStatus?: MembershipStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/* ── Newsletter preferences (per-user, 10 categories) ── */
+
+export const NEWSLETTER_CATEGORIES = [
+  { key: "info_generales", label: "Informations Générales", adherentOnly: true },
+  { key: "ag", label: "Assemblée Générale (AG)", adherentOnly: true },
+  { key: "emploi", label: "Emploi (CV et offres d'emploi)", adherentOnly: false },
+  { key: "formation_opco", label: "Formation & OPCO", adherentOnly: false },
+  { key: "veille_juridique", label: "Veille Juridique et Institutionnelle ADF", adherentOnly: true },
+  { key: "veille_sociale", label: "Veille Sociale ADF", adherentOnly: true },
+  { key: "veille_surete", label: "Veille Sûreté Sécurité ADF", adherentOnly: true },
+  { key: "veille_data", label: "Veille Data ADF", adherentOnly: true },
+  { key: "veille_environnement", label: "Veille Environnement ADF", adherentOnly: true },
+  { key: "actualites_gaspe", label: "Actualités GASPE", adherentOnly: false },
+] as const;
+
+export type NewsletterCategory = typeof NEWSLETTER_CATEGORIES[number]["key"];
+
+export type NewsletterPreferences = Record<NewsletterCategory, boolean>;
+
+/* ── Invitation (responsable invites team members) ── */
+
+export interface Invitation {
+  id: string;
+  organizationId: string;
+  invitedBy: string;
+  email: string;
+  name?: string;
+  orgRole?: string;
+  token: string;
+  expiresAt: string;
+  accepted: boolean;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -61,6 +120,10 @@ export interface User {
   phone?: string;
   approved?: boolean;
   archived?: boolean;
+  /** Organization link (replaces company name in multi-contact model) */
+  organizationId?: string;
+  isPrimary?: boolean;
+  invitedBy?: string;
   /** Adherent-specific */
   companyRole?: CompanyRole;
   companyDescription?: string;
