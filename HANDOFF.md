@@ -1,6 +1,6 @@
 # GASPE Website — Handoff Session 20
 
-## État actuel : v2.6.0 — Build OK, 96 pages, 0 erreurs TypeScript, 139 tests, CI green
+## État actuel : v2.6.0 — Build OK, ~101 pages, 0 erreurs TypeScript, 139 tests
 
 ### Branch : `claude/gaspe-session-20-PqfYj` → merge to `main`
 
