@@ -529,6 +529,7 @@ export default function EspaceCandidatPage() {
               {[
                 { label: "Toutes les offres d'emploi", href: "/nos-compagnies-recrutent" },
                 { label: "Formations", href: "/espace-candidat/formations" },
+                { label: "Préférences newsletter", href: "/espace-candidat/preferences" },
                 { label: "Nos adhérents", href: "/nos-adherents" },
                 { label: "Actualités", href: "/actualites" },
                 { label: "Contact", href: "/contact" },
