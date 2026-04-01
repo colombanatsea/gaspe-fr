@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { submitContact } from "@/lib/api";
+import { sendContactConfirmation } from "@/lib/email";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 
 interface FormErrors {
@@ -67,6 +68,8 @@ export default function ContactPage() {
       const result = await submitContact(form);
       if (!result.success) throw new Error("Submit failed");
       setStatus("success");
+      // Send confirmation email (fire & forget)
+      sendContactConfirmation({ name: form.nom, email: form.email, subject: form.sujet });
       setForm(initialForm);
     } catch {
       setStatus("error");

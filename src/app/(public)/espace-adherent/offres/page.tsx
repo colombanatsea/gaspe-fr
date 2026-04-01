@@ -8,6 +8,7 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { addNotification } from "@/lib/notifications";
+import { sendApplicationStatusNotification } from "@/lib/email";
 
 const APPLICATION_STATUSES = [
   { value: "sent", label: "Envoyée", variant: "neutral" as const },
@@ -532,7 +533,7 @@ export default function AdherentOffresPage() {
 // ── Applicant Pipeline Component ──
 
 function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[] }) {
-  const { getAllUsers, updateUser } = useAuth();
+  const { user, getAllUsers, updateUser } = useAuth();
   const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
   const [messageTarget, setMessageTarget] = useState<string | null>(null);
@@ -573,6 +574,18 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
       message: `Votre candidature pour "${offer?.title}" est passée au statut : ${statusLabel}`,
       href: "/espace-candidat",
     });
+
+    // Email notification (fire & forget)
+    if (candidate.email && offer) {
+      sendApplicationStatusNotification({
+        candidateName: candidate.name,
+        candidateEmail: candidate.email,
+        jobTitle: offer.title,
+        companyName: user?.company ?? "",
+        status: newStatus,
+        statusLabel,
+      });
+    }
   }
 
   function handleSendMessage(candidateId: string, offerId: string) {
