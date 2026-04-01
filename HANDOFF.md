@@ -1,123 +1,128 @@
 # GASPE Website — Handoff Session 20
 
-## État actuel : v2.6.0 — Build OK, ~101 pages, 0 erreurs TypeScript, 139 tests
+## État actuel : v2.6.0 — Build OK, 101 pages, 0 erreurs TS, 139 tests
 
-### Branch : `claude/gaspe-session-20-PqfYj` → merge to `main`
+### Branch : `main` (merged from `claude/gaspe-session-20-PqfYj`)
 
 ---
 
-## Résumé session 20
+## Résumé session 20 (majeure — 11 commits)
 
 ### Chantier 1 — CI Fix (P0)
-1. **Dead dependencies removed** — `better-sqlite3`, `drizzle-orm`, `drizzle-kit`, `next-auth`, `bcryptjs`, `dompurify`, `dotenv`, `@auth/drizzle-adapter`, `@neondatabase/serverless` + types
-   - These were leftover from a pre-session-18 architecture (DB-backed auth via Drizzle/SQLite)
-   - `better-sqlite3` native compilation was the **root cause** of CI failures on main
-   - Removed 80 packages total, `drizzle.config.ts`, `src/lib/db/`, `src/lib/actions/`, `src/lib/auth/index.ts`
-   - CI pipeline now passes: `tsc → lint → test → build`
+- **Dead dependencies removed** — `better-sqlite3`, `drizzle-orm`, `next-auth`, `bcryptjs`, etc. (9 deps, 80 packages)
+- Root cause des CI failures : `better-sqlite3` native compilation
+- Dead code supprimé : `src/lib/db/`, `src/lib/actions/`, `drizzle.config.ts`
 
 ### Chantier 2 — Overlay/Click Blocking Fix (P0)
-2. **`pointer-events-none` added** to all decorative overlay divs missing it:
-   - `HeroSection.tsx` — Globe container + gradient overlay
-   - `RecruitHero.tsx` — Background image container
-   - `nos-compagnies-recrutent/[slug]/page.tsx` — Job detail hero
-3. **CookieConsent** — outer wrapper now `pointer-events-none`, inner banner `pointer-events-auto`
-4. **Z-index normalized** — Header `z-[9999]→z-50`, CookieConsent `z-[9999]→z-[60]`, skip-to-content `z-[99999]→z-[70]`
+- `pointer-events-none` ajouté à tous les overlays décoratifs
+- Z-index normalisé : Header z-50, CookieConsent z-60, skip-to-content z-70
 
 ### Chantier 3 — Password Reset Flow (P1)
-5. **Worker endpoints**:
-   - `POST /api/auth/forgot-password` — generates secure token (32 bytes), stores in D1, sends Brevo email
-   - `POST /api/auth/reset-password` — validates token (1h expiry, single-use), updates password hash
-   - Anti-enumeration: always returns success regardless of email existence
-6. **D1 migration** — `workers/migrations/0002_password_reset.sql` (password_reset_tokens table)
-7. **Frontend pages**:
-   - `/mot-de-passe-oublie` — email input form, sends request, shows confirmation
-   - `/reinitialiser-mot-de-passe?token=xxx` — new password form, validates token
-8. **ApiAuthStore** — `forgotPassword()` + `resetPassword()` static methods
-9. **Connexion page** — "Mot de passe oublié ?" link added
+- `POST /api/auth/forgot-password` + `POST /api/auth/reset-password`
+- Migration `0002_password_reset.sql` (tokens 1h, single-use, anti-enumeration)
+- Pages `/mot-de-passe-oublie` + `/reinitialiser-mot-de-passe`
 
-### Chantier 4 — Lighthouse Optimizations (P1)
-10. **Slimmed Google Fonts request** — removed italic variants and optical size axis
-11. **Cache headers** — `/_next/static/*: immutable, max-age=1y`, `/icons/*: 1d`, `/manifest.json: 1d`
-12. **CSP tightened** — removed `fonts.googleapis.com` and `fonts.gstatic.com` from style-src/font-src (self-hosted when next/font available)
+### Chantier 4 — Dark Mode Complet
+- Overrides CSS complets : `text-red-500/400`, `hover:bg-red-50`, `bg-green-100`, `border-red-300`
+- NotificationBell : remplacé toutes les classes `text-neutral-*` par CSS variables
+- MediaLibrary : fix `bg-white/90` → `bg-background/90`
 
-### Chantier 5 — Admin Dashboard (P1)
-13. **Already wired to API** — `getAllUsers()` delegates to `ApiAuthStore.fetchAllUsers()` in API mode
-14. **Loading state** added to admin dashboard
-15. **Archived users excluded** from dashboard counts
-16. **Page count updated** to 96, version to v2.6.0, removed duplicate version display
+### Chantier 5 — Sécurité
+- JWT auth sur `POST /api/email` (était un relay ouvert)
+- JWT auth sur `POST /api/upload` (était non authentifié)
+- `/cgu` ajouté au sitemap
+
+### Chantier 6 — Architecture Multi-Contacts (Phase 1-3)
+**Migration DB `0003_organizations.sql` :**
+- Table `organizations` — 31 compagnies seedées
+- Table `newsletter_preferences` — 10 catégories par utilisateur
+- Table `invitations` — système d'invitation par token (7 jours)
+- Users : `+organization_id`, `+is_primary`, `+invited_by`
+
+**10 nouveaux endpoints Worker API :**
+- Organisations : GET/PATCH /api/organizations, GET /api/organizations/:id
+- Invitations : POST invite, GET list, POST accept
+- Préférences : GET/PATCH /api/preferences
+
+**7 nouvelles pages frontend :**
+- `/inscription/invitation` — accepter invitation équipe
+- `/espace-adherent/equipe` — gestion contacts compagnie
+- `/espace-adherent/preferences` — 10 toggles newsletter
+- `/espace-candidat/preferences` — 3 toggles newsletter
+- `/admin/newsletter` — composer + envoyer par catégorie
+- `/mot-de-passe-oublie` + `/reinitialiser-mot-de-passe`
+
+**8 templates email (avant : 3) :**
+1. Nouvelle adhésion → admin
+2. Compte approuvé → adhérent
+3. Compte refusé → adhérent
+4. Bienvenue candidat → candidat
+5. Candidature reçue → recruteur
+6. Statut candidature → candidat
+7. Confirmation contact → expéditeur
+8. Invitation équipe → invité
+
+**Registration auto-détection is_primary :**
+- Premier contact d'une compagnie = responsable automatiquement
+
+### Chantier 7 — UX
+- Page 404 enrichie avec 4 liens rapides
+- Dashboard adhérent : +2 cards (Mon équipe, Préférences)
+- Dashboard candidat : +lien préférences newsletter
+- Admin sidebar : +lien Newsletter
+- Slimmed Google Fonts, cache headers, CSP tightened
 
 ---
 
 ## Tests automatisés
 
 ### Unit tests (Vitest) — 139 tests, 13 fichiers
-| Fichier | Tests | Couvre |
-|---------|-------|-------|
-| hash.test.ts | 12 | SHA-256 hashing, vérification, détection plaintext |
-| matching.test.ts | 10 | Score matching STCW, supersedes, zone, catégorie |
-| sanitize-html.test.ts | 11 | XSS, scripts, event handlers, javascript: URLs |
-| geolocation.test.ts | 8 | Haversine, formatDistance |
-| utils.test.ts | 8 | slugify, formatDate |
-| schemas.test.ts | 18 | Zod schemas User/Media/Page/Member, safeParse |
-| cms-store.test.ts | 5 | CRUD media + pages |
-| members-store.test.ts | 5 | Seeding, archivage, fallback corrupted data |
-| jwt.test.ts | 8 | JWT sign/verify, tampering, expiry, base64url |
-| auth-store.test.ts | 10 | LocalStorage CRUD, corrupted data, DI, isApiMode |
-| export-csv.test.ts | 14 | CSV export logic |
-| notifications.test.ts | 20 | Notification system |
-| validations.test.ts | 8 | Form/data validation rules |
+| Fichier | Tests |
+|---------|-------|
+| hash.test.ts | 12 |
+| matching.test.ts | 10 |
+| sanitize-html.test.ts | 11 |
+| geolocation.test.ts | 8 |
+| utils.test.ts | 8 |
+| schemas.test.ts | 18 |
+| cms-store.test.ts | 5 |
+| members-store.test.ts | 5 |
+| jwt.test.ts | 8 |
+| auth-store.test.ts | 10 |
+| export-csv.test.ts | 14 |
+| notifications.test.ts | 20 |
+| validations.test.ts | 8 |
 
 ### E2E tests (Playwright) — 9 fichiers
-(Inchangé depuis session 17)
 
 ---
 
-## Fichiers modifiés/créés (session 20)
+## Database D1 — 8 tables
 
-### Créés
-| Fichier | Description |
-|---------|-------------|
-| `src/app/(auth)/mot-de-passe-oublie/page.tsx` | Page demande de reset |
-| `src/app/(auth)/reinitialiser-mot-de-passe/page.tsx` | Page saisie nouveau mot de passe |
-| `workers/migrations/0002_password_reset.sql` | Migration D1 — table password_reset_tokens |
-
-### Modifiés
-| Fichier | Changement |
-|---------|------------|
-| `workers/api.ts` | +POST /api/auth/forgot-password, +POST /api/auth/reset-password |
-| `src/lib/auth/api-auth-store.ts` | +forgotPassword(), +resetPassword() |
-| `src/app/(auth)/connexion/page.tsx` | +lien "Mot de passe oublié ?" |
-| `src/components/home/HeroSection.tsx` | +pointer-events-none sur Globe + gradient |
-| `src/components/jobs/RecruitHero.tsx` | +pointer-events-none sur image container |
-| `src/app/(public)/nos-compagnies-recrutent/[slug]/page.tsx` | +pointer-events-none sur hero image |
-| `src/components/shared/CookieConsent.tsx` | pointer-events-none wrapper, z-[60] |
-| `src/components/layout/Header.tsx` | z-50 (was z-[9999]) |
-| `src/app/(public)/layout.tsx` | skip-to-content z-[70] (was z-[99999]) |
-| `public/_headers` | +cache headers for static assets, tightened CSP |
-| `package.json` | Removed 9 dead deps, v2.6.0, removed db scripts |
-| `package-lock.json` | Regenerated (80 packages removed) |
-| `src/lib/constants.ts` | SITE_VERSION → 2.6.0 |
-| `src/app/(admin)/admin/page.tsx` | +loading state, fixed counts (exclude archived), 96 pages |
-
-### Supprimés (dead code)
-| Fichier | Raison |
-|---------|--------|
-| `src/lib/db/` (4 files) | Drizzle/SQLite schema+seed — unused since session 18 |
-| `src/lib/actions/` (3 files) | Server actions for DB — unused since session 18 |
-| `src/lib/auth/index.ts` | NextAuth config — replaced by AuthContext+AuthStore |
-| `drizzle.config.ts` | Drizzle Kit config — no longer needed |
+| Table | Migration | Rows |
+|-------|-----------|------|
+| users | 0001 | Variable |
+| auth | 0001 | Variable |
+| sessions | 0001 | Variable |
+| newsletter | 0001 | Variable |
+| contact_messages | 0001 | Variable |
+| password_reset_tokens | 0002 | Variable |
+| organizations | 0003 | 31 (seeded) |
+| newsletter_preferences | 0003 | Variable |
+| invitations | 0003 | Variable |
 
 ---
 
-## Déploiement — Password Reset
+## Déploiement des migrations
 
-### 1. Appliquer la migration D1
 ```bash
+# Migration 2 (password reset)
 npx wrangler d1 execute gaspe-db --file workers/migrations/0002_password_reset.sql
-```
 
-### 2. Redéployer le Worker
-```bash
+# Migration 3 (organizations + newsletter + invitations)
+npx wrangler d1 execute gaspe-db --file workers/migrations/0003_organizations.sql
+
+# Redéployer le Worker
 npx wrangler deploy --config workers/wrangler.toml
 ```
 
@@ -125,98 +130,73 @@ npx wrangler deploy --config workers/wrangler.toml
 
 ## TODO session 21
 
-### P0 — Stabilisation
+### P0 — Connecter le backend
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Merge session 20 → main | Verify CI green, merge branch |
-| 2 | Deploy and test password reset | Apply migration, test full flow end-to-end |
+| 1 | Appliquer migrations D1 | 0002 + 0003 sur la DB de prod |
+| 2 | Redéployer Worker | Nouveaux endpoints (orgs, invitations, prefs, password reset) |
+| 3 | Tester flow complet | Inscription → invitation → préférences → newsletter |
+| 4 | Connecter newsletter send | `POST /api/newsletter/send` → Brevo bulk API (page admin prête) |
 
-### P1 — Améliorations
+### P1 — Fonctionnel
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Rate limiting on email endpoint | Prevent abuse of /api/email open relay |
-| 2 | next/font/google migration | Self-host fonts (requires network access at build) |
-| 3 | Contact form → Brevo migration | Replace Resend with Brevo for contact emails |
-| 4 | Error boundaries on all pages | Wrap remaining client components |
+| 5 | Page admin organisations | Vue groupée par compagnie (remplace vue par contact) |
+| 6 | Migrer users existants | Script: lier users.company → organizations.organization_id |
+| 7 | Créer /admin/offres/new | CRUD complet offres d'emploi côté admin |
+| 8 | Contact form → Brevo | Remplacer Resend par Brevo pour unifier l'envoi email |
+| 9 | MediaLibrary → R2 | Remplacer localStorage base64 par upload R2 |
 
-### P2 — Features
+### P2 — Améliorations
 | # | Tâche | Détail |
 |---|-------|--------|
-| 1 | Analytics dashboard admin | Graphiques visites, candidatures, offres |
-| 2 | Blog SEO | Articles avec markdown, catégories, recherche |
-| 3 | Custom domain gaspe.fr | CF Pages Custom Domain → DNS config |
-
----
-
-## Plan architecture : Multi-contacts + Newsletter + Notifications
-
-### Contexte
-Le GASPE demande un tableau "CONTACTS et LISTES DE DIFFUSION" par compagnie avec :
-- Plusieurs contacts par compagnie (DPA, Directeur, Technique, Finance...)
-- 10 catégories de newsletter avec opt-in/out individuel
-- Un responsable par compagnie qui gère son équipe
-
-### Décisions validées
-- Admin GASPE valide le 1er contact → il devient responsable → gère les suivants via invitations
-- Candidats ont aussi des préférences newsletter (sous-ensemble : Emploi, Formations, Actualités)
-- Veilles ADF = relais de contenus externes, pas de rédaction GASPE
-
-### Modèle cible
-```
-organizations (compagnies) 1:N → users (contacts) 1:1 → newsletter_preferences
-                                  ├─ is_primary (responsable)
-                                  ├─ invited_by
-                                  └─ organization_id (FK)
-```
-
-### 3 niveaux de gestion
-1. Admin GASPE → approuve compagnies, cotisations, envoie newsletters
-2. Responsable compagnie (is_primary) → invite/valide contacts, gère infos compagnie
-3. Contact compagnie → profil perso + préférences newsletter
-
-### 10 catégories newsletter
-1. Informations Générales (GASPE) — adhérents
-2. AG (GASPE) — adhérents
-3. Emploi/CV (auto + GASPE) — adhérents + candidats
-4. Formation & OPCO (auto + GASPE) — adhérents + candidats
-5. Veille Juridique (relais ADF) — adhérents
-6. Veille Sociale (relais ADF) — adhérents
-7. Veille Sûreté Sécurité (relais ADF) — adhérents
-8. Veille Data (relais ADF) — adhérents
-9. Veille Environnement (relais ADF) — adhérents
-10. Actualités GASPE (GASPE) — adhérents + candidats
-
-### Phases d'implémentation
-| Session | Phase | Contenu |
-|---------|-------|---------|
-| 21 | 1+4 | DB schema (organizations, newsletter_prefs, invitations) + API endpoints + migration 31 compagnies |
-| 22 | 2a | Inscription révisée + page invitation + flux is_primary |
-| 23 | 2b | Espace responsable (équipe) + admin organisations |
-| 24 | 2c+3a | Préférences newsletter + page admin newsletter |
-| 25 | 3b | Tous les emails transactionnels |
-
-Plan détaillé complet : voir fichier `/root/.claude/plans/graceful-hatching-bubble.md`
+| 10 | Cron rappels | CF Workers Cron pour rappels formations J-7, cotisations |
+| 11 | NotificationBell → API | Persistance notifications en D1 au lieu de localStorage |
+| 12 | CMS → D1 | Migrer contenu CMS de localStorage vers D1 |
+| 13 | Custom domain gaspe.fr | CF Pages Custom Domain → DNS config |
+| 14 | Analytics dashboard | Graphiques visites, candidatures, offres |
+| 15 | Error boundaries | Wrap remaining client components |
 
 ---
 
 ## Prompt pour lancer la session 21
 
 ```
-Continue GASPE Website session 21. Voir HANDOFF.md section "Plan architecture" et "TODO session 21".
+Continue GASPE Website session 21. Voir HANDOFF.md section "TODO session 21".
 
 Contexte :
-- v2.6.0, 96 pages, 0 erreurs TS, 139 tests unitaires, 9 specs E2E
-- CI green (dead deps removed: better-sqlite3, drizzle, next-auth, bcryptjs)
-- Password reset flow implemented (forgot-password + reset-password endpoints)
-- Audit exhaustif fait : dark mode corrigé, sécurité upload/email, 404 enrichie
+- v2.6.0, 101 pages, 0 erreurs TS, 139 tests unitaires, 9 specs E2E, CI green
+- Session 20 mergée sur main (11 commits) :
+  • CI fix (dead deps removed), password reset, overlay/click fix, dark mode complet
+  • Architecture multi-contacts : table organizations (31 seedées), newsletter_preferences
+    (10 catégories), invitations (token 7j), users +organization_id +is_primary
+  • 10 endpoints Worker API (orgs, invitations, prefs)
+  • 7 nouvelles pages (invitation, équipe, préférences x2, newsletter admin, reset x2)
+  • 8 templates email (bienvenue candidat, candidature reçue/statut, contact, invitation)
+  • Registration auto-détecte is_primary (1er contact = responsable)
 - CF Worker déployé (D1, R2, JWT_SECRET, BREVO_API_KEY)
-- Sessions 1-20 sur branch claude/gaspe-session-20-PqfYj (à merger sur main)
+- Brevo transactional intégré via CF Worker proxy
 
 Priorité P0 session 21 :
-1. Merger session 20 → main
-2. Phase 1 du plan multi-contacts : migration DB (organizations, newsletter_prefs, invitations)
-3. Phase 1 : endpoints Worker API (10 nouveaux endpoints)
-4. Phase 4 : migration données (seed 31 compagnies, lier users existants)
+1. Appliquer migrations D1 (0002 password_reset + 0003 organizations)
+2. Redéployer Worker (28 endpoints dont 10 nouveaux)
+3. Connecter POST /api/newsletter/send à Brevo bulk API
+4. Tester flow complet : inscription → invitation → préférences → newsletter
 
-Architecture : voir "Plan architecture" dans HANDOFF.md
+Priorité P1 :
+5. Page admin /admin/organisations (vue groupée par compagnie)
+6. Script migration users existants → organization_id
+7. Créer /admin/offres/new (CRUD complet offres admin)
+8. Unifier emails sur Brevo (remplacer Resend pour contact form)
+
+Architecture multi-contacts :
+- Admin GASPE → approuve 1er contact compagnie → is_primary
+- Responsable (is_primary) → invite contacts via /api/organizations/:id/invite
+- Contact → gère profil + préférences newsletter (10 catégories)
+- Candidat → préférences limitées (emploi, formations, actualités)
+- 31 compagnies dans D1 organizations table (seeded from members.ts)
+
+Newsletter 10 catégories : Info Générales, AG, Emploi, Formation & OPCO,
+5 Veilles ADF (Juridique, Sociale, Sûreté, Data, Environnement), Actualités GASPE.
+Veilles ADF = relais contenus externes. Page admin /admin/newsletter prête (UI).
 ```

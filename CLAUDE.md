@@ -3,10 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**96 pages** — deployed on Cloudflare Pages (static export)
+**101 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
+- **Version**: v2.6.0
 
 ## Commands
 ```bash
@@ -44,46 +45,78 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Page headers: dark bg (#222221) with gradient orbs + wave SVG separator
 - Buttons: `rounded-xl` with teal focus ring
 - Glass: `.glass` class for frosted glass effect
+- Dark mode: `[data-theme="dark"]` overrides in globals.css (comprehensive)
 - All colors use CSS variables `var(--gaspe-*)` — zero hardcoded hex in components
 
 ## Content rules
 - Baseline: "Localement ancrés. Socialement engagés."
 - Hero: "Fédérer et représenter les compagnies maritimes de proximité"
-- All member data comes from `src/data/members.ts` (31 membres)
+- All member data comes from `src/data/members.ts` (31 membres) + D1 `organizations` table
 - Stats: 1951, 28 compagnies, 1364 collaborateurs, 111 navires, 20M+ passagers
 - Job offers in `src/data/jobs.ts` (11 offres: DNO, Bacs Gironde, Karu'Ferry)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 
-## Authentication (dual-mode, 3 rôles)
+## Authentication (dual-mode, 3 rôles + organisation hierarchy)
 | Rôle | Login | Accès |
 |------|-------|-------|
-| Admin | admin@gaspe.fr / admin123 | Console /admin (8 sections) |
-| Adhérent | Via /inscription/adherent (admin approval needed) | /espace-adherent |
+| Admin | admin@gaspe.fr / admin123 | Console /admin (13 sections) |
+| Adhérent (responsable) | Via /inscription/adherent (admin approval) | /espace-adherent + gestion équipe |
+| Adhérent (contact) | Via /inscription/invitation (token, pré-approuvé) | /espace-adherent |
 | Candidat | Via /inscription/candidat (auto-approved) | /espace-candidat |
+
+### Organisation hierarchy (session 20)
+- **Admin GASPE** → approuve 1er contact de chaque compagnie, gère cotisations
+- **Responsable compagnie** (`is_primary=true`) → invite/gère contacts de sa compagnie
+- **Contact compagnie** → gère son profil + préférences newsletter
+- Lien User ↔ Organisation via `organization_id` FK
 
 Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) with two backends:
 - **Dev/demo**: `LocalStorageAuthStore` (default when `NEXT_PUBLIC_API_URL` not set)
 - **Production**: `ApiAuthStore` → CF Worker API (JWT httpOnly cookie, PBKDF2 hashing, D1)
 
-API endpoints in `workers/api.ts`: register, login, logout, me, users CRUD.
-JWT via `workers/jwt.ts` (HMAC-SHA256, 7-day expiry, Web Crypto API).
-
-## Email (Brevo transactional)
-- CF Worker endpoint: `POST /api/email` → Brevo API proxy
-- **Adherent registration** → email notification to admin (CONTACT_EMAIL)
-- **Account approval/rejection** → email notification to adherent
-- Worker secret: `BREVO_API_KEY`
+## Email (Brevo transactional — 8 templates)
+- CF Worker endpoint: `POST /api/email` → Brevo API proxy (JWT auth required)
+- Templates in `src/lib/email.ts`:
+  1. **Nouvelle adhésion** → admin
+  2. **Compte approuvé** → adhérent
+  3. **Compte refusé** → adhérent
+  4. **Bienvenue candidat** → candidat (auto-inscription)
+  5. **Candidature reçue** → recruteur/responsable compagnie
+  6. **Statut candidature** → candidat (viewed/shortlisted/interview/accepted/rejected)
+  7. **Confirmation contact** → expéditeur formulaire
+  8. **Invitation équipe** → invité (inline dans worker, pas dans email.ts)
+- Password reset email: inline dans `workers/api.ts` (forgot-password endpoint)
+- Worker secrets: `BREVO_API_KEY`, `JWT_SECRET`
 - Worker env: `CONTACT_EMAIL` (admin recipient address)
+
+## Newsletter (10 catégories, session 20)
+| # | Catégorie | Adhérents | Candidats | Type |
+|---|-----------|-----------|-----------|------|
+| 1 | Informations Générales | ✓ | — | GASPE rédige |
+| 2 | AG (Assemblée Générale) | ✓ | — | GASPE envoie |
+| 3 | Emploi (CV et offres) | ✓ | ✓ | Auto + GASPE |
+| 4 | Formation & OPCO | ✓ | ✓ | Auto + GASPE |
+| 5 | Veille Juridique ADF | ✓ | — | Relais ADF |
+| 6 | Veille Sociale ADF | ✓ | — | Relais ADF |
+| 7 | Veille Sûreté Sécurité ADF | ✓ | — | Relais ADF |
+| 8 | Veille Data ADF | ✓ | — | Relais ADF |
+| 9 | Veille Environnement ADF | ✓ | — | Relais ADF |
+| 10 | Actualités GASPE | ✓ | ✓ | GASPE rédige |
+
+Preferences stored in D1 `newsletter_preferences` table (per-user, per-category boolean).
+Managed via `/espace-adherent/preferences` and `/espace-candidat/preferences`.
+Admin sends via `/admin/newsletter` (category selector + compose).
 
 ## Architecture
 ```
 src/
 ├── app/
-│   ├── (public)/          # 24 routes publiques (+ formations, CGU…)
-│   ├── (admin)/           # 12 routes admin
-│   ├── (auth)/            # 3 routes auth
+│   ├── (public)/          # 26 routes publiques (+ formations, CGU, preferences…)
+│   ├── (admin)/           # 13 routes admin (+ newsletter)
+│   ├── (auth)/            # 5 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
-│   ├── globals.css        # Design system + CSS variables + animations
+│   ├── globals.css        # Design system + CSS variables + dark mode
+│   ├── not-found.tsx      # 404 page with quick links
 │   └── sitemap.ts         # Sitemap dynamique
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
@@ -92,39 +125,64 @@ src/
 │   ├── map/               # MemberMap (Leaflet)
 │   ├── globe/             # GaspeGlobe (Three.js)
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
-│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, Providers
+│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell
 │   └── ui/                # Badge, Button, Card, ThemeToggle
 ├── data/                  # Static data (members, jobs, ccn3228, stcw, formations…)
 ├── lib/
-│   ├── auth/              # AuthContext, AuthStore interface, types, storage, hash
+│   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types (Organization, Newsletter, Invitation)
 │   ├── theme/             # ThemeContext (dark mode)
-│   ├── schemas.ts         # Zod validation schemas for localStorage
+│   ├── email.ts           # 8 email templates (Brevo transactional)
+│   ├── notifications.ts   # In-app notification system (localStorage)
+│   ├── schemas.ts         # Zod validation schemas
 │   ├── matching.ts        # Job-candidate matching engine
 │   ├── sanitize-html.ts   # XSS sanitization
-│   ├── cms-store.ts       # CMS localStorage store (Zod validated)
-│   ├── members-store.ts   # Members localStorage store (Zod validated)
+│   ├── cms-store.ts       # CMS localStorage store
+│   ├── members-store.ts   # Members localStorage store
 │   └── ...
 ├── types/index.ts         # Centralized type re-exports
-└── test/setup.ts          # Vitest test setup (localStorage mock)
+└── test/setup.ts          # Vitest test setup
+workers/
+├── api.ts                 # CF Worker: 28 endpoints (auth, orgs, invitations, prefs, email, contact, upload)
+├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
+├── wrangler.toml          # Worker config (D1, R2, secrets)
+└── migrations/
+    ├── 0001_auth.sql      # Users, auth, sessions, newsletter, contact_messages
+    ├── 0002_password_reset.sql  # Password reset tokens
+    └── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
 ```
 
+## Database (D1 — 8 tables)
+| Table | Description |
+|-------|-------------|
+| `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary |
+| `auth` | PBKDF2 password hashes |
+| `organizations` | 31 GASPE member companies (seeded from members.ts) |
+| `newsletter_preferences` | 10 boolean columns per user |
+| `invitations` | Team member invitations (token, 7-day expiry) |
+| `password_reset_tokens` | Reset tokens (1h expiry, single-use) |
+| `sessions` | JWT refresh tracking |
+| `newsletter` | Legacy email-only subscriptions (public form) |
+| `contact_messages` | Contact form submissions |
+
 ## Testing
-- **Unit tests**: Vitest — 139 tests, 13 spec files (hash, matching, sanitize-html, geolocation, utils, schemas, cms-store, members-store, jwt, auth-store, export-csv, notifications, validations)
-- **E2E tests**: Playwright — 9 spec files (homepage, auth, recruitment, contact, formations, pages, candidate-space, adherent-space, admin-crud)
+- **Unit tests**: Vitest — 139 tests, 13 spec files
+- **E2E tests**: Playwright — 9 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
 ## Security
-- SHA-256 password hashing (Web Crypto API) + auto-migration from plaintext
-- Zod validation on all localStorage reads (safeParse with fallbacks)
+- PBKDF2 password hashing (100k iterations, Web Crypto API)
+- JWT auth required on `/api/email` and `/api/upload` endpoints
+- Zod validation on all localStorage reads
 - sanitizeHtml() on all dangerouslySetInnerHTML usage
-- CSP headers via Cloudflare `_headers`
-- File upload validation (PDF/DOC/DOCX, 10 Mo max; magic bytes verification server-side)
+- CSP headers via Cloudflare `_headers` (tightened: self-hosted fonts)
+- File upload: magic bytes validation server-side (PDF/DOC/DOCX, 10 MB max)
+- Anti-enumeration on forgot-password (always returns success)
 - ErrorBoundary wrapping Globe 3D, Leaflet Map, RichTextEditor
-- AuthStore interface for swappable backend
 
-## Known limitations (require deployment)
-- **Domain gaspe.fr** — manual CF Pages DNS config
-- **Email réel** — Brevo integration deployed (BREVO_API_KEY set), test full flow end-to-end
-- **Document PDF uploads** — needs R2 bucket (worker code ready)
-- **CSP unsafe-inline** — required by Next.js hydration (cannot remove client-side)
-- **Server auth activation** — set `NEXT_PUBLIC_API_URL` + deploy CF Worker (deployed with D1, R2, JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL)
+## Known limitations
+- **Domain gaspe.fr** — manual CF Pages DNS config needed
+- **MediaLibrary** stores in localStorage (base64) — should migrate to R2
+- **CMS content** in localStorage — should migrate to D1 for multi-admin
+- **CSP unsafe-inline** — required by Next.js hydration
+- **Newsletter send** — admin UI ready but POST /api/newsletter/send not yet connected to Brevo bulk
+- **Offres admin** — no /admin/offres/new page yet (adherents create offers from their space)
