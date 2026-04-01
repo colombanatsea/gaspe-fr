@@ -27,6 +27,7 @@ const navSections = [
   {
     title: "Organisation",
     items: [
+      { label: "Organisations", href: "/admin/organisations", icon: BuildingIcon },
       { label: "Membres", href: "/admin/membres", icon: UsersIcon },
       { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon },
       { label: "Documents", href: "/admin/documents", icon: FileIcon },
@@ -290,6 +291,16 @@ function PagesIcon({ className }: { className?: string }) {
       <path d="M16 13H8" />
       <path d="M16 17H8" />
       <path d="M10 9H8" />
+    </svg>
+  );
+}
+
+function BuildingIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+      <path d="M9 22v-4h6v4" />
+      <path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
     </svg>
   );
 }
