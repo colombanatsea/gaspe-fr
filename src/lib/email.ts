@@ -173,3 +173,132 @@ export async function sendRejectionNotification(adherent: {
     textContent: `Bonjour ${adherent.name}, votre demande d'adhésion au GASPE n'a pas été retenue. Contactez-nous sur ${SITE_URL}/contact pour plus d'informations.`,
   });
 }
+
+/** Welcome email for auto-approved candidats. */
+export async function sendWelcomeCandidatNotification(candidat: {
+  name: string;
+  email: string;
+}): Promise<{ success: boolean; error?: string }> {
+  return sendEmail({
+    to: [{ email: candidat.email, name: candidat.name }],
+    subject: "Bienvenue sur GASPE — Votre espace candidat est prêt",
+    htmlContent: emailWrapper(`
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Bienvenue sur GASPE !</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${candidat.name},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Votre compte candidat a été créé avec succès. Vous pouvez dès maintenant :</p>
+      <ul style="margin:0 0 12px;padding-left:20px;color:#222221;font-size:15px;">
+        <li>Consulter les offres d'emploi maritime</li>
+        <li>Postuler directement aux offres qui vous correspondent</li>
+        <li>Gérer vos certifications et votre expérience</li>
+        <li>Suivre vos candidatures en temps réel</li>
+      </ul>
+      <p style="margin:24px 0;">
+        <a href="${SITE_URL}/nos-compagnies-recrutent" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;">
+          Voir les offres d'emploi
+        </a>
+      </p>
+      <p style="margin:16px 0 0;">
+        <a href="${SITE_URL}/espace-candidat/preferences" style="color:#1B7E8A;font-size:13px;text-decoration:none;">
+          Gérer mes préférences de newsletter →
+        </a>
+      </p>
+    `),
+    textContent: `Bienvenue ${candidat.name} ! Votre compte candidat GASPE est actif. Consultez les offres : ${SITE_URL}/nos-compagnies-recrutent`,
+  });
+}
+
+/** Notify company responsable that a new application was received. */
+export async function sendApplicationReceivedNotification(data: {
+  recruiterName: string;
+  recruiterEmail: string;
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  companyName: string;
+}): Promise<{ success: boolean; error?: string }> {
+  return sendEmail({
+    to: [{ email: data.recruiterEmail, name: data.recruiterName }],
+    subject: `Nouvelle candidature — ${data.jobTitle}`,
+    htmlContent: emailWrapper(`
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Nouvelle candidature reçue</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.recruiterName},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Un candidat a postulé à votre offre :</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:8px 12px;font-weight:600;color:#6B6560;width:120px;">Offre</td><td style="padding:8px 12px;color:#222221;">${data.jobTitle}</td></tr>
+        <tr style="background:#F5F3F0;"><td style="padding:8px 12px;font-weight:600;color:#6B6560;">Candidat</td><td style="padding:8px 12px;color:#222221;">${data.candidateName}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:600;color:#6B6560;">Email</td><td style="padding:8px 12px;color:#222221;">${data.candidateEmail}</td></tr>
+      </table>
+      <p style="margin:16px 0 0;">
+        <a href="${SITE_URL}/espace-adherent/offres" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;">
+          Gérer les candidatures
+        </a>
+      </p>
+    `),
+    textContent: `Nouvelle candidature de ${data.candidateName} (${data.candidateEmail}) pour "${data.jobTitle}". Gérez-la sur ${SITE_URL}/espace-adherent/offres`,
+  });
+}
+
+/** Notify candidat of application status change. */
+export async function sendApplicationStatusNotification(data: {
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  companyName: string;
+  status: string;
+  statusLabel: string;
+  message?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const statusColors: Record<string, string> = {
+    viewed: "#2F72A0",
+    shortlisted: "#1B7E8A",
+    interview: "#D97706",
+    accepted: "#16A34A",
+    rejected: "#DC2626",
+  };
+  const color = statusColors[data.status] ?? "#1B7E8A";
+
+  return sendEmail({
+    to: [{ email: data.candidateEmail, name: data.candidateName }],
+    subject: `Candidature "${data.jobTitle}" — ${data.statusLabel}`,
+    htmlContent: emailWrapper(`
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Mise à jour de votre candidature</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.candidateName},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Votre candidature pour le poste <strong>${data.jobTitle}</strong> chez <strong>${data.companyName}</strong> a changé de statut :</p>
+      <div style="margin:16px 0;padding:16px;border-left:4px solid ${color};background:#F5F3F0;border-radius:0 8px 8px 0;">
+        <p style="margin:0;font-size:16px;font-weight:600;color:${color};">${data.statusLabel}</p>
+      </div>
+      ${data.message ? `
+        <div style="margin:16px 0;padding:16px;background:#F5F3F0;border-radius:8px;">
+          <p style="margin:0 0 4px;font-size:12px;color:#6B6560;font-weight:600;">Message du recruteur :</p>
+          <p style="margin:0;color:#222221;font-size:14px;">${data.message}</p>
+        </div>
+      ` : ""}
+      <p style="margin:24px 0;">
+        <a href="${SITE_URL}/espace-candidat" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;">
+          Voir mes candidatures
+        </a>
+      </p>
+    `),
+    textContent: `Bonjour ${data.candidateName}, votre candidature pour "${data.jobTitle}" est passée au statut : ${data.statusLabel}. ${data.message ? `Message: ${data.message}` : ""} Détails : ${SITE_URL}/espace-candidat`,
+  });
+}
+
+/** Confirmation email for contact form submission. */
+export async function sendContactConfirmation(data: {
+  name: string;
+  email: string;
+  subject: string;
+}): Promise<{ success: boolean; error?: string }> {
+  return sendEmail({
+    to: [{ email: data.email, name: data.name }],
+    subject: "Votre message a bien été reçu — GASPE",
+    htmlContent: emailWrapper(`
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Message reçu</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.name},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Nous avons bien reçu votre message concernant : <strong>${data.subject}</strong></p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Notre équipe vous répondra dans les meilleurs délais.</p>
+      <p style="margin:0;color:#6B6560;font-size:13px;">Cet email est un accusé de réception automatique.</p>
+    `),
+    textContent: `Bonjour ${data.name}, votre message "${data.subject}" a bien été reçu par le GASPE. Nous vous répondrons dans les meilleurs délais.`,
+  });
+}

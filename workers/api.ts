@@ -380,18 +380,39 @@ async function handleRegister(request: Request, env: Env, corsHeaders: Record<st
   const approved = role === "candidat" ? 1 : 0;
   const passwordHash = await hashPasswordServer(password);
 
+  // For adherents: link to organization and detect if first contact (becomes primary/responsable)
+  let organizationId: string | null = null;
+  let isPrimary = 0;
+  if (role === "adherent" && company?.trim()) {
+    const org = await env.DB.prepare("SELECT id FROM organizations WHERE name = ? COLLATE NOCASE").bind(company.trim()).first<{ id: string }>();
+    if (org) {
+      organizationId = org.id;
+      // Check if this org already has an approved primary contact
+      const existingPrimary = await env.DB.prepare(
+        "SELECT id FROM users WHERE organization_id = ? AND is_primary = 1 AND archived = 0"
+      ).bind(org.id).first();
+      if (!existingPrimary) {
+        isPrimary = 1; // First contact becomes responsable
+      }
+    }
+  }
+
   // Insert user
   await env.DB.prepare(`
-    INSERT INTO users (id, email, name, role, phone, company, approved, current_position, desired_position, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    INSERT INTO users (id, email, name, role, phone, company, approved, organization_id, is_primary, current_position, desired_position, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
   `).bind(
     id, email.trim(), sanitize(name.trim()), role,
     phone?.trim() ?? null, company?.trim() ?? null, approved,
+    organizationId, isPrimary,
     currentPosition?.trim() ?? null, desiredPosition?.trim() ?? null,
   ).run();
 
   // Insert password
   await env.DB.prepare("INSERT INTO auth (user_id, password_hash) VALUES (?, ?)").bind(id, passwordHash).run();
+
+  // Create default newsletter preferences
+  await env.DB.prepare("INSERT INTO newsletter_preferences (user_id) VALUES (?)").bind(id).run();
 
   // Auto-login for candidats
   if (role === "candidat") {

@@ -7,7 +7,7 @@ import { ApiAuthStore } from "./api-auth-store";
 import { ensureSeeded } from "./storage";
 import { safeParse, usersArraySchema, userSchema } from "@/lib/schemas";
 import type { User, RegisterData, AuthContextValue } from "./types";
-import { sendNewAdherentNotification, sendApprovalNotification, sendRejectionNotification } from "@/lib/email";
+import { sendNewAdherentNotification, sendApprovalNotification, sendRejectionNotification, sendWelcomeCandidatNotification } from "@/lib/email";
 
 // Re-export all types and constants so existing imports from AuthContext keep working
 export type { User, UserRole, ApplicationStatus, CompanyRole, MembershipStatus, Vessel, RegisterData, AuthContextValue } from "./types";
@@ -120,6 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result.success && data.role === "adherent") {
         sendNewAdherentNotification({ name: data.name, email: data.email, company: data.company });
       }
+      // Welcome email for candidats (fire & forget)
+      if (result.success && data.role === "candidat") {
+        sendWelcomeCandidatNotification({ name: data.name, email: data.email });
+      }
       return { success: result.success, error: result.error };
     }
 
@@ -160,6 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Notify admin of new adherent registration (fire & forget)
     if (data.role === "adherent") {
       sendNewAdherentNotification({ name: data.name, email: data.email, company: data.company });
+    }
+    // Welcome email for candidats (fire & forget)
+    if (data.role === "candidat") {
+      sendWelcomeCandidatNotification({ name: data.name, email: data.email });
     }
 
     return { success: true };

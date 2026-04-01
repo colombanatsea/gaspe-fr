@@ -31,6 +31,7 @@ const navSections = [
       { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon },
       { label: "Documents", href: "/admin/documents", icon: FileIcon },
       { label: "Messages", href: "/admin/messages", icon: MailIcon },
+      { label: "Newsletter", href: "/admin/newsletter", icon: MailIcon },
     ],
   },
   {
