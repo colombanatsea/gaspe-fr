@@ -115,12 +115,20 @@ export function Header() {
             </div>
             </>
           ) : (
-            <Link
-              href="/connexion"
-              className="ml-2 inline-flex items-center gap-2 rounded-lg border-2 border-primary px-4 py-1.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors"
-            >
-              Connexion
-            </Link>
+            <div className="flex items-center gap-2 ml-2">
+              <Link
+                href="/decouvrir-espace-adherent"
+                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-primary hover:bg-surface-teal transition-colors"
+              >
+                Espace démo
+              </Link>
+              <Link
+                href="/connexion"
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-primary px-4 py-1.5 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors"
+              >
+                Connexion
+              </Link>
+            </div>
           )}
         </nav>
 

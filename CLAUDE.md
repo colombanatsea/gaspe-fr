@@ -3,11 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**101 pages** — deployed on Cloudflare Pages (static export)
+**102 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.6.0
+- **Version**: v2.6.1
 
 ## Commands
 ```bash
@@ -184,5 +184,4 @@ workers/
 - **MediaLibrary** stores in localStorage (base64) — should migrate to R2
 - **CMS content** in localStorage — should migrate to D1 for multi-admin
 - **CSP unsafe-inline** — required by Next.js hydration
-- **Newsletter send** — admin UI ready but POST /api/newsletter/send not yet connected to Brevo bulk
-- **Offres admin** — no /admin/offres/new page yet (adherents create offers from their space)
+- **Offres admin** — admin can create offers from /admin/offres/new

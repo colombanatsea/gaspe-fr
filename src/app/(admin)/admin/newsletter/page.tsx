@@ -7,8 +7,40 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 const inputClass =
   "mt-1 block w-full rounded-xl border border-border-light bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
+function buildNewsletterHtml(content: string, categoryLabel: string): string {
+  const bodyHtml = content
+    .split("\n\n")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin:0 0 16px;line-height:1.6;color:#222221;">${p.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;margin-top:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
+      <p style="margin:4px 0 0;color:#B2DFE3;font-family:'DM Sans',Helvetica,sans-serif;font-size:13px;">Localement ancrés. Socialement engagés.</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 8px;font-size:12px;color:#6B6560;text-transform:uppercase;letter-spacing:0.5px;">${categoryLabel}</p>
+      ${bodyHtml}
+    </div>
+    <div style="padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-size:12px;color:#6B6560;">
+      <p style="margin:0;">GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
+      <p style="margin:4px 0 0;">Pour modifier vos préférences de newsletter, connectez-vous sur votre espace.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
 export default function AdminNewsletterPage() {
   const { user } = useAuth();
@@ -17,8 +49,7 @@ export default function AdminNewsletterPage() {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
+  const [result, setResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== "admin") router.push("/connexion");
@@ -28,23 +59,60 @@ export default function AdminNewsletterPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setResult(null);
 
     if (!selectedCategory || !subject.trim() || !content.trim()) {
-      setError("Veuillez remplir tous les champs.");
+      setResult({ type: "error", message: "Veuillez remplir tous les champs." });
       return;
     }
 
+    const categoryInfo = NEWSLETTER_CATEGORIES.find((c) => c.key === selectedCategory);
+    if (!categoryInfo) return;
+
     setSending(true);
-    // In production, this would call POST /api/newsletter/send
-    // For now, show the UI and log
-    console.warn("[Newsletter] Envoi simulé — connecter POST /api/newsletter/send en production");
-    await new Promise((r) => setTimeout(r, 1000));
-    setSending(false);
-    setSent(true);
-    setSubject("");
-    setContent("");
-    setTimeout(() => setSent(false), 5000);
+
+    if (!API_URL) {
+      // Demo mode — no API configured
+      console.warn("[Newsletter] Mode démo — API_URL non configurée");
+      await new Promise((r) => setTimeout(r, 1000));
+      setSending(false);
+      setResult({ type: "success", message: "Newsletter envoyée avec succès ! (mode démo)" });
+      setSubject("");
+      setContent("");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("gaspe_api_token");
+      const res = await fetch(`${API_URL}/api/newsletter/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          category: selectedCategory,
+          subject: subject.trim(),
+          htmlContent: buildNewsletterHtml(content, categoryInfo.label),
+        }),
+      });
+
+      const data = await res.json() as { success?: boolean; sent?: number; total?: number; error?: string; errors?: string[] };
+
+      if (res.ok && data.success) {
+        setResult({ type: "success", message: `Newsletter envoyée à ${data.sent}/${data.total} abonnés.` });
+        setSubject("");
+        setContent("");
+      } else if (res.ok && data.sent) {
+        setResult({ type: "error", message: `Envoi partiel : ${data.sent}/${data.total} abonnés. ${data.errors?.join(", ") ?? ""}` });
+      } else {
+        setResult({ type: "error", message: data.error ?? `Erreur HTTP ${res.status}` });
+      }
+    } catch (err) {
+      setResult({ type: "error", message: "Erreur de connexion au serveur." });
+    } finally {
+      setSending(false);
+    }
   };
 
   const categoryInfo = NEWSLETTER_CATEGORIES.find((c) => c.key === selectedCategory);
@@ -94,12 +162,14 @@ export default function AdminNewsletterPage() {
             <Badge variant="teal">{categoryInfo?.label}</Badge>
           </div>
 
-          {error && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>
+          {result?.type === "error" && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700 [data-theme=dark]:bg-red-950/30 [data-theme=dark]:border-red-800 [data-theme=dark]:text-red-400">
+              {result.message}
+            </div>
           )}
-          {sent && (
-            <div className="rounded-xl bg-green-50 border border-green-500 p-3 text-sm text-green-600">
-              Newsletter envoyée avec succès !
+          {result?.type === "success" && (
+            <div className="rounded-xl bg-green-50 border border-green-500 p-3 text-sm text-green-600 [data-theme=dark]:bg-green-950/30 [data-theme=dark]:border-green-800 [data-theme=dark]:text-green-400">
+              {result.message}
             </div>
           )}
 

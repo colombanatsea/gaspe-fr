@@ -7,7 +7,7 @@
  * Bindings needed in wrangler.toml:
  *   - D1: DB (gaspe-db)
  *   - R2: UPLOADS (gaspe-uploads)
- *   - Environment: RESEND_API_KEY, CONTACT_EMAIL, JWT_SECRET
+ *   - Environment: BREVO_API_KEY, CONTACT_EMAIL, JWT_SECRET
  *
  * Endpoints:
  *   POST /api/auth/register    — create account
@@ -27,8 +27,9 @@
  *   POST /api/invitations/:token/accept — accept invitation
  *   GET  /api/preferences         — get newsletter preferences
  *   PATCH /api/preferences        — update newsletter preferences
- *   POST /api/contact          — send contact email via Resend
+ *   POST /api/contact          — send contact email via Brevo
  *   POST /api/newsletter       — subscribe to newsletter
+ *   POST /api/newsletter/send  — admin: bulk send newsletter by category
  *   POST /api/upload           — upload CV/documents to R2
  *   GET  /api/health           — health check
  */
@@ -38,7 +39,6 @@ import { signJwt, verifyJwt } from "./jwt";
 interface Env {
   DB: D1Database;
   UPLOADS: R2Bucket;
-  RESEND_API_KEY: string;
   BREVO_API_KEY: string;
   CONTACT_EMAIL: string;
   JWT_SECRET: string;
@@ -326,6 +326,9 @@ export default {
       // ── Newsletter ──
       if (path === "/api/newsletter" && request.method === "POST") {
         return handleNewsletter(request, env, corsHeaders);
+      }
+      if (path === "/api/newsletter/send" && request.method === "POST") {
+        return handleNewsletterSend(request, env, corsHeaders);
       }
 
       // ── Upload ──
@@ -1067,7 +1070,7 @@ async function handleUpdatePreferences(request: Request, env: Env, corsHeaders: 
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Contact form → Resend email
+//  Contact form → Brevo email
 // ═══════════════════════════════════════════════════════════
 
 async function handleContact(request: Request, env: Env, corsHeaders: Record<string, string>) {
@@ -1094,19 +1097,20 @@ async function handleContact(request: Request, env: Env, corsHeaders: Record<str
     "INSERT INTO contact_messages (id, nom, email, societe, sujet, message) VALUES (?, ?, ?, ?, ?, ?)",
   ).bind(crypto.randomUUID(), nom, email, societe ?? "", sujet, message).run();
 
-  if (env.RESEND_API_KEY) {
-    await fetch("https://api.resend.com/emails", {
+  if (env.BREVO_API_KEY) {
+    await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": env.BREVO_API_KEY,
       },
       body: JSON.stringify({
-        from: "GASPE <noreply@gaspe.fr>",
-        to: env.CONTACT_EMAIL || "contact@gaspe.fr",
-        reply_to: email,
+        sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
+        to: [{ email: env.CONTACT_EMAIL || "contact@gaspe.fr", name: "GASPE" }],
+        replyTo: { email, name: nom },
         subject: `[Contact GASPE] ${sujet}`,
-        html: `
+        htmlContent: `
           <h2>Nouveau message de contact</h2>
           <p><strong>Nom :</strong> ${nom}</p>
           <p><strong>Email :</strong> ${sanitize(email)}</p>
@@ -1137,6 +1141,96 @@ async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<
   await env.DB.prepare("INSERT OR IGNORE INTO newsletter (email) VALUES (?)").bind(email).run();
 
   return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Newsletter send → Brevo bulk email
+// ═══════════════════════════════════════════════════════════
+
+async function handleNewsletterSend(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  // Admin only
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const admin = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first<{ role: string }>();
+  if (!admin || admin.role !== "admin") {
+    return json({ error: "Accès réservé aux administrateurs" }, corsHeaders, 403);
+  }
+
+  if (!env.BREVO_API_KEY) {
+    return json({ error: "Clé API Brevo non configurée" }, corsHeaders, 500);
+  }
+
+  const body = await request.json() as { category: string; subject: string; htmlContent: string };
+
+  if (!body.category || !body.subject?.trim() || !body.htmlContent?.trim()) {
+    return json({ error: "Champs requis: category, subject, htmlContent" }, corsHeaders, 400);
+  }
+
+  // Validate category
+  if (!NEWSLETTER_COLUMNS.includes(body.category as typeof NEWSLETTER_COLUMNS[number])) {
+    return json({ error: `Catégorie invalide: ${body.category}` }, corsHeaders, 400);
+  }
+
+  // Find subscribed users: join users + newsletter_preferences where category = true
+  const query = `
+    SELECT u.email, u.name
+    FROM users u
+    INNER JOIN newsletter_preferences np ON np.user_id = u.id
+    WHERE np.${body.category} = 1
+      AND u.approved = 1
+      AND u.archived = 0
+  `;
+  const { results } = await env.DB.prepare(query).all<{ email: string; name: string }>();
+  const recipients = results ?? [];
+
+  if (recipients.length === 0) {
+    return json({ error: "Aucun abonné pour cette catégorie" }, corsHeaders, 400);
+  }
+
+  // Send via Brevo in batches of 50 (Brevo limit for transactional)
+  const BATCH_SIZE = 50;
+  let sentCount = 0;
+  const errors: string[] = [];
+
+  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+    const batch = recipients.slice(i, i + BATCH_SIZE);
+
+    try {
+      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
+          to: batch.map((r) => ({ email: r.email, name: r.name })),
+          subject: body.subject,
+          htmlContent: body.htmlContent,
+        }),
+      });
+
+      if (brevoRes.ok) {
+        sentCount += batch.length;
+      } else {
+        const err = await brevoRes.json().catch(() => ({})) as { message?: string };
+        errors.push(err.message ?? `Brevo HTTP ${brevoRes.status}`);
+      }
+    } catch (err) {
+      errors.push(`Erreur réseau batch ${i / BATCH_SIZE + 1}`);
+    }
+  }
+
+  return json({
+    success: errors.length === 0,
+    sent: sentCount,
+    total: recipients.length,
+    errors: errors.length > 0 ? errors : undefined,
+  }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
