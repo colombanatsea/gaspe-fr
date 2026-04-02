@@ -300,6 +300,19 @@ export function GroupementContent() {
           </div>
         </div>
       </section>
+
+      {/* Sources */}
+      <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="rounded-2xl bg-surface border border-border-light p-6">
+          <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources</h3>
+          <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
+            <li>Statuts du GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondée en 1951</li>
+            <li>Données compagnies adhérentes : déclarations des membres au secrétariat du GASPE (effectifs, flotte, territoires desservis)</li>
+            <li>Composition du Bureau : élection lors de l&apos;Assemblée Générale du GASPE</li>
+            <li>Chiffres clés (compagnies, collaborateurs, navires, passagers) : consolidation annuelle GASPE à partir des données déclarées par les adhérents</li>
+          </ul>
+        </div>
+      </section>
     </div>
   );
 }

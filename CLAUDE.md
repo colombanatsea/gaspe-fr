@@ -3,11 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**102 pages** — deployed on Cloudflare Pages (static export)
+**105 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.6.1
+- **Version**: v2.7.0
 
 ## Commands
 ```bash
@@ -28,8 +28,9 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Static export: `output: 'export'` in next.config.ts
 
 ## CI/CD
-- GitHub Actions: `.github/workflows/ci.yml`
-- Runs on push/PR to main: install → typecheck → lint → test → build
+- GitHub Actions: `.github/workflows/ci.yml` — push/PR to main: install → typecheck → lint → test → build
+- GitHub Actions: `.github/workflows/deploy-worker.yml` — auto-deploy Worker on push to main (workers/** path)
+- Requires secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
 ## Design System (GASPE v2)
 - Primary: teal-600 `#1B7E8A` (text, buttons, links — WCAG AA)
@@ -55,6 +56,17 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Stats: 1951, 28 compagnies, 1364 collaborateurs, 111 navires, 20M+ passagers
 - Job offers in `src/data/jobs.ts` (11 offres: DNO, Bacs Gironde, Karu'Ferry)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
+- SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
+- Demo space at `/decouvrir-espace-adherent` (8 tabs, fake data, adhesion CTAs)
+
+## Source citations
+All content pages display a "Sources et références" section citing origin of data:
+- **Boîte à outils** : CCN 3228 (Legifrance), ENIM, Code des transports
+- **SSGM** : DAM, décret 2015-1575, STCW (OMI), MLC 2006 (OIT)
+- **Formations** : STCW, arrêté du 26 juillet 2013, DAM
+- **Notre groupement** : statuts GASPE, données déclarées par adhérents
+- **Documents** : textes conventionnels, Journal officiel, Legifrance
+- Data files (`ccn3228.ts`, `stcw.ts`, `ssgm.ts`) include source headers
 
 ## Authentication (dual-mode, 3 rôles + organisation hierarchy)
 | Rôle | Login | Accès |
@@ -127,7 +139,7 @@ src/
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
 │   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations…)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm…)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types (Organization, Newsletter, Invitation)
 │   ├── theme/             # ThemeContext (dark mode)

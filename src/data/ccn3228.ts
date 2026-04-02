@@ -1,6 +1,13 @@
 /* ------------------------------------------------------------------ */
 /*  CCN 3228 — Convention Collective Nationale                         */
 /*  Personnel navigant des entreprises de passages d'eau (IDCC 3228)  */
+/*                                                                     */
+/*  Sources :                                                          */
+/*  - CCN 3228 (IDCC 3228), Legifrance, Journal officiel              */
+/*  - Avenants salariaux annuels, partenaires sociaux de la branche   */
+/*  - Barèmes ENIM, Caisse des Gens de Mer                            */
+/*  - Code des transports, Livre V, titre V (congés)                  */
+/*  - Accords de branche étendus, publiés au Journal officiel         */
 /* ------------------------------------------------------------------ */
 
 // --- Types -----------------------------------------------------------

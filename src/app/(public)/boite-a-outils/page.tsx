@@ -735,8 +735,25 @@ export default function BoiteAOutilsPage() {
           <SectionContent activeId={activeSection} />
         </div>
 
+        {/* Sources */}
+        <div className="reveal mt-12 rounded-2xl bg-surface border border-border-light p-6">
+          <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources et références</h3>
+          <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
+            <li>Convention Collective Nationale du personnel navigant des entreprises de passages d&apos;eau (CCN 3228, IDCC 3228) — <span className="text-foreground">Legifrance, Journal officiel</span></li>
+            <li>Grilles salariales et classifications : avenant salarial CCN 3228, mis à jour annuellement par les partenaires sociaux</li>
+            <li>Taux ENIM (Établissement National des Invalides de la Marine) : barèmes officiels ENIM publiés par la Caisse des Gens de Mer</li>
+            <li>Droits à congés : articles du Code des transports (Livre V, titre V) et CCN 3228</li>
+            <li>Guides employeur : fiches pratiques GASPE élaborées à partir de la CCN 3228, du Code du travail maritime et des textes réglementaires en vigueur</li>
+            <li>Accords de branche : textes conventionnels étendus, publiés au Journal officiel et disponibles sur Legifrance</li>
+          </ul>
+          <p className="mt-3 text-xs text-foreground-muted italic">
+            Ces informations sont fournies à titre indicatif et ne constituent pas un conseil juridique.
+            Consultez les textes officiels ou un conseiller spécialisé pour toute question spécifique.
+          </p>
+        </div>
+
         {/* Footer */}
-        <div className="reveal mt-12 text-center text-xs text-foreground-muted">
+        <div className="mt-6 text-center text-xs text-foreground-muted">
           <p>Dernière mise à jour : {LAST_UPDATED} · Source : CCN 3228 (IDCC 3228)</p>
           <p className="mt-1">
             Pour toute question, contactez le{" "}
