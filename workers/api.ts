@@ -39,7 +39,6 @@ import { signJwt, verifyJwt } from "./jwt";
 interface Env {
   DB: D1Database;
   UPLOADS: R2Bucket;
-  RESEND_API_KEY: string;
   BREVO_API_KEY: string;
   CONTACT_EMAIL: string;
   JWT_SECRET: string;

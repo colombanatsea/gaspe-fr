@@ -17,14 +17,12 @@ binding = "UPLOADS"
 bucket_name = "gaspe-uploads"
 
 # Environment variables (set via wrangler secret)
-# RESEND_API_KEY — from resend.com dashboard
 # CONTACT_EMAIL — email to receive contact form submissions
 
 [vars]
 CONTACT_EMAIL = "contact@gaspe.fr"
 
 # JWT_SECRET — set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
-# RESEND_API_KEY — set via: npx wrangler secret put RESEND_API_KEY --config workers/wrangler.toml
 # BREVO_API_KEY — set via: npx wrangler secret put BREVO_API_KEY --config workers/wrangler.toml
 
 # D1 migrations
