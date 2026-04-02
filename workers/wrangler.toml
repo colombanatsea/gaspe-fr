@@ -9,7 +9,7 @@ compatibility_date = "2024-12-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "gaspe-db"
-database_id = "REPLACE_WITH_DB_ID"
+database_id = "3c26d76d-e348-4dda-a20f-e0fdc0bda55e"
 
 # R2 Storage (file uploads)
 [[r2_buckets]]
