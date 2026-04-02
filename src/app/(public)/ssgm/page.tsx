@@ -258,6 +258,23 @@ export default function SSGMPage() {
           </div>
         )}
 
+        {/* Sources */}
+        <div className="reveal mt-12 rounded-2xl bg-surface border border-border-light p-6">
+          <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources et références</h3>
+          <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
+            <li>Organisation des SSGM : Direction des Affaires Maritimes (DAM), Ministère de la Mer — <span className="text-foreground">décret n° 2015-1575 du 3 décembre 2015</span> relatif à la santé et à l&apos;aptitude médicale à la navigation</li>
+            <li>Visites médicales d&apos;aptitude : <span className="text-foreground">Code des transports, articles L5521-1 à L5521-4</span> — conditions d&apos;aptitude physique des gens de mer</li>
+            <li>Périodicité des visites (2 ans standard, 1 an &lt; 18 ans ou &gt; 50 ans) : arrêté du 16 avril 1986 modifié relatif aux conditions d&apos;aptitude physique à la profession de marin</li>
+            <li>Convention STCW (Standards of Training, Certification and Watchkeeping for Seafarers) : Organisation Maritime Internationale (OMI), convention de 1978 amendée — <span className="text-foreground">Section A-I/9 « Normes médicales »</span></li>
+            <li>Convention du Travail Maritime (MLC 2006) : OIT — <span className="text-foreground">Règle 1.2 « Certificat médical »</span> et norme A1.2</li>
+            <li>Coordonnées des centres SSGM : annuaire de la Direction des Affaires Maritimes et des services déconcentrés de l&apos;État</li>
+          </ul>
+          <p className="mt-3 text-xs text-foreground-muted italic">
+            Les coordonnées et horaires sont donnés à titre indicatif et peuvent évoluer.
+            Contactez directement le centre SSGM concerné pour confirmer les disponibilités.
+          </p>
+        </div>
+
         {/* Adherent CTA */}
         <div className="reveal mt-12 rounded-2xl border-2 border-dashed border-primary/30 bg-surface-teal/50 p-8 text-center">
           <h3 className="font-heading text-xl font-bold text-foreground">

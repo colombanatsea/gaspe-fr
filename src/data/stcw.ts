@@ -1,6 +1,12 @@
 /* ------------------------------------------------------------------ */
 /*  Certifications STCW — Catalogue structuré                          */
 /*  Standards of Training, Certification and Watchkeeping (OMI)        */
+/*                                                                     */
+/*  Sources :                                                          */
+/*  - Convention STCW 1978 amendée (OMI), chapitres II à VIII          */
+/*  - Code STCW, parties A (obligatoire) et B (recommandations)        */
+/*  - Arrêté du 26 juillet 2013 (formation professionnelle maritime)   */
+/*  - Direction des Affaires Maritimes (DAM), référentiel brevets      */
 /* ------------------------------------------------------------------ */
 
 export type STCWCategory = "pont" | "machine" | "securite" | "radio";

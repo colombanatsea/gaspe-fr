@@ -368,6 +368,16 @@ function DocumentsContent() {
           </div>
         </div>
       )}
+      {/* Sources */}
+      <div className="mt-12 rounded-2xl bg-surface border border-border-light p-6">
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources</h3>
+        <p className="text-xs text-foreground-muted leading-relaxed">
+          Les documents présentés sur cette page sont issus des travaux du GASPE, des partenaires sociaux
+          de la branche et des textes conventionnels publiés au Journal officiel. La Convention Collective CCN 3228
+          (IDCC 3228) et les accords de branche sont disponibles sur Legifrance. Les publications et notes de
+          position sont rédigées par le secrétariat du GASPE.
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,16 @@
 /* ------------------------------------------------------------------ */
 /*  SSGM — Services de Santé des Gens de Mer                          */
 /*  Centres et médecins agréés pour les visites médicales maritimes    */
+/*                                                                     */
+/*  Sources :                                                          */
+/*  - Direction des Affaires Maritimes (DAM), Ministère de la Mer      */
+/*  - Décret n° 2015-1575 du 3 décembre 2015 (santé gens de mer)      */
+/*  - Convention STCW (OMI), Section A-I/9 « Normes médicales »        */
+/*  - Convention du Travail Maritime (MLC 2006), Règle 1.2             */
+/*  - Annuaire des services déconcentrés de l'État en mer              */
+/*                                                                     */
+/*  Note : Les coordonnées et horaires sont indicatifs et peuvent      */
+/*  évoluer. Les médecins listés sont un échantillon représentatif.    */
 /* ------------------------------------------------------------------ */
 
 export interface SSGMCenter {
