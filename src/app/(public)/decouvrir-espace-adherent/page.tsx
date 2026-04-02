@@ -138,6 +138,21 @@ const DEMO_APPLICATIONS = [
   { candidate: "Nathan Robert", offer: "Chef Mécanicien 750 kW", status: "pending", date: "2026-03-28" },
 ];
 
+const DEMO_MEDICAL_VISITS = [
+  { sailor: "Thomas Kervarrec", role: "Capitaine", type: "Renouvellement d'aptitude", date: "2026-01-15", expiry: "2028-01-15", status: "completed" as const, doctor: "Dr. Anne Petit" },
+  { sailor: "Yann Le Goff", role: "Chef Mécanicien", type: "Certificat STCW", date: "2025-11-20", expiry: "2026-05-20", status: "expiring_soon" as const, doctor: "Dr. Philippe Martin" },
+  { sailor: "Loïc Briand", role: "Matelot", type: "Renouvellement d'aptitude", date: "2024-06-10", expiry: "2026-06-10", status: "expiring_soon" as const, doctor: "Dr. Anne Petit" },
+  { sailor: "Nolwenn Cariou", role: "Matelot", type: "Aptitude initiale", date: "2025-09-01", expiry: "2027-09-01", status: "completed" as const, doctor: "Dr. Philippe Martin" },
+  { sailor: "Julien Masson", role: "Matelot saisonnier", type: "Visite de reprise", date: "2026-04-10", expiry: undefined, status: "scheduled" as const, doctor: "Dr. Anne Petit" },
+];
+
+const medicalStatusConfig: Record<string, { label: string; variant: "green" | "warm" | "neutral" | "teal" }> = {
+  scheduled: { label: "Planifiée", variant: "teal" },
+  completed: { label: "Valide", variant: "green" },
+  expiring_soon: { label: "Expire bientôt", variant: "warm" },
+  expired: { label: "Expirée", variant: "neutral" },
+};
+
 const statusConfig: Record<string, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   pending: { label: "Envoyée", variant: "neutral" },
   viewed: { label: "Vue", variant: "blue" },
@@ -151,12 +166,13 @@ const statusConfig: Record<string, { label: string; variant: "teal" | "blue" | "
    Demo page sections
    ────────────────────────────────────────────── */
 
-type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "preferences";
+type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "visites" | "preferences";
 
 const TABS: { key: DemoTab; label: string }[] = [
   { key: "dashboard", label: "Tableau de bord" },
   { key: "offres", label: "Offres d'emploi" },
   { key: "formations", label: "Formations" },
+  { key: "visites", label: "Visites médicales" },
   { key: "documents", label: "Documents" },
   { key: "annuaire", label: "Annuaire" },
   { key: "equipe", label: "Mon équipe" },
@@ -233,6 +249,7 @@ function DashboardTab() {
     { title: "Mes formations", count: 1, desc: "3 formations disponibles", color: "teal" },
     { title: "Documents privés", count: 5, desc: "Documents institutionnels et réglementaires", color: "teal" },
     { title: "Annuaire membres", count: null, desc: "Répertoire complet des adhérents", color: "teal" },
+    { title: "Visites médicales", count: 5, desc: "Suivi des aptitudes de vos marins", color: "teal" },
     { title: "Mon équipe", count: 3, desc: "Contacts de votre compagnie", color: "teal" },
     { title: "Préférences", count: null, desc: "Gérer vos newsletters", color: "teal" },
   ];
@@ -609,6 +626,79 @@ function EquipeTab() {
   );
 }
 
+/* ── Visites Médicales Tab ── */
+function VisitesTab() {
+  const expiring = DEMO_MEDICAL_VISITS.filter((v) => v.status === "expiring_soon").length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-heading text-lg font-bold text-foreground">Visites médicales</h2>
+          <p className="text-sm text-foreground-muted">Suivi des aptitudes médicales de vos marins.</p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/ssgm">
+            <Button variant="secondary">Annuaire SSGM</Button>
+          </Link>
+          <Button disabled className="opacity-60 cursor-not-allowed">+ Ajouter</Button>
+        </div>
+      </div>
+
+      {expiring > 0 && (
+        <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700 [data-theme=dark]:bg-red-950/30 [data-theme=dark]:border-red-800 [data-theme=dark]:text-red-400">
+          {expiring} visite{expiring > 1 ? "s" : ""} expire{expiring > 1 ? "nt" : ""} dans moins de 60 jours
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl bg-background border border-border-light p-3 text-center">
+          <p className="text-xl font-bold font-heading text-foreground">{DEMO_MEDICAL_VISITS.length}</p>
+          <p className="text-xs text-foreground-muted">Total</p>
+        </div>
+        <div className="rounded-xl bg-background border border-border-light p-3 text-center">
+          <p className="text-xl font-bold font-heading text-green-600">{DEMO_MEDICAL_VISITS.filter((v) => v.status === "completed").length}</p>
+          <p className="text-xs text-foreground-muted">Valides</p>
+        </div>
+        <div className="rounded-xl bg-background border border-border-light p-3 text-center">
+          <p className="text-xl font-bold font-heading text-amber-600">{expiring}</p>
+          <p className="text-xs text-foreground-muted">Expirent bientôt</p>
+        </div>
+        <div className="rounded-xl bg-background border border-border-light p-3 text-center">
+          <p className="text-xl font-bold font-heading text-primary">{DEMO_MEDICAL_VISITS.filter((v) => v.status === "scheduled").length}</p>
+          <p className="text-xs text-foreground-muted">Planifiées</p>
+        </div>
+      </div>
+
+      {/* Visits list */}
+      <div className="space-y-3">
+        {DEMO_MEDICAL_VISITS.map((visit, i) => {
+          const sConfig = medicalStatusConfig[visit.status];
+          return (
+            <div key={i} className="rounded-xl border border-border-light bg-background p-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-foreground">{visit.sailor}</p>
+                  <span className="text-xs text-foreground-muted">— {visit.role}</span>
+                  <Badge variant={sConfig.variant}>{sConfig.label}</Badge>
+                </div>
+                <p className="text-xs text-foreground-muted mt-1">
+                  {visit.type} — {visit.date}
+                  {visit.expiry && <> — Expire le {visit.expiry}</>}
+                </p>
+                <p className="text-xs text-foreground-muted">{visit.doctor}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <AdhesionCTA variant="inline" />
+    </div>
+  );
+}
+
 /* ── Preferences Tab ── */
 function PreferencesTab() {
   return (
@@ -689,6 +779,7 @@ export default function DecouvrirEspaceAdherentPage() {
         {activeTab === "dashboard" && <DashboardTab />}
         {activeTab === "offres" && <OffresTab />}
         {activeTab === "formations" && <FormationsTab />}
+        {activeTab === "visites" && <VisitesTab />}
         {activeTab === "documents" && <DocumentsTab />}
         {activeTab === "annuaire" && <AnnuaireTab />}
         {activeTab === "equipe" && <EquipeTab />}

@@ -131,6 +131,18 @@ export default function EspaceAdherentPage() {
       ),
     },
     {
+      title: "Visites médicales",
+      count: null,
+      href: "/espace-adherent/visites-medicales",
+      description: "Suivi des aptitudes de vos marins",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+          <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+          <path d="M12 14h.01M8 14h.01M16 14h.01M12 18h.01M8 18h.01M16 18h.01" />
+        </svg>
+      ),
+    },
+    {
       title: "Mon équipe",
       count: null,
       href: "/espace-adherent/equipe",
@@ -266,6 +278,7 @@ export default function EspaceAdherentPage() {
             <CardTitle>Liens rapides</CardTitle>
             <nav className="mt-3 space-y-1">
               {[
+                { label: "SSGM & Médecins agréés", href: "/ssgm" },
                 { label: "Offres d'emploi", href: "/nos-compagnies-recrutent" },
                 { label: "Documents publics", href: "/documents" },
                 { label: "Agenda", href: "/agenda" },
