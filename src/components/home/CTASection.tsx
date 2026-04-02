@@ -85,6 +85,13 @@ export function CTASection() {
               </svg>
             </Button>
             <Button
+              href="/decouvrir-espace-adherent"
+              variant="secondary"
+              className="border-white/40 text-white hover:bg-white/15 px-8 py-4 text-base backdrop-blur-sm"
+            >
+              Découvrir l&apos;espace adhérent
+            </Button>
+            <Button
               href="/contact"
               variant="secondary"
               className="border-white/40 text-white hover:bg-white/15 px-8 py-4 text-base backdrop-blur-sm"

@@ -117,6 +117,12 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               >
                 Inscription Adhérent
               </Link>
+              <Link
+                href="/decouvrir-espace-adherent"
+                className="rounded-md px-3 py-3 text-sm font-medium text-primary bg-surface-teal transition-colors"
+              >
+                Découvrir l&apos;espace adhérent
+              </Link>
             </>
           )}
         </nav>
