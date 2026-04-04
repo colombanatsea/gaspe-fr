@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { members } from "@/data/members";
 import { slugify } from "@/lib/utils";
-import type { Job } from "@/data/jobs";
+import { ZONE_LABELS, START_DATE_OPTIONS } from "@/data/jobs";
+import type { Job, Zone } from "@/data/jobs";
 
 const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 
-const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance"];
+const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance", "Autres"];
 const categories = [
   "Pont",
   "Machine",
@@ -33,13 +34,18 @@ export default function AdminNewOffrePage() {
     description: "",
     company: "",
     location: "",
+    zone: "normandie",
     contractType: "",
     category: "",
     salaryRange: "",
     contactEmail: "",
+    contactPhone: "",
     applicationUrl: "",
+    reference: "",
+    startDate: "Immédiat",
     profile: "",
     conditions: "",
+    handiAccessible: false,
   });
 
   if (!user || user.role !== "admin") {
@@ -48,7 +54,12 @@ export default function AdminNewOffrePage() {
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -66,14 +77,19 @@ export default function AdminNewOffrePage() {
       company: form.company,
       companySlug,
       location: form.location,
-      zone: 'normandie',
+      zone: form.zone as Zone,
       contractType: form.contractType as Job["contractType"],
       category: form.category || "Autre",
       description: form.description,
       profile: form.profile,
       conditions: form.conditions,
       contactEmail: form.contactEmail,
+      contactPhone: form.contactPhone || undefined,
+      applicationUrl: form.applicationUrl || undefined,
+      reference: form.reference || undefined,
+      startDate: form.startDate || undefined,
       salaryRange: form.salaryRange || undefined,
+      handiAccessible: form.handiAccessible || undefined,
       publishedAt: new Date().toISOString().split("T")[0],
       published: true,
     };
@@ -114,6 +130,22 @@ export default function AdminNewOffrePage() {
             value={form.title}
             onChange={handleChange}
             placeholder="Ex : Capitaine 500 UMS"
+            className={inputClass}
+          />
+        </div>
+
+        {/* Référence */}
+        <div>
+          <label htmlFor="reference" className="block text-sm font-medium text-foreground mb-1">
+            Référence de l&apos;offre
+          </label>
+          <input
+            id="reference"
+            name="reference"
+            type="text"
+            value={form.reference}
+            onChange={handleChange}
+            placeholder="Ex : RH-2026-042"
             className={inputClass}
           />
         </div>
@@ -171,7 +203,7 @@ export default function AdminNewOffrePage() {
               onChange={handleChange}
               className={inputClass}
             >
-              <option value="">S&eacute;lectionner un adh&eacute;rent...</option>
+              <option value="">Sélectionner un adhérent...</option>
               {members.map((m) => (
                 <option key={m.slug} value={m.name}>{m.name}</option>
               ))}
@@ -195,7 +227,44 @@ export default function AdminNewOffrePage() {
           </div>
         </div>
 
-        {/* Contrat + Cat&eacute;gorie */}
+        {/* Zone + Début */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="zone" className="block text-sm font-medium text-foreground mb-1">
+              Zone géographique <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="zone"
+              name="zone"
+              required
+              value={form.zone}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              {Object.entries(ZONE_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="startDate" className="block text-sm font-medium text-foreground mb-1">
+              Début de la mission
+            </label>
+            <select
+              id="startDate"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              {START_DATE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Contrat + Catégorie */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="contractType" className="block text-sm font-medium text-foreground mb-1">
@@ -209,7 +278,7 @@ export default function AdminNewOffrePage() {
               onChange={handleChange}
               className={inputClass}
             >
-              <option value="">S&eacute;lectionner...</option>
+              <option value="">Sélectionner...</option>
               {contractTypes.map((type) => (
                 <option key={type} value={type}>{type}</option>
               ))}
@@ -217,7 +286,7 @@ export default function AdminNewOffrePage() {
           </div>
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-foreground mb-1">
-              Cat&eacute;gorie
+              Catégorie
             </label>
             <select
               id="category"
@@ -226,7 +295,7 @@ export default function AdminNewOffrePage() {
               onChange={handleChange}
               className={inputClass}
             >
-              <option value="">S&eacute;lectionner...</option>
+              <option value="">Sélectionner...</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -250,7 +319,7 @@ export default function AdminNewOffrePage() {
           />
         </div>
 
-        {/* Contact + URL */}
+        {/* Contact */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="contactEmail" className="block text-sm font-medium text-foreground mb-1">
@@ -267,19 +336,50 @@ export default function AdminNewOffrePage() {
             />
           </div>
           <div>
-            <label htmlFor="applicationUrl" className="block text-sm font-medium text-foreground mb-1">
-              URL de candidature
+            <label htmlFor="contactPhone" className="block text-sm font-medium text-foreground mb-1">
+              Téléphone de contact
             </label>
             <input
-              id="applicationUrl"
-              name="applicationUrl"
-              type="url"
-              value={form.applicationUrl}
+              id="contactPhone"
+              name="contactPhone"
+              type="tel"
+              value={form.contactPhone}
               onChange={handleChange}
-              placeholder="https://..."
+              placeholder="02 00 00 00 00"
               className={inputClass}
             />
           </div>
+        </div>
+
+        {/* URL candidature */}
+        <div>
+          <label htmlFor="applicationUrl" className="block text-sm font-medium text-foreground mb-1">
+            URL de candidature externe
+          </label>
+          <input
+            id="applicationUrl"
+            name="applicationUrl"
+            type="url"
+            value={form.applicationUrl}
+            onChange={handleChange}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
+
+        {/* Handi-accessible */}
+        <div className="flex items-center gap-2">
+          <input
+            id="handiAccessible"
+            name="handiAccessible"
+            type="checkbox"
+            checked={form.handiAccessible}
+            onChange={handleChange}
+            className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary"
+          />
+          <label htmlFor="handiAccessible" className="text-sm text-foreground">
+            Offre handi-accueillante
+          </label>
         </div>
 
         {/* Actions */}

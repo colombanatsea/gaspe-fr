@@ -42,6 +42,9 @@ const contractBadgeVariant: Record<string, "teal" | "blue" | "warm" | "green" | 
   CDI: "teal",
   CDD: "blue",
   Saisonnier: "warm",
+  Stage: "green",
+  Alternance: "green",
+  Autres: "neutral",
 };
 
 const categoryBadgeVariant: Record<string, "teal" | "blue" | "warm" | "green" | "neutral"> = {
@@ -188,16 +191,32 @@ export default async function JobDetailPage({ params }: PageProps) {
               <h3 className="font-heading text-base font-semibold text-foreground mb-4">
                 Postuler à cette offre
               </h3>
-              <Button href={mailtoHref} variant="primary" className="w-full justify-center py-3.5 text-base shadow-sm">
-                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                </svg>
-                Postuler par email
-              </Button>
-              {job.contactName && (
-                <p className="mt-4 text-xs text-foreground-muted text-center">
-                  Contact : {job.contactName}
-                </p>
+              {job.applicationUrl ? (
+                <Button href={job.applicationUrl} variant="primary" className="w-full justify-center py-3.5 text-base shadow-sm">
+                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  Postuler en ligne
+                </Button>
+              ) : (
+                <Button href={mailtoHref} variant="primary" className="w-full justify-center py-3.5 text-base shadow-sm">
+                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                  </svg>
+                  Postuler par email
+                </Button>
+              )}
+              {(job.contactName || job.contactPhone) && (
+                <div className="mt-4 text-xs text-foreground-muted text-center space-y-0.5">
+                  {job.contactName && <p>Contact : {job.contactName}</p>}
+                  {job.contactPhone && <p>{job.contactPhone}</p>}
+                </div>
+              )}
+              {job.hydrosOfferUrl && (
+                <a href={job.hydrosOfferUrl} target="_blank" rel="noopener noreferrer"
+                  className="mt-3 flex items-center justify-center gap-1.5 text-xs text-blue-600 hover:underline">
+                  Voir aussi sur Hydros Alumni
+                </a>
               )}
             </div>
 
@@ -251,6 +270,29 @@ export default async function JobDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                 )}
+                {job.startDate && job.startDate !== "Non précisé" && (
+                  <div className="flex items-start gap-3">
+                    <svg className="h-5 w-5 text-[var(--gaspe-teal-600)] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <div>
+                      <dt className="text-xs text-foreground-muted">Début</dt>
+                      <dd className="text-sm font-medium text-foreground">{job.startDate}</dd>
+                    </div>
+                  </div>
+                )}
+                {job.reference && (
+                  <div className="flex items-start gap-3">
+                    <svg className="h-5 w-5 text-foreground-muted mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
+                    <div>
+                      <dt className="text-xs text-foreground-muted">Référence</dt>
+                      <dd className="text-sm font-medium text-foreground">{job.reference}</dd>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-start gap-3">
                   <svg className="h-5 w-5 text-foreground-muted mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -260,6 +302,12 @@ export default async function JobDetailPage({ params }: PageProps) {
                     <dd className="text-sm font-medium text-foreground">{formatDate(job.publishedAt)}</dd>
                   </div>
                 </div>
+                {job.handiAccessible && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-border-light">
+                    <span className="text-sm">♿</span>
+                    <span className="text-xs text-foreground-muted">Offre handi-accueillante</span>
+                  </div>
+                )}
               </dl>
             </div>
 

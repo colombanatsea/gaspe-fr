@@ -37,6 +37,14 @@ interface JobOffer {
   company: string;
   ownerId: string;
   applicationsCount: number;
+  // Hydros Alumni fields
+  reference?: string;
+  applicationUrl?: string;
+  startDate?: string;
+  contactPhone?: string;
+  handiAccessible?: boolean;
+  hydrosOfferUrl?: string;
+  hydrosOfferId?: string;
 }
 
 const OFFERS_KEY = "gaspe_adherent_offers";
@@ -63,6 +71,11 @@ const emptyForm = {
   contactEmail: "",
   profile: "",
   conditions: "",
+  reference: "",
+  applicationUrl: "",
+  startDate: "Immédiat",
+  contactPhone: "",
+  handiAccessible: false,
 };
 
 function readOffers(): JobOffer[] {
@@ -137,6 +150,11 @@ export default function AdherentOffresPage() {
           contactEmail: form.contactEmail,
           profile: form.profile,
           conditions: form.conditions,
+          reference: form.reference || undefined,
+          applicationUrl: form.applicationUrl || undefined,
+          startDate: form.startDate || undefined,
+          contactPhone: form.contactPhone || undefined,
+          handiAccessible: form.handiAccessible || undefined,
         };
         writeOffers(all);
       }
@@ -154,6 +172,11 @@ export default function AdherentOffresPage() {
         contactEmail: form.contactEmail || user.email,
         profile: form.profile,
         conditions: form.conditions,
+        reference: form.reference || undefined,
+        applicationUrl: form.applicationUrl || undefined,
+        startDate: form.startDate || undefined,
+        contactPhone: form.contactPhone || undefined,
+        handiAccessible: form.handiAccessible || undefined,
         status: asDraft ? "draft" : "active",
         createdAt: new Date().toISOString(),
         company: user.company ?? "",
@@ -181,6 +204,11 @@ export default function AdherentOffresPage() {
       contactEmail: offer.contactEmail ?? "",
       profile: offer.profile ?? "",
       conditions: offer.conditions ?? "",
+      reference: offer.reference ?? "",
+      applicationUrl: offer.applicationUrl ?? "",
+      startDate: offer.startDate ?? "Immédiat",
+      contactPhone: offer.contactPhone ?? "",
+      handiAccessible: offer.handiAccessible ?? false,
     });
     setEditingId(offer.id);
     setShowForm(true);
@@ -358,15 +386,87 @@ export default function AdherentOffresPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground">Référence de l&apos;offre</label>
+                <input
+                  type="text"
+                  value={form.reference}
+                  onChange={(e) => update("reference", e.target.value)}
+                  className={inputClass}
+                  placeholder="Ex: RH-2026-042"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">Début de la mission</label>
+                <select
+                  value={form.startDate}
+                  onChange={(e) => update("startDate", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="Immédiat">Immédiat</option>
+                  <option value="Non précisé">Non précisé</option>
+                  <option value="Janvier">Janvier</option>
+                  <option value="Février">Février</option>
+                  <option value="Mars">Mars</option>
+                  <option value="Avril">Avril</option>
+                  <option value="Mai">Mai</option>
+                  <option value="Juin">Juin</option>
+                  <option value="Juillet">Juillet</option>
+                  <option value="Août">Août</option>
+                  <option value="Septembre">Septembre</option>
+                  <option value="Octobre">Octobre</option>
+                  <option value="Novembre">Novembre</option>
+                  <option value="Décembre">Décembre</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground">Email de contact</label>
+                <input
+                  type="email"
+                  value={form.contactEmail}
+                  onChange={(e) => update("contactEmail", e.target.value)}
+                  className={inputClass}
+                  placeholder={user.email}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">Téléphone de contact</label>
+                <input
+                  type="tel"
+                  value={form.contactPhone}
+                  onChange={(e) => update("contactPhone", e.target.value)}
+                  className={inputClass}
+                  placeholder="02 00 00 00 00"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-foreground">Email de contact</label>
+              <label className="block text-sm font-medium text-foreground">URL de candidature externe</label>
               <input
-                type="email"
-                value={form.contactEmail}
-                onChange={(e) => update("contactEmail", e.target.value)}
+                type="url"
+                value={form.applicationUrl}
+                onChange={(e) => update("applicationUrl", e.target.value)}
                 className={inputClass}
-                placeholder={user.email}
+                placeholder="https://..."
               />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="handiAccessible"
+                type="checkbox"
+                checked={form.handiAccessible}
+                onChange={(e) => setForm((prev) => ({ ...prev, handiAccessible: e.target.checked }))}
+                className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary"
+              />
+              <label htmlFor="handiAccessible" className="text-sm text-foreground">
+                Offre handi-accueillante
+              </label>
             </div>
 
             <div>
@@ -442,10 +542,16 @@ export default function AdherentOffresPage() {
                         {offer.category && <> — {offer.category}</>}
                       </p>
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 space-y-1">
                       <Badge variant={statusLabel[offer.status]?.variant ?? "neutral"}>
                         {statusLabel[offer.status]?.text ?? offer.status}
                       </Badge>
+                      {offer.hydrosOfferUrl && (
+                        <a href={offer.hydrosOfferUrl} target="_blank" rel="noopener noreferrer"
+                          className="block text-xs text-blue-600 hover:underline">
+                          Publiée sur Hydros Alumni
+                        </a>
+                      )}
                     </td>
                     <td className="py-4 text-foreground-muted">
                       {new Date(offer.createdAt).toLocaleDateString("fr-FR")}
