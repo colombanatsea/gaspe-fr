@@ -581,7 +581,61 @@ export const jobs: Job[] = [
   },
 ];
 
-/** Published jobs sorted by date (most recent first) */
+  {
+    id: 'seine-maritime-technicien-naval-electromeca',
+    slug: 'technicien-naval-bacs-electromecanicien-seine-maritime',
+    title: 'Technicien naval bacs – Électromécanicien (F/H)',
+    company: 'Département de la Seine-Maritime',
+    companySlug: 'seine-maritime',
+    location: 'Yainville (76) — bacs de Seine (Rouen–Quillebeuf)',
+    zone: 'normandie',
+    contractType: 'CDI',
+    category: 'Machine',
+    description: `
+      <h3>Contexte du poste</h3>
+      <p>Le département de la Seine-Maritime exploite huit passages d'eau en Seine entre Rouen et l'embouchure, avec une flotte de 11 bacs transportant environ 3,3 millions de véhicules par an. Le service technique des bacs recherche <strong>2 techniciens navals électromécaniciens</strong> pour assurer l'entretien et le dépannage de la flotte.</p>
+
+      <h3>Missions principales</h3>
+      <ul>
+        <li>Maintenance préventive et corrective des organes électriques et électroniques des bacs</li>
+        <li>Maintenance et réparations de transbordeurs rouliers à passagers</li>
+        <li>Entretien et dépannage des circuits de production électrique et hydrauliques</li>
+        <li>Élaboration de bilans électriques et rédaction de rapports techniques</li>
+        <li>Interventions sur les 8 passages d'eau (Rouen–Quillebeuf-sur-Seine), y compris week-ends et jours fériés en astreinte (environ 1 semaine par mois)</li>
+      </ul>
+    `,
+    profile: `
+      <h3>Profil recherché</h3>
+      <ul>
+        <li>Cadre d'emplois des techniciens territoriaux (cat. B/C) — ouvert aux agents de maîtrise, adjoints techniques confirmés et contractuels</li>
+        <li><strong>Diplôme :</strong> BAC PRO à BAC+2 en électromécanique / maintenance</li>
+        <li>Maîtrise des normes de sécurité électrique et réglementations en vigueur</li>
+        <li>Compétences avancées en diagnostic et réparation de systèmes électromécaniques</li>
+        <li>Expérience en systèmes GMAO</li>
+        <li><strong>Habilitations électriques :</strong> B2V/BR/BC/BTA – BS BE MAN B2+B0 ; interventions sous tension BT (batteries)</li>
+        <li>Permis B obligatoire</li>
+        <li>CACES R389 CAT 3 et CACES R423 appréciés</li>
+        <li>Autonomie, rigueur, polyvalence, réactivité et esprit d'équipe</li>
+      </ul>
+    `,
+    conditions: `
+      <h3>Conditions & avantages</h3>
+      <ul>
+        <li><strong>Statut :</strong> Titulaire / Lauréat concours / Contractuel — emploi permanent</li>
+        <li><strong>Référence :</strong> VP-134-26/P08192 – VP-136-26/P08581</li>
+        <li>Astreinte environ 1 semaine par mois (week-ends et jours fériés)</li>
+        <li>Titres restaurant</li>
+        <li>Participation employeur aux trajets domicile-travail (forfait mobilités durables)</li>
+        <li>Plan de formation dynamique</li>
+        <li>Travail en équipe pluridisciplinaire (mécanique, électricité, métallerie)</li>
+      </ul>
+    `,
+    contactEmail: 'recrutement@seinemaritime.fr',
+    publishedAt: '2026-04-04',
+    expiresAt: '2026-04-25',
+    published: true,
+  },
+  /** Published jobs sorted by date (most recent first) */
 export const publishedJobs = jobs
   .filter((j) => j.published)
   .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
