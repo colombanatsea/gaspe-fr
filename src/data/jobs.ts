@@ -19,7 +19,7 @@ export interface Job {
   companySlug: string;
   location: string;
   zone: Zone;
-  contractType: 'CDI' | 'CDD' | 'Saisonnier';
+  contractType: 'CDI' | 'CDD' | 'Saisonnier' | 'Stage' | 'Alternance' | 'Autres';
   category: string;
   brevet?: string;
   description: string;
@@ -32,7 +32,35 @@ export interface Job {
   publishedAt: string;
   expiresAt?: string;
   published: boolean;
+
+  // Hydros Alumni integration
+  applicationUrl?: string;
+  reference?: string;
+  startDate?: string;
+  contactFirstName?: string;
+  contactLastName?: string;
+  contactPhone?: string;
+  handiAccessible?: boolean;
+  hydrosOfferUrl?: string;
+  hydrosOfferId?: string;
 }
+
+export const START_DATE_OPTIONS = [
+  { value: 'Immédiat', label: 'Immédiat' },
+  { value: 'Non précisé', label: 'Non précisé' },
+  { value: 'Janvier', label: 'Janvier' },
+  { value: 'Février', label: 'Février' },
+  { value: 'Mars', label: 'Mars' },
+  { value: 'Avril', label: 'Avril' },
+  { value: 'Mai', label: 'Mai' },
+  { value: 'Juin', label: 'Juin' },
+  { value: 'Juillet', label: 'Juillet' },
+  { value: 'Août', label: 'Août' },
+  { value: 'Septembre', label: 'Septembre' },
+  { value: 'Octobre', label: 'Octobre' },
+  { value: 'Novembre', label: 'Novembre' },
+  { value: 'Décembre', label: 'Décembre' },
+];
 
 export const jobs: Job[] = [
   // ──────────────────────────────────────────────────
@@ -579,8 +607,6 @@ export const jobs: Job[] = [
     publishedAt: '2026-03-26',
     published: true,
   },
-];
-
   {
     id: 'seine-maritime-technicien-naval-electromeca',
     slug: 'technicien-naval-bacs-electromecanicien-seine-maritime',
@@ -635,7 +661,9 @@ export const jobs: Job[] = [
     expiresAt: '2026-04-25',
     published: true,
   },
-  /** Published jobs sorted by date (most recent first) */
+];
+
+/** Published jobs sorted by date (most recent first) */
 export const publishedJobs = jobs
   .filter((j) => j.published)
   .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
