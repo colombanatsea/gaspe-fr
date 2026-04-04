@@ -1,0 +1,17 @@
+# GASPE — https://gaspe-fr.pages.dev
+# Robots.txt
+
+User-agent: *
+Allow: /
+
+# Protected areas
+Disallow: /admin/
+Disallow: /espace-adherent/
+Disallow: /espace-candidat/
+Disallow: /inscription/
+Disallow: /connexion
+Disallow: /mot-de-passe-oublie
+Disallow: /reinitialiser-mot-de-passe
+
+# Sitemap
+Sitemap: https://gaspe-fr.pages.dev/sitemap.xml

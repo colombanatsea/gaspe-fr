@@ -38,6 +38,7 @@ export function NewsletterForm() {
     <form onSubmit={handleSubmit} className="flex w-full max-w-sm gap-2">
       <input
         type="email"
+        autoComplete="email"
         value={email}
         onChange={(e) => { setEmail(e.target.value); setStatus("idle"); }}
         placeholder="votre@email.fr"
