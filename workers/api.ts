@@ -446,19 +446,21 @@ async function handleLogin(request: Request, env: Env, corsHeaders: Record<strin
     return json({ error: "Email et mot de passe requis" }, corsHeaders, 400);
   }
 
+  const loginError = { error: "Email ou mot de passe incorrect." };
+
   const userRow = await env.DB.prepare("SELECT * FROM users WHERE email = ? COLLATE NOCASE").bind(email.trim()).first<DbUser>();
   if (!userRow) {
-    return json({ error: "Aucun compte trouvé avec cet email." }, corsHeaders, 401);
+    return json(loginError, corsHeaders, 401);
   }
 
   const authRow = await env.DB.prepare("SELECT password_hash FROM auth WHERE user_id = ?").bind(userRow.id).first<{ password_hash: string }>();
   if (!authRow) {
-    return json({ error: "Mot de passe incorrect." }, corsHeaders, 401);
+    return json(loginError, corsHeaders, 401);
   }
 
   const valid = await verifyPasswordServer(password, authRow.password_hash);
   if (!valid) {
-    return json({ error: "Mot de passe incorrect." }, corsHeaders, 401);
+    return json(loginError, corsHeaders, 401);
   }
 
   if (userRow.role === "adherent" && userRow.approved !== 1) {
