@@ -134,7 +134,7 @@ export default function ContactPage() {
                     <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                       Email <span className="text-red-400">*</span>
                     </label>
-                    <input id="email" name="email" type="email" value={form.email} onChange={handleChange} className={errors.email ? inputErr : inputOk} placeholder="votre@email.fr" />
+                    <input id="email" name="email" type="email" autoComplete="email" value={form.email} onChange={handleChange} className={errors.email ? inputErr : inputOk} placeholder="votre@email.fr" />
                     {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>}
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**105 pages** — deployed on Cloudflare Pages (static export)
+**106 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
@@ -13,7 +13,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 139 tests)
+npm run test         # unit tests (Vitest, 145 tests)
 npm run test:watch   # unit tests in watch mode
 npm run lint         # ESLint
 git push origin main # auto-deploy to CF Pages (~1 min)
@@ -24,7 +24,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Framework preset: None (NOT Next.js)
 - Build output: `out`
 - NODE_VERSION: 20
-- D1 binding: DB → gaspe-db (Frankfurt)
+- D1 binding: DB → gaspe-db (database_id: 3c26d76d-e348-4dda-a20f-e0fdc0bda55e)
 - Static export: `output: 'export'` in next.config.ts
 
 ## CI/CD
@@ -52,9 +52,9 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 ## Content rules
 - Baseline: "Localement ancrés. Socialement engagés."
 - Hero: "Fédérer et représenter les compagnies maritimes de proximité"
-- All member data comes from `src/data/members.ts` (31 membres) + D1 `organizations` table
+- All member data comes from `src/data/members.ts` (31 membres with descriptions) + D1 `organizations` table
 - Stats: 1951, 28 compagnies, 1364 collaborateurs, 111 navires, 20M+ passagers
-- Job offers in `src/data/jobs.ts` (11 offres: DNO, Bacs Gironde, Karu'Ferry)
+- Job offers in `src/data/jobs.ts` (12 offres) + localStorage for admin/adherent-created offers
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
 - Demo space at `/decouvrir-espace-adherent` (8 tabs, fake data, adhesion CTAs)
@@ -71,7 +71,7 @@ All content pages display a "Sources et références" section citing origin of d
 ## Authentication (dual-mode, 3 rôles + organisation hierarchy)
 | Rôle | Login | Accès |
 |------|-------|-------|
-| Admin | admin@gaspe.fr / admin123 | Console /admin (13 sections) |
+| Admin | admin@gaspe.fr / admin123 | Console /admin (14 sections) |
 | Adhérent (responsable) | Via /inscription/adherent (admin approval) | /espace-adherent + gestion équipe |
 | Adhérent (contact) | Via /inscription/invitation (token, pré-approuvé) | /espace-adherent |
 | Candidat | Via /inscription/candidat (auto-approved) | /espace-candidat |
@@ -117,32 +117,41 @@ Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) with two backends
 
 Preferences stored in D1 `newsletter_preferences` table (per-user, per-category boolean).
 Managed via `/espace-adherent/preferences` and `/espace-candidat/preferences`.
-Admin sends via `/admin/newsletter` (category selector + compose).
+Admin sends via `/admin/newsletter` (category selector + compose → Brevo bulk).
+
+## Hydros Alumni cross-publication
+- Job offers published on GASPE can be cross-published to hydros-alumni.org (AlumnForce platform)
+- Mapping file: `src/lib/hydros-mapping.ts` (contract types, positions, sectors → AlumnForce IDs)
+- Worker endpoint: `POST /api/hydros/publish` (JWT auth, login + form submit)
+- Worker secrets: `HYDROS_EMAIL`, `HYDROS_PASSWORD`
+- Job interface extended with: `applicationUrl`, `reference`, `startDate`, `contactPhone`, `handiAccessible`, `hydrosOfferUrl`, `hydrosOfferId`
+- `START_DATE_OPTIONS` in `src/data/jobs.ts` (Immédiat + 12 mois)
 
 ## Architecture
 ```
 src/
 ├── app/
-│   ├── (public)/          # 26 routes publiques (+ formations, CGU, preferences…)
-│   ├── (admin)/           # 13 routes admin (+ newsletter)
+│   ├── (public)/          # 30+ routes publiques (+ ssgm, decouvrir, visites-medicales)
+│   ├── (admin)/           # 14 routes admin (+ newsletter, organisations)
 │   ├── (auth)/            # 5 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
-│   └── sitemap.ts         # Sitemap dynamique
+│   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations)
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
 │   ├── jobs/              # JobCard, JobList, JobFilters, JobDetailActions, JobMatchScore
-│   ├── layout/            # Header, Footer, AdminSidebar, AdminMobileNav
-│   ├── map/               # MemberMap (Leaflet)
-│   ├── globe/             # GaspeGlobe (Three.js)
+│   ├── layout/            # Header, Footer, AdminSidebar, AdminMobileNav, MobileNav
+│   ├── map/               # MemberMap (Leaflet, lazy-loaded)
+│   ├── globe/             # GaspeGlobe (Three.js, lazy-loaded)
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
-│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell
+│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm…)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm)
 ├── lib/
-│   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types (Organization, Newsletter, Invitation)
+│   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
 │   ├── theme/             # ThemeContext (dark mode)
+│   ├── hydros-mapping.ts  # GASPE → Hydros Alumni ID mapping + payload builder
 │   ├── email.ts           # 8 email templates (Brevo transactional)
 │   ├── notifications.ts   # In-app notification system (localStorage)
 │   ├── schemas.ts         # Zod validation schemas
@@ -150,18 +159,47 @@ src/
 │   ├── sanitize-html.ts   # XSS sanitization
 │   ├── cms-store.ts       # CMS localStorage store
 │   ├── members-store.ts   # Members localStorage store
-│   └── ...
+│   └── __tests__/         # Unit tests (hydros-mapping, etc.)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 28 endpoints (auth, orgs, invitations, prefs, email, contact, upload)
+├── api.ts                 # CF Worker: 30 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
     ├── 0001_auth.sql      # Users, auth, sessions, newsletter, contact_messages
     ├── 0002_password_reset.sql  # Password reset tokens
-    └── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
+    ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
+    └── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
 ```
+
+## Worker API — 30 endpoints
+| Endpoint | Method | Auth |
+|----------|--------|------|
+| /api/health | GET | — |
+| /api/auth/register | POST | — |
+| /api/auth/login | POST | — |
+| /api/auth/logout | POST | — |
+| /api/auth/me | GET | JWT |
+| /api/auth/users | GET | JWT+admin |
+| /api/auth/users/:id | PATCH | JWT+admin |
+| /api/auth/users/:id | DELETE | JWT+admin |
+| /api/auth/forgot-password | POST | — |
+| /api/auth/reset-password | POST | — |
+| /api/email | POST | JWT |
+| /api/organizations | GET | — |
+| /api/organizations/:id | GET | JWT |
+| /api/organizations/:id | PATCH | JWT+primary/admin |
+| /api/organizations/:id/invite | POST | JWT+primary/admin |
+| /api/organizations/:id/invitations | GET | JWT+primary/admin |
+| /api/invitations/:token/accept | POST | — |
+| /api/preferences | GET | JWT |
+| /api/preferences | PATCH | JWT |
+| /api/contact | POST | — |
+| /api/newsletter | POST | — |
+| /api/newsletter/send | POST | JWT+admin |
+| /api/hydros/publish | POST | JWT |
+| /api/upload | POST | JWT |
 
 ## Database (D1 — 8 tables)
 | Table | Description |
@@ -177,23 +215,36 @@ workers/
 | `contact_messages` | Contact form submissions |
 
 ## Testing
-- **Unit tests**: Vitest — 139 tests, 13 spec files
+- **Unit tests**: Vitest — 145 tests, 14 spec files
 - **E2E tests**: Playwright — 9 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
+## SEO
+- Sitemap dynamique: pages statiques + jobs + membres + formations
+- robots.txt: allow all public, disallow admin/auth areas
+- JSON-LD: Organization + Website schema on root layout
+- Open Graph + Twitter Card on all pages
+- `font-display: swap` on Google Fonts
+- Three.js and Leaflet lazy-loaded (no SSR)
+- `loading="lazy"` on all images except hero
+- `autocomplete` attributes on all login/contact/newsletter forms
+
 ## Security
-- PBKDF2 password hashing (100k iterations, Web Crypto API)
-- JWT auth required on `/api/email` and `/api/upload` endpoints
+- PBKDF2 password hashing (100k iterations, Web Crypto API) — server-side only
+- JWT auth (HMAC-SHA256, 7-day expiry) on protected endpoints
 - Zod validation on all localStorage reads
 - sanitizeHtml() on all dangerouslySetInnerHTML usage
 - CSP headers via Cloudflare `_headers` (tightened: self-hosted fonts)
 - File upload: magic bytes validation server-side (PDF/DOC/DOCX, 10 MB max)
 - Anti-enumeration on forgot-password (always returns success)
 - ErrorBoundary wrapping Globe 3D, Leaflet Map, RichTextEditor
+- CORS restricted to gaspe-fr.pages.dev, gaspe.fr, localhost
+- robots.txt blocks indexing of admin/auth pages
 
 ## Known limitations
 - **Domain gaspe.fr** — manual CF Pages DNS config needed
 - **MediaLibrary** stores in localStorage (base64) — should migrate to R2
 - **CMS content** in localStorage — should migrate to D1 for multi-admin
 - **CSP unsafe-inline** — required by Next.js hydration
-- **Offres admin** — admin can create offers from /admin/offres/new
+- **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
+- **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
