@@ -53,7 +53,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Baseline: "Localement ancrés. Socialement engagés."
 - Hero: "Fédérer et représenter les compagnies maritimes de proximité"
 - All member data comes from `src/data/members.ts` (31 membres with descriptions) + D1 `organizations` table
-- Stats: 1951, 28 compagnies, 1364 collaborateurs, 111 navires, 20M+ passagers
+- Stats: 1951, 31 compagnies, 1487 collaborateurs, 201 navires, 20M+ passagers
 - Job offers in `src/data/jobs.ts` (12 offres) + localStorage for admin/adherent-created offers
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
