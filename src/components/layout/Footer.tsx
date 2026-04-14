@@ -2,6 +2,7 @@ import Link from "next/link";
 import { footerNavigation } from "@/data/navigation";
 import { SITE_NAME, SITE_FULL_NAME, SITE_TAGLINE, SITE_VERSION } from "@/lib/constants";
 import { NewsletterForm } from "@/components/shared/NewsletterForm";
+import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 
 export function Footer() {
   return (
@@ -47,7 +48,7 @@ export function Footer() {
             <div className="md:col-span-4">
               <div className="flex items-center gap-3 mb-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl gaspe-gradient shadow-lg shadow-[var(--gaspe-teal-600)]/20">
-                  <span className="font-heading text-lg font-bold text-white">G</span>
+                  <GaspeLogoWhite size={26} />
                 </div>
                 <div>
                   <span className="font-heading text-xl font-bold block leading-tight">{SITE_NAME}</span>

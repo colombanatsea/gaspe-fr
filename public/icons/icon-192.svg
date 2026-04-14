@@ -1,5 +1,7 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'>
-  <defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#42B3D5'/><stop offset='50%' stop-color='#6DAAAC'/><stop offset='100%' stop-color='#5AA89A'/></linearGradient></defs>
-  <rect width='192' height='192' rx='38.400000000000006' fill='url(#g)'/>
-  <text x='50%' y='55%' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-weight='bold' font-size='76.80000000000001' fill='white'>G</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#42B3D5"/><stop offset="50%" stop-color="#6DAAAC"/><stop offset="100%" stop-color="#1B9E8A"/></linearGradient></defs>
+  <rect width="192" height="192" rx="38" fill="url(#bg)"/>
+  <g transform="translate(36,28) scale(1.0)">
+    <path d="M68.5 8L28 102h18.5l8-18h38l-5.5-14H60l15-36.5L93 88c4 8-2.5 14-8 18.5-6.5 5.5-16 5.5-22 2.5-5-2.5-8.5-7.5-6-14l2-5.5L42 112h-2c10 6 24 8.5 36 4 14-5 22-16 18.5-28L68.5 8Z" fill="white"/>
+  </g>
 </svg>

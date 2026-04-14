@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 import { SITE_NAME } from "@/lib/constants";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useState, useEffect } from "react";
@@ -66,7 +67,7 @@ export function AdminSidebar() {
       <div className="flex items-center justify-between px-4 py-5 border-b border-white/5">
         <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl gaspe-gradient shadow-lg shadow-[var(--gaspe-teal-600)]/20">
-            <span className="font-heading text-sm font-bold text-white">G</span>
+            <GaspeLogoWhite size={22} />
           </div>
           {!collapsed && (
             <div className="flex flex-col">

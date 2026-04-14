@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminMobileNav } from "@/components/layout/AdminMobileNav";
+import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 
 export default function AdminLayout({
   children,
@@ -37,7 +38,7 @@ export default function AdminLayout({
           </button>
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg gaspe-gradient">
-              <span className="font-heading text-xs font-bold text-white">G</span>
+              <GaspeLogoWhite size={18} />
             </div>
             <span className="font-heading text-sm font-bold text-foreground">Admin</span>
           </div>
