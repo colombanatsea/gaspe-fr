@@ -36,6 +36,16 @@ export interface SalaryEntry {
   annualPremium: number;
 }
 
+/** NAO 2026 — Grille salariale réelle par fonction */
+export interface SalaryGridEntry {
+  fonction: string;
+  enim?: string;
+  salaireMensuel: number;
+  tauxHoraire: number;
+  tauxHS: number;
+  primeFinAnnee: number;
+}
+
 export interface ENIMRate {
   label: string;
   employerRate: number;
@@ -344,48 +354,45 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
   },
 ];
 
-// --- Grilles salariales ---------------------------------------------
+// --- Grilles salariales NAO 2026 ------------------------------------
+// Source : Avenant salarial CCN 3228, NAO 2026
+// Navires armes au Cabotage National et Navigation cotiere
 
-export const SALARY_GRID: SalaryEntry[] = [
-  // Pont
-  { level: 1, echelonCode: "E1", grossMonthly: 1800, annualPremium: 400 },
-  { level: 1, echelonCode: "E2", grossMonthly: 1900, annualPremium: 400 },
-  { level: 1, echelonCode: "E3", grossMonthly: 2000, annualPremium: 450 },
-  { level: 2, echelonCode: "E1", grossMonthly: 1950, annualPremium: 450 },
-  { level: 2, echelonCode: "E2", grossMonthly: 2050, annualPremium: 450 },
-  { level: 2, echelonCode: "E3", grossMonthly: 2200, annualPremium: 500 },
-  { level: 3, echelonCode: "E1", grossMonthly: 2400, annualPremium: 550 },
-  { level: 3, echelonCode: "E2", grossMonthly: 2600, annualPremium: 600 },
-  { level: 3, echelonCode: "E3", grossMonthly: 2800, annualPremium: 650 },
-  { level: 4, echelonCode: "E1", grossMonthly: 2800, annualPremium: 650 },
-  { level: 4, echelonCode: "E2", grossMonthly: 3100, annualPremium: 700 },
-  { level: 4, echelonCode: "E3", grossMonthly: 3400, annualPremium: 750 },
-  { level: 5, echelonCode: "E1", grossMonthly: 3200, annualPremium: 750 },
-  { level: 5, echelonCode: "E2", grossMonthly: 3500, annualPremium: 800 },
-  { level: 5, echelonCode: "E3", grossMonthly: 3800, annualPremium: 900 },
-  { level: 6, echelonCode: "E1", grossMonthly: 3600, annualPremium: 850 },
-  { level: 6, echelonCode: "E2", grossMonthly: 3900, annualPremium: 950 },
-  { level: 6, echelonCode: "E3", grossMonthly: 4200, annualPremium: 1050 },
-
-  // Machine
-  { level: 7, echelonCode: "E1", grossMonthly: 1900, annualPremium: 450 },
-  { level: 7, echelonCode: "E2", grossMonthly: 2050, annualPremium: 450 },
-  { level: 7, echelonCode: "E3", grossMonthly: 2200, annualPremium: 500 },
-  { level: 8, echelonCode: "E1", grossMonthly: 2400, annualPremium: 550 },
-  { level: 8, echelonCode: "E2", grossMonthly: 2700, annualPremium: 650 },
-  { level: 8, echelonCode: "E3", grossMonthly: 3000, annualPremium: 700 },
-  { level: 9, echelonCode: "E1", grossMonthly: 3000, annualPremium: 700 },
-  { level: 9, echelonCode: "E2", grossMonthly: 3500, annualPremium: 800 },
-  { level: 9, echelonCode: "E3", grossMonthly: 4000, annualPremium: 950 },
-
-  // Services
-  { level: 10, echelonCode: "E1", grossMonthly: 1800, annualPremium: 400 },
-  { level: 10, echelonCode: "E2", grossMonthly: 1900, annualPremium: 400 },
-  { level: 10, echelonCode: "E3", grossMonthly: 2000, annualPremium: 450 },
-  { level: 11, echelonCode: "E1", grossMonthly: 2200, annualPremium: 500 },
-  { level: 11, echelonCode: "E2", grossMonthly: 2500, annualPremium: 600 },
-  { level: 11, echelonCode: "E3", grossMonthly: 2800, annualPremium: 700 },
+export const SALARY_GRID_NAO_2026: SalaryGridEntry[] = [
+  { fonction: "Capitaines et Chefs Mecaniciens > 3000 UMS", enim: "16e categorie", salaireMensuel: 3512.71, tauxHoraire: 23.16, tauxHS: 28.95, primeFinAnnee: 3512.71 },
+  { fonction: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS", enim: "15e categorie", salaireMensuel: 3028.20, tauxHoraire: 19.97, tauxHS: 24.96, primeFinAnnee: 3028.20 },
+  { fonction: "Capitaines / Chefs Mecaniciens > 200 UMS", enim: "12e categorie", salaireMensuel: 2702.96, tauxHoraire: 17.82, tauxHS: 22.28, primeFinAnnee: 2702.96 },
+  { fonction: "Capitaines et Chefs Mecaniciens < 200 UMS", enim: "12e categorie", salaireMensuel: 2609.69, tauxHoraire: 17.21, tauxHS: 21.51, primeFinAnnee: 2609.69 },
+  { fonction: "Patrons de vedettes < 50 UMS", salaireMensuel: 2064.53, tauxHoraire: 13.61, tauxHS: 17.01, primeFinAnnee: 2064.53 },
+  { fonction: "Maitres pont et machine", salaireMensuel: 2001.95, tauxHoraire: 13.20, tauxHS: 16.50, primeFinAnnee: 2001.95 },
+  { fonction: "Mecaniciens, Ouvriers mecaniciens, Timoniers", salaireMensuel: 1923.61, tauxHoraire: 12.68, tauxHS: 15.85, primeFinAnnee: 1923.61 },
+  { fonction: "Matelots Qualifies, Graisseurs", salaireMensuel: 1868.98, tauxHoraire: 12.32, tauxHS: 15.40, primeFinAnnee: 1868.98 },
+  { fonction: "Matelots, Matelots Legers", salaireMensuel: 1847.80, tauxHoraire: 12.18, tauxHS: 15.23, primeFinAnnee: 1847.80 },
 ];
+
+/** Notes reglementaires NAO 2026 */
+export const SALARY_NOTES = [
+  "Le taux horaire est base sur 151,67 heures/mois.",
+  "Les heures supplementaires sont majorees au taux de 25 %.",
+  "La prime de fin d'annee est attribuee au prorata du temps de presence dans l'entreprise, sous reserve d'une presence cumulee de 6 mois sur l'annee civile ecoulee. Les periodes d'arrets maladies et ATM sont pris en compte pour le prorata.",
+  "La prime d'anciennete est de 0,3 % du salaire de base par annee passee dans l'entreprise depuis l'application des conventions collectives du GASPE.",
+];
+
+/** Indemnites et frais NAO 2026 */
+export const INDEMNITES_NAO_2026 = {
+  nourritureJournaliere: 19.48,
+  nourritureDeplacement: 22.01,
+  logementParJour: 15.10,
+  fraisDiversParJour: 15.10,
+};
+
+/** Legacy — kept for backward compatibility with simulator */
+export const SALARY_GRID: SalaryEntry[] = SALARY_GRID_NAO_2026.map((entry, i) => ({
+  level: i + 1,
+  echelonCode: "E1",
+  grossMonthly: entry.salaireMensuel,
+  annualPremium: entry.primeFinAnnee,
+}));
 
 // --- Cotisations ENIM -----------------------------------------------
 
