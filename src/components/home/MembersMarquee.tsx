@@ -42,11 +42,17 @@ export function MembersMarquee() {
                 key={`${member.slug}-${i}`}
                 className="flex shrink-0 items-center gap-3 rounded-xl border border-white/8 bg-white/5 px-5 py-3 hover:bg-white/10 transition-colors"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">
-                  <span className="font-heading text-xs font-bold text-[var(--gaspe-teal-400)]">
-                    {member.name.charAt(0)}
-                  </span>
-                </div>
+                {member.logoUrl ? (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/90 border border-white/20 overflow-hidden p-0.5">
+                    <img src={member.logoUrl} alt={member.name} className="w-full h-full object-contain" loading="lazy" />
+                  </div>
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">
+                    <span className="font-heading text-xs font-bold text-[var(--gaspe-teal-400)]">
+                      {member.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
                 <span className="whitespace-nowrap text-sm font-medium text-white/70">
                   {member.name}
                 </span>

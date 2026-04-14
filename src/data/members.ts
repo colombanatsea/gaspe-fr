@@ -88,7 +88,7 @@ export const members: Member[] = [
     region: "Pays de la Loire",
     territory: "metropole",
     category: "titulaire",
-    description: "La Compagnie Maritime de Transport (CMT) est une compagnie maritime de service public assurant des liaisons de transport de passagers en Guyane.",
+    description: "La Compagnie Maritime de Transport (CMT) assure le transport de passagers dans le chenal et le port des Sables-d'Olonne.",
     shipCount: 5,
   },
   {
@@ -100,7 +100,7 @@ export const members: Member[] = [
     region: "Provence-Alpes-Côte d'Azur",
     territory: "metropole",
     category: "titulaire",
-    description: "La Compagnie Maritime TLV est une compagnie maritime de service public assurant des liaisons de transport de passagers vers les îles de Ré et d'Aix.",
+    description: "La Compagnie Maritime TLV, delegataire de service public, assure le transport de passagers et de fret vers les iles d'Hyeres (Porquerolles, Port-Cros, Le Levant) depuis la presqu'ile de Giens.",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/11/image14.png",
     websiteUrl: "http://www.tlv-tvm.com/",
     employeeCount: 49,
@@ -109,7 +109,7 @@ export const members: Member[] = [
   {
     name: "Compagnie Yeu Continent",
     slug: "compagnie-yeu-continent",
-    city: "La Barre-de-Monts",
+    city: "Fromentine",
     latitude: 46.893,
     longitude: -2.139,
     region: "Pays de la Loire",
@@ -311,6 +311,7 @@ export const members: Member[] = [
     description: "Zéphyr & Borée – Treizhadenn An Oriant (TAO) est une compagnie maritime de service public assurant des liaisons maritimes dans la rade de Lorient.",
     logoUrl: "https://www.gaspe.fr/wp-content/uploads/2024/12/Zephyr-et-Boree-TAO.png",
     websiteUrl: "https://zephyretboree.com/",
+    shipCount: 5,
   },
 
   // ═══════════════════════════════════════════════════

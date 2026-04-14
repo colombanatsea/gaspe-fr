@@ -14,7 +14,7 @@ const stats = [
     ),
   },
   {
-    value: 28,
+    value: 31,
     label: "Compagnies adhérentes",
     icon: (
       <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -23,7 +23,7 @@ const stats = [
     ),
   },
   {
-    value: 1364,
+    value: 1487,
     label: "Collaborateurs",
     icon: (
       <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -32,7 +32,7 @@ const stats = [
     ),
   },
   {
-    value: 111,
+    value: 201,
     label: "Navires",
     icon: (
       <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
