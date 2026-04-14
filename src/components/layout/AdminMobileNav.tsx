@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
 
@@ -80,7 +81,7 @@ export function AdminMobileNav({ open, onClose }: AdminMobileNavProps) {
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gaspe-gradient">
-              <span className="font-heading text-sm font-bold text-white">G</span>
+              <GaspeLogoWhite size={22} />
             </div>
             <div>
               <span className="font-heading text-sm font-bold block leading-tight">GASPE</span>
