@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { Badge } from "@/components/ui/Badge";
 import { formations } from "@/data/formations";
+import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 
 export const metadata: Metadata = {
   title: "Formations",
@@ -95,18 +96,16 @@ export default function FormationsPage() {
 
       {/* Sources */}
       <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="rounded-2xl bg-surface border border-border-light p-6">
-          <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources et références</h3>
+        <CollapsibleSources>
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Convention STCW (Standards of Training, Certification and Watchkeeping for Seafarers) : Organisation Maritime Internationale (OMI), convention de 1978 amendée</li>
-            <li>Formations obligatoires (CFBS, CRO, CGO) : <span className="text-foreground">arrêté du 26 juillet 2013</span> relatif à la délivrance des titres de formation professionnelle maritime</li>
-            <li>Référentiel des formations maritimes : Direction des Affaires Maritimes (DAM), Ministère de la Mer</li>
-            <li>Organismes de formation agréés : centres agréés par la DAM pour la délivrance des brevets et certificats maritimes</li>
+            <li>Convention STCW (OMI), convention de 1978 amendee</li>
+            <li>Arrete du 26 juillet 2013 relatif a la formation professionnelle maritime</li>
+            <li>Referentiel DAM, Ministere de la Mer</li>
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">
-            Les dates, tarifs et places disponibles sont communiqués par les organismes de formation et peuvent évoluer.
+            Dates, tarifs et places communiques par les organismes de formation.
           </p>
-        </div>
+        </CollapsibleSources>
       </div>
     </>
   );

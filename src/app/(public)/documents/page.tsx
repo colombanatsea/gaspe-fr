@@ -3,6 +3,7 @@
 import { Suspense, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
@@ -13,8 +14,7 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 
 type Category =
   | "Convention Collective et Accords de Branche"
-  | "Documents Institutionnels"
-  | "Publications et Notes de Position";
+  | "Documents Institutionnels";
 
 interface DocumentItem {
   title: string;
@@ -93,41 +93,11 @@ const documents: DocumentItem[] = [
     href: "#",
   },
 
-  // Publications et Notes de Position
-  {
-    title: "Transition énergétique des flottes",
-    category: "Publications et Notes de Position",
-    date: "Février 2026",
-    sortKey: "2026-02",
-    href: "#",
-  },
-  {
-    title: "Accessibilité PMR sur les liaisons maritimes",
-    category: "Publications et Notes de Position",
-    date: "Janvier 2026",
-    sortKey: "2026-01",
-    href: "#",
-  },
-  {
-    title: "Continuité territoriale et service public",
-    category: "Publications et Notes de Position",
-    date: "Décembre 2025",
-    sortKey: "2025-12",
-    href: "#",
-  },
-  {
-    title: "Formation et attractivité des métiers maritimes",
-    category: "Publications et Notes de Position",
-    date: "Novembre 2025",
-    sortKey: "2025-11",
-    href: "#",
-  },
 ];
 
 const allCategories: Category[] = [
   "Convention Collective et Accords de Branche",
   "Documents Institutionnels",
-  "Publications et Notes de Position",
 ];
 
 function categoryVariant(category: Category) {
@@ -136,8 +106,6 @@ function categoryVariant(category: Category) {
       return "teal" as const;
     case "Documents Institutionnels":
       return "blue" as const;
-    case "Publications et Notes de Position":
-      return "warm" as const;
   }
 }
 
@@ -370,15 +338,12 @@ function DocumentsContent() {
         </div>
       )}
       {/* Sources */}
-      <div className="mt-12 rounded-2xl bg-surface border border-border-light p-6">
-        <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources</h3>
+      <CollapsibleSources className="mt-12">
         <p className="text-xs text-foreground-muted leading-relaxed">
-          Les documents présentés sur cette page sont issus des travaux du GASPE, des partenaires sociaux
-          de la branche et des textes conventionnels publiés au Journal officiel. La Convention Collective CCN 3228
-          (IDCC 3228) et les accords de branche sont disponibles sur Legifrance. Les publications et notes de
-          position sont rédigées par le secrétariat du GASPE.
+          Documents issus des travaux du GASPE et des partenaires sociaux de la branche.
+          CCN 3228 (IDCC 3228) et accords de branche disponibles sur Legifrance.
         </p>
-      </div>
+      </CollapsibleSources>
     </div>
   );
 }
