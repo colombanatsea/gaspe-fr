@@ -9,6 +9,9 @@ import {
   TOOLKIT_SECTIONS,
   CLASSIFICATION_LEVELS,
   SALARY_GRID,
+  SALARY_GRID_NAO_2026,
+  SALARY_NOTES,
+  INDEMNITES_NAO_2026,
   ENIM_RATES,
   ENIM_TOTAL_EMPLOYER_RATE,
   ENIM_TOTAL_EMPLOYEE_RATE,
@@ -116,69 +119,98 @@ function GrillesSalariales() {
   return (
     <div>
       <Disclaimer />
-      {CATEGORIES.map((cat) => {
-        const levels = CLASSIFICATION_LEVELS.filter((l) => l.category === cat);
-        return (
-          <div key={cat} className="reveal mb-8">
-            <h3 className="font-heading text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/10 text-[var(--gaspe-teal-600)]">
-                {cat === "pont" ? "⚓" : cat === "machine" ? "⚙️" : "🎫"}
-              </span>
-              {CATEGORY_LABELS[cat]}
-            </h3>
-            <div className="overflow-x-auto rounded-xl border border-border-light">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-[var(--gaspe-teal-600)]/5 text-left">
-                    <th className="sticky left-0 z-10 bg-[var(--gaspe-teal-600)]/5 px-4 py-3 font-heading font-semibold text-foreground">
-                      Poste
-                    </th>
-                    <th className="px-4 py-3 font-heading font-semibold text-foreground text-right">
-                      Débutant (E1)
-                    </th>
-                    <th className="px-4 py-3 font-heading font-semibold text-foreground text-right">
-                      Confirmé (E2)
-                    </th>
-                    <th className="px-4 py-3 font-heading font-semibold text-foreground text-right">
-                      Expérimenté (E3)
-                    </th>
-                    <th className="px-4 py-3 font-heading font-semibold text-foreground text-right">
-                      Prime annuelle
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-light">
-                  {levels.map((lvl) => {
-                    const entries = SALARY_GRID.filter((s) => s.level === lvl.level);
-                    const e1 = entries.find((e) => e.echelonCode === "E1");
-                    const e2 = entries.find((e) => e.echelonCode === "E2");
-                    const e3 = entries.find((e) => e.echelonCode === "E3");
-                    return (
-                      <tr key={lvl.level} className="hover:bg-[var(--gaspe-neutral-50)] transition-colors">
-                        <td className="sticky left-0 z-10 bg-surface px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                          {lvl.label}
-                        </td>
-                        <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                          {e1 ? fmt.format(e1.grossMonthly) : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                          {e2 ? fmt.format(e2.grossMonthly) : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                          {e3 ? fmt.format(e3.grossMonthly) : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                          {e1 ? fmt.format(e1.annualPremium) : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+
+      {/* NAO 2026 salary grid */}
+      <div className="reveal mb-8">
+        <h3 className="font-heading text-lg font-bold text-foreground mb-1">
+          Grille salariale NAO 2026
+        </h3>
+        <p className="text-sm text-foreground-muted mb-4">
+          Navires armes au Cabotage National et Navigation cotiere (UMS / tonnage du navire arme)
+        </p>
+        <div className="overflow-x-auto rounded-xl border border-border-light">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[var(--gaspe-teal-600)]/5 text-left">
+                <th className="sticky left-0 z-10 bg-[var(--gaspe-teal-600)]/5 px-4 py-3 font-heading font-semibold text-foreground">
+                  Fonction
+                </th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground text-right whitespace-nowrap">
+                  Salaire mensuel
+                </th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground text-right whitespace-nowrap">
+                  Taux horaire
+                </th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground text-right whitespace-nowrap">
+                  Taux HS (25 %)
+                </th>
+                <th className="px-4 py-3 font-heading font-semibold text-foreground text-right whitespace-nowrap">
+                  Prime fin d&apos;annee
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-light">
+              {SALARY_GRID_NAO_2026.map((entry, i) => (
+                <tr key={i} className="hover:bg-[var(--gaspe-neutral-50)] transition-colors [data-theme=dark]:hover:bg-white/5">
+                  <td className="sticky left-0 z-10 bg-surface px-4 py-3 font-medium text-foreground">
+                    {entry.fonction}
+                    {entry.enim && (
+                      <span className="block text-xs text-foreground-muted">{entry.enim} ENIM</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right text-foreground tabular-nums font-semibold">
+                    {fmt.format(entry.salaireMensuel)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
+                    {fmt.format(entry.tauxHoraire)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
+                    {fmt.format(entry.tauxHS)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
+                    {fmt.format(entry.primeFinAnnee)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Indemnites */}
+      <div className="reveal mb-8">
+        <h3 className="font-heading text-base font-bold text-foreground mb-3">
+          Indemnites et frais
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-border-light bg-background p-4">
+            <p className="text-sm text-foreground-muted">Indemnite journaliere de nourriture</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.nourritureJournaliere)}</p>
           </div>
-        );
-      })}
+          <div className="rounded-xl border border-border-light bg-background p-4">
+            <p className="text-sm text-foreground-muted">Nourriture en deplacement</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.nourritureDeplacement)}</p>
+          </div>
+          <div className="rounded-xl border border-border-light bg-background p-4">
+            <p className="text-sm text-foreground-muted">Logement par jour</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.logementParJour)}</p>
+          </div>
+          <div className="rounded-xl border border-border-light bg-background p-4">
+            <p className="text-sm text-foreground-muted">Frais divers par jour</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.fraisDiversParJour)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div className="reveal rounded-xl bg-surface-teal p-5">
+        <h4 className="font-heading text-sm font-semibold text-foreground mb-2">Notes reglementaires</h4>
+        <ol className="space-y-2 text-xs text-foreground-muted leading-relaxed list-decimal list-inside">
+          {SALARY_NOTES.map((note, i) => (
+            <li key={i}>{note}</li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }
