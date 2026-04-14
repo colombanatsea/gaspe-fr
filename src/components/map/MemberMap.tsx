@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 // DOM-TOM quick-fly destinations
 const VIEWS = [
-  { label: "France", lat: 46.6, lng: 2.2, zoom: 6 },
+  { label: "France", lat: 47.211, lng: -1.562, zoom: 6 },
   { label: "Guadeloupe", lat: 16.0, lng: -61.6, zoom: 10 },
   { label: "Martinique", lat: 14.6, lng: -61.0, zoom: 11 },
   { label: "Mayotte", lat: -12.8, lng: 45.2, zoom: 11 },
@@ -54,7 +54,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         if (!container || (container as any)._leaflet_id) return;
 
         const map = L.map(container, {
-          center: [46.6, 2.2],
+          center: [47.211, -1.562],
           zoom: 6,
           zoomControl: false,
           scrollWheelZoom: true,

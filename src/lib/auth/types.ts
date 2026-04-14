@@ -80,16 +80,16 @@ export interface Organization {
 /* ── Newsletter preferences (per-user, 10 categories) ── */
 
 export const NEWSLETTER_CATEGORIES = [
-  { key: "info_generales", label: "Informations Générales", adherentOnly: true },
-  { key: "ag", label: "Assemblée Générale (AG)", adherentOnly: true },
+  { key: "info_generales", label: "Informations Generales", adherentOnly: true },
+  { key: "ag", label: "Assemblee Generale (AG)", adherentOnly: true },
   { key: "emploi", label: "Emploi (CV et offres d'emploi)", adherentOnly: false },
   { key: "formation_opco", label: "Formation & OPCO", adherentOnly: false },
-  { key: "veille_juridique", label: "Veille Juridique et Institutionnelle ADF", adherentOnly: true },
-  { key: "veille_sociale", label: "Veille Sociale ADF", adherentOnly: true },
-  { key: "veille_surete", label: "Veille Sûreté Sécurité ADF", adherentOnly: true },
-  { key: "veille_data", label: "Veille Data ADF", adherentOnly: true },
-  { key: "veille_environnement", label: "Veille Environnement ADF", adherentOnly: true },
-  { key: "actualites_gaspe", label: "Actualités GASPE", adherentOnly: false },
+  { key: "veille_juridique", label: "Veille Juridique et Institutionnelle", adherentOnly: true },
+  { key: "veille_sociale", label: "Veille Sociale", adherentOnly: true },
+  { key: "veille_surete", label: "Veille Surete Securite", adherentOnly: true },
+  { key: "veille_environnement", label: "Veille Environnement", adherentOnly: true },
+  { key: "communication_marque", label: "Communication & Marque employeur", adherentOnly: false },
+  { key: "actualites_gaspe", label: "Actualites GASPE", adherentOnly: false },
 ] as const;
 
 export type NewsletterCategory = typeof NEWSLETTER_CATEGORIES[number]["key"];

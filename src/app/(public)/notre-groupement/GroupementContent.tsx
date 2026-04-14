@@ -100,7 +100,7 @@ export function GroupementContent() {
           <div className="reveal mb-12">
             <Badge variant="teal" className="mb-4">Depuis 1951</Badge>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              Plus de 70 années de soutien et d&apos;innovation
+              75 ans de soutien et d&apos;innovation
             </h2>
             <p className="mt-3 max-w-3xl text-foreground-muted leading-relaxed">
               Depuis 1951, nous nous adaptons aux besoins de la société et aux
@@ -188,9 +188,9 @@ export function GroupementContent() {
                   <div className="absolute left-[-10%] bottom-[-10%] h-32 w-32 rounded-full bg-white/5 blur-xl" />
                 </div>
                 <div className="relative z-10">
-                  <p className="font-heading text-6xl font-bold mb-2">73+</p>
+                  <p className="font-heading text-6xl font-bold mb-2">75</p>
                   <p className="text-white/90 font-heading text-lg font-semibold">
-                    années d&apos;engagement
+                    ans d&apos;engagement
                   </p>
                   <p className="mt-4 text-sm text-white/70 leading-relaxed">
                     Au service du transport maritime public français, le GASPE
@@ -199,12 +199,12 @@ export function GroupementContent() {
                   </p>
                   <div className="mt-8 grid grid-cols-2 gap-4">
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
-                      <p className="font-heading text-2xl font-bold">28</p>
+                      <p className="font-heading text-2xl font-bold">27</p>
                       <p className="text-xs text-white/70">Compagnies</p>
                     </div>
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
-                      <p className="font-heading text-2xl font-bold">1 364</p>
-                      <p className="text-xs text-white/70">Collaborateurs</p>
+                      <p className="font-heading text-2xl font-bold">1 494</p>
+                      <p className="text-xs text-white/70">Marins francais</p>
                     </div>
                   </div>
                 </div>
