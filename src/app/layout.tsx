@@ -52,9 +52,8 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-        <link rel="icon" href="/icons/icon-192.svg" sizes="192x192" />
+        <link rel="icon" href="/logo-gaspe.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo-gaspe.jpg" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
