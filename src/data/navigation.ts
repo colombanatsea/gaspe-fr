@@ -1,15 +1,10 @@
 import type { NavItem } from "@/types";
 
 export const mainNavigation: NavItem[] = [
-  { label: "Accueil", href: "/" },
   { label: "Notre Groupement", href: "/notre-groupement" },
   { label: "Nos Adhérents", href: "/nos-adherents" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
-  { label: "Boîte à outils", href: "/boite-a-outils" },
-  { label: "Agenda", href: "/agenda" },
-  { label: "Formations", href: "/formations" },
-  { label: "SSGM", href: "/ssgm" },
   {
     label: "Nos Compagnies Recrutent",
     href: "/nos-compagnies-recrutent",
@@ -31,8 +26,7 @@ export const footerNavigation = {
     { label: "Nos Positions", href: "/positions" },
   ],
   ressources: [
-    { label: "Positions", href: "/positions" },
-    { label: "Documents", href: "/documents" },
+    { label: "Documents & Boîte à outils", href: "/documents" },
     { label: "Boîte à outils CCN 3228", href: "/boite-a-outils" },
     { label: "Formations", href: "/formations" },
     { label: "SSGM & Médecins", href: "/ssgm" },
