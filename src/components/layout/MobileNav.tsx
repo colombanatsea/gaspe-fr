@@ -77,6 +77,29 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             </Link>
           ))}
 
+          {/* More pages (not in main nav) */}
+          <div className="my-2 border-t border-border-light" />
+          <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-foreground-muted">Ressources</p>
+          {[
+            { label: "Boîte à outils CCN 3228", href: "/boite-a-outils" },
+            { label: "Formations", href: "/formations" },
+            { label: "SSGM & Médecins", href: "/ssgm" },
+            { label: "Agenda", href: "/agenda" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                pathname === item.href
+                  ? "text-primary bg-surface-teal"
+                  : "text-foreground-muted hover:text-foreground hover:bg-surface",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+
           {/* Auth section */}
           <div className="my-2 border-t border-border-light" />
           {isAuthenticated && user ? (

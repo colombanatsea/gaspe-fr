@@ -137,7 +137,7 @@ export default function NosAdherentsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
               </svg>
             )}
-            {userPos ? "Autour de moi ✓" : "Autour de moi"}
+            {userPos ? "Autour de moi (actif)" : "Autour de moi"}
           </button>
           {geoError && <p className="mt-2 text-xs text-red-500">{geoError}</p>}
           {userPos && !geoError && (

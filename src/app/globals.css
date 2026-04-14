@@ -158,6 +158,13 @@ body {
   background: linear-gradient(135deg, var(--gaspe-gradient-start), var(--gaspe-gradient-mid), var(--gaspe-gradient-end));
 }
 
+/* ── Prose list bullets: round dots, no squares ── */
+.prose ul { list-style-type: disc; }
+.prose ul ul { list-style-type: circle; }
+.prose ol { list-style-type: decimal; }
+.prose li::marker { color: var(--gaspe-teal-600); }
+[data-theme="dark"] .prose li::marker { color: var(--gaspe-teal-400); }
+
 /* ── Card style from design system ── */
 .gaspe-card {
   background: var(--color-background);
