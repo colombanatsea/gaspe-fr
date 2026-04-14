@@ -1023,7 +1023,7 @@ async function handleAcceptInvitation(request: Request, env: Env, corsHeaders: R
 const NEWSLETTER_COLUMNS = [
   "info_generales", "ag", "emploi", "formation_opco",
   "veille_juridique", "veille_sociale", "veille_surete",
-  "veille_data", "veille_environnement", "actualites_gaspe",
+  "veille_environnement", "communication_marque", "actualites_gaspe",
 ] as const;
 
 async function handleGetPreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {

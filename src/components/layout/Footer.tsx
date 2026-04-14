@@ -3,6 +3,7 @@ import { footerNavigation } from "@/data/navigation";
 import { SITE_NAME, SITE_FULL_NAME, SITE_TAGLINE, SITE_VERSION } from "@/lib/constants";
 import { NewsletterForm } from "@/components/shared/NewsletterForm";
 import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function Footer() {
   return (
@@ -163,7 +164,7 @@ export function Footer() {
             <p className="text-xs text-[var(--gaspe-neutral-500)]">
               &copy; {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés. <span className="ml-2 text-[var(--gaspe-neutral-600)]">v{SITE_VERSION}</span>
             </p>
-            <div className="flex gap-6">
+            <div className="flex items-center gap-6">
               {footerNavigation.legal.map((item) => (
                 <Link
                   key={item.href}
@@ -173,6 +174,7 @@ export function Footer() {
                   {item.label}
                 </Link>
               ))}
+              <ThemeToggle />
             </div>
           </div>
           <div className="mt-4 text-center text-[10px] text-[var(--gaspe-neutral-600)]">

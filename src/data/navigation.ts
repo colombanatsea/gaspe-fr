@@ -2,7 +2,6 @@ import type { NavItem } from "@/types";
 
 export const mainNavigation: NavItem[] = [
   { label: "Notre Groupement", href: "/notre-groupement" },
-  { label: "Nos Adhérents", href: "/nos-adherents" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
   {
@@ -10,7 +9,6 @@ export const mainNavigation: NavItem[] = [
     href: "/nos-compagnies-recrutent",
     highlight: true,
   },
-  { label: "Contact", href: "/contact" },
 ];
 
 export const authNavigation = {

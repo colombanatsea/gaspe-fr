@@ -43,7 +43,7 @@ export function MembersMarquee() {
                 className="flex shrink-0 items-center gap-3 rounded-xl border border-white/8 bg-white/5 px-5 py-3 hover:bg-white/10 transition-colors"
               >
                 {member.logoUrl ? (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/90 border border-white/20 overflow-hidden p-0.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-white/30 overflow-hidden p-0.5">
                     <img src={member.logoUrl} alt={member.name} className="w-full h-full object-contain" loading="lazy" />
                   </div>
                 ) : (

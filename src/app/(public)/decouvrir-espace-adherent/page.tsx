@@ -123,11 +123,11 @@ const DEMO_TEAM = [
 ];
 
 const DEMO_ANNUAIRE = [
-  { name: "Vedettes de Bréhat", city: "Paimpol", region: "Bretagne", category: "titulaire", ships: 5 },
-  { name: "Compagnie Océane", city: "Lorient", region: "Bretagne", category: "titulaire", ships: 8 },
-  { name: "Bacs de Gironde", city: "Bordeaux", region: "Nouvelle-Aquitaine", category: "titulaire", ships: 4 },
-  { name: "Corsica Linea", city: "Marseille", region: "PACA", category: "associe", ships: 12 },
-  { name: "Karu'Ferry", city: "Pointe-à-Pitre", region: "Guadeloupe", category: "titulaire", ships: 2 },
+  { name: "BreizhGo Penn Ar Bed", city: "Brest", region: "Bretagne", category: "titulaire", ships: 6 },
+  { name: "Compagnie Yeu Continent", city: "Fromentine", region: "Pays de la Loire", category: "titulaire", ships: 3 },
+  { name: "Direction des Transports Maritimes de la Gironde", city: "Le Verdon-sur-Mer", region: "Nouvelle-Aquitaine", category: "titulaire", ships: 3 },
+  { name: "SNC Transrades", city: "Marseille", region: "PACA", category: "titulaire", ships: 7 },
+  { name: "Karu'Ferry", city: "Petit-Bourg", region: "Guadeloupe", category: "titulaire", ships: 1 },
 ];
 
 const DEMO_APPLICATIONS = [
@@ -555,8 +555,8 @@ function AnnuaireTab() {
 
         {/* Placeholder for more */}
         <div className="rounded-2xl border-2 border-dashed border-border-light bg-surface/50 p-6 flex flex-col items-center justify-center text-center">
-          <p className="text-2xl font-bold text-foreground-muted">+26</p>
-          <p className="text-sm text-foreground-muted">compagnies membres</p>
+          <p className="text-2xl font-bold text-foreground-muted">+22</p>
+          <p className="text-sm text-foreground-muted">autres adherents GASPE</p>
         </div>
       </div>
 

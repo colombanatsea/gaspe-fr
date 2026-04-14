@@ -9,7 +9,7 @@ import { SITE_NAME } from "@/lib/constants";
 import { MobileNav } from "./MobileNav";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+
 import NotificationBell from "@/components/shared/NotificationBell";
 
 import { GaspeLogo } from "@/components/shared/GaspeLogo";
@@ -74,8 +74,7 @@ export function Header() {
             </Link>
           ))}
 
-          {/* Theme toggle + Auth buttons */}
-          <ThemeToggle />
+          {/* Auth buttons */}
           {isAuthenticated && user ? (
             <>
             <NotificationBell />
@@ -134,7 +133,6 @@ export function Header() {
 
         {/* Mobile hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
-          <ThemeToggle />
           {isAuthenticated && user && (
             <>
               <NotificationBell />
