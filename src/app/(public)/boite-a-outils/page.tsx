@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import {
@@ -768,21 +769,18 @@ export default function BoiteAOutilsPage() {
         </div>
 
         {/* Sources */}
-        <div className="reveal mt-12 rounded-2xl bg-surface border border-border-light p-6">
-          <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Sources et références</h3>
+        <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Convention Collective Nationale du personnel navigant des entreprises de passages d&apos;eau (CCN 3228, IDCC 3228) — <span className="text-foreground">Legifrance, Journal officiel</span></li>
-            <li>Grilles salariales et classifications : avenant salarial CCN 3228, mis à jour annuellement par les partenaires sociaux</li>
-            <li>Taux ENIM (Établissement National des Invalides de la Marine) : barèmes officiels ENIM publiés par la Caisse des Gens de Mer</li>
-            <li>Droits à congés : articles du Code des transports (Livre V, titre V) et CCN 3228</li>
-            <li>Guides employeur : fiches pratiques GASPE élaborées à partir de la CCN 3228, du Code du travail maritime et des textes réglementaires en vigueur</li>
-            <li>Accords de branche : textes conventionnels étendus, publiés au Journal officiel et disponibles sur Legifrance</li>
+            <li>Convention Collective Nationale du personnel navigant des entreprises de passages d&apos;eau (CCN 3228, IDCC 3228) — Legifrance, Journal officiel</li>
+            <li>Grilles salariales et classifications : avenant salarial CCN 3228, NAO 2026</li>
+            <li>Taux ENIM : baremes officiels publies par la Caisse des Gens de Mer</li>
+            <li>Droits a conges : articles du Code des transports (Livre V, titre V) et CCN 3228</li>
+            <li>Guides employeur : fiches pratiques GASPE elaborees a partir de la CCN 3228 et du Code du travail maritime</li>
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">
-            Ces informations sont fournies à titre indicatif et ne constituent pas un conseil juridique.
-            Consultez les textes officiels ou un conseiller spécialisé pour toute question spécifique.
+            Ces informations sont fournies a titre indicatif et ne constituent pas un conseil juridique.
           </p>
-        </div>
+        </CollapsibleSources>
 
         {/* Footer */}
         <div className="mt-6 text-center text-xs text-foreground-muted">

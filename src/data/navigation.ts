@@ -19,9 +19,9 @@ export const authNavigation = {
 
 export const footerNavigation = {
   groupement: [
-    { label: "Qui sommes-nous", href: "/notre-groupement" },
-    { label: "Nos Adhérents", href: "/nos-adherents" },
+    { label: "Notre Groupement", href: "/notre-groupement" },
     { label: "Nos Positions", href: "/positions" },
+    { label: "Contact", href: "/contact" },
   ],
   ressources: [
     { label: "Documents & Boîte à outils", href: "/documents" },
