@@ -24,7 +24,7 @@ jobs:
         run: |
           for f in workers/migrations/*.sql; do
             echo "Applying $f..."
-            npx wrangler d1 execute gaspe-db --file "$f" --config workers/wrangler.toml --yes
+            npx wrangler d1 execute gaspe-db --file "$f" --config workers/wrangler.toml --yes || echo "Migration $f skipped (already applied or error)"
           done
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -3,17 +3,17 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**106 pages** — deployed on Cloudflare Pages (static export)
+**107 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.7.0
+- **Version**: v2.8.0
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 145 tests)
+npm run test         # unit tests (Vitest, 145 tests, 14 files)
 npm run test:watch   # unit tests in watch mode
 npm run lint         # ESLint
 git push origin main # auto-deploy to CF Pages (~1 min)
@@ -53,11 +53,12 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Baseline: "Localement ancrés. Socialement engagés."
 - Hero: "Fédérer et représenter les compagnies maritimes de proximité"
 - All member data comes from `src/data/members.ts` (31 membres with descriptions) + D1 `organizations` table
-- Stats: 1951, 31 compagnies, 1487 collaborateurs, 201 navires, 20M+ passagers
+- Stats: 1951, 27 compagnies, 1494 marins francais, 155 navires, 25M passagers, 6.9M vehicules, 200M EUR CA
 - Job offers in `src/data/jobs.ts` (12 offres) + localStorage for admin/adherent-created offers
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
 - Demo space at `/decouvrir-espace-adherent` (8 tabs, fake data, adhesion CTAs)
+- Transition ecologique at `/transition-ecologique` (simulateur ADEME iframe, 4 guides PDF, 6 technologies)
 
 ## Source citations
 All content pages display a "Sources et références" section citing origin of data:
