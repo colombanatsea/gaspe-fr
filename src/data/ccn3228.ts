@@ -243,12 +243,15 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
   },
 ];
 
-// --- Echelons communs -----------------------------------------------
+// --- Echelons -------------------------------------------------------
+// Note : la CCN 3228 ne prevoit pas d'echelons formels.
+// L'anciennete se traduit par la prime d'anciennete (0,3%/an).
+// Les echelons ci-dessous sont indicatifs pour la grille de classification.
 
 const ECHELONS: Echelon[] = [
-  { code: "E1", label: "Débutant", minMonths: 0 },
-  { code: "E2", label: "Confirmé", minMonths: 24 },
-  { code: "E3", label: "Expérimenté", minMonths: 60 },
+  { code: "E1", label: "Debutant (< 2 ans)", minMonths: 0 },
+  { code: "E2", label: "Confirme (2-5 ans)", minMonths: 24 },
+  { code: "E3", label: "Experimente (> 5 ans)", minMonths: 60 },
 ];
 
 // --- Classifications ------------------------------------------------
@@ -372,10 +375,12 @@ export const SALARY_GRID_NAO_2026: SalaryGridEntry[] = [
 
 /** Notes reglementaires NAO 2026 */
 export const SALARY_NOTES = [
-  "Le taux horaire est base sur 151,67 heures/mois.",
-  "Les heures supplementaires sont majorees au taux de 25 %.",
-  "La prime de fin d'annee est attribuee au prorata du temps de presence dans l'entreprise, sous reserve d'une presence cumulee de 6 mois sur l'annee civile ecoulee. Les periodes d'arrets maladies et ATM sont pris en compte pour le prorata.",
-  "La prime d'anciennete est de 0,3 % du salaire de base par annee passee dans l'entreprise depuis l'application des conventions collectives du GASPE.",
+  "Taux horaire base sur 151,67 heures/mois (35h x 52/12).",
+  "Heures supplementaires majorees a 25 % (article L5544-6 Code des transports).",
+  "Prime de fin d'annee egale au salaire de base mensuel, au prorata du temps de presence cumule (minimum 6 mois sur l'annee civile). Arrets maladie et ATM pris en compte dans le prorata.",
+  "Prime d'anciennete : 0,3 % du salaire de base par annee d'anciennete dans l'entreprise.",
+  "Les salaires forfaitaires ENIM servant de base aux cotisations sont distincts des salaires reels. Categories ENIM indiquees a titre de correspondance.",
+  "Grille applicable aux navires armes au cabotage national et navigation cotiere uniquement. Ne couvre pas le commerce au long cours.",
 ];
 
 /** Indemnites et frais NAO 2026 */
@@ -395,16 +400,18 @@ export const SALARY_GRID: SalaryEntry[] = SALARY_GRID_NAO_2026.map((entry, i) =>
 }));
 
 // --- Cotisations ENIM -----------------------------------------------
+// Source : Bareme ENIM 2025/2026, Caisse des Gens de Mer
+// Note : les taux AT/MP varient par entreprise (classe de risque)
+// Les cotisations sont assises sur les salaires forfaitaires ENIM
 
 export const ENIM_RATES: ENIMRate[] = [
-  { label: "Pension de vieillesse", employerRate: 10.85, employeeRate: 7.85 },
-  { label: "Maladie, maternité, invalidité", employerRate: 13.0, employeeRate: 0.0 },
-  { label: "Accidents du travail", employerRate: 2.1, employeeRate: 0.0 },
+  { label: "Pension de vieillesse (CRM)", employerRate: 11.15, employeeRate: 7.85 },
+  { label: "Maladie, maternite, invalidite", employerRate: 12.50, employeeRate: 0.0 },
+  { label: "Accidents du travail / maladies pro.", employerRate: 2.40, employeeRate: 0.0 },
   { label: "Allocations familiales", employerRate: 5.25, employeeRate: 0.0 },
-  { label: "CSG (sur 98,25 % du brut)", employerRate: 0.0, employeeRate: 9.2 },
-  { label: "CRDS (sur 98,25 % du brut)", employerRate: 0.0, employeeRate: 0.5 },
-  { label: "Prévoyance complémentaire", employerRate: 1.3, employeeRate: 0.7 },
-  { label: "Retraite complémentaire", employerRate: 4.72, employeeRate: 3.15 },
+  { label: "CSG (assiette : 98,25 % du brut)", employerRate: 0.0, employeeRate: 9.2 },
+  { label: "CRDS (assiette : 98,25 % du brut)", employerRate: 0.0, employeeRate: 0.5 },
+  { label: "Prevoyance CCN 3228 (65/35)", employerRate: 1.30, employeeRate: 0.70 },
 ];
 
 /** Taux simplifié pour le simulateur (approximation) */
@@ -419,50 +426,51 @@ export const ENIM_TOTAL_EMPLOYEE_RATE = ENIM_RATES.reduce(
 
 // --- Congés et repos ------------------------------------------------
 
+// Source : CCN 3228 (articles 30 a 38), Code des transports Livre V titre V
 export const LEAVE_RULES: LeaveRule[] = [
   {
-    type: "Congés payés",
+    type: "Conges payes",
     description:
-      "Droit annuel aux congés payés pour le personnel navigant maritime",
-    duration: "30 jours ouvrables / an",
+      "Droit annuel aux conges payes pour le personnel navigant maritime",
+    duration: "3 jours ouvrables / mois (36 j/an)",
     details:
-      "Le personnel navigant bénéficie de 2,5 jours ouvrables de congé par mois de travail effectif, soit 30 jours ouvrables pour une année complète. Les congés sont majorés d'un jour ouvrable supplémentaire par tranche de 5 ans d'ancienneté dans l'entreprise.",
+      "Le personnel navigant beneficie de 3 jours ouvrables de conge par mois de travail effectif (article 32 CCN 3228), soit 36 jours ouvrables pour une annee complete. Majoration d'un jour ouvrable supplementaire par tranche de 5 ans d'anciennete dans l'entreprise. Ce droit est superieur au minimum legal de 2,5 j/mois du Code du travail.",
   },
   {
     type: "Repos compensateur d'embarquement",
     description:
-      "Repos accordé en compensation des heures de disponibilité à bord",
-    duration: "1 jour par semaine d'embarquement",
+      "Repos accorde en compensation de la disponibilite permanente a bord",
+    duration: "Selon rythme d'alternance et accord d'entreprise",
     details:
-      "Le navigant embarqué bénéficie d'un repos compensateur d'une journée par semaine d'embarquement. Ce repos est distinct des congés payés et vise à compenser la disponibilité permanente à bord.",
+      "Le navigant embarque beneficie d'un repos compensateur calcule en fonction du temps de travail effectif a bord et du rythme d'alternance defini par accord d'entreprise. Les rythmes courants sont 1 semaine / 1 semaine, 2 semaines / 2 semaines ou 15 jours / 15 jours selon les lignes. Ce repos est distinct des conges payes.",
   },
   {
-    type: "Repos à terre",
-    description: "Période de repos entre deux embarquements",
-    duration: "Variable selon le rythme d'embarquement",
+    type: "Jours feries",
+    description: "Compensation des jours feries travailles a bord",
+    duration: "11 jours feries / an",
     details:
-      "Le rythme d'alternance embarquement / repos à terre est défini par accord d'entreprise. Les rythmes courants sont 1 semaine / 1 semaine, 2 semaines / 2 semaines ou 15 jours / 15 jours selon les lignes.",
+      "Les jours feries travailles a bord donnent droit a une majoration de salaire de 100 % ou a un repos compensateur equivalent, au choix de l'employeur. Le 1er mai travaille est systematiquement majore a 100 % (article L3133-6 Code du travail).",
   },
   {
-    type: "Jours fériés",
-    description: "Compensation des jours fériés travaillés à bord",
-    duration: "11 jours fériés / an",
+    type: "Conge maternite / paternite",
+    description: "Conges lies a la naissance ou l'adoption",
+    duration: "16 sem. (maternite) / 28 jours (paternite)",
     details:
-      "Les jours fériés travaillés à bord donnent droit à une majoration de salaire de 100 % ou à un repos compensateur équivalent, au choix de l'employeur. Le 1er mai travaillé est systématiquement majoré à 100 %.",
+      "Conge maternite de droit commun (16 semaines 1er/2e enfant, 26 semaines a partir du 3e). Conge paternite : 25 jours calendaires + 3 jours naissance = 28 jours. L'ENIM assure le versement des indemnites journalieres (regime special gens de mer).",
   },
   {
-    type: "Congé maternité / paternité",
-    description: "Congés liés à la naissance ou l'adoption",
-    duration: "16 semaines (maternité) / 25 jours (paternité)",
+    type: "Conge enfant malade",
+    description: "Absence autorisee pour soigner un enfant malade",
+    duration: "3 jours / an (5 si enfant < 1 an ou 3+ enfants)",
     details:
-      "Les navigantes bénéficient du congé maternité de droit commun (16 semaines pour le 1er ou 2e enfant, 26 semaines à partir du 3e). Le congé paternité est de 25 jours calendaires. L'ENIM assure le versement des indemnités journalières.",
+      "Droit commun Code du travail (L1225-61). Non remunere sauf dispositions plus favorables de l'accord d'entreprise.",
   },
   {
-    type: "Congés pour événements familiaux",
-    description: "Absences autorisées pour événements de la vie personnelle",
-    duration: "1 à 5 jours selon l'événement",
+    type: "Conges pour evenements familiaux",
+    description: "Absences autorisees pour evenements de la vie personnelle",
+    duration: "1 a 5 jours selon l'evenement",
     details:
-      "Mariage du salarié : 5 jours. Mariage d'un enfant : 2 jours. Naissance ou adoption : 3 jours. Décès du conjoint : 5 jours. Décès d'un parent ou beau-parent : 3 jours. Décès d'un frère ou sœur : 3 jours. Déménagement : 1 jour (une fois par an).",
+      "Mariage du salarie : 5 jours. Mariage d'un enfant : 2 jours. Naissance/adoption : 3 jours. Deces du conjoint : 5 jours. Deces parent/beau-parent : 3 jours. Deces frere/soeur : 3 jours. Demenagement : 1 jour (une fois par an). Annonce handicap enfant : 5 jours.",
   },
 ];
 

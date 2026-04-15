@@ -280,10 +280,11 @@ function RegimeENIM() {
           Qu&apos;est-ce que l&apos;ENIM ?
         </h3>
         <p className="text-sm text-foreground-muted leading-relaxed">
-          L&apos;Établissement National des Invalides de la Marine (ENIM) est le régime de sécurité sociale
-          spécifique aux marins professionnels. Distinct du régime général, il couvre la maladie, la maternité,
-          l&apos;invalidité, les accidents du travail et la retraite des navigants. Les cotisations sont calculées
-          sur le salaire forfaitaire déterminé par catégorie.
+          L&apos;Etablissement National des Invalides de la Marine (ENIM), devenu la Caisse des Gens de Mer,
+          est le regime de securite sociale specifique aux marins professionnels. Il couvre la maladie,
+          la maternite, l&apos;invalidite, les accidents du travail et la retraite (via la Caisse de Retraite des Marins, CRM).
+          Les cotisations sont assises sur les salaires forfaitaires ENIM, distincts des salaires reels.
+          Le taux AT/MP varie par entreprise selon la sinistralite.
         </p>
       </div>
 
@@ -316,7 +317,9 @@ function RegimeENIM() {
       </div>
 
       <p className="mt-4 text-xs text-foreground-muted">
-        Taux indicatifs applicables au 1er janvier 2026. La CSG et la CRDS sont calculées sur 98,25 % du salaire brut.
+        Taux indicatifs, bareme ENIM 2025/2026. Taux AT/MP : moyenne de branche, varie selon l&apos;entreprise.
+        CSG et CRDS assises sur 98,25 % du brut. La CRM (retraite) remplace AGIRC-ARRCO pour les gens de mer.
+        Source : Caisse des Gens de Mer, decret 2023-1329.
       </p>
     </div>
   );
