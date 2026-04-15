@@ -26,6 +26,7 @@ export const footerNavigation = {
   ressources: [
     { label: "Documents & Boîte à outils", href: "/documents" },
     { label: "Boîte à outils CCN 3228", href: "/boite-a-outils" },
+    { label: "Transition Ecologique", href: "/transition-ecologique" },
     { label: "Formations", href: "/formations" },
     { label: "SSGM & Médecins", href: "/ssgm" },
     { label: "Agenda", href: "/agenda" },
