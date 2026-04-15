@@ -403,33 +403,19 @@ function Classifications() {
 /* ------------------------------------------------------------------ */
 
 function SimulateurSalaire() {
-  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | "">("");
-  const [selectedLevel, setSelectedLevel] = useState<number | "">("");
-  const [selectedEchelon, setSelectedEchelon] = useState("");
+  const [selectedIdx, setSelectedIdx] = useState<number | "">("");
 
-  const availableLevels = useMemo(
-    () => (selectedCategory ? CLASSIFICATION_LEVELS.filter((l) => l.category === selectedCategory) : []),
-    [selectedCategory]
-  );
-
-  const availableEchelons = useMemo(() => {
-    if (!selectedLevel) return [];
-    const lvl = CLASSIFICATION_LEVELS.find((l) => l.level === selectedLevel);
-    return lvl?.echelons ?? [];
-  }, [selectedLevel]);
+  const entry = selectedIdx !== "" ? SALARY_GRID_NAO_2026[selectedIdx] : null;
 
   const result = useMemo(() => {
-    if (!selectedLevel || !selectedEchelon) return null;
-    const entry = SALARY_GRID.find(
-      (s) => s.level === selectedLevel && s.echelonCode === selectedEchelon
-    );
     if (!entry) return null;
-    const gross = entry.grossMonthly;
+    const gross = entry.salaireMensuel;
     const employeeContrib = Math.round(gross * (ENIM_TOTAL_EMPLOYEE_RATE / 100));
     const estimatedNet = gross - employeeContrib;
-    const annualGross = gross * 12 + entry.annualPremium;
-    return { gross, employeeContrib, estimatedNet, annualGross, annualPremium: entry.annualPremium };
-  }, [selectedLevel, selectedEchelon]);
+    const annualGross = gross * 12 + entry.primeFinAnnee;
+    const hourlyNet = Math.round((estimatedNet / 151.67) * 100) / 100;
+    return { gross, employeeContrib, estimatedNet, annualGross, annualPremium: entry.primeFinAnnee, hourlyNet, tauxHoraire: entry.tauxHoraire, tauxHS: entry.tauxHS };
+  }, [entry]);
 
   const selectCls =
     "w-full rounded-xl border border-border-light bg-surface px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--gaspe-teal-600)]/40 focus:border-[var(--gaspe-teal-600)] transition-colors";
@@ -440,84 +426,45 @@ function SimulateurSalaire() {
 
       <div className="reveal gaspe-card rounded-xl p-6">
         <h3 className="font-heading text-base font-bold text-foreground mb-4">
-          Sélectionnez un poste
+          Selectionnez une fonction
         </h3>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* Category */}
-          <div>
-            <label htmlFor="sim-category" className="block text-xs font-semibold text-foreground-muted mb-1.5">Catégorie</label>
-            <select
-              id="sim-category"
-              className={selectCls}
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value as ServiceCategory | "");
-                setSelectedLevel("");
-                setSelectedEchelon("");
-              }}
-            >
-              <option value="">— Choisir —</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Level */}
-          <div>
-            <label htmlFor="sim-level" className="block text-xs font-semibold text-foreground-muted mb-1.5">Niveau / Poste</label>
-            <select
-              id="sim-level"
-              className={selectCls}
-              value={selectedLevel}
-              disabled={!selectedCategory}
-              onChange={(e) => {
-                setSelectedLevel(e.target.value ? Number(e.target.value) : "");
-                setSelectedEchelon("");
-              }}
-            >
-              <option value="">— Choisir —</option>
-              {availableLevels.map((lvl) => (
-                <option key={lvl.level} value={lvl.level}>{lvl.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Echelon */}
-          <div>
-            <label htmlFor="sim-echelon" className="block text-xs font-semibold text-foreground-muted mb-1.5">Échelon</label>
-            <select
-              id="sim-echelon"
-              className={selectCls}
-              value={selectedEchelon}
-              disabled={!selectedLevel}
-              onChange={(e) => setSelectedEchelon(e.target.value)}
-            >
-              <option value="">— Choisir —</option>
-              {availableEchelons.map((ech) => (
-                <option key={ech.code} value={ech.code}>
-                  {ech.label} ({ech.code})
-                </option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <label htmlFor="sim-fonction" className="block text-xs font-semibold text-foreground-muted mb-1.5">Fonction (grille NAO 2026)</label>
+          <select
+            id="sim-fonction"
+            className={selectCls}
+            value={selectedIdx}
+            onChange={(e) => setSelectedIdx(e.target.value ? Number(e.target.value) : "")}
+          >
+            <option value="">— Choisir une fonction —</option>
+            {SALARY_GRID_NAO_2026.map((entry, i) => (
+              <option key={i} value={i}>{entry.fonction}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Results */}
       {result && (
         <div className="reveal mt-6 rounded-xl border-2 border-[var(--gaspe-teal-600)]/30 bg-[var(--gaspe-teal-600)]/5 p-6">
           <h3 className="font-heading text-base font-bold text-foreground mb-4 flex items-center gap-2">
             <SectionIcon icon="calculator" className="h-5 w-5 text-[var(--gaspe-teal-600)]" />
-            Estimation salariale
+            Estimation salariale — {entry?.fonction}
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ResultCard label="Brut mensuel" value={fmt.format(result.gross)} highlight />
-            <ResultCard label="Cotisations salarié" value={`- ${fmt.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
-            <ResultCard label="Net estimé" value={fmt.format(result.estimatedNet)} highlight />
+            <ResultCard label="Cotisations salarie" value={`- ${fmt.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
+            <ResultCard label="Net estime" value={fmt.format(result.estimatedNet)} highlight />
             <ResultCard label="Brut annuel" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt.format(result.annualPremium)} de prime`} />
           </div>
+          <div className="grid gap-4 sm:grid-cols-3 mt-4">
+            <ResultCard label="Taux horaire" value={fmt.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois" />
+            <ResultCard label="Taux HS (25 %)" value={fmt.format(result.tauxHS)} />
+            <ResultCard label="Net horaire estime" value={fmt.format(result.hourlyNet)} />
+          </div>
+          {entry?.enim && (
+            <p className="mt-3 text-xs text-foreground-muted text-center">{entry.enim} ENIM</p>
+          )}
         </div>
       )}
     </div>
