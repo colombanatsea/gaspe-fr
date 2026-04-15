@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Skip if Cloudflare secrets are not configured
+    if: ${{ vars.CF_CONFIGURED == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -17,10 +19,22 @@ jobs:
         with:
           node-version: 20
 
+      - name: Check Cloudflare credentials
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cloudflare secrets not configured. Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository secrets."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install wrangler
+        if: steps.check-secrets.outputs.skip != 'true'
         run: npm install -g wrangler
 
       - name: Apply D1 migrations
+        if: steps.check-secrets.outputs.skip != 'true'
         run: |
           for f in workers/migrations/*.sql; do
             echo "Applying $f..."
@@ -31,6 +45,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy Worker
+        if: steps.check-secrets.outputs.skip != 'true'
         run: npx wrangler deploy --config workers/wrangler.toml
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
