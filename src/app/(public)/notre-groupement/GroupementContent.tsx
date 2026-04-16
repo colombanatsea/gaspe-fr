@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -78,13 +79,13 @@ const engagements = [
 ];
 
 const bureauMembers = [
-  { name: "Baudouin PAPPENS", role: "President", company: "Compagnie Yeu Continent", href: "https://www.linkedin.com/in/baudouin-pappens/" },
-  { name: "Guillaume du FONTENIOUX", role: "Vice-president", company: "Compagnie des Bacs de Loire", href: "https://www.linkedin.com/in/guillaume-du-fontenioux/" },
-  { name: "Marc L'Alexandre", role: "Vice-president", company: "Groupe LHD", href: "https://www.linkedin.com/in/marc-l-alexandre/" },
-  { name: "Nelly DEPARDIEU", role: "Secretaire", company: "Manche Iles Express", href: "https://www.linkedin.com/in/nelly-depardieu/" },
-  { name: "Franck LAUSSEL", role: "Secretaire adjoint", company: undefined, href: "https://www.linkedin.com/in/franck-laussel/" },
-  { name: "Thomas CREPY", role: "Tresorier", company: "Compagnie Oceane", href: "https://www.linkedin.com/in/thomas-crepy/" },
-  { name: "Colomban Monnier", role: "Delegue General", company: "President de la Fondation ENSM", href: "https://colombanatsea.com" },
+  { name: "Baudouin PAPPENS", role: "President", company: "Compagnie Yeu Continent", href: "https://www.linkedin.com/in/baudouin-pappens/", photoUrl: "/assets/bureau/baudouin-pappens.jpg" },
+  { name: "Guillaume du FONTENIOUX", role: "Vice-president", company: "Compagnie des Bacs de Loire", href: "https://www.linkedin.com/in/guillaume-du-fontenioux/", photoUrl: "/assets/bureau/guillaume-du-fontenioux.jpg" },
+  { name: "Marc L'Alexandre", role: "Vice-president", company: "Groupe LHD", href: "https://www.linkedin.com/in/marc-l-alexandre/", photoUrl: "/assets/bureau/marc-lalexandre.jpg" },
+  { name: "Nelly DEPARDIEU", role: "Secretaire", company: "Manche Iles Express", href: "https://www.linkedin.com/in/nelly-depardieu/", photoUrl: "/assets/bureau/nelly-depardieu.jpg" },
+  { name: "Franck LAUSSEL", role: "Secretaire adjoint", company: undefined, href: "https://www.linkedin.com/in/franck-laussel/", photoUrl: "/assets/bureau/franck-laussel.jpg" },
+  { name: "Thomas CREPY", role: "Tresorier", company: "Compagnie Oceane", href: "https://www.linkedin.com/in/thomas-crepy/", photoUrl: "/assets/bureau/thomas-crepy.jpg" },
+  { name: "Colomban Monnier", role: "Delegue General", company: "President de la Fondation ENSM", href: "https://colombanatsea.com", photoUrl: "/assets/bureau/colomban-monnier.jpg" },
 ];
 
 const timeline = [
@@ -325,8 +326,19 @@ export function GroupementContent() {
               >
                 <div className="absolute top-0 left-0 right-0 h-1 gaspe-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gaspe-teal-50)] to-[var(--gaspe-blue-50)] border border-[var(--gaspe-neutral-200)]">
-                    <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">
+                  <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gaspe-teal-50)] to-[var(--gaspe-blue-50)] border border-[var(--gaspe-neutral-200)] overflow-hidden">
+                    {member.photoUrl ? (
+                      <Image
+                        src={member.photoUrl}
+                        alt={member.name}
+                        width={56}
+                        height={56}
+                        className="object-cover"
+                        unoptimized
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }}
+                      />
+                    ) : null}
+                    <span className={`font-heading text-sm font-bold text-[var(--gaspe-teal-600)] absolute inset-0 flex items-center justify-center ${member.photoUrl ? "hidden" : ""}`}>
                       {member.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </span>
                   </div>

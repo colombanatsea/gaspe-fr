@@ -1,10 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+const AdemeSimulator = dynamic(
+  () => import("@/components/ademe/AdemeSimulator"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 border-2 border-[var(--gaspe-teal-400)] border-t-transparent rounded-full animate-spin" />
+        <span className="ml-3 text-sm text-foreground-muted">Chargement du simulateur...</span>
+      </div>
+    ),
+  }
+);
 
 const ADEME_GUIDES = [
   {
@@ -102,18 +117,18 @@ export default function TransitionEcologiquePage() {
             Estimez vos aides, calculez votre scoring et preparez votre candidature en 30 minutes.
             Le simulateur couvre l&apos;electrique, le biocarburant, le dual-fuel et l&apos;optimisation operationnelle.
           </p>
-          <div className="rounded-2xl border border-border-light overflow-hidden bg-background">
-            <iframe
-              src="https://colombanatsea.com/simulateur-transition-armateurs-cotiers/"
-              className="w-full border-0"
-              style={{ height: "85vh", minHeight: "700px" }}
-              title="Simulateur AAP ADEME 2026 — GASPE"
-              loading="lazy"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
-          </div>
+          <ErrorBoundary fallback={
+            <div className="rounded-2xl border border-border-light p-12 text-center bg-background">
+              <p className="text-foreground-muted">Le simulateur n&apos;a pas pu se charger.</p>
+              <a href="https://colombanatsea.com/simulateur-transition-armateurs-cotiers/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-2 inline-block">
+                Ouvrir dans un nouvel onglet &rarr;
+              </a>
+            </div>
+          }>
+            <AdemeSimulator />
+          </ErrorBoundary>
           <p className="mt-2 text-xs text-foreground-muted text-center">
-            Simulateur heberge par GASPE · Donnees indicatives, ne se substituent pas a un conseil professionnel
+            Simulateur natif GASPE · Donnees indicatives, ne se substituent pas a un conseil professionnel
           </p>
         </div>
 

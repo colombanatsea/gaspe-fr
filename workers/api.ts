@@ -344,6 +344,58 @@ export default {
         return handleUpload(request, env, corsHeaders);
       }
 
+      // ── CMS Pages ──
+      if (path === "/api/cms/pages" && request.method === "GET") {
+        return handleCmsGetPages(env, corsHeaders);
+      }
+      if (path === "/api/cms/pages" && request.method === "PUT") {
+        return handleCmsSavePage(request, env, corsHeaders);
+      }
+
+      // ── Job Offers (admin/adherent CRUD) ──
+      if (path === "/api/jobs" && request.method === "GET") {
+        return handleListJobs(env, corsHeaders);
+      }
+      if (path === "/api/jobs" && request.method === "POST") {
+        return handleCreateJob(request, env, corsHeaders);
+      }
+      if (path.match(/^\/api\/jobs\/[^/]+$/) && request.method === "PATCH") {
+        const jobId = path.split("/api/jobs/")[1];
+        return handleUpdateJob(request, env, corsHeaders, jobId);
+      }
+      if (path.match(/^\/api\/jobs\/[^/]+$/) && request.method === "DELETE") {
+        const jobId = path.split("/api/jobs/")[1];
+        return handleDeleteJob(request, env, corsHeaders, jobId);
+      }
+
+      // ── Medical Visits ──
+      if (path === "/api/medical-visits" && request.method === "GET") {
+        return handleListMedicalVisits(request, env, corsHeaders);
+      }
+      if (path === "/api/medical-visits" && request.method === "POST") {
+        return handleCreateMedicalVisit(request, env, corsHeaders);
+      }
+      if (path.match(/^\/api\/medical-visits\/[^/]+$/) && request.method === "PATCH") {
+        const visitId = path.split("/api/medical-visits/")[1];
+        return handleUpdateMedicalVisit(request, env, corsHeaders, visitId);
+      }
+      if (path.match(/^\/api\/medical-visits\/[^/]+$/) && request.method === "DELETE") {
+        const visitId = path.split("/api/medical-visits/")[1];
+        return handleDeleteMedicalVisit(request, env, corsHeaders, visitId);
+      }
+
+      // ── Media Library ──
+      if (path === "/api/media" && request.method === "GET") {
+        return handleListMedia(request, env, corsHeaders);
+      }
+      if (path === "/api/media" && request.method === "POST") {
+        return handleUploadMedia(request, env, corsHeaders);
+      }
+      if (path.match(/^\/api\/media\/[^/]+$/) && request.method === "DELETE") {
+        const mediaId = path.split("/api/media/")[1];
+        return handleDeleteMedia(request, env, corsHeaders, mediaId);
+      }
+
       return json({ error: "Not found" }, corsHeaders, 404);
     } catch (err) {
       console.error("Worker error:", err);
@@ -1429,4 +1481,351 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
   });
 
   return json({ success: true, key, filename: file.name }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CMS Pages — D1 backed content management
+// ═══════════════════════════════════════════════════════════
+
+async function handleCmsGetPages(env: Env, corsHeaders: Record<string, string>) {
+  const rows = await env.DB.prepare(
+    "SELECT page_id, section_id, section_label, section_type, content, updated_at FROM cms_pages ORDER BY page_id, section_id"
+  ).all();
+
+  // Group by page_id
+  const pages: Record<string, { pageId: string; sections: unknown[]; updatedAt: string }> = {};
+  for (const row of rows.results) {
+    const r = row as Record<string, string>;
+    if (!pages[r.page_id]) {
+      pages[r.page_id] = { pageId: r.page_id, sections: [], updatedAt: r.updated_at };
+    }
+    pages[r.page_id].sections.push({
+      id: r.section_id,
+      label: r.section_label,
+      type: r.section_type,
+      content: r.content,
+    });
+    if (r.updated_at > pages[r.page_id].updatedAt) {
+      pages[r.page_id].updatedAt = r.updated_at;
+    }
+  }
+
+  return json(pages, corsHeaders);
+}
+
+async function handleCmsSavePage(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  // Admin only
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || user.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  const body = await request.json() as { pageId: string; sections: { id: string; label: string; type: string; content: string }[] };
+  if (!body.pageId || !body.sections) return json({ error: "Données invalides" }, corsHeaders, 400);
+
+  const stmt = env.DB.prepare(
+    "INSERT OR REPLACE INTO cms_pages (page_id, section_id, section_label, section_type, content, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, datetime('now'), ?)"
+  );
+  const batch = body.sections.map(s =>
+    stmt.bind(body.pageId, s.id, s.label, s.type, s.content, payload.sub)
+  );
+  await env.DB.batch(batch);
+
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Job Offers — D1 backed CRUD
+// ═══════════════════════════════════════════════════════════
+
+async function handleListJobs(env: Env, corsHeaders: Record<string, string>) {
+  const rows = await env.DB.prepare(
+    "SELECT * FROM job_offers ORDER BY created_at DESC"
+  ).all();
+  return json(rows.results, corsHeaders);
+}
+
+async function handleCreateJob(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT id, role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || (user.role !== "admin" && user.role !== "adherent")) {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  const body = await request.json() as Record<string, unknown>;
+  const id = crypto.randomUUID();
+  const slug = (body.slug as string) || `${(body.title as string || "offre").toLowerCase().replace(/\s+/g, "-")}-${id.slice(0, 8)}`;
+
+  await env.DB.prepare(`
+    INSERT INTO job_offers (id, title, company, company_slug, location, contract_type, category, zone, brevet, description, requirements, salary_range, salary_min, slug, published, published_at, application_url, reference, start_date, contact_phone, handi_accessible, created_by, created_by_role, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    body.title || "", body.company || "", body.companySlug || "",
+    body.location || "", body.contractType || "CDI", body.category || "pont",
+    body.zone || "normandie", body.brevet || null,
+    body.description || "", body.requirements || null,
+    body.salaryRange || null, body.salaryMin || null,
+    slug,
+    body.published ? 1 : 0,
+    body.published ? new Date().toISOString() : null,
+    body.applicationUrl || null, body.reference || null,
+    body.startDate || null, body.contactPhone || null,
+    body.handiAccessible ? 1 : 0,
+    payload.sub, user.role as string, body.status || "draft"
+  ).run();
+
+  return json({ success: true, id, slug }, corsHeaders, 201);
+}
+
+async function handleUpdateJob(request: Request, env: Env, corsHeaders: Record<string, string>, jobId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT id, role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user) return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  // Check ownership or admin
+  const job = await env.DB.prepare("SELECT created_by FROM job_offers WHERE id = ?").bind(jobId).first();
+  if (!job) return json({ error: "Offre non trouvée" }, corsHeaders, 404);
+  if (user.role !== "admin" && job.created_by !== payload.sub) {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  const body = await request.json() as Record<string, unknown>;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+
+  const fields: Record<string, string> = {
+    title: "title", company: "company", location: "location",
+    contractType: "contract_type", category: "category", zone: "zone",
+    description: "description", requirements: "requirements",
+    salaryRange: "salary_range", salaryMin: "salary_min",
+    published: "published", status: "status",
+    applicationUrl: "application_url", reference: "reference",
+    startDate: "start_date", contactPhone: "contact_phone",
+    handiAccessible: "handi_accessible",
+  };
+
+  for (const [jsKey, dbKey] of Object.entries(fields)) {
+    if (jsKey in body) {
+      sets.push(`${dbKey} = ?`);
+      values.push(body[jsKey]);
+    }
+  }
+
+  if (sets.length === 0) return json({ error: "Aucune modification" }, corsHeaders, 400);
+
+  sets.push("updated_at = datetime('now')");
+  values.push(jobId);
+
+  await env.DB.prepare(`UPDATE job_offers SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+  return json({ success: true }, corsHeaders);
+}
+
+async function handleDeleteJob(request: Request, env: Env, corsHeaders: Record<string, string>, jobId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || user.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  await env.DB.prepare("DELETE FROM job_offers WHERE id = ?").bind(jobId).run();
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Medical Visits — D1 backed crew aptitude tracking
+// ═══════════════════════════════════════════════════════════
+
+async function handleListMedicalVisits(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT id, role, organization_id FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user) return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  let rows;
+  if (user.role === "admin") {
+    rows = await env.DB.prepare("SELECT * FROM medical_visits ORDER BY visit_date DESC").all();
+  } else {
+    rows = await env.DB.prepare(
+      "SELECT * FROM medical_visits WHERE user_id = ? OR organization_id = ? ORDER BY visit_date DESC"
+    ).bind(payload.sub, user.organization_id || "").all();
+  }
+
+  return json(rows.results, corsHeaders);
+}
+
+async function handleCreateMedicalVisit(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT id, role, organization_id FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || user.role === "candidat") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  const body = await request.json() as Record<string, unknown>;
+  const id = crypto.randomUUID();
+
+  await env.DB.prepare(`
+    INSERT INTO medical_visits (id, user_id, organization_id, crew_member_name, crew_member_role, visit_type, visit_date, expiry_date, result, doctor_name, center_id, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, payload.sub, user.organization_id || null,
+    body.crewMemberName || "", body.crewMemberRole || null,
+    body.visitType || "aptitude", body.visitDate || "",
+    body.expiryDate || null, body.result || "pending",
+    body.doctorName || null, body.centerId || null, body.notes || null
+  ).run();
+
+  return json({ success: true, id }, corsHeaders, 201);
+}
+
+async function handleUpdateMedicalVisit(request: Request, env: Env, corsHeaders: Record<string, string>, visitId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const visit = await env.DB.prepare("SELECT user_id FROM medical_visits WHERE id = ?").bind(visitId).first();
+  if (!visit) return json({ error: "Visite non trouvée" }, corsHeaders, 404);
+
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user) return json({ error: "Accès refusé" }, corsHeaders, 403);
+  if (user.role !== "admin" && visit.user_id !== payload.sub) {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  const body = await request.json() as Record<string, unknown>;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+
+  const fields: Record<string, string> = {
+    crewMemberName: "crew_member_name", crewMemberRole: "crew_member_role",
+    visitType: "visit_type", visitDate: "visit_date", expiryDate: "expiry_date",
+    result: "result", doctorName: "doctor_name", centerId: "center_id", notes: "notes",
+  };
+
+  for (const [jsKey, dbKey] of Object.entries(fields)) {
+    if (jsKey in body) {
+      sets.push(`${dbKey} = ?`);
+      values.push(body[jsKey]);
+    }
+  }
+
+  if (sets.length === 0) return json({ error: "Aucune modification" }, corsHeaders, 400);
+
+  sets.push("updated_at = datetime('now')");
+  values.push(visitId);
+
+  await env.DB.prepare(`UPDATE medical_visits SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+  return json({ success: true }, corsHeaders);
+}
+
+async function handleDeleteMedicalVisit(request: Request, env: Env, corsHeaders: Record<string, string>, visitId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || (user.role !== "admin" && user.role !== "adherent")) {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
+
+  await env.DB.prepare("DELETE FROM medical_visits WHERE id = ?").bind(visitId).run();
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Media Library — R2 storage + D1 metadata
+// ═══════════════════════════════════════════════════════════
+
+async function handleListMedia(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const rows = await env.DB.prepare(
+    "SELECT * FROM media_library ORDER BY created_at DESC"
+  ).all();
+
+  return json(rows.results, corsHeaders);
+}
+
+async function handleUploadMedia(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || user.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  const formData = await request.formData();
+  const file = formData.get("file") as File;
+  if (!file) return json({ error: "Aucun fichier fourni" }, corsHeaders, 400);
+
+  // Allow images + PDF for media library
+  const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml", "application/pdf"];
+  if (!allowed.includes(file.type)) {
+    return json({ error: "Type de fichier non autorisé" }, corsHeaders, 400);
+  }
+
+  // Max 5MB for media
+  if (file.size > 5 * 1024 * 1024) {
+    return json({ error: "Fichier trop volumineux (max 5 Mo)" }, corsHeaders, 400);
+  }
+
+  const id = crypto.randomUUID();
+  const ext = file.name.split(".").pop() || "bin";
+  const r2Key = `media/${id}.${ext}`;
+
+  const buffer = await file.arrayBuffer();
+  await env.UPLOADS.put(r2Key, buffer, {
+    httpMetadata: { contentType: file.type },
+    customMetadata: { originalName: file.name },
+  });
+
+  await env.DB.prepare(`
+    INSERT INTO media_library (id, filename, content_type, size, r2_key, uploaded_by)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(id, file.name, file.type, file.size, r2Key, payload.sub).run();
+
+  return json({ success: true, id, r2Key, filename: file.name }, corsHeaders, 201);
+}
+
+async function handleDeleteMedia(request: Request, env: Env, corsHeaders: Record<string, string>, mediaId: string) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+
+  const user = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first();
+  if (!user || user.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  const media = await env.DB.prepare("SELECT r2_key FROM media_library WHERE id = ?").bind(mediaId).first();
+  if (!media) return json({ error: "Média non trouvé" }, corsHeaders, 404);
+
+  // Delete from R2 and D1
+  await env.UPLOADS.delete(media.r2_key as string);
+  await env.DB.prepare("DELETE FROM media_library WHERE id = ?").bind(mediaId).run();
+
+  return json({ success: true }, corsHeaders);
 }
