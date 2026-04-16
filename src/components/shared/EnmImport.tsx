@@ -2,51 +2,53 @@
 
 import { useState } from "react";
 import { useAuth, type User } from "@/lib/auth/AuthContext";
+import { parseEnmText, type ParsedEnmData } from "@/lib/enm-parser";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-interface EnmSeaService {
-  id: string;
-  vesselName: string;
-  vesselImo: string;
-  rank: string;
-  category: string;
-  startDate: string;
-  endDate: string;
-}
+type Step = "paste" | "loading" | "review" | "done" | "error";
 
-interface EnmCertificate {
-  certId: string;
-  title: string;
-  enmReference: string;
-  status: "valid" | "expired";
-  expiryDate?: string;
-}
-
-interface EnmMedical {
-  visitType?: string;
-  lastVisitDate?: string;
-  expiryDate?: string;
-  decision?: string;
-  duration?: string;
-  restrictions: string[];
-}
-
-interface EnmData {
-  seaService: EnmSeaService[];
-  certificates: EnmCertificate[];
-  medical: EnmMedical;
-  enmMarinId?: string;
-}
-
-type Step = "credentials" | "loading" | "review" | "done" | "error";
+const ENM_PAGES = [
+  { label: "Lignes de service", path: "/fr/univers-marin/pmr/lignes-de-service" },
+  { label: "Mes titres et brevets", path: "/fr/univers-marin/pmr/mes-titres" },
+  { label: "Aptitude médicale", path: "/fr/univers-marin/pmr/aptitude-medicale" },
+];
 
 export function EnmImport() {
   const { user, updateUser } = useAuth();
-  const [step, setStep] = useState<Step>("credentials");
+  const [step, setStep] = useState<Step>("paste");
+  const [pastedText, setPastedText] = useState("");
   const [error, setError] = useState("");
-  const [data, setData] = useState<EnmData | null>(null);
+  const [data, setData] = useState<ParsedEnmData | null>(null);
+
+  function handleParse() {
+    if (!pastedText.trim()) {
+      setError("Veuillez coller le contenu de vos pages ENM.");
+      setStep("error");
+      return;
+    }
+
+    setStep("loading");
+    setError("");
+
+    // Parse on next tick to show loading state
+    setTimeout(() => {
+      try {
+        const parsed = parseEnmText(pastedText);
+        if (parsed.seaService.length === 0 && parsed.certificates.length === 0 && !parsed.medical.decision) {
+          setError("Aucune donnee trouvee dans le texte colle. Assurez-vous de copier le contenu complet des pages ENM (Ctrl+A puis Ctrl+C sur chaque page).");
+          setStep("error");
+          return;
+        }
+        setData(parsed);
+        setStep("review");
+      } catch {
+        setError("Erreur lors de l'analyse du texte. Verifiez le contenu colle.");
+        setStep("error");
+      }
+    }, 500);
+  }
 
   function handleSave() {
     if (!user || !data) return;
@@ -91,8 +93,8 @@ export function EnmImport() {
         </div>
       </div>
 
-      {/* Already connected */}
-      {user?.enmMarinId && step === "credentials" && (
+      {/* Already imported */}
+      {user?.enmMarinId && step === "paste" && (
         <div className="rounded-xl bg-green-50 border border-green-200 p-4 flex items-center gap-3">
           <svg className="h-5 w-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -110,86 +112,75 @@ export function EnmImport() {
         </div>
       )}
 
-      {/* Step 1: FranceConnect redirect */}
-      {step === "credentials" && (
+      {/* Step 1: Instructions + paste */}
+      {step === "paste" && (
         <Card>
           <div className="space-y-4">
-            <p className="text-sm text-foreground-muted">
-              L&apos;Espace Numerique Maritime utilise <strong>FranceConnect</strong> pour l&apos;authentification.
-              Connectez-vous d&apos;abord sur le portail ENM, puis revenez ici pour importer vos donnees.
-            </p>
-
+            {/* FranceConnect instructions */}
             <div className="rounded-xl bg-[#000091]/5 border border-[#000091]/15 p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#000091]">
-                  <span className="text-white text-xs font-bold">FC</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">Etape 1 : Connectez-vous via FranceConnect</p>
-                  <p className="text-xs text-foreground-muted mt-1">
-                    Rendez-vous sur le portail ENM et connectez-vous avec FranceConnect (impots.gouv.fr, Ameli, identite numerique La Poste, etc.)
-                  </p>
-                </div>
+              <p className="text-sm font-semibold text-foreground mb-3">Comment importer vos donnees :</p>
+              <ol className="text-sm text-foreground-muted space-y-2 list-decimal list-inside">
+                <li>
+                  Connectez-vous a l&apos;ENM via FranceConnect :{" "}
+                  <a
+                    href="https://enm.mes-services.mer.gouv.fr/fr/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[#000091] font-medium hover:underline"
+                  >
+                    enm.mes-services.mer.gouv.fr
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                </li>
+                <li>Ouvrez chacune de ces pages :</li>
+              </ol>
+              <div className="mt-2 ml-6 space-y-1">
+                {ENM_PAGES.map((page) => (
+                  <a
+                    key={page.path}
+                    href={`https://enm.mes-services.mer.gouv.fr${page.path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-xs text-[#000091] hover:underline py-0.5"
+                  >
+                    <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    {page.label}
+                  </a>
+                ))}
               </div>
+              <ol className="text-sm text-foreground-muted space-y-2 list-decimal list-inside mt-2" start={3}>
+                <li>Sur chaque page, faites <kbd className="rounded bg-[var(--gaspe-neutral-200)] px-1.5 py-0.5 text-xs font-mono">Ctrl+A</kbd> puis <kbd className="rounded bg-[var(--gaspe-neutral-200)] px-1.5 py-0.5 text-xs font-mono">Ctrl+C</kbd></li>
+                <li>Collez tout le contenu dans le champ ci-dessous</li>
+              </ol>
             </div>
 
-            <a
-              href="https://enm.mes-services.mer.gouv.fr/fr/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#000091] px-5 py-3 text-sm font-semibold text-white hover:bg-[#000091]/90 transition-colors"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-              </svg>
-              Ouvrir le portail ENM (FranceConnect)
-            </a>
-
-            <div className="rounded-xl bg-surface border border-border-light p-4">
-              <p className="text-sm font-medium text-foreground mb-2">Etape 2 : Importez vos donnees</p>
-              <p className="text-xs text-foreground-muted mb-3">
-                Une fois connecte au portail ENM, cliquez ci-dessous pour lancer l&apos;import automatique de vos lignes de service, brevets et aptitude medicale.
+            {/* Paste area */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Contenu copie depuis l&apos;ENM
+              </label>
+              <textarea
+                value={pastedText}
+                onChange={(e) => setPastedText(e.target.value)}
+                placeholder="Collez ici le contenu de vos pages ENM (lignes de service, titres, aptitude medicale)...&#10;&#10;Vous pouvez coller le contenu des 3 pages dans ce meme champ."
+                rows={8}
+                className="w-full rounded-xl border border-border-light bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              />
+              <p className="mt-1 text-xs text-foreground-muted">
+                Collez le contenu des 3 pages dans ce champ. Le systeme detectera automatiquement les lignes de service, brevets et aptitude medicale.
               </p>
-              <Button onClick={() => {
-                setStep("loading");
-                setError("");
-                // FranceConnect auth cannot be proxied — demo data until OAuth redirect flow is implemented
-                setTimeout(() => {
-                  setData({
-                    enmMarinId: "20105975",
-                    seaService: [
-                      { id: "enm-1", startDate: "2017-06-08", endDate: "2017-06-17", vesselName: "ZOURITE", vesselImo: "933184", rank: "LIEUTENANT", category: "11" },
-                      { id: "enm-2", startDate: "2017-02-01", endDate: "2017-02-12", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-                      { id: "enm-3", startDate: "2017-01-26", endDate: "2017-01-31", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-                      { id: "enm-4", startDate: "2017-01-01", endDate: "2017-01-25", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-                      { id: "enm-5", startDate: "2016-12-14", endDate: "2016-12-31", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-                    ],
-                    certificates: [
-                      { certId: "enm-cert-10216913", title: "Brevet de second capitaine 3000 (2016)", enmReference: "10216913", status: "expired", expiryDate: "2021-10-23" },
-                      { certId: "enm-cert-10138454", title: "Chef de quart de navire de mer", enmReference: "10138454", status: "expired", expiryDate: "2019-11-16" },
-                      { certId: "enm-cert-10138450", title: "Brevet d'aptitude a l'exploitation des embarcations et radeaux de sauvetage", enmReference: "10138450", status: "valid" },
-                      { certId: "enm-cert-10091950", title: "Certificat general d'operateur", enmReference: "10091950", status: "expired", expiryDate: "2017-10-18" },
-                      { certId: "enm-cert-10200675", title: "Certificat d'aptitude a l'exploitation des embarcations (STCW10)", enmReference: "10200675", status: "expired", expiryDate: "2021-03-23" },
-                      { certId: "enm-cert-10200674", title: "Certificat de formation de base a la securite (STCW10)", enmReference: "10200674", status: "expired", expiryDate: "2021-03-23" },
-                    ],
-                    medical: {
-                      visitType: "Annuelle",
-                      lastVisitDate: "2017-04-06",
-                      expiryDate: "2018-04-30",
-                      decision: "Apte TF/TN avec restriction",
-                      duration: "12 mois",
-                      restrictions: ["Port de verres correcteurs"],
-                    },
-                  });
-                  setStep("review");
-                }, 1500);
-              }}>
-                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                </svg>
-                Importer mes donnees ENM
-              </Button>
             </div>
+
+            <Button onClick={handleParse} disabled={!pastedText.trim()}>
+              <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+              </svg>
+              Analyser et importer
+            </Button>
           </div>
         </Card>
       )}
@@ -199,7 +190,7 @@ export function EnmImport() {
         <Card>
           <div className="flex items-center justify-center py-8 gap-3">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--gaspe-teal-600)] border-t-transparent" />
-            <p className="text-sm text-foreground-muted">Connexion au portail ENM en cours...</p>
+            <p className="text-sm text-foreground-muted">Analyse du contenu en cours...</p>
           </div>
         </Card>
       )}
@@ -210,7 +201,7 @@ export function EnmImport() {
           <div className="rounded-xl bg-red-50 border border-red-200 p-4 mb-4">
             <p className="text-sm text-red-700">{error}</p>
           </div>
-          <Button variant="secondary" onClick={() => setStep("credentials")}>Reessayer</Button>
+          <Button variant="secondary" onClick={() => setStep("paste")}>Reessayer</Button>
         </Card>
       )}
 
@@ -219,7 +210,7 @@ export function EnmImport() {
         <div className="space-y-4">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle>Donnees importees</CardTitle>
+              <CardTitle>Donnees detectees</CardTitle>
               {data.enmMarinId && (
                 <Badge variant="teal">N° marin {data.enmMarinId}</Badge>
               )}
@@ -262,7 +253,7 @@ export function EnmImport() {
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-foreground-muted">Aucune ligne de service trouvee</p>
+                <p className="text-xs text-foreground-muted">Aucune ligne de service detectee</p>
               )}
             </div>
 
@@ -286,6 +277,9 @@ export function EnmImport() {
                     </Badge>
                   </div>
                 ))}
+                {data.certificates.length === 0 && (
+                  <p className="text-xs text-foreground-muted">Aucun titre detecte</p>
+                )}
               </div>
             </div>
 
@@ -323,14 +317,14 @@ export function EnmImport() {
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-foreground-muted">Aucune donnee d&apos;aptitude medicale trouvee</p>
+                <p className="text-xs text-foreground-muted">Aucune donnee d&apos;aptitude medicale detectee</p>
               )}
             </div>
           </Card>
 
           <div className="flex items-center gap-3">
             <Button onClick={handleSave}>Enregistrer dans mon profil</Button>
-            <Button variant="secondary" onClick={() => { setStep("credentials"); setData(null); }}>Annuler</Button>
+            <Button variant="secondary" onClick={() => { setStep("paste"); setData(null); }}>Modifier</Button>
           </div>
         </div>
       )}
@@ -349,7 +343,7 @@ export function EnmImport() {
               </p>
             </div>
           </div>
-          <Button variant="secondary" className="mt-3" onClick={() => setStep("credentials")}>
+          <Button variant="secondary" className="mt-3" onClick={() => { setStep("paste"); setPastedText(""); setData(null); }}>
             Reimporter
           </Button>
         </Card>
