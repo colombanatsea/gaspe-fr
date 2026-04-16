@@ -11,13 +11,13 @@ export default function PreferencesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [prefs, setPrefs] = useState<NewsletterPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => isApiMode());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    if (!isApiMode()) { setLoading(false); return; }
+    if (!isApiMode()) return;
     ApiAuthStore.fetchPreferences().then((p) => {
       setPrefs(p);
       setLoading(false);

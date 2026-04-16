@@ -27,6 +27,7 @@ export function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
+  const closeUserMenu = useCallback(() => setUserMenuOpen(false), []);
 
   // Close user menu on click outside
   useEffect(() => {
@@ -38,11 +39,6 @@ export function Header() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  // Close menu on route change
-  useEffect(() => {
-    setUserMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border-light">
@@ -96,6 +92,7 @@ export function Header() {
                 <div className="absolute right-0 mt-1 w-48 rounded-lg bg-background shadow-lg border border-border-light py-1 z-50">
                   <Link
                     href={authNavigation[user.role].href}
+                    onClick={closeUserMenu}
                     className="block px-4 py-2 text-sm text-foreground hover:bg-surface transition-colors"
                   >
                     Mon espace

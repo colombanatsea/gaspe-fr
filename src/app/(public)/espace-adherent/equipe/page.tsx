@@ -21,7 +21,7 @@ export default function EquipePage() {
   const [inviteForm, setInviteForm] = useState({ email: "", name: "", orgRole: "" });
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => isApiMode());
 
   const orgId = user?.organizationId;
   const isPrimary = user?.isPrimary;
@@ -38,10 +38,22 @@ export default function EquipePage() {
   }, [orgId, isPrimary]);
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    if (!isApiMode()) { setLoading(false); return; }
-    refresh();
-  }, [user, router, refresh]);
+    if (!user || user.role !== "adherent") { router.push("/connexion"); }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (!isApiMode() || !orgId) return;
+    let cancelled = false;
+    ApiAuthStore.fetchOrganization(orgId).then(({ contacts: c }) => {
+      if (cancelled) return;
+      setContacts(c);
+      if (!isPrimary) { setLoading(false); return; }
+      ApiAuthStore.fetchInvitations(orgId).then((inv) => {
+        if (!cancelled) { setInvitations(inv); setLoading(false); }
+      });
+    });
+    return () => { cancelled = true; };
+  }, [orgId, isPrimary]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();

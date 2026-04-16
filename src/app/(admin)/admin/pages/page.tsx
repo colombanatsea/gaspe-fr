@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -16,48 +17,53 @@ import {
   type MediaItem,
 } from "@/lib/cms-store";
 
+function loadPageSections(pageId: string): PageSection[] {
+  const pageDef = PAGE_DEFINITIONS.find((p) => p.id === pageId);
+  if (!pageDef) return [];
+  const stored = getPageContent(pageId);
+  if (stored) {
+    return pageDef.sections.map((def) => {
+      const existing = stored.sections.find((s) => s.id === def.id);
+      return existing ?? { id: def.id, label: def.label, type: def.type, content: "" };
+    });
+  }
+  return pageDef.sections.map((def) => ({
+    id: def.id,
+    label: def.label,
+    type: def.type,
+    content: "",
+  }));
+}
+
 export default function AdminPagesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [selectedPageId, setSelectedPageId] = useState(PAGE_DEFINITIONS[0].id);
-  const [sections, setSections] = useState<PageSection[]>([]);
+  const [pageState, setPageState] = useState<{ id: string; sections: PageSection[] }>(() => {
+    const id = PAGE_DEFINITIONS[0].id;
+    return { id, sections: loadPageSections(id) };
+  });
+  const selectedPageId = pageState.id;
+  const sections = pageState.sections;
+  function setSections(update: PageSection[] | ((prev: PageSection[]) => PageSection[])) {
+    setPageState((prev) => ({
+      ...prev,
+      sections: typeof update === "function" ? update(prev.sections) : update,
+    }));
+  }
   const [showPreview, setShowPreview] = useState(false);
-  const [previewSection, setPreviewSection] = useState<string | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeEditorInsert, setActiveEditorInsert] = useState<((item: MediaItem) => void) | null>(null);
+  const [activeEditorInsert, setActiveEditorInsert] = useState<
+    ((item: MediaItem) => void) | null
+  >(null);
+
+
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
     }
   }, [user, router]);
-
-  // Load content when page selection changes
-  useEffect(() => {
-    const pageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
-    if (!pageDef) return;
-
-    const stored = getPageContent(selectedPageId);
-    if (stored) {
-      // Merge stored sections with definition (in case new sections were added)
-      const merged = pageDef.sections.map((def) => {
-        const existing = stored.sections.find((s) => s.id === def.id);
-        return existing ?? { id: def.id, label: def.label, type: def.type, content: "" };
-      });
-      setSections(merged);
-    } else {
-      setSections(
-        pageDef.sections.map((def) => ({
-          id: def.id,
-          label: def.label,
-          type: def.type,
-          content: "",
-        }))
-      );
-    }
-    setSaved(false);
-  }, [selectedPageId]);
 
   function updateSection(id: string, content: string) {
     setSections((prev) =>
@@ -88,8 +94,6 @@ export default function AdminPagesPage() {
     }
     setShowMediaLibrary(false);
   }
-
-  const currentPageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
 
   if (!user || user.role !== "admin") return null;
 
@@ -155,7 +159,12 @@ export default function AdminPagesPage() {
         {PAGE_DEFINITIONS.map((page) => (
           <button
             key={page.id}
-            onClick={() => setSelectedPageId(page.id)}
+            onClick={() => {
+              if (page.id !== selectedPageId) {
+                setPageState({ id: page.id, sections: loadPageSections(page.id) });
+                setSaved(false);
+              }
+            }}
             className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
               selectedPageId === page.id
                 ? "bg-primary text-white shadow-sm"
@@ -198,7 +207,7 @@ export default function AdminPagesPage() {
                       className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
                     />
                     {section.content && (
-                      <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
+                      <Image src={section.content} alt="Aperçu image" width={300} height={128} className="max-h-32 rounded-xl object-contain" />
                     )}
                     <button
                       type="button"

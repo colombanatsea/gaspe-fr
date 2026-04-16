@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth, COMPANY_ROLES, type CompanyRole, type Vessel } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
@@ -33,18 +34,6 @@ export default function AdherentProfilPage() {
       router.push("/connexion");
     }
   }, [user, router]);
-
-  useEffect(() => {
-    if (user) {
-      setCompanyRole(user.companyRole ?? "");
-      setCompanyDescription(user.companyDescription ?? "");
-      setCompanyLogo(user.companyLogo ?? "");
-      setCompanyAddress(user.companyAddress ?? "");
-      setCompanyEmail(user.companyEmail ?? "");
-      setCompanyPhone(user.companyPhone ?? "");
-      setVessels(user.vessels ?? []);
-    }
-  }, [user]);
 
   if (!user || user.role !== "adherent") return null;
 
@@ -224,7 +213,7 @@ export default function AdherentProfilPage() {
                     <label className="block text-sm font-medium text-foreground mb-1">Logo entreprise</label>
                     <div className="flex items-center gap-4">
                       {companyLogo && (
-                        <img src={companyLogo} alt="Logo entreprise" loading="lazy" className="h-16 w-16 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                        <Image src={companyLogo} alt="Logo entreprise" width={64} height={64} className="h-16 w-16 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
                       )}
                       <div>
                         <input
@@ -309,7 +298,7 @@ export default function AdherentProfilPage() {
                   {/* Logo + company name */}
                   <div className="flex items-center gap-4">
                     {user.companyLogo ? (
-                      <img src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} loading="lazy" className="h-16 w-16 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                      <Image src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} width={64} height={64} className="h-16 w-16 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
                     ) : (
                       <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
                         <span className="font-heading text-xl font-bold text-[var(--gaspe-teal-600)]">

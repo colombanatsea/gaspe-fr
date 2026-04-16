@@ -31,16 +31,14 @@ function getPositions(): Position[] {
 export default function AdminPositionsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [positions, setPositions] = useState<Position[]>([]);
+  const [positions, setPositions] = useState<Position[]>(getPositions);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("");
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
-      return;
     }
-    setPositions(getPositions());
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

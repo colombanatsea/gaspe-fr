@@ -235,13 +235,12 @@ const modalityVariant: Record<FormationModality, "teal" | "blue" | "warm"> = {
 export default function AdminFormationsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [formations, setFormations] = useState<Formation[]>([]);
+  const [formations, setFormations] = useState<Formation[]>(getFormations);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    setFormations(getFormations());
+    if (!user || user.role !== "admin") { router.push("/connexion"); }
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

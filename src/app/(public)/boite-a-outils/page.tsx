@@ -9,7 +9,6 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 import {
   TOOLKIT_SECTIONS,
   CLASSIFICATION_LEVELS,
-  SALARY_GRID,
   SALARY_GRID_NAO_2026,
   SALARY_NOTES,
   INDEMNITES_NAO_2026,

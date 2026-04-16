@@ -25,11 +25,10 @@ export default function AdminDashboardPage() {
     pending: 0, adherents: 0, candidats: 0, total: 0,
     formations: 0, positions: 0, events: 0, documents: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    setLoading(true);
     getAllUsers().then((users) => {
       setCounts({
         pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,

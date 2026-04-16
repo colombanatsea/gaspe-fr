@@ -68,7 +68,7 @@ function getEvents(): AgendaEvent[] {
 export default function AdminAgendaPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [events, setEvents] = useState<AgendaEvent[]>([]);
+  const [events, setEvents] = useState<AgendaEvent[]>(getEvents);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -85,9 +85,7 @@ export default function AdminAgendaPage() {
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
-      return;
     }
-    setEvents(getEvents());
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

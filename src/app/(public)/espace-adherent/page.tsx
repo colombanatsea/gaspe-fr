@@ -2,58 +2,50 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 
 const OFFERS_KEY = "gaspe_adherent_offers";
 const FORMATIONS_KEY = "gaspe_formations";
 const DOCUMENTS_KEY = "gaspe_documents";
 
+function computeCounts(userId: string) {
+  let offersCount = 0, activeOffersCount = 0, applicationsCount = 0;
+  let formationsCount = 0, myFormationsCount = 0, documentsCount = 0;
+  try {
+    const offers = JSON.parse(localStorage.getItem(OFFERS_KEY) ?? "[]");
+    const myOffers = offers.filter((o: { ownerId: string }) => o.ownerId === userId);
+    offersCount = myOffers.length;
+    activeOffersCount = myOffers.filter((o: { status: string }) => o.status === "active").length;
+    applicationsCount = myOffers.reduce((acc: number, o: { applications?: number }) => acc + (o.applications ?? 0), 0);
+  } catch { /* empty */ }
+  try {
+    const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
+    formationsCount = formations.length;
+    myFormationsCount = formations.filter((f: { registrations?: string[] }) => f.registrations?.includes(userId)).length;
+  } catch { /* empty */ }
+  try {
+    const documents = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? "[]");
+    documentsCount = documents.length;
+  } catch { /* empty */ }
+  return { offersCount, activeOffersCount, applicationsCount, formationsCount, myFormationsCount, documentsCount };
+}
+
 export default function EspaceAdherentPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [offersCount, setOffersCount] = useState(0);
-  const [activeOffersCount, setActiveOffersCount] = useState(0);
-  const [applicationsCount, setApplicationsCount] = useState(0);
-  const [formationsCount, setFormationsCount] = useState(0);
-  const [myFormationsCount, setMyFormationsCount] = useState(0);
-  const [documentsCount, setDocumentsCount] = useState(0);
+  const [counts] = useState(() =>
+    user ? computeCounts(user.id) : { offersCount: 0, activeOffersCount: 0, applicationsCount: 0, formationsCount: 0, myFormationsCount: 0, documentsCount: 0 }
+  );
+  const { offersCount, activeOffersCount, applicationsCount, formationsCount, myFormationsCount, documentsCount } = counts;
 
   useEffect(() => {
     if (!user || user.role !== "adherent") {
       router.push("/connexion");
-      return;
     }
-
-    // Count offers
-    try {
-      const offers = JSON.parse(localStorage.getItem(OFFERS_KEY) ?? "[]");
-      const myOffers = offers.filter((o: { ownerId: string }) => o.ownerId === user.id);
-      setOffersCount(myOffers.length);
-      setActiveOffersCount(myOffers.filter((o: { status: string }) => o.status === "active").length);
-      // Count applications across all my offers
-      const allApplications = myOffers.reduce((acc: number, o: { applications?: number }) => acc + (o.applications ?? 0), 0);
-      setApplicationsCount(allApplications);
-    } catch { /* empty */ }
-
-    // Count formations
-    try {
-      const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
-      setFormationsCount(formations.length);
-      const myRegistrations = formations.filter((f: { registrations?: string[] }) =>
-        f.registrations?.includes(user.id)
-      );
-      setMyFormationsCount(myRegistrations.length);
-    } catch { /* empty */ }
-
-    // Count documents
-    try {
-      const documents = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? "[]");
-      setDocumentsCount(documents.length);
-    } catch { /* empty */ }
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;
@@ -244,7 +236,7 @@ export default function EspaceAdherentPage() {
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3">
                 {user.companyLogo ? (
-                  <img src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                  <Image src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} width={40} height={40} className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
                     <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">{(user.company ?? "?").charAt(0)}</span>

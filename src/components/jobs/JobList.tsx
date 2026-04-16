@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -20,13 +20,14 @@ function getAllPublishedJobs(): Job[] {
   } catch { /* empty */ }
   try {
     const adhRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
-    const adh: any[] = adhRaw ? JSON.parse(adhRaw) : [];
+    interface AdherentOffer extends Partial<Job> { status?: string; createdAt?: string }
+    const adh: AdherentOffer[] = adhRaw ? JSON.parse(adhRaw) : [];
     // Adherent offers use "status" not "published"
     base.push(...adh
-      .filter((j: any) => j.status === "active")
-      .map((j: any) => ({
+      .filter((j) => j.status === "active")
+      .map((j) => ({
         ...j,
-        slug: j.slug || j.id,
+        slug: j.slug || j.id || "",
         companySlug: j.companySlug || "",
         zone: j.zone || "normandie",
         publishedAt: j.createdAt || new Date().toISOString(),
@@ -46,11 +47,7 @@ function getAllPublishedJobs(): Job[] {
 export function JobList() {
   const searchParams = useSearchParams();
   const { user, updateUser } = useAuth();
-  const [allJobs, setAllJobs] = useState(publishedJobs);
-
-  useEffect(() => {
-    setAllJobs(getAllPublishedJobs());
-  }, []);
+  const [allJobs] = useState<Job[]>(getAllPublishedJobs);
 
   const selectedContracts = searchParams.getAll("contrat");
   const selectedCategories = searchParams.getAll("categorie");

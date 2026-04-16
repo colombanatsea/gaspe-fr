@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
@@ -23,13 +23,9 @@ function getPublishedEvents(): AgendaEvent[] {
 
 export default function AgendaPage() {
   const { user } = useAuth();
-  const [events, setEvents] = useState<AgendaEvent[]>([]);
+  const [events] = useState<AgendaEvent[]>(getPublishedEvents);
 
   const isAdherent = user && (user.role === "adherent" || user.role === "admin");
-
-  useEffect(() => {
-    setEvents(getPublishedEvents());
-  }, []);
 
   return (
     <>

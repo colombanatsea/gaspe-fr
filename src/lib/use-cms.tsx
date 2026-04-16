@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getPageContent, type PageSection } from "@/lib/cms-store";
+import { useMemo } from "react";
+import { getPageContent } from "@/lib/cms-store";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 
 /**
@@ -9,19 +9,16 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
  * Returns the CMS content if it exists and is non-empty, otherwise the fallback.
  */
 export function useCmsContent(pageId: string, sectionId: string, fallback: string = ""): string {
-  const [content, setContent] = useState(fallback);
-
-  useEffect(() => {
+  return useMemo(() => {
     const page = getPageContent(pageId);
     if (page) {
       const section = page.sections.find((s) => s.id === sectionId);
       if (section && section.content.trim()) {
-        setContent(section.content);
+        return section.content;
       }
     }
-  }, [pageId, sectionId]);
-
-  return content;
+    return fallback;
+  }, [pageId, sectionId, fallback]);
 }
 
 /**
@@ -29,22 +26,17 @@ export function useCmsContent(pageId: string, sectionId: string, fallback: strin
  * Returns a map of sectionId → content (only non-empty sections).
  */
 export function useCmsPage(pageId: string): Record<string, string> {
-  const [sections, setSections] = useState<Record<string, string>>({});
-
-  useEffect(() => {
+  return useMemo(() => {
     const page = getPageContent(pageId);
-    if (page) {
-      const map: Record<string, string> = {};
-      for (const s of page.sections) {
-        if (s.content.trim()) {
-          map[s.id] = s.content;
-        }
+    if (!page) return {};
+    const map: Record<string, string> = {};
+    for (const s of page.sections) {
+      if (s.content.trim()) {
+        map[s.id] = s.content;
       }
-      setSections(map);
     }
+    return map;
   }, [pageId]);
-
-  return sections;
 }
 
 /**

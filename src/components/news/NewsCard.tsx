@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type NewsCategory = "actualite" | "position" | "presse";
@@ -60,10 +61,11 @@ export function NewsCard({
       >
         {coverImageUrl && (
           <div className="mb-4 overflow-hidden rounded-md">
-            <img
+            <Image
               src={coverImageUrl}
               alt={title}
-              loading="lazy"
+              width={600}
+              height={160}
               className="h-40 w-full object-cover transition-transform group-hover:scale-105"
             />
           </div>

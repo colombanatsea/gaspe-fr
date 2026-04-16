@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { MemberLogo } from "@/components/shared/MemberLogo";
 import { Badge } from "@/components/ui/Badge";
-import type { Member } from "@/types";
 import type { Vessel } from "@/lib/auth/AuthContext";
 
 /* ---------- Adherent profile data from localStorage ---------- */
@@ -55,13 +54,9 @@ function getAdherentProfile(memberName: string): AdherentProfile | null {
 
 export function MemberDetail({ slug }: { slug: string }) {
   const member = members.find((m) => m.slug === slug);
-  const [profile, setProfile] = useState<AdherentProfile | null>(null);
-
-  useEffect(() => {
-    if (member) {
-      setProfile(getAdherentProfile(member.name));
-    }
-  }, [member]);
+  const [profile] = useState<AdherentProfile | null>(() =>
+    member ? getAdherentProfile(member.name) : null
+  );
 
   if (!member) {
     return (
@@ -109,9 +104,11 @@ export function MemberDetail({ slug }: { slug: string }) {
           <div className="shrink-0">
             {logoUrl ? (
               <div className="h-20 w-20 rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden p-2">
-                <img
+                <Image
                   src={logoUrl}
                   alt={member.name}
+                  width={72}
+                  height={72}
                   className="max-w-full max-h-full object-contain"
                 />
               </div>

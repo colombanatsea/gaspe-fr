@@ -52,7 +52,7 @@ export default function AdminMembresPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [members, setMembers] = useState<StoredMember[]>([]);
+  const [members, setMembers] = useState<StoredMember[]>(getStoredMembers);
   const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
 
@@ -68,10 +68,8 @@ export default function AdminMembresPage() {
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
-      return;
     }
-    refresh();
-  }, [user, router, refresh]);
+  }, [user, router]);
 
   // ------- Filters -------
   const filtered = members

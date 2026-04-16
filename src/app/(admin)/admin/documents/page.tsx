@@ -78,7 +78,7 @@ function getDocuments(): GaspeDocument[] {
 export default function AdminDocumentsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [documents, setDocuments] = useState<GaspeDocument[]>([]);
+  const [documents, setDocuments] = useState<GaspeDocument[]>(getDocuments);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState("");
@@ -93,9 +93,7 @@ export default function AdminDocumentsPage() {
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
-      return;
     }
-    setDocuments(getDocuments());
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

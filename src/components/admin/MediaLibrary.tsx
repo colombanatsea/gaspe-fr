@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { getMedia, addMedia, deleteMedia, type MediaItem } from "@/lib/cms-store";
 
 interface MediaLibraryProps {
@@ -164,7 +165,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
                   {/* Thumbnail */}
                   <div className="aspect-square bg-[var(--gaspe-neutral-50)] flex items-center justify-center overflow-hidden">
                     {isImage(item.type) ? (
-                      <img src={item.data} alt={item.alt ?? item.name} className="w-full h-full object-cover" />
+                      <Image src={item.data} alt={item.alt ?? item.name} width={200} height={200} className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center gap-2 p-4">
                         <svg className="h-10 w-10 text-[var(--gaspe-neutral-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

@@ -4,9 +4,7 @@ import {
   userSchema,
   usersArraySchema,
   mediaItemSchema,
-  mediaArraySchema,
   memberSchema,
-  membersArraySchema,
   pageContentSchema,
   pagesRecordSchema,
 } from "../schemas";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useImperativeHandle, forwardRef, useState, useRef } from "react";
+import type L from "leaflet";
 import type { Member } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +26,8 @@ interface MemberMapProps {
 export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
   function MemberMap({ members, className }, ref) {
     const [mapReady, setMapReady] = useState(false);
-    const mapRef = useRef<any>(null);
-    const markersRef = useRef<Map<string, any>>(new Map());
+    const mapRef = useRef<L.Map | null>(null);
+    const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
     useImperativeHandle(ref, () => ({
       flyToMember(member: Member) {
@@ -51,7 +52,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         if (cancelled) return;
 
         const container = document.getElementById("gaspe-member-map");
-        if (!container || (container as any)._leaflet_id) return;
+        if (!container || (container as HTMLElement & { _leaflet_id?: number })._leaflet_id) return;
 
         const map = L.map(container, {
           center: [47.211, -1.562],

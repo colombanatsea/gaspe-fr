@@ -1,9 +1,11 @@
+import Image from "next/image";
+
 /**
  * GASPE Logo — uses the official logo-gaspe.jpg
  */
 export function GaspeLogo({ className, size = 24 }: { className?: string; size?: number }) {
   return (
-    <img
+    <Image
       src="/logo-gaspe.jpg"
       alt="GASPE"
       width={size}
@@ -22,9 +24,11 @@ export function GaspeLogoWhite({ className, size = 24 }: { className?: string; s
       className={`flex items-center justify-center rounded-lg bg-white p-0.5 overflow-hidden ${className ?? ""}`}
       style={{ width: size, height: size }}
     >
-      <img
+      <Image
         src="/logo-gaspe.jpg"
         alt="GASPE"
+        width={size}
+        height={size}
         className="w-full h-full object-contain"
       />
     </div>

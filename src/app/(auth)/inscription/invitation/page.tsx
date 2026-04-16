@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ApiAuthStore } from "@/lib/auth/api-auth-store";
-import { useAuth } from "@/lib/auth/AuthContext";
 
 const inputClass =
   "mt-1 block w-full rounded-xl border border-border-light bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
@@ -13,7 +12,6 @@ const inputClass =
 function InvitationForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { login } = useAuth();
   const token = searchParams.get("token") ?? "";
 
   const [form, setForm] = useState({ name: "", password: "", phone: "" });

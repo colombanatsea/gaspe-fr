@@ -40,15 +40,13 @@ function writeFormations(formations: Formation[]) {
 export default function AdherentFormationsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [formations, setFormations] = useState<Formation[]>([]);
+  const [formations, setFormations] = useState<Formation[]>(readFormations);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== "adherent") {
       router.push("/connexion");
-      return;
     }
-    setFormations(readFormations());
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;

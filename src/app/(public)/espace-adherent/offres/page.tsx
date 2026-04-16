@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, type User, type ApplicationStatus } from "@/lib/auth/AuthContext";
+import { useAuth, type ApplicationStatus } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -106,7 +106,9 @@ const inputClass =
 export default function AdherentOffresPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [offers, setOffers] = useState<JobOffer[]>([]);
+  const [offers, setOffers] = useState<JobOffer[]>(() =>
+    user ? readOffers().filter((o) => o.ownerId === user.id) : []
+  );
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -114,9 +116,7 @@ export default function AdherentOffresPage() {
   useEffect(() => {
     if (!user || user.role !== "adherent") {
       router.push("/connexion");
-      return;
     }
-    setOffers(readOffers().filter((o) => o.ownerId === user.id));
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;
@@ -752,7 +752,6 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
               {isExpanded && (
                 <div className="border-t border-[var(--gaspe-neutral-100)] divide-y divide-[var(--gaspe-neutral-100)]">
                   {applicants.map(({ user: candidate, application }) => {
-                    const statusInfo = APPLICATION_STATUSES.find((s) => s.value === application.status) ?? APPLICATION_STATUSES[0];
                     const isMessaging = messageTarget === `${candidate.id}-${offer.id}`;
 
                     return (

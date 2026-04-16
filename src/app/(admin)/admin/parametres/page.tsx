@@ -27,16 +27,18 @@ export default function AdminParametresPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    if (typeof window === "undefined") return DEFAULT_SETTINGS;
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : DEFAULT_SETTINGS;
+  });
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   const [passwordForm, setPasswordForm] = useState({ current: "", newPassword: "", confirm: "" });
   const [passwordMsg, setPasswordMsg] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) setSettings(JSON.parse(raw));
+    if (!user || user.role !== "admin") { router.push("/connexion"); }
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

@@ -117,8 +117,8 @@
   --color-info: var(--gaspe-info);
   --color-warm: var(--gaspe-warm-300);
   --color-green: var(--gaspe-green-300);
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-heading: "Exo 2", system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  --font-heading: var(--font-exo2), "Exo 2", system-ui, sans-serif;
 }
 
 /* ── Base ── */

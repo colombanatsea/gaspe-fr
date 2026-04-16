@@ -48,7 +48,7 @@ test.describe("Candidate space", () => {
   test("candidate can access formations page", async ({ page }) => {
     await loginAsCandidate(page);
     await page.goto("/espace-candidat/formations");
-    const response = await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
     await expect(page.locator("h1").first()).toBeVisible();
   });
 

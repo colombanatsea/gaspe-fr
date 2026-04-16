@@ -71,7 +71,7 @@ export class ApiAuthStore implements AuthStore {
     return {};
   }
 
-  setPasswords(_passwords: Record<string, string>): void {
+  setPasswords(_: Record<string, string>): void {
     // No-op: passwords managed server-side
   }
 

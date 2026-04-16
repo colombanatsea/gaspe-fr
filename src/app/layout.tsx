@@ -1,8 +1,23 @@
 import type { Metadata, Viewport } from "next";
+import { DM_Sans, Exo_2 } from "next/font/google";
 import { SITE_NAME, SITE_FULL_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/shared/SEOJsonLd";
 import { Providers } from "@/components/shared/Providers";
 import "./globals.css";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const exo2 = Exo_2({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-exo2",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -49,19 +64,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="fr" className={`h-full antialiased ${dmSans.variable} ${exo2.variable}`} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/logo-gaspe.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/logo-gaspe.jpg" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="min-h-full flex flex-col">
         <OrganizationJsonLd />

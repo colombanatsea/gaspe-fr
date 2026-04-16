@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { publishedJobs, ZONE_LABELS } from "@/data/jobs";
 import type { Zone } from "@/data/jobs";
 
@@ -23,8 +23,6 @@ export function JobFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [searchOpen, setSearchOpen] = useState(false);
-
   const selectedContracts = searchParams.getAll("contrat");
   const selectedCategories = searchParams.getAll("categorie");
   const selectedCompany = searchParams.get("entreprise") ?? "";

@@ -38,14 +38,12 @@ function writeFormations(formations: Formation[]) {
 export default function CandidatFormationsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [formations, setFormations] = useState<Formation[]>([]);
+  const [formations, setFormations] = useState<Formation[]>(readFormations);
 
   useEffect(() => {
     if (!user || user.role !== "candidat") {
       router.push("/connexion");
-      return;
     }
-    setFormations(readFormations());
   }, [user, router]);
 
   if (!user || user.role !== "candidat") return null;

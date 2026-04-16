@@ -52,7 +52,8 @@ export default function AdminComptesPage() {
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    refresh();
+    async function load() { await refresh(); }
+    void load();
   }, [user, router, refresh]);
 
   const handleApprove = async (id: string) => { approveUser(id); await refresh(); };

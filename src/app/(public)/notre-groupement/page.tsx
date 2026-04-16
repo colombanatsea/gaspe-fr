@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Badge } from "@/components/ui/Badge";
 import { GroupementContent } from "./GroupementContent";
 
 export const metadata: Metadata = {

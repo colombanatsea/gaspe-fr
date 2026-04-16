@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { Badge } from "@/components/ui/Badge";
 
 interface ContactMessage {
   nom: string;
@@ -31,13 +30,12 @@ function writeMessages(msgs: ContactMessage[]) {
 export default function AdminMessagesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>(readMessages);
   const [selected, setSelected] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    setMessages(readMessages());
+    if (!user || user.role !== "admin") { router.push("/connexion"); }
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;
@@ -52,7 +50,7 @@ export default function AdminMessagesPage() {
 
   function markAsRead(idx: number) {
     const all = readMessages();
-    const realIdx = messages.length - 1 - idx; // reverse order
+    // reverse order
     // Find the actual message in the original array
     const target = filtered[idx];
     const originalIdx = all.findIndex((m) => m.date === target.date && m.email === target.email);

@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
-  ssgmCenters,
-  approvedDoctors,
   MEDICAL_VISIT_TYPES,
   type MedicalVisit,
   type MedicalVisitType,
@@ -17,7 +14,7 @@ import {
 
 const VISITS_KEY = "gaspe_medical_visits";
 
-function getStoredVisits(userId: string): MedicalVisit[] {
+function getStoredVisits(): MedicalVisit[] {
   try {
     const all = JSON.parse(localStorage.getItem(VISITS_KEY) ?? "[]") as MedicalVisit[];
     return all;
@@ -51,7 +48,9 @@ const inputClass =
 export default function VisitesMedicalesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [visits, setVisits] = useState<MedicalVisit[]>([]);
+  const [visits, setVisits] = useState<MedicalVisit[]>(() =>
+    getStoredVisits().map((v) => ({ ...v, status: computeStatus(v) }))
+  );
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<"all" | MedicalVisit["status"]>("all");
 
@@ -66,10 +65,7 @@ export default function VisitesMedicalesPage() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    const stored = getStoredVisits(user.id);
-    // Recompute statuses
-    setVisits(stored.map((v) => ({ ...v, status: computeStatus(v) })));
+    if (!user || user.role !== "adherent") { router.push("/connexion"); }
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;

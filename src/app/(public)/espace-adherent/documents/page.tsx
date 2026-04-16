@@ -40,16 +40,14 @@ function readDocuments(): Document[] {
 export default function AdherentDocumentsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents] = useState<Document[]>(readDocuments);
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!user || user.role !== "adherent") {
       router.push("/connexion");
-      return;
     }
-    setDocuments(readDocuments());
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;

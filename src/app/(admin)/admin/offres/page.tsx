@@ -23,7 +23,7 @@ function getAllOffers(): Job[] {
 export default function AdminOffresPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [allJobs, setAllJobs] = useState<Job[]>(getAllOffers);
   const [search, setSearch] = useState("");
   const [filterContract, setFilterContract] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -31,9 +31,7 @@ export default function AdminOffresPage() {
   useEffect(() => {
     if (!user || user.role !== "admin") {
       router.push("/connexion");
-      return;
     }
-    setAllJobs(getAllOffers());
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;

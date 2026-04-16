@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 
 // Free maritime images from Unsplash
@@ -18,11 +19,12 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
     <section ref={ref} className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
       {/* Background image with overlay */}
       <div className="pointer-events-none absolute inset-0">
-        <img
+        <Image
           src={HERO_IMAGE}
           alt="Navire maritime en service"
-          className="h-full w-full object-cover"
-          fetchPriority="high"
+          fill
+          className="object-cover"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-900)] via-[var(--gaspe-neutral-900)]/85 to-[var(--gaspe-neutral-900)]/50" />
       </div>

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-explicit-any": "warn",
       // React Compiler memoization — non-critical
       "react-hooks/preserve-manual-memoization": "warn",
+      // Allow intentionally unused parameters/variables prefixed with _
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     },
   },
   // Override default ignores of eslint-config-next.

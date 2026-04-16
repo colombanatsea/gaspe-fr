@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { STCW_CERTIFICATIONS, STCW_CATEGORY_LABELS, type STCWCategory } from "@/data/stcw";
@@ -24,34 +24,23 @@ export default function EspaceCandidatPage() {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
-    currentPosition: "",
-    desiredPosition: "",
-    phone: "",
-    experience: "",
-    certifications: "",
-    cvFilename: "",
+    currentPosition: user?.currentPosition ?? "",
+    desiredPosition: user?.desiredPosition ?? "",
+    phone: user?.phone ?? "",
+    experience: user?.experience ?? "",
+    certifications: user?.certifications ?? "",
+    cvFilename: user?.cvFilename ?? "",
   });
-  const [formationsCount, setFormationsCount] = useState(0);
+  const [formationsCount] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]").length as number;
+    } catch { return 0; }
+  });
 
   useEffect(() => {
     if (!user || user.role !== "candidat") {
       router.push("/connexion");
-      return;
     }
-    setForm({
-      currentPosition: user.currentPosition ?? "",
-      desiredPosition: user.desiredPosition ?? "",
-      phone: user.phone ?? "",
-      experience: user.experience ?? "",
-      certifications: user.certifications ?? "",
-      cvFilename: user.cvFilename ?? "",
-    });
-
-    // Count formations
-    try {
-      const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
-      setFormationsCount(formations.length);
-    } catch { /* empty */ }
   }, [user, router]);
 
   const handleSaveProfile = useCallback(() => {
@@ -68,7 +57,7 @@ export default function EspaceCandidatPage() {
     setEditing(false);
   }, [user, form, updateUser]);
 
-  const [cvError, setCvError] = useState("");
+  const [, setCvError] = useState("");
 
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

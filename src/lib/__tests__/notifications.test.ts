@@ -56,8 +56,8 @@ describe("notifications", () => {
 
     it("returns notifications sorted newest first", () => {
       // Add with slight delay simulation via manual dates
-      const n1 = addNotification({ userId: "u1", type: "offer_new", title: "First", message: "m" });
-      const n2 = addNotification({ userId: "u1", type: "offer_new", title: "Second", message: "m" });
+      addNotification({ userId: "u1", type: "offer_new", title: "First", message: "m" });
+      addNotification({ userId: "u1", type: "offer_new", title: "Second", message: "m" });
 
       // Force different dates
       const stored = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || "[]");

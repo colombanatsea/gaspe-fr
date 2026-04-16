@@ -84,8 +84,9 @@ export function getAuthStore(): AuthStore {
   if (!_store) {
     // Use API store when NEXT_PUBLIC_API_URL is set (production)
     if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
-      // Dynamic import to avoid bundling ApiAuthStore when not needed
-      const { ApiAuthStore } = require("./api-auth-store");
+      // Lazy-load ApiAuthStore; use dynamic require for sync factory
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { ApiAuthStore } = require("./api-auth-store") as typeof import("./api-auth-store");
       _store = new ApiAuthStore();
     } else {
       _store = new LocalStorageAuthStore();
