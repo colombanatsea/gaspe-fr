@@ -1,15 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
 import { sanitizeHtml } from "@/lib/sanitize-html";
-import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
-const GaspeGlobe = dynamic(
-  () => import("@/components/globe/GaspeGlobe").then((m) => m.GaspeGlobe),
-  { ssr: false },
-);
+const HERO_VIDEO_URL = "https://canva.link/fmrz5m10p1no8wd";
 
 export function HeroSection() {
   const cmsTitle = useCmsContent("homepage", "hero-title");
@@ -18,23 +13,22 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
-      {/* Globe as background */}
+      {/* Video background (Canva embed) */}
       <div className="pointer-events-none absolute inset-0">
-        <ErrorBoundary name="Globe 3D" fallback={<div className="h-full w-full bg-[var(--gaspe-neutral-950)]" />}>
-          <GaspeGlobe className="w-full h-full" />
-        </ErrorBoundary>
+        <iframe
+          src={HERO_VIDEO_URL}
+          title="GASPE — Vidéo de présentation"
+          className="absolute inset-0 h-full w-full border-0"
+          style={{ transform: "scale(1.15)", transformOrigin: "center center" }}
+          allow="autoplay"
+          loading="lazy"
+        />
       </div>
 
-      {/* Gradient overlay for readability */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/90 via-[var(--gaspe-neutral-950)]/60 to-transparent" />
-
-      {/* Decorative floating particles */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[10%] top-[20%] h-2 w-2 rounded-full bg-[var(--gaspe-teal-400)] opacity-40" style={{ animation: "float 4s ease-in-out infinite" }} />
-        <div className="absolute left-[25%] top-[60%] h-1.5 w-1.5 rounded-full bg-[var(--gaspe-blue-400)] opacity-30" style={{ animation: "float 5s ease-in-out infinite 1s" }} />
-        <div className="absolute left-[15%] top-[80%] h-1 w-1 rounded-full bg-white opacity-20" style={{ animation: "float 6s ease-in-out infinite 0.5s" }} />
-        <div className="absolute left-[35%] top-[30%] h-1 w-1 rounded-full bg-[var(--gaspe-teal-300)] opacity-25" style={{ animation: "float 4.5s ease-in-out infinite 2s" }} />
-      </div>
+      {/* Dark overlay for text readability */}
+      <div className="pointer-events-none absolute inset-0 bg-[var(--gaspe-neutral-950)]/65" />
+      {/* Left-side gradient for text contrast */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/80 via-[var(--gaspe-neutral-950)]/40 to-transparent" />
 
       {/* Content overlay */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
