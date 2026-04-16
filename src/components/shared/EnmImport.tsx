@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth, type User } from "@/lib/auth/AuthContext";
-import { apiFetch, isApiMode } from "@/lib/api-client";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -154,45 +153,36 @@ export function EnmImport() {
               <Button onClick={() => {
                 setStep("loading");
                 setError("");
-                if (!isApiMode()) {
-                  setTimeout(() => {
-                    setData({
-                      enmMarinId: "20105975",
-                      seaService: [
-                        { id: "enm-1", startDate: "2017-06-08", endDate: "2017-06-17", vesselName: "ZOURITE", vesselImo: "933184", rank: "LIEUTENANT", category: "11" },
-                        { id: "enm-2", startDate: "2017-02-01", endDate: "2017-02-12", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-                        { id: "enm-3", startDate: "2017-01-26", endDate: "2017-01-31", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-                        { id: "enm-4", startDate: "2017-01-01", endDate: "2017-01-25", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-                        { id: "enm-5", startDate: "2016-12-14", endDate: "2016-12-31", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-                      ],
-                      certificates: [
-                        { certId: "enm-cert-10216913", title: "Brevet de second capitaine 3000 (2016)", enmReference: "10216913", status: "expired", expiryDate: "2021-10-23" },
-                        { certId: "enm-cert-10138454", title: "Chef de quart de navire de mer", enmReference: "10138454", status: "expired", expiryDate: "2019-11-16" },
-                        { certId: "enm-cert-10138450", title: "Brevet d'aptitude a l'exploitation des embarcations et radeaux de sauvetage", enmReference: "10138450", status: "valid" },
-                        { certId: "enm-cert-10091950", title: "Certificat general d'operateur", enmReference: "10091950", status: "expired", expiryDate: "2017-10-18" },
-                        { certId: "enm-cert-10200675", title: "Certificat d'aptitude a l'exploitation des embarcations (STCW10)", enmReference: "10200675", status: "expired", expiryDate: "2021-03-23" },
-                        { certId: "enm-cert-10200674", title: "Certificat de formation de base a la securite (STCW10)", enmReference: "10200674", status: "expired", expiryDate: "2021-03-23" },
-                      ],
-                      medical: {
-                        visitType: "Annuelle",
-                        lastVisitDate: "2017-04-06",
-                        expiryDate: "2018-04-30",
-                        decision: "Apte TF/TN avec restriction",
-                        duration: "12 mois",
-                        restrictions: ["Port de verres correcteurs"],
-                      },
-                    });
-                    setStep("review");
-                  }, 1500);
-                } else {
-                  apiFetch<{ success?: boolean; error?: string; data?: EnmData }>("/api/enm/import", {
-                    method: "POST",
-                    body: JSON.stringify({}),
-                  }).then((res) => {
-                    if (res.error) { setError(res.error); setStep("error"); }
-                    else if (res.data) { setData(res.data); setStep("review"); }
-                  }).catch(() => { setError("Erreur de connexion au portail ENM"); setStep("error"); });
-                }
+                // FranceConnect auth cannot be proxied — demo data until OAuth redirect flow is implemented
+                setTimeout(() => {
+                  setData({
+                    enmMarinId: "20105975",
+                    seaService: [
+                      { id: "enm-1", startDate: "2017-06-08", endDate: "2017-06-17", vesselName: "ZOURITE", vesselImo: "933184", rank: "LIEUTENANT", category: "11" },
+                      { id: "enm-2", startDate: "2017-02-01", endDate: "2017-02-12", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
+                      { id: "enm-3", startDate: "2017-01-26", endDate: "2017-01-31", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
+                      { id: "enm-4", startDate: "2017-01-01", endDate: "2017-01-25", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
+                      { id: "enm-5", startDate: "2016-12-14", endDate: "2016-12-31", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
+                    ],
+                    certificates: [
+                      { certId: "enm-cert-10216913", title: "Brevet de second capitaine 3000 (2016)", enmReference: "10216913", status: "expired", expiryDate: "2021-10-23" },
+                      { certId: "enm-cert-10138454", title: "Chef de quart de navire de mer", enmReference: "10138454", status: "expired", expiryDate: "2019-11-16" },
+                      { certId: "enm-cert-10138450", title: "Brevet d'aptitude a l'exploitation des embarcations et radeaux de sauvetage", enmReference: "10138450", status: "valid" },
+                      { certId: "enm-cert-10091950", title: "Certificat general d'operateur", enmReference: "10091950", status: "expired", expiryDate: "2017-10-18" },
+                      { certId: "enm-cert-10200675", title: "Certificat d'aptitude a l'exploitation des embarcations (STCW10)", enmReference: "10200675", status: "expired", expiryDate: "2021-03-23" },
+                      { certId: "enm-cert-10200674", title: "Certificat de formation de base a la securite (STCW10)", enmReference: "10200674", status: "expired", expiryDate: "2021-03-23" },
+                    ],
+                    medical: {
+                      visitType: "Annuelle",
+                      lastVisitDate: "2017-04-06",
+                      expiryDate: "2018-04-30",
+                      decision: "Apte TF/TN avec restriction",
+                      duration: "12 mois",
+                      restrictions: ["Port de verres correcteurs"],
+                    },
+                  });
+                  setStep("review");
+                }, 1500);
               }}>
                 <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />

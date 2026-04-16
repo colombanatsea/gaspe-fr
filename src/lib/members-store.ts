@@ -45,7 +45,14 @@ function getLocalMembers(): StoredMember[] {
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
     return seeded;
   }
-  return safeParse(membersArraySchema, raw, staticMembers as StoredMember[]);
+  const parsed = safeParse(membersArraySchema, raw, staticMembers as StoredMember[]);
+  // Force re-seed if cached data has stale external URLs (gaspe.fr was down)
+  if (parsed.some((m) => m.logoUrl?.includes("gaspe.fr/wp-content"))) {
+    const seeded: StoredMember[] = staticMembers.map((m) => ({ ...m, archived: false }));
+    localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
+    return seeded;
+  }
+  return parsed;
 }
 
 function setLocalMembers(members: StoredMember[]) {
