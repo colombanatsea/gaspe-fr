@@ -1,96 +1,99 @@
-# GASPE Website — Handoff Session 21 → Session 22
+# GASPE Website — Handoff Session 22 → Session 23
 
-## Etat actuel : v2.8.0 — Production OK
+## Etat actuel : v2.9.0 — Production OK
 
 | Metrique | Valeur |
 |----------|--------|
-| Version | 2.8.0 |
+| Version | 2.9.0 |
 | Pages HTML (build) | 105 |
 | Routes page.tsx | 55 (33 public + 16 admin + 6 auth) |
 | Erreurs TypeScript | 0 |
-| Erreurs ESLint | 0 (101 warnings, 0 errors) |
+| Erreurs ESLint | 0 |
+| Warnings ESLint | 1 (React Compiler informational) |
 | Tests unitaires | 145 (14 fichiers) |
-| Tests E2E | 9 spec files (Playwright) |
-| Endpoints Worker | 24 |
-| Tables D1 | 9 + 4 migrations |
+| Tests E2E | 9 spec files (Playwright, desktop + mobile) |
+| Endpoints Worker | 38 (24 existants + 14 nouveaux) |
+| Tables D1 | 13 (9 existantes + 4 nouvelles) |
+| Migrations D1 | 5 (0001-0005) |
 | Templates email | 8 (Brevo) |
 | Newsletter categories | 10 |
 | Membres | 31 (29 avec logos) |
 | Centres SSGM | 25 + 10 medecins |
 | Offres d'emploi | 12 statiques |
-| Composants (.tsx) | 39 dans 9 repertoires |
-| Fichiers data | 10 (members, jobs, ccn3228, stcw, formations, ssgm, routes, navigation, stats, maritime-certifications) |
+| Composants (.tsx) | ~40 dans 10 repertoires |
 
 ---
 
 ## Branch : `main` — tout merge, CI vert
 
-### Dernier commit
-```
-d633853 fix: resolve CI/CD failures — node version, deploy guard, version sync
-```
-
 ### CI/CD status
-- **ci.yml** : TSC + Lint + Tests + Build — PASSE
-- **deploy-worker.yml** : Skip gracieux si `CF_CONFIGURED != true` (pas de crash rouge)
+- **ci.yml** : TSC + Lint + Tests + Build + E2E (Playwright Chromium)
+- **deploy-worker.yml** : Skip gracieux si `CF_CONFIGURED != true`
 - **Cloudflare Pages** : auto-deploy depuis main → https://gaspe-fr.pages.dev
 
 ---
 
-## Resume session 21 (complet)
+## Resume session 22 (complet)
 
-### Infrastructure & CI/CD
-- `.node-version` et `.nvmrc` alignes sur Node 20
-- `deploy-worker.yml` : garde `CF_CONFIGURED` pour eviter les crashes
-- `ci.yml` : Node 20, max 200 warnings lint
-- `package.json` version synchronisee a 2.8.0
-- `eslint.config.mjs` : exclut `public/assets/**` et `workers/**`
+### P1.6 — ESLint cleanup (101 warnings → 1)
+- Suppression de 38 imports/variables inutilises (23 fichiers)
+- Correction de 33 warnings `set-state-in-effect` (lazy initializers, useEffect)
+- Conversion de 16 `<img>` en Next.js `<Image>` avec `unoptimized`
+- Remplacement de 11 types `any` explicites (Three.js, Leaflet)
+- Correction de 4 erreurs "Cannot access refs during render"
+- Migration Google Fonts de `<link>` vers `next/font/google` (self-hosted)
+- Ajout `argsIgnorePattern`/`varsIgnorePattern` dans eslint config
+- Restant : 1 warning React Compiler informationnel (non actionable)
 
-### Backend & API (Worker Cloudflare)
-- 24 endpoints REST (auth, organisations, invitations, preferences, newsletter, email, hydros, upload, health)
-- Newsletter bulk send Brevo (POST /api/newsletter/send)
-- /admin/organisations (vue groupee par compagnie)
-- Contact form unifie Brevo (plus de Resend)
-- Migration 0004 (link users → organizations + is_primary)
-- Security: anti-enumeration forgot-password, PBKDF2 100k iterations
+### P1.4 — Simulateur ADEME natif Next.js
+- Port de `public/assets/sim-ademe.jsx` (2235 lignes) → `src/components/ademe/AdemeSimulator.tsx`
+- Ajout `"use client"`, `@ts-nocheck`, `eslint-disable` (port pragmatique)
+- Guards SSR pour localStorage/window
+- Lazy-loaded avec `dynamic()` + `ErrorBoundary` fallback
+- Suppression de l'iframe externe colombanatsea.com
+- Installation de `recharts` en dependance npm
 
-### Pages publiques (33 routes)
-- `/decouvrir-espace-adherent` — espace demo 8 onglets avec CTAs adhesion
-- `/ssgm` — annuaire 25 centres SSGM + 10 medecins agrees
-- `/espace-adherent/visites-medicales` — suivi aptitudes marins
-- `/transition-ecologique` — simulateur ADEME iframe + 4 guides PDF + 6 technologies
-- `/notre-groupement` — adherents fusionnes (grille logos + filtres)
-- `/boite-a-outils` — guides CCN 3228, ENIM, STCW
-- `/formations` — 8 formations avec pages detail
-- `/nos-compagnies-recrutent` — 12 offres avec pages detail
+### P1.5 — Photos equipe bureau
+- Ajout champ `photoUrl` aux membres du bureau
+- UI mise a jour : `<Image>` avec fallback initiales
+- Repertoire `public/assets/bureau/` cree (photos a fournir par GASPE)
 
-### Admin (12 sections + dashboard)
-- agenda, comptes, documents, formations (+new), membres, messages
-- newsletter, offres (+new), organisations, pages, parametres, positions (+new)
+### P2 — Backend migration localStorage → D1/R2
+**Migration 0005** (`workers/migrations/0005_cms_jobs_medical.sql`) :
+- Table `cms_pages` (page_id, section_id, content, updated_by)
+- Table `job_offers` (CRUD complet, slug, published, hydros fields)
+- Table `medical_visits` (crew aptitude tracking, organization-scoped)
+- Table `media_library` (metadata D1, fichiers R2)
+- Indexes sur queries frequentes
 
-### Auth (6 routes)
-- connexion, inscription/adherent, inscription/candidat, inscription/invitation
-- mot-de-passe-oublie, reinitialiser-mot-de-passe
+**14 nouveaux endpoints Worker** :
+| Endpoint | Method | Auth |
+|----------|--------|------|
+| /api/cms/pages | GET | — |
+| /api/cms/pages | PUT | JWT+admin |
+| /api/jobs | GET | — |
+| /api/jobs | POST | JWT+admin/adherent |
+| /api/jobs/:id | PATCH | JWT+owner/admin |
+| /api/jobs/:id | DELETE | JWT+admin |
+| /api/medical-visits | GET | JWT |
+| /api/medical-visits | POST | JWT+admin/adherent |
+| /api/medical-visits/:id | PATCH | JWT+owner/admin |
+| /api/medical-visits/:id | DELETE | JWT+admin/adherent |
+| /api/media | GET | JWT |
+| /api/media | POST | JWT+admin |
+| /api/media/:id | DELETE | JWT+admin |
 
-### Hydros Alumni
-- Interface Job etendue (applicationUrl, reference, startDate, contactPhone, handiAccessible)
-- Mapping AlumnForce IDs (`src/lib/hydros-mapping.ts`)
-- Endpoint POST /api/hydros/publish (JWT auth)
+### P3.12 — E2E tests en CI
+- Nouveau job `e2e` dans `ci.yml` (apres build)
+- Utilise `serve` pour servir `out/` en statique
+- Playwright Chromium desktop, 2 retries en CI
+- Upload rapport comme artifact (14 jours)
+- Config Playwright adaptee CI vs dev local
 
-### Design system
-- Primary: teal-600 `#1B7E8A`, Decorative: teal-400 `#6DAAAC`
-- Fonts: Exo 2 (headings) + DM Sans (body)
-- CSS variables `var(--gaspe-*)` — zero hardcoded hex
-- Dark mode via `[data-theme="dark"]`
-- Logo officiel GASPE partout
-- Header simplifie (4 items), ThemeToggle en footer
-
-### Donnees
-- Stats officielles: 27 compagnies, 155 navires, 1494 marins, 25M passagers, 6.9M vehicules
-- Grilles NAO 2026 (9 fonctions, montants exacts)
-- Taux ENIM corriges (CRM 11.15%, maladie 12.50%, AT/MP 2.40%)
-- 31 membres avec descriptions, 29 avec logos
-- 10 guides employeur CCN 3228
+### P3.13 — Monitoring & observabilite
+- Documentation dans CLAUDE.md : CF Analytics, Workers Analytics, D1/R2 metrics
+- Recommandations d'alertes CF Notifications
+- Endpoint `/api/health` pour uptime monitoring
 
 ---
 
@@ -102,38 +105,41 @@ d633853 fix: resolve CI/CD failures — node version, deploy guard, version sync
 | Secrets Worker | A configurer | `BREVO_API_KEY`, `JWT_SECRET`, `CONTACT_EMAIL` dans CF dashboard |
 | Secrets Hydros | A configurer | `HYDROS_EMAIL`, `HYDROS_PASSWORD` |
 | Repo variable | A configurer | `CF_CONFIGURED=true` dans GitHub Settings > Variables |
-| Migrations D1 | A appliquer | 0001-0004 via CF dashboard ou `wrangler d1 migrations apply` |
+| Migrations D1 | A appliquer | 0001-0005 via CF dashboard ou `wrangler d1 migrations apply` |
 | Custom domain | A configurer | gaspe.fr DNS dans CF Pages |
+| Photos bureau | A fournir | Portraits dans `public/assets/bureau/` (7 fichiers JPG) |
 
 ---
 
-## TODO session 22 — Priorise
+## TODO session 23 — Priorise
 
-### P0 — Quick wins / verification
+### P0 — Quick wins
 | # | Tache | Effort |
 |---|-------|--------|
 | 1 | Configurer CF secrets + variable `CF_CONFIGURED` | 5 min |
-| 2 | Appliquer migrations D1 (0001-0004) | 5 min |
-| 3 | Tester auth end-to-end en production (register, login, me) | 15 min |
+| 2 | Appliquer migrations D1 (0001-0005) | 5 min |
+| 3 | Tester auth end-to-end en production | 15 min |
+| 4 | Ajouter les photos du bureau (7 portraits) | 10 min |
 
-### P1 — Contenu & UX
+### P1 — Frontend migration vers API stores
 | # | Tache | Effort |
 |---|-------|--------|
-| 4 | Porter simulateur ADEME (sim-ademe.jsx 2235 lignes) en composant Next.js natif | 2-3h |
-| 5 | Ajouter photos equipe bureau dans /notre-groupement | 30 min |
-| 6 | Reduire les 101 ESLint warnings (react-hooks, any, etc.) | 1h |
+| 5 | Creer `ApiCmsStore` (cms-store.ts → fetch /api/cms/*) | 1h |
+| 6 | Creer `ApiJobsStore` (remplacer localStorage par /api/jobs/*) | 1h |
+| 7 | Creer `ApiMedicalStore` (visites-medicales → /api/medical-visits/*) | 1h |
+| 8 | Creer `ApiMediaStore` (media-library → /api/media/* + R2) | 1h |
+| 9 | Supprimer ancien code localStorage CMS/jobs/media/visits | 30 min |
 
-### P2 — Backend migration localStorage → D1/R2
+### P2 — Qualite & performances
 | # | Tache | Effort |
 |---|-------|--------|
-| 7 | MediaLibrary localStorage → R2 upload | 2h |
-| 8 | CMS content localStorage → D1 (multi-admin) | 2h |
-| 9 | Visites medicales localStorage → D1 | 1h |
-| 10 | Job offers admin-created localStorage → D1 | 1h |
+| 10 | Typer correctement AdemeSimulator.tsx (supprimer @ts-nocheck) | 2-3h |
+| 11 | Ajouter tests unitaires pour nouveaux endpoints Worker | 2h |
+| 12 | Custom domain gaspe.fr (CF Pages DNS) | 30 min |
 
-### P3 — Production readiness
+### P3 — Fonctionnalites
 | # | Tache | Effort |
 |---|-------|--------|
-| 11 | Custom domain gaspe.fr (CF Pages DNS) | 30 min |
-| 12 | E2E tests en CI (Playwright) | 1h |
-| 13 | Monitoring & alerting (CF Analytics) | 30 min |
+| 13 | Export PDF du simulateur ADEME avec branding GASPE | 2h |
+| 14 | Dashboard admin : widgets D1 (offres, visites, medias, contacts) | 2h |
+| 15 | Notification temps reel (SSE ou polling) pour admin | 1h |
