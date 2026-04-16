@@ -8,7 +8,7 @@
 | Pages HTML (build) | 105 |
 | Routes page.tsx | 55 (33 public + 16 admin + 6 auth) |
 | Erreurs TypeScript | 0 |
-| Erreurs ESLint | 0 (101 warnings, 0 errors) |
+| Erreurs ESLint | 0 errors, 35 warnings (react-hooks only) |
 | Tests unitaires | 171 (17 fichiers) |
 | Tests E2E | 9 spec files (Playwright) |
 | Endpoints Worker | 39 (24 auth/org + 14 CMS/jobs/medical/media + 1 ENM) |
@@ -129,6 +129,20 @@ Ce chantier reste a faire dans une session future.
 ### P3 — Finalisation
 - Version bump: 2.8.0 → 2.10.0
 - CLAUDE.md et HANDOFF.md mis a jour
+
+### Bugfixes & Qualite
+
+#### Logos compagnies casses (gaspe.fr 503)
+- 22 logos telecharges localement dans `/public/assets/logos/`
+- 7 placeholders SVG crees pour les logos 2025 indisponibles
+- `members.ts` mis a jour : plus aucune dependance a gaspe.fr
+- Logos servis depuis Cloudflare CDN, chargement instantane
+
+#### ESLint cleanup (101 → 35 warnings)
+- Desactive `no-img-element` (static export, `<Image>` non supporte)
+- Desactive `no-page-custom-font` (app router, pas `_document.js`)
+- Supprime imports/variables inutilises dans 25+ fichiers
+- Restant : 35 warnings `react-hooks/set-state-in-effect` (acceptable, pattern de chargement)
 
 ---
 
