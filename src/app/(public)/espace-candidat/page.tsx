@@ -14,9 +14,21 @@ import { computeMatchScore, MATCH_COLORS } from "@/lib/matching";
 const FORMATIONS_KEY = "gaspe_formations";
 
 function profileCompletion(user: User): number {
-  const fields = [user.name, user.email, user.phone, user.currentPosition, user.desiredPosition];
-  const filled = fields.filter((f) => f && f.trim() !== "").length;
-  return Math.round((filled / fields.length) * 100);
+  const weights = [
+    { filled: !!user.name?.trim(), weight: 10 },
+    { filled: !!user.email?.trim(), weight: 10 },
+    { filled: !!user.phone?.trim(), weight: 10 },
+    { filled: !!user.currentPosition?.trim(), weight: 10 },
+    { filled: !!user.desiredPosition?.trim(), weight: 10 },
+    { filled: !!user.experience?.trim(), weight: 15 },
+    { filled: !!user.certifications?.trim(), weight: 15 },
+    { filled: !!user.cvFilename?.trim(), weight: 10 },
+    { filled: (user.structuredCertifications ?? []).length > 0, weight: 5 },
+    { filled: (user.seaService ?? []).length > 0, weight: 5 },
+  ];
+  const total = weights.reduce((s, w) => s + w.weight, 0);
+  const filled = weights.reduce((s, w) => s + (w.filled ? w.weight : 0), 0);
+  return Math.round((filled / total) * 100);
 }
 
 export default function EspaceCandidatPage() {
@@ -371,11 +383,31 @@ export default function EspaceCandidatPage() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">CV</p>
-                    <p className="text-sm text-foreground">
+                    <p className={`text-sm ${user.cvFilename ? "text-foreground" : "text-amber-600"}`}>
                       {user.cvFilename
                         ? user.cvFilename
                         : "Non chargé"}
                     </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Expérience</p>
+                    <p className={`text-sm ${user.experience?.trim() ? "text-foreground" : "text-amber-600"}`}>
+                      {user.experience?.trim() || "Non renseignée"}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Certifications &amp; brevets</p>
+                    {user.certifications?.trim() ? (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {user.certifications.split(",").filter(Boolean).map((cert) => (
+                          <span key={cert.trim()} className="rounded-full bg-[var(--gaspe-teal-50)] px-2.5 py-0.5 text-xs font-medium text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]">
+                            {cert.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-amber-600">Non renseignées</p>
+                    )}
                   </div>
                 </div>
               )}
