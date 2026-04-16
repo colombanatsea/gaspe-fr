@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { publishedJobs, ZONE_LABELS } from "@/data/jobs";
 import type { Zone } from "@/data/jobs";
 

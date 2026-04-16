@@ -61,7 +61,6 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
 export function JobCard({
   title,
   company,
-  companySlug: _companySlug,
   location,
   contractType,
   category,

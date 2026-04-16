@@ -71,7 +71,8 @@ export class ApiAuthStore implements AuthStore {
     return {};
   }
 
-  setPasswords(_: Record<string, string>): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setPasswords(_passwords: Record<string, string>): void {
     // No-op: passwords managed server-side
   }
 

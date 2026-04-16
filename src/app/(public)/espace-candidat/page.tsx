@@ -89,7 +89,7 @@ export default function EspaceCandidatPage() {
     setEditing(false);
   }, [user, form, updateUser]);
 
-  const [_cvError, setCvError] = useState("");
+  const [, setCvError] = useState("");
 
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
