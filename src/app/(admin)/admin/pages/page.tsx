@@ -26,7 +26,6 @@ export default function AdminPagesPage() {
   const [selectedPageId, setSelectedPageId] = useState(PAGE_DEFINITIONS[0].id);
   const [sections, setSections] = useState<PageSection[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewSection, setPreviewSection] = useState<string | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeEditorInsert, setActiveEditorInsert] = useState<((item: MediaItem) => void) | null>(null);
@@ -99,8 +98,6 @@ export default function AdminPagesPage() {
     }
     setShowMediaLibrary(false);
   }
-
-  const currentPageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
 
   if (!user || user.role !== "admin") return null;
 

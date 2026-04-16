@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, type User, type ApplicationStatus } from "@/lib/auth/AuthContext";
+import { useAuth, type ApplicationStatus } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -752,7 +752,6 @@ function ApplicantPipeline({ offers }: { offers: { id: string; title: string }[]
               {isExpanded && (
                 <div className="border-t border-[var(--gaspe-neutral-100)] divide-y divide-[var(--gaspe-neutral-100)]">
                   {applicants.map(({ user: candidate, application }) => {
-                    const statusInfo = APPLICATION_STATUSES.find((s) => s.value === application.status) ?? APPLICATION_STATUSES[0];
                     const isMessaging = messageTarget === `${candidate.id}-${offer.id}`;
 
                     return (

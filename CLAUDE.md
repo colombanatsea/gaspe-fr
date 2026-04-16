@@ -15,7 +15,7 @@ npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
 npm run test         # unit tests (Vitest, 171 tests, 17 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint
+npm run lint         # ESLint (0 errors, ~35 warnings — mostly react-hooks/set-state-in-effect)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 

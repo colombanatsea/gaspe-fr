@@ -25,8 +25,8 @@ interface MemberMapProps {
 export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
   function MemberMap({ members, className }, ref) {
     const [mapReady, setMapReady] = useState(false);
-    const mapRef = useRef<any>(null);
-    const markersRef = useRef<Map<string, any>>(new Map());
+    const mapRef = useRef<import("leaflet").Map | null>(null);
+    const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
 
     useImperativeHandle(ref, () => ({
       flyToMember(member: Member) {
@@ -51,7 +51,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         if (cancelled) return;
 
         const container = document.getElementById("gaspe-member-map");
-        if (!container || (container as any)._leaflet_id) return;
+        if (!container || (container as HTMLElement & { _leaflet_id?: number })._leaflet_id) return;
 
         const map = L.map(container, {
           center: [47.211, -1.562],

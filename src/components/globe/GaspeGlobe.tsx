@@ -37,7 +37,6 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const PX_RATIO = Math.min(window.devicePixelRatio, 2);
       const BG_COLOR = 0x0a1520;
       const TEAL_400 = 0x6daaac;
-      const TEAL_300 = 0x8ac6ca;
 
       // ── SCENE ──
       const scene = new THREE.Scene();
@@ -104,7 +103,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
       const texturePath = "/assets/textures/";
       textureLoader.load(
         texturePath + "earth-blue-marble.jpg",
-        (t: any) => {
+        (t: import("three").Texture) => {
           t.colorSpace = THREE.SRGBColorSpace;
           globeMat.map = t;
           globeMat.needsUpdate = true;
@@ -131,7 +130,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           setLoaded(true);
         },
       );
-      textureLoader.load(texturePath + "earth-topology.png", (t: any) => {
+      textureLoader.load(texturePath + "earth-topology.png", (t: import("three").Texture) => {
         globeMat.bumpMap = t;
         globeMat.needsUpdate = true;
       });
@@ -189,7 +188,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
         const gap = Math.sqrt(dLat * dLat + dLon * dLon);
         if (gap <= maxGapDeg) return [latLonToVec3(lat2, lon2, r)];
         const steps = Math.ceil(gap / maxGapDeg);
-        const pts: any[] = [];
+        const pts: import("three").Vector3[] = [];
         for (let s = 1; s <= steps; s++) {
           const t = s / steps;
           pts.push(latLonToVec3(lat1 + dLat * t, lon1 + dLon * t, r));
@@ -246,7 +245,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
 
       // ── ROUTE LINES with progressive draw animation ──
       interface AnimatedRoute {
-        line: any;
+        line: import("three").Line;
         totalPoints: number;
         drawnPoints: number;
         drawSpeed: number;
@@ -275,7 +274,7 @@ export function GaspeGlobe({ className }: GaspeGlobeProps) {
           depthWrite: false,
         });
 
-        const points: any[] = [];
+        const points: import("three").Vector3[] = [];
         for (let i = 0; i < route.coordinates.length; i++) {
           const [lat, lon] = route.coordinates[i];
           if (points.length === 0) {

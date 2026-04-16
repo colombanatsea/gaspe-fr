@@ -7,6 +7,10 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
+      // Static export: <Image> not supported, <img> is correct
+      "@next/next/no-img-element": "off",
+      // Custom fonts loaded in layout.tsx (not _document.js) — Next.js app router pattern
+      "@next/next/no-page-custom-font": "off",
       // Common pattern in our codebase: loading data in useEffect on mount
       "react-hooks/set-state-in-effect": "warn",
       // Pre-existing: dynamic requires for conditional backend loading

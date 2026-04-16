@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { STCW_CERTIFICATIONS, STCW_CATEGORY_LABELS, type STCWCategory } from "@/data/stcw";
@@ -89,7 +89,7 @@ export default function EspaceCandidatPage() {
     setEditing(false);
   }, [user, form, updateUser]);
 
-  const [cvError, setCvError] = useState("");
+  const [_cvError, setCvError] = useState("");
 
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

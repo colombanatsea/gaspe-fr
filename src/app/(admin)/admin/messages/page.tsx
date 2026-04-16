@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { Badge } from "@/components/ui/Badge";
 
 interface ContactMessage {
   nom: string;
@@ -52,7 +51,6 @@ export default function AdminMessagesPage() {
 
   function markAsRead(idx: number) {
     const all = readMessages();
-    const realIdx = messages.length - 1 - idx; // reverse order
     // Find the actual message in the original array
     const target = filtered[idx];
     const originalIdx = all.findIndex((m) => m.date === target.date && m.email === target.email);

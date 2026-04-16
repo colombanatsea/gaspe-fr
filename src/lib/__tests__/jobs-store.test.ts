@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { getAllPublishedJobs, getAllOffers, createJob, toggleJobPublished, deleteJob } from "../jobs-store";
 import type { Job } from "@/data/jobs";
 

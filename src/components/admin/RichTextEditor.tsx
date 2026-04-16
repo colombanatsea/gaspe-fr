@@ -158,7 +158,6 @@ export function RichTextEditor({
   }
 
   const btnBase = "flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-colors text-[var(--gaspe-neutral-700)] hover:bg-[var(--gaspe-teal-100)] hover:text-[var(--gaspe-teal-700)]";
-  const btnActive = "bg-[var(--color-surface-teal)] text-[var(--color-primary)]";
   const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   const groups = ["format", "heading", "list", "align", "insert"] as const;

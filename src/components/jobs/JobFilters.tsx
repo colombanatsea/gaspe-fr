@@ -23,8 +23,6 @@ export function JobFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [searchOpen, setSearchOpen] = useState(false);
-
   const selectedContracts = searchParams.getAll("contrat");
   const selectedCategories = searchParams.getAll("categorie");
   const selectedCompany = searchParams.get("entreprise") ?? "";

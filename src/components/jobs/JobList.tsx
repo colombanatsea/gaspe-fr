@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
+import { publishedJobs, ZONE_LABELS } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { computeMatchScore, type MatchResult } from "@/lib/matching";

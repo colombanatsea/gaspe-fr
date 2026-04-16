@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +13,7 @@ const inputClass =
 function InvitationForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { login } = useAuth();
+  useAuth();
   const token = searchParams.get("token") ?? "";
 
   const [form, setForm] = useState({ name: "", password: "", phone: "" });

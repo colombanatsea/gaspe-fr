@@ -25,11 +25,8 @@ export default function AdminDashboardPage() {
     pending: 0, adherents: 0, candidats: 0, total: 0,
     formations: 0, positions: 0, events: 0, documents: 0,
   });
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    setLoading(true);
     getAllUsers().then((users) => {
       setCounts({
         pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,
@@ -41,7 +38,7 @@ export default function AdminDashboardPage() {
         events: getStorageCount(AGENDA_KEY),
         documents: getStorageCount(DOCUMENTS_KEY),
       });
-    }).finally(() => setLoading(false));
+    }).finally(() => { /* loaded */ });
   }, [user, router, getAllUsers]);
 
   if (!user || user.role !== "admin") return null;

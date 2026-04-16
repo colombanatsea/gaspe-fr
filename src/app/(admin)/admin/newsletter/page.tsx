@@ -108,7 +108,7 @@ export default function AdminNewsletterPage() {
       } else {
         setResult({ type: "error", message: data.error ?? `Erreur HTTP ${res.status}` });
       }
-    } catch (err) {
+    } catch {
       setResult({ type: "error", message: "Erreur de connexion au serveur." });
     } finally {
       setSending(false);

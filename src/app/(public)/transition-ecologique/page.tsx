@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { useScrollReveal } from "@/lib/useScrollReveal";

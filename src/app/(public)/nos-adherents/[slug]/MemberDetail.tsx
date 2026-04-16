@@ -5,9 +5,7 @@ import Link from "next/link";
 import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { MemberLogo } from "@/components/shared/MemberLogo";
 import { Badge } from "@/components/ui/Badge";
-import type { Member } from "@/types";
 import type { Vessel } from "@/lib/auth/AuthContext";
 
 /* ---------- Adherent profile data from localStorage ---------- */

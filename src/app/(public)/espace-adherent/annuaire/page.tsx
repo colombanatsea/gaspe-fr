@@ -8,7 +8,7 @@ import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
-import { haversineDistance, getUserPosition, RADIUS_OPTIONS, formatDistance } from "@/lib/geolocation";
+import { haversineDistance, getUserPosition, RADIUS_OPTIONS } from "@/lib/geolocation";
 
 type Tab = "members" | "peers";
 type ViewMode = "grid" | "list";
