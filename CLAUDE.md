@@ -7,13 +7,13 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.8.0
+- **Version**: v2.10.0
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 145 tests, 14 files)
+npm run test         # unit tests (Vitest, 171 tests, 17 files)
 npm run test:watch   # unit tests in watch mode
 npm run lint         # ESLint
 git push origin main # auto-deploy to CF Pages (~1 min)
@@ -54,7 +54,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - Hero: "Fédérer et représenter les compagnies maritimes de proximité"
 - All member data comes from `src/data/members.ts` (31 membres with descriptions) + D1 `organizations` table
 - Stats: 1951, 27 compagnies, 1494 marins francais, 155 navires, 25M passagers, 6.9M vehicules, 200M EUR CA
-- Job offers in `src/data/jobs.ts` (12 offres) + localStorage for admin/adherent-created offers
+- Job offers in `src/data/jobs.ts` (12 offres) + dual-mode store (localStorage/D1)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
 - Demo space at `/decouvrir-espace-adherent` (8 tabs, fake data, adhesion CTAs)
@@ -159,23 +159,27 @@ src/
 │   ├── schemas.ts         # Zod validation schemas
 │   ├── matching.ts        # Job-candidate matching engine
 │   ├── sanitize-html.ts   # XSS sanitization
-│   ├── cms-store.ts       # CMS localStorage store
+│   ├── api-client.ts      # Shared API client (JWT auth, FormData support)
+│   ├── cms-store.ts       # CMS dual-mode store (localStorage ↔ D1)
+│   ├── jobs-store.ts      # Jobs dual-mode store (localStorage ↔ D1)
+│   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
-│   └── __tests__/         # Unit tests (hydros-mapping, etc.)
+│   └── __tests__/         # Unit tests (171 tests, 17 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 24 endpoints
+├── api.ts                 # CF Worker: 38 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
     ├── 0001_auth.sql      # Users, auth, sessions, newsletter, contact_messages
     ├── 0002_password_reset.sql  # Password reset tokens
     ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
-    └── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
+    ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
+    └── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
 ```
 
-## Worker API — 24 endpoints
+## Worker API — 38 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -202,8 +206,23 @@ workers/
 | /api/newsletter/send | POST | JWT+admin |
 | /api/hydros/publish | POST | JWT |
 | /api/upload | POST | JWT |
+| /api/cms/pages | GET | — |
+| /api/cms/pages/:pageId | GET | — |
+| /api/cms/pages/:pageId | PUT | JWT+admin |
+| /api/jobs | GET | — |
+| /api/jobs | POST | JWT |
+| /api/jobs/:id | GET | — |
+| /api/jobs/:id | PATCH | JWT+admin/owner |
+| /api/jobs/:id | DELETE | JWT+admin/owner |
+| /api/medical-visits | GET | JWT |
+| /api/medical-visits | POST | JWT |
+| /api/medical-visits/:id | PATCH | JWT+owner |
+| /api/medical-visits/:id | DELETE | JWT+owner |
+| /api/media | GET | JWT+admin |
+| /api/media | POST | JWT+admin |
+| /api/media/:id | DELETE | JWT+admin |
 
-## Database (D1 — 9 tables)
+## Database (D1 — 13 tables)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary |
@@ -215,9 +234,13 @@ workers/
 | `sessions` | JWT refresh tracking |
 | `newsletter` | Legacy email-only subscriptions (public form) |
 | `contact_messages` | Contact form submissions |
+| `cms_pages` | CMS page content (page_id + section_id composite key) |
+| `jobs` | Job offers (admin + adherent created) |
+| `medical_visits` | Sailor medical visit tracking (per-user) |
+| `media_files` | Media file metadata (actual files in R2) |
 
 ## Testing
-- **Unit tests**: Vitest — 145 tests, 14 spec files
+- **Unit tests**: Vitest — 171 tests, 17 spec files
 - **E2E tests**: Playwright — 9 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -243,14 +266,27 @@ workers/
 - CORS restricted to gaspe-fr.pages.dev, gaspe.fr, localhost
 - robots.txt blocks indexing of admin/auth pages
 
+## Dual-mode stores (session 23)
+All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` is set:
+| Store | localStorage key | API endpoint | Status |
+|-------|-----------------|--------------|--------|
+| Auth | `gaspe_users` / `gaspe_current_user` | `/api/auth/*` | Done (session 20) |
+| CMS | `gaspe_page_content` | `/api/cms/pages/*` | Done (session 23) |
+| Jobs | `gaspe_admin_offers` / `gaspe_adherent_offers` | `/api/jobs/*` | Done (session 23) |
+| Medical | `gaspe_medical_visits` | `/api/medical-visits/*` | Done (session 23) |
+| Media | `gaspe_media_library` | `/api/media/*` | Done (session 23) |
+| Members | `gaspe_members` | Not yet | localStorage only |
+
+Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
+
 ## Known limitations
 - **Domain gaspe.fr** — manual CF Pages DNS config needed
-- **MediaLibrary** stores in localStorage (base64) — should migrate to R2
-- **CMS content** in localStorage — should migrate to D1 for multi-admin
+- **ADEME simulator** — still iframe to external URL (native component not yet built)
 - **CSP unsafe-inline** — required by Next.js hydration
 - **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
 - **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
 - **CF secrets** — Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
+- **Members store** — still localStorage only (no D1 backend yet)
 
 ## Session history
 | Session | Version | Key deliverables |
@@ -264,3 +300,4 @@ workers/
 | 16-19 | 2.6-2.7 | Transition ecologique, ADEME simulator, boîte à outils audit |
 | 20 | 2.7 | Organisation hierarchy, newsletter 10 catégories, invitations |
 | 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
+| 23 | 2.10.0 | Frontend API stores (CMS, jobs, medical, media), 14 new Worker endpoints, migration 0005 |
