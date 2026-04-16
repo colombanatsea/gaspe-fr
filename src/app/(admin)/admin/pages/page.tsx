@@ -11,10 +11,14 @@ import {
   PAGE_DEFINITIONS,
   getPageContent,
   savePageContent,
+  apiGetPageContent,
+  apiSavePageContent,
   type PageContent,
   type PageSection,
   type MediaItem,
+  type ApiMediaItem,
 } from "@/lib/cms-store";
+import { isApiMode } from "@/lib/api-client";
 
 export default function AdminPagesPage() {
   const { user } = useAuth();
@@ -38,25 +42,28 @@ export default function AdminPagesPage() {
     const pageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
     if (!pageDef) return;
 
-    const stored = getPageContent(selectedPageId);
-    if (stored) {
-      // Merge stored sections with definition (in case new sections were added)
-      const merged = pageDef.sections.map((def) => {
-        const existing = stored.sections.find((s) => s.id === def.id);
-        return existing ?? { id: def.id, label: def.label, type: def.type, content: "" };
-      });
-      setSections(merged);
-    } else {
-      setSections(
-        pageDef.sections.map((def) => ({
-          id: def.id,
-          label: def.label,
-          type: def.type,
-          content: "",
-        }))
-      );
+    const emptySections = pageDef.sections.map((def) => ({
+      id: def.id, label: def.label, type: def.type, content: "",
+    }));
+
+    function applyStored(stored: PageContent | null) {
+      if (stored) {
+        const merged = pageDef!.sections.map((def) => {
+          const existing = stored.sections.find((s) => s.id === def.id);
+          return existing ?? { id: def.id, label: def.label, type: def.type, content: "" };
+        });
+        setSections(merged);
+      } else {
+        setSections(emptySections);
+      }
+      setSaved(false);
     }
-    setSaved(false);
+
+    if (isApiMode()) {
+      apiGetPageContent(selectedPageId).then(applyStored);
+    } else {
+      applyStored(getPageContent(selectedPageId));
+    }
   }, [selectedPageId]);
 
   function updateSection(id: string, content: string) {
@@ -66,22 +73,26 @@ export default function AdminPagesPage() {
     setSaved(false);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const pageContent: PageContent = {
       pageId: selectedPageId,
       sections,
       updatedAt: new Date().toISOString(),
     };
-    savePageContent(pageContent);
+    if (isApiMode()) {
+      await apiSavePageContent(pageContent);
+    } else {
+      savePageContent(pageContent);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
 
-  function handleMediaSelect(item: MediaItem) {
+  function handleMediaSelect(item: MediaItem | ApiMediaItem) {
     if (activeEditorInsert) {
       // Insert image URL into the active editor via a callback
       // For simplicity, copy URL to clipboard and notify user
-      if (item.type.startsWith("image/")) {
+      if (item.type.startsWith("image/") && "data" in item) {
         navigator.clipboard?.writeText(item.data);
       }
       setActiveEditorInsert(null);

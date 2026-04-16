@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { getMedia, addMedia, deleteMedia, type MediaItem } from "@/lib/cms-store";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  getMedia, addMedia, deleteMedia, type MediaItem,
+  apiGetMedia, apiUploadMedia, apiDeleteMedia, type ApiMediaItem,
+} from "@/lib/cms-store";
+import { isApiMode } from "@/lib/api-client";
 
 interface MediaLibraryProps {
   open: boolean;
   onClose: () => void;
-  onSelect?: (item: MediaItem) => void;
+  onSelect?: (item: MediaItem | ApiMediaItem) => void;
 }
 
 const MAX_FILE_SIZE = 5_000_000; // 5 MB
@@ -22,56 +26,112 @@ function isImage(type: string) {
   return type.startsWith("image/");
 }
 
+/** Unified item type for display (works for both localStorage and API items) */
+type DisplayItem = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  alt?: string;
+  uploadedAt: string;
+  // localStorage mode: base64 data
+  data?: string;
+  // API mode: R2 key
+  r2Key?: string;
+};
+
 export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
-  const [items, setItems] = useState<MediaItem[]>(() => getMedia());
+  const [items, setItems] = useState<DisplayItem[]>([]);
   const [filter, setFilter] = useState<"all" | "images" | "documents">("all");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const refreshItems = useCallback(() => setItems(getMedia()), []);
+  const refreshItems = useCallback(async () => {
+    if (isApiMode()) {
+      const apiItems = await apiGetMedia();
+      setItems(apiItems.map((i) => ({ ...i, uploadedAt: i.uploadedAt })));
+    } else {
+      setItems(getMedia().map((i) => ({ ...i, uploadedAt: i.uploadedAt })));
+    }
+  }, []);
 
-  function handleFiles(files: FileList | null) {
+  useEffect(() => {
+    if (open) refreshItems();
+  }, [open, refreshItems]);
+
+  async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
 
-    const promises = Array.from(files).map((file) => {
-      return new Promise<void>((resolve) => {
+    if (isApiMode()) {
+      for (const file of Array.from(files)) {
         if (file.size > MAX_FILE_SIZE) {
           alert(`"${file.name}" dépasse 5 Mo.`);
-          resolve();
-          return;
+          continue;
         }
         if (!ACCEPTED_TYPES.includes(file.type)) {
           alert(`Type non accepté : ${file.type}`);
-          resolve();
-          return;
+          continue;
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-          addMedia({
-            id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            name: file.name,
-            type: file.type,
-            data: reader.result as string,
-            size: file.size,
-            uploadedAt: new Date().toISOString(),
-          });
-          resolve();
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(promises).then(() => {
-      refreshItems();
+        await apiUploadMedia(file);
+      }
+      await refreshItems();
       setUploading(false);
-    });
+    } else {
+      const promises = Array.from(files).map((file) => {
+        return new Promise<void>((resolve) => {
+          if (file.size > MAX_FILE_SIZE) {
+            alert(`"${file.name}" dépasse 5 Mo.`);
+            resolve();
+            return;
+          }
+          if (!ACCEPTED_TYPES.includes(file.type)) {
+            alert(`Type non accepté : ${file.type}`);
+            resolve();
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            addMedia({
+              id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              name: file.name,
+              type: file.type,
+              data: reader.result as string,
+              size: file.size,
+              uploadedAt: new Date().toISOString(),
+            });
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      await Promise.all(promises);
+      await refreshItems();
+      setUploading(false);
+    }
   }
 
-  function handleDelete(id: string) {
-    deleteMedia(id);
-    refreshItems();
+  async function handleDelete(id: string) {
+    if (isApiMode()) {
+      await apiDeleteMedia(id);
+    } else {
+      deleteMedia(id);
+    }
+    await refreshItems();
+  }
+
+  function handleSelect(item: DisplayItem) {
+    if (onSelect) {
+      if (item.data) {
+        // localStorage item
+        onSelect(item as MediaItem);
+      } else {
+        // API item
+        onSelect(item as ApiMediaItem);
+      }
+    }
   }
 
   const filtered = items.filter((item) => {
@@ -159,12 +219,19 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
                 <div
                   key={item.id}
                   className="group relative rounded-xl border border-[var(--gaspe-neutral-200)] overflow-hidden hover:border-[var(--gaspe-teal-300)] transition-colors cursor-pointer"
-                  onClick={() => onSelect?.(item)}
+                  onClick={() => handleSelect(item)}
                 >
                   {/* Thumbnail */}
                   <div className="aspect-square bg-[var(--gaspe-neutral-50)] flex items-center justify-center overflow-hidden">
-                    {isImage(item.type) ? (
+                    {isImage(item.type) && item.data ? (
                       <img src={item.data} alt={item.alt ?? item.name} className="w-full h-full object-cover" />
+                    ) : isImage(item.type) && item.r2Key ? (
+                      <div className="flex flex-col items-center gap-2 p-4">
+                        <svg className="h-10 w-10 text-[var(--gaspe-teal-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                        </svg>
+                        <span className="text-xs text-foreground-muted text-center truncate max-w-full px-2">{item.name}</span>
+                      </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2 p-4">
                         <svg className="h-10 w-10 text-[var(--gaspe-neutral-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

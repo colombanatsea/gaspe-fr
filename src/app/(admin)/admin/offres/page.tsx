@@ -6,19 +6,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { jobs as staticJobs, type Job } from "@/data/jobs";
+import { type Job } from "@/data/jobs";
 import { formatDate } from "@/lib/utils";
-
-const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
-const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
-
-function getAllOffers(): Job[] {
-  const adminRaw = typeof window !== "undefined" ? localStorage.getItem(ADMIN_OFFERS_KEY) : null;
-  const adherentRaw = typeof window !== "undefined" ? localStorage.getItem(ADHERENT_OFFERS_KEY) : null;
-  const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
-  const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
-  return [...staticJobs, ...adminOffers, ...adherentOffers];
-}
+import { getAllOffers, toggleJobPublished, deleteJob } from "@/lib/jobs-store";
 
 export default function AdminOffresPage() {
   const { user } = useAuth();
@@ -33,7 +23,7 @@ export default function AdminOffresPage() {
       router.push("/connexion");
       return;
     }
-    setAllJobs(getAllOffers());
+    getAllOffers().then(setAllJobs);
   }, [user, router]);
 
   if (!user || user.role !== "admin") return null;
@@ -52,50 +42,17 @@ export default function AdminOffresPage() {
     return matchSearch && matchContract && matchStatus;
   });
 
-  function togglePublish(id: string) {
-    // Try admin offers first
-    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
-    const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
-    const adminIdx = adminOffers.findIndex((j) => j.id === id);
-    if (adminIdx >= 0) {
-      adminOffers[adminIdx].published = !adminOffers[adminIdx].published;
-      localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(adminOffers));
-      setAllJobs(getAllOffers());
-      return;
-    }
-    // Try adherent offers
-    const adherentRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
-    const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
-    const adhIdx = adherentOffers.findIndex((j) => j.id === id);
-    if (adhIdx >= 0) {
-      adherentOffers[adhIdx].published = !adherentOffers[adhIdx].published;
-      localStorage.setItem(ADHERENT_OFFERS_KEY, JSON.stringify(adherentOffers));
-      setAllJobs(getAllOffers());
-      return;
-    }
-    // Static jobs: store toggle in admin offers as override
-    const staticJob = staticJobs.find((j) => j.id === id);
-    if (staticJob) {
-      const toggled = { ...staticJob, published: !staticJob.published };
-      adminOffers.push(toggled);
-      localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(adminOffers));
-      setAllJobs(getAllOffers());
-    }
+  async function handleTogglePublish(id: string) {
+    await toggleJobPublished(id);
+    const refreshed = await getAllOffers();
+    setAllJobs(refreshed);
   }
 
-  function deleteOffer(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Supprimer cette offre ?")) return;
-    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
-    const adminOffers: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
-    const filtered2 = adminOffers.filter((j) => j.id !== id);
-    localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(filtered2));
-
-    const adherentRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
-    const adherentOffers: Job[] = adherentRaw ? JSON.parse(adherentRaw) : [];
-    const filtered3 = adherentOffers.filter((j) => j.id !== id);
-    localStorage.setItem(ADHERENT_OFFERS_KEY, JSON.stringify(filtered3));
-
-    setAllJobs(getAllOffers());
+    await deleteJob(id);
+    const refreshed = await getAllOffers();
+    setAllJobs(refreshed);
   }
 
   const contractTypes = [...new Set(allJobs.map((j) => j.contractType))];
@@ -209,13 +166,13 @@ export default function AdminOffresPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => togglePublish(job.id)}
+                        onClick={() => handleTogglePublish(job.id)}
                         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
                       >
                         {job.published ? "Dépublier" : "Publier"}
                       </button>
                       <button
-                        onClick={() => deleteOffer(job.id)}
+                        onClick={() => handleDelete(job.id)}
                         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 transition-colors"
                       >
                         Supprimer

@@ -6,42 +6,7 @@ import { publishedJobs, ZONE_LABELS, type Job } from "@/data/jobs";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { computeMatchScore, type MatchResult } from "@/lib/matching";
-
-const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
-const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
-
-function getAllPublishedJobs(): Job[] {
-  const base = [...publishedJobs];
-  if (typeof window === "undefined") return base;
-  try {
-    const adminRaw = localStorage.getItem(ADMIN_OFFERS_KEY);
-    const admin: Job[] = adminRaw ? JSON.parse(adminRaw) : [];
-    base.push(...admin.filter((j) => j.published));
-  } catch { /* empty */ }
-  try {
-    const adhRaw = localStorage.getItem(ADHERENT_OFFERS_KEY);
-    const adh: any[] = adhRaw ? JSON.parse(adhRaw) : [];
-    // Adherent offers use "status" not "published"
-    base.push(...adh
-      .filter((j: any) => j.status === "active")
-      .map((j: any) => ({
-        ...j,
-        slug: j.slug || j.id,
-        companySlug: j.companySlug || "",
-        zone: j.zone || "normandie",
-        publishedAt: j.createdAt || new Date().toISOString(),
-        published: true,
-      } as Job))
-    );
-  } catch { /* empty */ }
-  // Deduplicate by id
-  const seen = new Set<string>();
-  return base.filter((j) => {
-    if (seen.has(j.id)) return false;
-    seen.add(j.id);
-    return true;
-  }).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-}
+import { getAllPublishedJobs } from "@/lib/jobs-store";
 
 export function JobList() {
   const searchParams = useSearchParams();
@@ -49,7 +14,7 @@ export function JobList() {
   const [allJobs, setAllJobs] = useState(publishedJobs);
 
   useEffect(() => {
-    setAllJobs(getAllPublishedJobs());
+    getAllPublishedJobs().then(setAllJobs);
   }, []);
 
   const selectedContracts = searchParams.getAll("contrat");

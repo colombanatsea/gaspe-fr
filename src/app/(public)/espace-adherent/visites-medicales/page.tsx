@@ -14,29 +14,12 @@ import {
   type MedicalVisit,
   type MedicalVisitType,
 } from "@/data/ssgm";
-
-const VISITS_KEY = "gaspe_medical_visits";
-
-function getStoredVisits(userId: string): MedicalVisit[] {
-  try {
-    const all = JSON.parse(localStorage.getItem(VISITS_KEY) ?? "[]") as MedicalVisit[];
-    return all;
-  } catch { return []; }
-}
-
-function saveVisits(visits: MedicalVisit[]) {
-  localStorage.setItem(VISITS_KEY, JSON.stringify(visits));
-}
-
-function computeStatus(visit: MedicalVisit): MedicalVisit["status"] {
-  if (!visit.expiryDate) return visit.status === "completed" ? "completed" : "scheduled";
-  const expiry = new Date(visit.expiryDate);
-  const now = new Date();
-  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (daysUntil < 0) return "expired";
-  if (daysUntil < 60) return "expiring_soon";
-  return "completed";
-}
+import {
+  getMedicalVisits,
+  createMedicalVisit,
+  deleteMedicalVisit,
+  computeStatus,
+} from "@/lib/medical-store";
 
 const statusConfig: Record<MedicalVisit["status"], { label: string; variant: "green" | "warm" | "neutral" | "teal" }> = {
   scheduled: { label: "Planifiée", variant: "teal" },
@@ -67,14 +50,12 @@ export default function VisitesMedicalesPage() {
 
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    const stored = getStoredVisits(user.id);
-    // Recompute statuses
-    setVisits(stored.map((v) => ({ ...v, status: computeStatus(v) })));
+    getMedicalVisits().then(setVisits);
   }, [user, router]);
 
   if (!user || user.role !== "adherent") return null;
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sailorName || !visitDate) return;
 
@@ -92,9 +73,9 @@ export default function VisitesMedicalesPage() {
     };
     newVisit.status = computeStatus(newVisit);
 
-    const updated = [newVisit, ...visits];
-    setVisits(updated);
-    saveVisits(updated);
+    await createMedicalVisit(newVisit);
+    const refreshed = await getMedicalVisits();
+    setVisits(refreshed);
 
     // Reset form
     setSailorName("");
@@ -107,11 +88,11 @@ export default function VisitesMedicalesPage() {
     setShowForm(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette visite médicale ?")) return;
-    const updated = visits.filter((v) => v.id !== id);
-    setVisits(updated);
-    saveVisits(updated);
+    await deleteMedicalVisit(id);
+    const refreshed = await getMedicalVisits();
+    setVisits(refreshed);
   };
 
   const filtered = filter === "all" ? visits : visits.filter((v) => v.status === filter);

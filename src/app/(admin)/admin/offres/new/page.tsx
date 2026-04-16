@@ -10,8 +10,7 @@ import { members } from "@/data/members";
 import { slugify } from "@/lib/utils";
 import { ZONE_LABELS, START_DATE_OPTIONS } from "@/data/jobs";
 import type { Job, Zone } from "@/data/jobs";
-
-const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
+import { createJob } from "@/lib/jobs-store";
 
 const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance", "Autres"];
 const categories = [
@@ -62,7 +61,7 @@ export default function AdminNewOffrePage() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -94,11 +93,7 @@ export default function AdminNewOffrePage() {
       published: true,
     };
 
-    const raw = localStorage.getItem(ADMIN_OFFERS_KEY);
-    const existing: Job[] = raw ? JSON.parse(raw) : [];
-    existing.push(newJob);
-    localStorage.setItem(ADMIN_OFFERS_KEY, JSON.stringify(existing));
-
+    await createJob(newJob);
     router.push("/admin/offres");
   }
 

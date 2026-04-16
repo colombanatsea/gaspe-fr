@@ -1,8 +1,10 @@
 /* ------------------------------------------------------------------ */
-/*  CMS Store — localStorage-based content management                  */
+/*  CMS Store — dual-mode content management                          */
+/*  localStorage (demo) ↔ API/D1 (production)                         */
 /* ------------------------------------------------------------------ */
 
 import { safeParse, mediaArraySchema, pagesRecordSchema, type mediaItemSchema } from "./schemas";
+import { apiFetch, isApiMode } from "./api-client";
 import type { z } from "zod";
 
 const MEDIA_KEY = "gaspe_media_library";
@@ -11,6 +13,18 @@ const PAGES_KEY = "gaspe_page_content";
 /* ── Media Library ── */
 
 export type MediaItem = z.infer<typeof mediaItemSchema>;
+
+/** Media item from API (R2-backed, no base64 data) */
+export interface ApiMediaItem {
+  id: string;
+  name: string;
+  type: string;
+  r2Key: string;
+  size: number;
+  alt?: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+}
 
 export function getMedia(): MediaItem[] {
   if (typeof window === "undefined") return [];
@@ -31,6 +45,35 @@ export function deleteMedia(id: string) {
   saveMedia(getMedia().filter((m) => m.id !== id));
 }
 
+/* ── API Media (R2-backed) ── */
+
+export async function apiGetMedia(): Promise<ApiMediaItem[]> {
+  try {
+    const res = await apiFetch<{ items?: ApiMediaItem[] }>("/api/media");
+    return res.items ?? [];
+  } catch { return []; }
+}
+
+export async function apiUploadMedia(file: File, alt?: string): Promise<ApiMediaItem | null> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (alt) formData.append("alt", alt);
+    const res = await apiFetch<{ success?: boolean; item?: ApiMediaItem }>("/api/media", {
+      method: "POST",
+      body: formData,
+    });
+    return res.item ?? null;
+  } catch { return null; }
+}
+
+export async function apiDeleteMedia(id: string): Promise<boolean> {
+  try {
+    const res = await apiFetch<{ success?: boolean }>(`/api/media/${id}`, { method: "DELETE" });
+    return !!res.success;
+  } catch { return false; }
+}
+
 /* ── Page Content ── */
 
 export interface PageSection {
@@ -46,13 +89,17 @@ export interface PageContent {
   updatedAt: string;
 }
 
+// ── localStorage implementation ──
+
 export function getPageContent(pageId: string): PageContent | null {
   if (typeof window === "undefined") return null;
+  if (isApiMode()) return null; // Caller should use apiGetPageContent
   const all = safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
   return all[pageId] ?? null;
 }
 
 export function savePageContent(page: PageContent) {
+  if (isApiMode()) return; // Caller should use apiSavePageContent
   try {
     const all = safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
     all[page.pageId] = { ...page, updatedAt: new Date().toISOString() };
@@ -63,6 +110,32 @@ export function savePageContent(page: PageContent) {
 export function getAllPageContent(): Record<string, PageContent> {
   if (typeof window === "undefined") return {};
   return safeParse(pagesRecordSchema, localStorage.getItem(PAGES_KEY), {});
+}
+
+// ── API implementation ──
+
+export async function apiGetPageContent(pageId: string): Promise<PageContent | null> {
+  try {
+    const res = await apiFetch<{ page: PageContent | null }>(`/api/cms/pages/${pageId}`);
+    return res.page;
+  } catch { return null; }
+}
+
+export async function apiGetAllPageContent(): Promise<Record<string, PageContent>> {
+  try {
+    const res = await apiFetch<{ pages: Record<string, PageContent> }>("/api/cms/pages");
+    return res.pages ?? {};
+  } catch { return {}; }
+}
+
+export async function apiSavePageContent(page: PageContent): Promise<boolean> {
+  try {
+    const res = await apiFetch<{ success?: boolean }>(`/api/cms/pages/${page.pageId}`, {
+      method: "PUT",
+      body: JSON.stringify({ sections: page.sections }),
+    });
+    return !!res.success;
+  } catch { return false; }
 }
 
 /* ── Page definitions (what's editable per page) ── */
