@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**107 pages** — deployed on Cloudflare Pages (static export)
+**105 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
@@ -11,7 +11,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Commands
 ```bash
-npm run dev          # dev server (port 3001)
+npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
 npm run test         # unit tests (Vitest, 145 tests, 14 files)
 npm run test:watch   # unit tests in watch mode
@@ -72,7 +72,7 @@ All content pages display a "Sources et références" section citing origin of d
 ## Authentication (dual-mode, 3 rôles + organisation hierarchy)
 | Rôle | Login | Accès |
 |------|-------|-------|
-| Admin | admin@gaspe.fr / admin123 | Console /admin (14 sections) |
+| Admin | admin@gaspe.fr / admin123 | Console /admin (12 sections + dashboard) |
 | Adhérent (responsable) | Via /inscription/adherent (admin approval) | /espace-adherent + gestion équipe |
 | Adhérent (contact) | Via /inscription/invitation (token, pré-approuvé) | /espace-adherent |
 | Candidat | Via /inscription/candidat (auto-approved) | /espace-candidat |
@@ -132,9 +132,9 @@ Admin sends via `/admin/newsletter` (category selector + compose → Brevo bulk)
 ```
 src/
 ├── app/
-│   ├── (public)/          # 30+ routes publiques (+ ssgm, decouvrir, visites-medicales)
-│   ├── (admin)/           # 14 routes admin (+ newsletter, organisations)
-│   ├── (auth)/            # 5 routes auth (+ invitation, reset password)
+│   ├── (public)/          # 33 routes publiques (+ ssgm, decouvrir, visites-medicales)
+│   ├── (admin)/           # 12 sections admin + dashboard (16 pages avec /new)
+│   ├── (auth)/            # 6 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
@@ -145,10 +145,11 @@ src/
 │   ├── layout/            # Header, Footer, AdminSidebar, AdminMobileNav, MobileNav
 │   ├── map/               # MemberMap (Leaflet, lazy-loaded)
 │   ├── globe/             # GaspeGlobe (Three.js, lazy-loaded)
+│   ├── news/              # News-related components
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
 │   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
 │   ├── theme/             # ThemeContext (dark mode)
@@ -164,7 +165,7 @@ src/
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 30 endpoints
+├── api.ts                 # CF Worker: 24 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
@@ -174,7 +175,7 @@ workers/
     └── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
 ```
 
-## Worker API — 30 endpoints
+## Worker API — 24 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -202,7 +203,7 @@ workers/
 | /api/hydros/publish | POST | JWT |
 | /api/upload | POST | JWT |
 
-## Database (D1 — 8 tables)
+## Database (D1 — 9 tables)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary |
@@ -249,3 +250,17 @@ workers/
 - **CSP unsafe-inline** — required by Next.js hydration
 - **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
 - **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
+- **CF secrets** — Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
+
+## Session history
+| Session | Version | Key deliverables |
+|---------|---------|-----------------|
+| 1-10 | 1.x-2.0 | Initial site, members, jobs, auth, admin |
+| 11 | 2.1 | Official GASPE logo integration |
+| 12 | 2.2 | Data coherence audit — member data, stats, logos |
+| 13 | 2.3 | Bulk UI/content updates — stats, nav, newsletter, map |
+| 14 | 2.4 | Merge adherents into groupement, collapsible sources, bureau links |
+| 15 | 2.5 | NAO 2026 salary simulator upgrade |
+| 16-19 | 2.6-2.7 | Transition ecologique, ADEME simulator, boîte à outils audit |
+| 20 | 2.7 | Organisation hierarchy, newsletter 10 catégories, invitations |
+| 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
