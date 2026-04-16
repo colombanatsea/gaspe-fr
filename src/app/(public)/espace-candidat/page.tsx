@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { publishedJobs } from "@/data/jobs";
 import { computeMatchScore, MATCH_COLORS } from "@/lib/matching";
+import { EnmImport } from "@/components/shared/EnmImport";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -518,6 +519,9 @@ export default function EspaceCandidatPage() {
               )}
             </Card>
           </section>
+
+          {/* ENM Import */}
+          <EnmImport />
 
           {/* Saved offers */}
           <section id="saved">

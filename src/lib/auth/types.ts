@@ -145,23 +145,40 @@ export interface User {
   cvFilename?: string;
   profilePhoto?: string; // base64 data URL
   linkedinUrl?: string;
-  /** Structured certifications (replaces freetext) */
+  /** Structured certifications — ENM titres format */
   structuredCertifications?: {
     certId: string;
+    title: string;
+    enmReference?: string; // n° ENM (ex: 10216913)
     obtainedDate?: string;
     expiryDate?: string;
+    status?: "valid" | "expired" | "pending";
     reference?: string;
     verified?: boolean;
   }[];
-  /** Sea service history */
+  /** Sea service history — ENM lignes de service format */
   seaService?: {
     id: string;
     vesselName: string;
+    vesselImo?: string;
     vesselType?: string;
     rank: string;
+    category?: string;
     startDate: string;
     endDate?: string;
+    source?: "manual" | "enm_csv";
   }[];
+  /** Medical aptitude — ENM aptitude médicale format */
+  medicalAptitude?: {
+    visitType?: string;
+    lastVisitDate?: string;
+    expiryDate?: string;
+    decision?: string;
+    duration?: string;
+    restrictions?: string[];
+  };
+  /** ENM portal ID (n° marin) */
+  enmMarinId?: string;
   createdAt: string;
 }
 

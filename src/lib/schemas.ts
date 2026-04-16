@@ -35,8 +35,11 @@ const applicationSchema = z.object({
 
 const structuredCertSchema = z.object({
   certId: z.string(),
+  title: z.string().default(""),
+  enmReference: z.string().optional(),
   obtainedDate: z.string().optional(),
   expiryDate: z.string().optional(),
+  status: z.enum(["valid", "expired", "pending"]).optional(),
   reference: z.string().optional(),
   verified: z.boolean().optional(),
 });
@@ -44,10 +47,22 @@ const structuredCertSchema = z.object({
 const seaServiceSchema = z.object({
   id: z.string(),
   vesselName: z.string(),
+  vesselImo: z.string().optional(),
   vesselType: z.string().optional(),
   rank: z.string(),
+  category: z.string().optional(),
   startDate: z.string(),
   endDate: z.string().optional(),
+  source: z.enum(["manual", "enm_csv"]).optional(),
+});
+
+const medicalAptitudeSchema = z.object({
+  visitType: z.string().optional(),
+  lastVisitDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+  decision: z.string().optional(),
+  duration: z.string().optional(),
+  restrictions: z.array(z.string()).optional(),
 });
 
 export const userSchema = z.object({
@@ -80,6 +95,8 @@ export const userSchema = z.object({
   linkedinUrl: z.string().optional(),
   structuredCertifications: z.array(structuredCertSchema).optional(),
   seaService: z.array(seaServiceSchema).optional(),
+  medicalAptitude: medicalAptitudeSchema.optional(),
+  enmMarinId: z.string().optional(),
   createdAt: z.string(),
 });
 
