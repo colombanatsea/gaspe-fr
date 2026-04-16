@@ -11,16 +11,17 @@
 | Erreurs ESLint | 0 (101 warnings, 0 errors) |
 | Tests unitaires | 171 (17 fichiers) |
 | Tests E2E | 9 spec files (Playwright) |
-| Endpoints Worker | 38 (24 auth/org + 14 CMS/jobs/medical/media) |
-| Tables D1 | 13 + 5 migrations |
+| Endpoints Worker | 39 (24 auth/org + 14 CMS/jobs/medical/media + 1 ENM) |
+| Tables D1 | 13 + 6 migrations |
 | Templates email | 8 (Brevo) |
 | Newsletter categories | 10 |
 | Membres | 31 (29 avec logos) |
 | Centres SSGM | 25 + 10 medecins |
 | Offres d'emploi | 12 statiques + D1 dynamiques |
-| Composants (.tsx) | 39 dans 9 repertoires |
+| Composants (.tsx) | 40 dans 9 repertoires |
 | Fichiers data | 10 |
 | Stores dual-mode | 5 (auth, CMS, jobs, medical, media) |
+| Integrations externes | Brevo, Hydros Alumni, ENM (Portail du marin) |
 
 ---
 
@@ -101,6 +102,30 @@ Le composant natif AdemeSimulator.tsx mentionne dans la session 22 n'existe pas 
 La page `/transition-ecologique` utilise toujours un iframe vers `colombanatsea.com`.
 Ce chantier reste a faire dans une session future.
 
+### Bonus — Profils enrichis + ENM
+
+#### Import ENM (Portail du marin)
+- **Worker** `POST /api/enm/import` : login automatique sur `enm.mes-services.mer.gouv.fr`, scraping parallele de 3 pages
+- **Donnees importees** : lignes de service (navire + IMO, fonction, categorie, periode), titres/brevets (n° ENM, statut valide/expire, date expiration), aptitude medicale (decision, validite, restrictions)
+- **Frontend** `src/components/shared/EnmImport.tsx` : flow credentials → loading → review table → save
+- Identifiants ENM **jamais stockes** — usage unique pour le fetch
+- Mode demo avec donnees simulees realistes
+
+#### Profil candidat enrichi
+- **Photo de profil** : upload base64 (2 Mo max, JPG/PNG/WebP/GIF), affichage avatar
+- **LinkedIn personnel** : champ URL avec icone
+- **Completion profil** : 12 champs ponderes (photo 5%, LinkedIn 5%, certifications 15%, CV 10%, experience 15%...)
+- Champs manquants surlignes en ambre
+
+#### Profil adherent enrichi
+- **LinkedIn entreprise** : champ URL dans l'editeur profil
+- Affiche sur la **page publique** de la compagnie (`/nos-adherents/[slug]`) dans la sidebar info
+
+#### Backend
+- **Migration 0006** : `profile_photo`, `linkedin_url`, `company_linkedin_url` sur `users`
+- **Worker** : champs ajoutes a `DbUser`, `toFrontendUser`, PATCH allowed fields
+- **Types enrichis** : `seaService.vesselImo`, `structuredCertifications.title/.enmReference/.status`, `medicalAptitude`, `enmMarinId`
+
 ### P3 — Finalisation
 - Version bump: 2.8.0 → 2.10.0
 - CLAUDE.md et HANDOFF.md mis a jour
@@ -137,7 +162,7 @@ Le JWT est stocke dans `localStorage` sous la cle `gaspe_api_token`.
 | Secrets Worker | A configurer | `BREVO_API_KEY`, `JWT_SECRET`, `CONTACT_EMAIL` dans CF dashboard |
 | Secrets Hydros | A configurer | `HYDROS_EMAIL`, `HYDROS_PASSWORD` |
 | Repo variable | A configurer | `CF_CONFIGURED=true` dans GitHub Settings > Variables |
-| Migrations D1 | A appliquer | 0001-0005 via CF dashboard ou `wrangler d1 migrations apply` |
+| Migrations D1 | A appliquer | 0001-0006 via CF dashboard ou `wrangler d1 migrations apply` |
 | Custom domain | A configurer | gaspe.fr DNS dans CF Pages |
 | NEXT_PUBLIC_API_URL | A configurer | URL du Worker (ex: `https://gaspe-api.workers.dev`) dans CF Pages env |
 
@@ -148,27 +173,29 @@ Le JWT est stocke dans `localStorage` sous la cle `gaspe_api_token`.
 ### P0 — Quick wins / verification
 | # | Tache | Effort |
 |---|-------|--------|
-| 1 | Appliquer migration 0005 en production D1 | 5 min |
+| 1 | Appliquer migrations 0005-0006 en production D1 | 5 min |
 | 2 | Configurer `NEXT_PUBLIC_API_URL` sur CF Pages | 5 min |
 | 3 | Tester stores dual-mode en production (CMS, jobs, media) | 30 min |
 
 ### P1 — Composants & UX
 | # | Tache | Effort |
 |---|-------|--------|
-| 4 | Porter simulateur ADEME (iframe → composant natif Next.js) | 3-4h |
-| 5 | Ajouter store dual-mode pour `members-store.ts` | 1h |
-| 6 | Ajouter photos equipe bureau dans /notre-groupement | 30 min |
+| 4 | Ajouter store dual-mode pour `members-store.ts` | 1h |
+| 5 | Ajouter photos equipe bureau dans /notre-groupement | 30 min |
+| 6 | Tester import ENM en production (login reel sur enm.mes-services.mer.gouv.fr) | 1h |
+| 7 | Afficher les donnees ENM importees dans le profil candidat (timeline service, brevets) | 2h |
 
 ### P2 — Qualite
 | # | Tache | Effort |
 |---|-------|--------|
-| 7 | Reduire les 101 ESLint warnings (react-hooks, any, etc.) | 1-2h |
-| 8 | Ajouter tests E2E pour les nouveaux stores (Playwright) | 2h |
-| 9 | Ajouter monitoring Worker (CF Analytics, error tracking) | 1h |
+| 8 | Reduire les 101 ESLint warnings (react-hooks, any, etc.) | 1-2h |
+| 9 | Ajouter tests E2E pour les nouveaux stores et ENM import (Playwright) | 2h |
+| 10 | Ajouter monitoring Worker (CF Analytics, error tracking) | 1h |
 
 ### P3 — Production readiness
 | # | Tache | Effort |
 |---|-------|--------|
-| 10 | Custom domain gaspe.fr (CF Pages DNS) | 30 min |
-| 11 | Media library: serve images from R2 public URL (pas base64) | 2h |
-| 12 | CMS seed: migrer contenu localStorage existant vers D1 | 1h |
+| 11 | Custom domain gaspe.fr (CF Pages DNS) | 30 min |
+| 12 | Media library: serve images from R2 public URL (pas base64) | 2h |
+| 13 | CMS seed: migrer contenu localStorage existant vers D1 | 1h |
+| 14 | Robustifier parsers ENM (tester avec differents profils marins) | 1h |

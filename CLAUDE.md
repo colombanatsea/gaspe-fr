@@ -59,6 +59,8 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
 - Demo space at `/decouvrir-espace-adherent` (8 tabs, fake data, adhesion CTAs)
 - Transition ecologique at `/transition-ecologique` (simulateur ADEME iframe, 4 guides PDF, 6 technologies)
+- Candidat profile: photo, LinkedIn, CV, certifications STCW, experience, ENM import (12 weighted fields)
+- Adherent profile: company LinkedIn (displayed on public company page `/nos-adherents/[slug]`)
 
 ## Source citations
 All content pages display a "Sources et références" section citing origin of data:
@@ -120,6 +122,15 @@ Preferences stored in D1 `newsletter_preferences` table (per-user, per-category 
 Managed via `/espace-adherent/preferences` and `/espace-candidat/preferences`.
 Admin sends via `/admin/newsletter` (category selector + compose → Brevo bulk).
 
+## ENM — Espace Numérique Maritime (Portail du marin)
+- Import automatique depuis `enm.mes-services.mer.gouv.fr` via login candidat
+- Worker endpoint: `POST /api/enm/import` (JWT auth, login + scraping 3 pages)
+- Données importées : lignes de service (navire, IMO, fonction, catégorie), titres/brevets (n° ENM, statut), aptitude médicale (décision, validité, restrictions)
+- Frontend: `EnmImport` component (credentials → review table → save to profile)
+- Identifiants ENM jamais stockés — usage unique pour le fetch
+- Mode démo avec données simulées réalistes
+- Types enrichis : `seaService.vesselImo`, `structuredCertifications.enmReference/.status/.title`, `medicalAptitude`, `enmMarinId`
+
 ## Hydros Alumni cross-publication
 - Job offers published on GASPE can be cross-published to hydros-alumni.org (AlumnForce platform)
 - Mapping file: `src/lib/hydros-mapping.ts` (contract types, positions, sectors → AlumnForce IDs)
@@ -147,7 +158,7 @@ src/
 │   ├── globe/             # GaspeGlobe (Three.js, lazy-loaded)
 │   ├── news/              # News-related components
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
-│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm
+│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport
 │   └── ui/                # Badge, Button, Card, ThemeToggle
 ├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications)
 ├── lib/
@@ -177,9 +188,10 @@ workers/
     ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
     ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
     └── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
+    └── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
 ```
 
-## Worker API — 38 endpoints
+## Worker API — 39 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -221,6 +233,7 @@ workers/
 | /api/media | GET | JWT+admin |
 | /api/media | POST | JWT+admin |
 | /api/media/:id | DELETE | JWT+admin |
+| /api/enm/import | POST | JWT |
 
 ## Database (D1 — 13 tables)
 | Table | Description |
@@ -300,4 +313,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 16-19 | 2.6-2.7 | Transition ecologique, ADEME simulator, boîte à outils audit |
 | 20 | 2.7 | Organisation hierarchy, newsletter 10 catégories, invitations |
 | 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
-| 23 | 2.10.0 | Frontend API stores (CMS, jobs, medical, media), 14 new Worker endpoints, migration 0005 |
+| 23 | 2.10.0 | Frontend API stores, ENM portal import, profile photo/LinkedIn, 15 new endpoints, migrations 0005-0006 |
