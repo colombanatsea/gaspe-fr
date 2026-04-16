@@ -25,6 +25,5 @@ CONTACT_EMAIL = "contact@gaspe.fr"
 # JWT_SECRET — set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
 # BREVO_API_KEY — set via: npx wrangler secret put BREVO_API_KEY --config workers/wrangler.toml
 
-# D1 migrations
-[migrations]
-migrations_dir = "migrations"
+# D1 migrations applied via: wrangler d1 execute gaspe-db --file workers/migrations/XXXX.sql
+# Or via deploy-worker.yml CI workflow
