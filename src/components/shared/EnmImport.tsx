@@ -46,69 +46,8 @@ type Step = "credentials" | "loading" | "review" | "done" | "error";
 export function EnmImport() {
   const { user, updateUser } = useAuth();
   const [step, setStep] = useState<Step>("credentials");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [data, setData] = useState<EnmData | null>(null);
-
-  async function handleConnect(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim() || !password) return;
-
-    setStep("loading");
-    setError("");
-
-    try {
-      if (isApiMode()) {
-        const res = await apiFetch<{ success?: boolean; error?: string; data?: EnmData }>("/api/enm/import", {
-          method: "POST",
-          body: JSON.stringify({ email: email.trim(), password }),
-        });
-        if (res.error) {
-          setError(res.error);
-          setStep("error");
-          return;
-        }
-        if (res.data) {
-          setData(res.data);
-          setStep("review");
-        }
-      } else {
-        // Demo mode: simulate import with sample data matching the screenshots
-        await new Promise((r) => setTimeout(r, 1500));
-        setData({
-          enmMarinId: "20105975",
-          seaService: [
-            { id: "enm-1", startDate: "2017-06-08", endDate: "2017-06-17", vesselName: "ZOURITE", vesselImo: "933184", rank: "LIEUTENANT", category: "11" },
-            { id: "enm-2", startDate: "2017-02-01", endDate: "2017-02-12", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-            { id: "enm-3", startDate: "2017-01-26", endDate: "2017-01-31", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
-            { id: "enm-4", startDate: "2017-01-01", endDate: "2017-01-25", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-            { id: "enm-5", startDate: "2016-12-14", endDate: "2016-12-31", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
-          ],
-          certificates: [
-            { certId: "enm-cert-10216913", title: "Brevet de second capitaine 3000 (2016)", enmReference: "10216913", status: "expired", expiryDate: "2021-10-23" },
-            { certId: "enm-cert-10138454", title: "Chef de quart de navire de mer", enmReference: "10138454", status: "expired", expiryDate: "2019-11-16" },
-            { certId: "enm-cert-10138450", title: "Brevet d'aptitude a l'exploitation des embarcations et radeaux de sauvetage", enmReference: "10138450", status: "valid" },
-            { certId: "enm-cert-10091950", title: "Certificat general d'operateur", enmReference: "10091950", status: "expired", expiryDate: "2017-10-18" },
-            { certId: "enm-cert-10200675", title: "Certificat d'aptitude a l'exploitation des embarcations (STCW10)", enmReference: "10200675", status: "expired", expiryDate: "2021-03-23" },
-            { certId: "enm-cert-10200674", title: "Certificat de formation de base a la securite (STCW10)", enmReference: "10200674", status: "expired", expiryDate: "2021-03-23" },
-          ],
-          medical: {
-            visitType: "Annuelle",
-            lastVisitDate: "2017-04-06",
-            expiryDate: "2018-04-30",
-            decision: "Apte TF/TN avec restriction",
-            duration: "12 mois",
-            restrictions: ["Port de verres correcteurs"],
-          },
-        });
-        setStep("review");
-      }
-    } catch {
-      setError("Erreur de connexion au portail ENM");
-      setStep("error");
-    }
-  }
 
   function handleSave() {
     if (!user || !data) return;
@@ -135,11 +74,7 @@ export function EnmImport() {
     } as User);
 
     setStep("done");
-    setPassword("");
   }
-
-  const inputClass =
-    "mt-1 block w-full rounded-xl border border-border-light bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
 
   return (
     <section className="space-y-4">
@@ -176,50 +111,96 @@ export function EnmImport() {
         </div>
       )}
 
-      {/* Step 1: Credentials */}
+      {/* Step 1: FranceConnect redirect */}
       {step === "credentials" && (
         <Card>
-          <form onSubmit={handleConnect} className="space-y-4">
+          <div className="space-y-4">
             <p className="text-sm text-foreground-muted">
-              Connectez votre compte{" "}
-              <a href="https://enm.mes-services.mer.gouv.fr" target="_blank" rel="noopener noreferrer" className="text-[#000091] hover:underline font-medium">
-                enm.mes-services.mer.gouv.fr
-              </a>
-              {" "}pour importer automatiquement vos donnees.
+              L&apos;Espace Numerique Maritime utilise <strong>FranceConnect</strong> pour l&apos;authentification.
+              Connectez-vous d&apos;abord sur le portail ENM, puis revenez ici pour importer vos donnees.
             </p>
-            <div>
-              <label className="block text-sm font-medium text-foreground">Identifiant ENM (email)</label>
-              <input
-                type="text"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre.email@example.com"
-                autoComplete="username"
-                className={inputClass}
-              />
+
+            <div className="rounded-xl bg-[#000091]/5 border border-[#000091]/15 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#000091]">
+                  <span className="text-white text-xs font-bold">FC</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Etape 1 : Connectez-vous via FranceConnect</p>
+                  <p className="text-xs text-foreground-muted mt-1">
+                    Rendez-vous sur le portail ENM et connectez-vous avec FranceConnect (impots.gouv.fr, Ameli, identite numerique La Poste, etc.)
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground">Mot de passe ENM</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                className={inputClass}
-              />
-              <p className="mt-1 text-xs text-foreground-muted">
-                Vos identifiants ne sont pas stockes. Ils sont utilises uniquement pour recuperer vos donnees.
-              </p>
-            </div>
-            <Button type="submit">
-              <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+
+            <a
+              href="https://enm.mes-services.mer.gouv.fr/fr/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#000091] px-5 py-3 text-sm font-semibold text-white hover:bg-[#000091]/90 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
               </svg>
-              Importer mes donnees ENM
-            </Button>
-          </form>
+              Ouvrir le portail ENM (FranceConnect)
+            </a>
+
+            <div className="rounded-xl bg-surface border border-border-light p-4">
+              <p className="text-sm font-medium text-foreground mb-2">Etape 2 : Importez vos donnees</p>
+              <p className="text-xs text-foreground-muted mb-3">
+                Une fois connecte au portail ENM, cliquez ci-dessous pour lancer l&apos;import automatique de vos lignes de service, brevets et aptitude medicale.
+              </p>
+              <Button onClick={() => {
+                setStep("loading");
+                setError("");
+                if (!isApiMode()) {
+                  setTimeout(() => {
+                    setData({
+                      enmMarinId: "20105975",
+                      seaService: [
+                        { id: "enm-1", startDate: "2017-06-08", endDate: "2017-06-17", vesselName: "ZOURITE", vesselImo: "933184", rank: "LIEUTENANT", category: "11" },
+                        { id: "enm-2", startDate: "2017-02-01", endDate: "2017-02-12", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
+                        { id: "enm-3", startDate: "2017-01-26", endDate: "2017-01-31", vesselName: "B EXPLORER 509", vesselImo: "932466", rank: "LIEUTENANT", category: "10" },
+                        { id: "enm-4", startDate: "2017-01-01", endDate: "2017-01-25", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
+                        { id: "enm-5", startDate: "2016-12-14", endDate: "2016-12-31", vesselName: "VISSOLELA 19E", vesselImo: "924396", rank: "LIEUTENANT", category: "11" },
+                      ],
+                      certificates: [
+                        { certId: "enm-cert-10216913", title: "Brevet de second capitaine 3000 (2016)", enmReference: "10216913", status: "expired", expiryDate: "2021-10-23" },
+                        { certId: "enm-cert-10138454", title: "Chef de quart de navire de mer", enmReference: "10138454", status: "expired", expiryDate: "2019-11-16" },
+                        { certId: "enm-cert-10138450", title: "Brevet d'aptitude a l'exploitation des embarcations et radeaux de sauvetage", enmReference: "10138450", status: "valid" },
+                        { certId: "enm-cert-10091950", title: "Certificat general d'operateur", enmReference: "10091950", status: "expired", expiryDate: "2017-10-18" },
+                        { certId: "enm-cert-10200675", title: "Certificat d'aptitude a l'exploitation des embarcations (STCW10)", enmReference: "10200675", status: "expired", expiryDate: "2021-03-23" },
+                        { certId: "enm-cert-10200674", title: "Certificat de formation de base a la securite (STCW10)", enmReference: "10200674", status: "expired", expiryDate: "2021-03-23" },
+                      ],
+                      medical: {
+                        visitType: "Annuelle",
+                        lastVisitDate: "2017-04-06",
+                        expiryDate: "2018-04-30",
+                        decision: "Apte TF/TN avec restriction",
+                        duration: "12 mois",
+                        restrictions: ["Port de verres correcteurs"],
+                      },
+                    });
+                    setStep("review");
+                  }, 1500);
+                } else {
+                  apiFetch<{ success?: boolean; error?: string; data?: EnmData }>("/api/enm/import", {
+                    method: "POST",
+                    body: JSON.stringify({}),
+                  }).then((res) => {
+                    if (res.error) { setError(res.error); setStep("error"); }
+                    else if (res.data) { setData(res.data); setStep("review"); }
+                  }).catch(() => { setError("Erreur de connexion au portail ENM"); setStep("error"); });
+                }
+              }}>
+                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Importer mes donnees ENM
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
 

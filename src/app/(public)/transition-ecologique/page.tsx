@@ -1,10 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+
+const AdemeSimulator = dynamic(() => import("@/components/simulator/AdemeSimulator"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent" />
+        <p className="mt-3 text-sm text-foreground-muted">Chargement du simulateur...</p>
+      </div>
+    </div>
+  ),
+});
 
 const ADEME_GUIDES = [
   {
@@ -103,14 +116,7 @@ export default function TransitionEcologiquePage() {
             Le simulateur couvre l&apos;electrique, le biocarburant, le dual-fuel et l&apos;optimisation operationnelle.
           </p>
           <div className="rounded-2xl border border-border-light overflow-hidden bg-background">
-            <iframe
-              src="https://colombanatsea.com/simulateur-transition-armateurs-cotiers/"
-              className="w-full border-0"
-              style={{ height: "85vh", minHeight: "700px" }}
-              title="Simulateur AAP ADEME 2026 — GASPE"
-              loading="lazy"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
+            <AdemeSimulator />
           </div>
           <p className="mt-2 text-xs text-foreground-muted text-center">
             Simulateur heberge par GASPE · Donnees indicatives, ne se substituent pas a un conseil professionnel

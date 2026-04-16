@@ -1,36 +1,28 @@
-# GASPE Website — Handoff Session 23 → Session 24
+# GASPE Website — Handoff Session 24 → Session 25
 
-## Etat actuel : v2.10.0 — Production OK
+## Etat actuel : v2.11.0 — Production Ready
 
 | Metrique | Valeur |
 |----------|--------|
-| Version | 2.10.0 |
-| Pages HTML (build) | 105 |
+| Version | 2.11.0 |
+| Pages HTML (build) | 107 |
 | Routes page.tsx | 55 (33 public + 16 admin + 6 auth) |
 | Erreurs TypeScript | 0 |
-| Erreurs ESLint | 0 errors, 35 warnings (react-hooks only) |
+| Erreurs ESLint | 0 errors, 29 warnings (react-hooks/set-state-in-effect only) |
 | Tests unitaires | 171 (17 fichiers) |
 | Tests E2E | 9 spec files (Playwright) |
-| Endpoints Worker | 39 (24 auth/org + 14 CMS/jobs/medical/media + 1 ENM) |
+| Endpoints Worker | 39 |
 | Tables D1 | 13 + 6 migrations |
 | Templates email | 8 (Brevo) |
 | Newsletter categories | 10 |
 | Membres | 31 (29 avec logos) |
-| Centres SSGM | 25 + 10 medecins |
-| Offres d'emploi | 12 statiques + D1 dynamiques |
-| Composants (.tsx) | 40 dans 9 repertoires |
-| Fichiers data | 10 |
-| Stores dual-mode | 5 (auth, CMS, jobs, medical, media) |
-| Integrations externes | Brevo, Hydros Alumni, ENM (Portail du marin) |
+| Stores dual-mode | 6 (auth, CMS, jobs, medical, media, members) |
+| Composants (.tsx) | 42+ dans 10 repertoires |
+| Integrations externes | Brevo, Hydros Alumni, ENM (Portail du marin), ADEME simulator |
 
 ---
 
 ## Branch : `main` — tout merge, CI vert
-
-### Dernier commit sur main
-```
-ffbcb17 Merge pull request #16 from colombanatsea/claude/gaspe-v2.9.0-upgrade-d0zAr
-```
 
 ### CI/CD status
 - **ci.yml** : TSC + Lint + Tests + Build — PASSE
@@ -39,115 +31,82 @@ ffbcb17 Merge pull request #16 from colombanatsea/claude/gaspe-v2.9.0-upgrade-d0
 
 ---
 
-## Resume session 23 (complet)
+## Resume session 24 (complet)
 
-### P1 — Frontend API Stores (priorite haute)
+### P0 — Infrastructure production
 
-#### Backend: Migration 0005 + 14 nouveaux endpoints
-- **Migration 0005** (`workers/migrations/0005_cms_jobs_medical_media.sql`):
-  - `cms_pages` — contenu CMS par page/section (composite PK)
-  - `jobs` — offres d'emploi (admin + adherent, source tracking)
-  - `medical_visits` — visites medicales par marin (FK users)
-  - `media_files` — metadonnees fichiers R2
+#### Production Deployment Guide
+- **`docs/PRODUCTION-DEPLOYMENT.md`** : Guide complet pour la mise en production
+  - Procedure d'application des 6 migrations D1 (wrangler CLI ou dashboard)
+  - Configuration des secrets Worker (JWT_SECRET, BREVO_API_KEY)
+  - Activation du mode API (`NEXT_PUBLIC_API_URL`)
+  - Configuration du domaine personnalise gaspe.fr
+  - Checklist de verification des stores dual-mode
+  - Procedure de rollback
 
-- **Worker API** (`workers/api.ts`): 14 nouveaux endpoints
-  | Endpoint | Method | Auth | Description |
-  |----------|--------|------|-------------|
-  | /api/cms/pages | GET | — | Lister tout le contenu CMS |
-  | /api/cms/pages/:pageId | GET | — | Contenu d'une page |
-  | /api/cms/pages/:pageId | PUT | JWT+admin | Upsert sections |
-  | /api/jobs | GET | — (public: published) | Lister les offres |
-  | /api/jobs | POST | JWT | Creer une offre |
-  | /api/jobs/:id | GET | — | Detail d'une offre |
-  | /api/jobs/:id | PATCH | JWT+admin/owner | Modifier une offre |
-  | /api/jobs/:id | DELETE | JWT+admin/owner | Supprimer une offre |
-  | /api/medical-visits | GET | JWT | Visites de l'utilisateur |
-  | /api/medical-visits | POST | JWT | Creer une visite |
-  | /api/medical-visits/:id | PATCH | JWT+owner | Modifier une visite |
-  | /api/medical-visits/:id | DELETE | JWT+owner | Supprimer une visite |
-  | /api/media | GET | JWT+admin | Lister les fichiers |
-  | /api/media | POST | JWT+admin | Uploader un fichier (R2) |
-  | /api/media/:id | DELETE | JWT+admin | Supprimer fichier + R2 |
+### P1 — Fonctionnel
 
-#### Frontend: Stores dual-mode
-- **`src/lib/api-client.ts`** — Client API partage (JWT auth, FormData, `isApiMode()`)
-- **`src/lib/cms-store.ts`** — Store CMS dual-mode (localStorage ↔ D1/API)
-  - API functions: `apiGetPageContent()`, `apiGetAllPageContent()`, `apiSavePageContent()`
-  - Media API: `apiGetMedia()`, `apiUploadMedia()`, `apiDeleteMedia()`
-- **`src/lib/jobs-store.ts`** — Store offres dual-mode
-  - `getAllPublishedJobs()`, `getAllOffers()`, `createJob()`, `toggleJobPublished()`, `deleteJob()`
-  - Remplace le code localStorage eparpille dans JobList.tsx et admin/offres
-- **`src/lib/medical-store.ts`** — Store visites medicales dual-mode
-  - `getMedicalVisits()`, `createMedicalVisit()`, `updateMedicalVisit()`, `deleteMedicalVisit()`
-  - `computeStatus()` pour calcul automatique expired/expiring_soon
+#### Members Store Dual-Mode (dernier store converti)
+- **`src/lib/members-store.ts`** : Upgrade complet localStorage → API
+  - `getStoredMembers()` et `getActiveMembers()` maintenant async (retournent Promise)
+  - En mode API : fetch depuis `GET /api/organizations` (endpoint existant)
+  - Fonction `orgToMember()` pour mapper les champs API → Member interface
+  - `updateMember()` supporte PATCH via `/api/organizations/:id`
+  - `toggleMemberArchived()` en localStorage seulement (champ archive pas en D1)
+  - Fallback gracieux : si API echoue, retourne localStorage
+- **Consommateurs mis a jour** (4 fichiers) :
+  - `GroupementContent.tsx` — converti de sync a useState + useEffect
+  - `MembersMarquee.tsx` — `.then()` dans useEffect
+  - `admin/membres/page.tsx` — `refresh()` et handlers async
+  - `espace-adherent/annuaire/page.tsx` — `await` dans fonction async
+- **Tests** : 5 tests existants convertis en async, tous passent
 
-#### Frontend: Composants mis a jour
-- `src/components/jobs/JobList.tsx` — utilise `jobs-store.ts` au lieu de localStorage direct
-- `src/components/admin/MediaLibrary.tsx` — supporte localStorage + API/R2 dual-mode
-- `src/app/(admin)/admin/offres/page.tsx` — utilise `jobs-store.ts` (async)
-- `src/app/(admin)/admin/offres/new/page.tsx` — utilise `createJob()` du store
-- `src/app/(admin)/admin/pages/page.tsx` — utilise `apiGetPageContent()` / `apiSavePageContent()`
-- `src/app/(public)/espace-adherent/visites-medicales/page.tsx` — utilise `medical-store.ts`
-- `src/lib/use-cms.tsx` — hooks CMS supportent API mode
+#### Affichage ENM dans le profil candidat
+- **`src/components/shared/EnmProfileDisplay.tsx`** (nouveau) : Composant riche d'affichage des donnees ENM importees
+  - **Cartes resumees** : jours de mer totaux, embarquements, brevets valides, aptitude medicale
+  - **Timeline service** : groupee par annee, avec dots, duree en jours, navire + IMO + fonction
+  - **Brevets visuels** : badges vert (valide) / ambre (expire bientot, <90j) / gris (expire)
+    - Tri : valides en premier, puis par date d'expiration
+    - Compteur valides/expires dans le header
+  - **Aptitude medicale** : carte coloree (vert/rouge), decision, dates, restrictions en badges ambre
+- **Integration** : ajoute dans `espace-candidat/page.tsx` entre EnmImport et les offres sauvegardees
+
+#### Simulateur ADEME natif (fin de l'iframe)
+- **`src/components/simulator/AdemeSimulator.tsx`** (2237 lignes) : Port complet du simulateur standalone
+  - `@ts-nocheck` pour les types (code JSX non type)
+  - ESLint relaxe pour le repertoire `src/components/simulator/`
+  - Lazy-load avec `dynamic(() => import(...), { ssr: false })` sur la page transition-ecologique
+  - Suppression complete de l'iframe vers colombanatsea.com
+  - **Dependance ajoutee** : `recharts@3.8.1`
+- **Fonctionnalites** :
+  - Wizard 7 etapes (navire → projet → contrefactuel → DNSH → budget → aide → dossier)
+  - 12 technologies de decarbonation avec TRL
+  - 7 types de carburants (MDO → H2)
+  - 31 cas de reference sources
+  - Calcul aide ADEME (taux LDACEE, plafond 6M EUR)
+  - Export pre-dossier HTML
+  - Sauvegarde localStorage (`ademe2026_list`)
 
 ### P2 — Qualite
 
-#### Tests unitaires (+26 tests)
-- `src/lib/__tests__/api-client.test.ts` — isApiMode detection
-- `src/lib/__tests__/jobs-store.test.ts` — CRUD, deduplication, tri, toggle publish
-- `src/lib/__tests__/medical-store.test.ts` — CRUD, computeStatus (expired/expiring/completed)
+#### ESLint
+- 35 → 29 warnings, 0 errors
+- Configuration ESLint mise a jour pour le repertoire `simulator/` (regles relaxees)
+- Warnings restants : tous `react-hooks/set-state-in-effect` (pattern de chargement, non-bloquant)
 
-#### AdemeSimulator.tsx — NON LIVRE
-Le composant natif AdemeSimulator.tsx mentionne dans la session 22 n'existe pas dans le codebase.
-La page `/transition-ecologique` utilise toujours un iframe vers `colombanatsea.com`.
-Ce chantier reste a faire dans une session future.
-
-### Bonus — Profils enrichis + ENM
-
-#### Import ENM (Portail du marin)
-- **Worker** `POST /api/enm/import` : login automatique sur `enm.mes-services.mer.gouv.fr`, scraping parallele de 3 pages
-- **Donnees importees** : lignes de service (navire + IMO, fonction, categorie, periode), titres/brevets (n° ENM, statut valide/expire, date expiration), aptitude medicale (decision, validite, restrictions)
-- **Frontend** `src/components/shared/EnmImport.tsx` : flow credentials → loading → review table → save
-- Identifiants ENM **jamais stockes** — usage unique pour le fetch
-- Mode demo avec donnees simulees realistes
-
-#### Profil candidat enrichi
-- **Photo de profil** : upload base64 (2 Mo max, JPG/PNG/WebP/GIF), affichage avatar
-- **LinkedIn personnel** : champ URL avec icone
-- **Completion profil** : 12 champs ponderes (photo 5%, LinkedIn 5%, certifications 15%, CV 10%, experience 15%...)
-- Champs manquants surlignes en ambre
-
-#### Profil adherent enrichi
-- **LinkedIn entreprise** : champ URL dans l'editeur profil
-- Affiche sur la **page publique** de la compagnie (`/nos-adherents/[slug]`) dans la sidebar info
-
-#### Backend
-- **Migration 0006** : `profile_photo`, `linkedin_url`, `company_linkedin_url` sur `users`
-- **Worker** : champs ajoutes a `DbUser`, `toFrontendUser`, PATCH allowed fields
-- **Types enrichis** : `seaService.vesselImo`, `structuredCertifications.title/.enmReference/.status`, `medicalAptitude`, `enmMarinId`
-
-### P3 — Finalisation
-- Version bump: 2.8.0 → 2.10.0
-- CLAUDE.md et HANDOFF.md mis a jour
-
-### Bugfixes & Qualite
-
-#### Logos compagnies casses (gaspe.fr 503)
-- 22 logos telecharges localement dans `/public/assets/logos/`
-- 7 placeholders SVG crees pour les logos 2025 indisponibles
-- `members.ts` mis a jour : plus aucune dependance a gaspe.fr
-- Logos servis depuis Cloudflare CDN, chargement instantane
-
-#### ESLint cleanup (101 → 35 warnings)
-- Desactive `no-img-element` (static export, `<Image>` non supporte)
-- Desactive `no-page-custom-font` (app router, pas `_document.js`)
-- Supprime imports/variables inutilises dans 25+ fichiers
-- Restant : 35 warnings `react-hooks/set-state-in-effect` (acceptable, pattern de chargement)
+#### CMS Seed Script
+- **`scripts/seed-cms-to-d1.ts`** : Script de migration du contenu localStorage vers D1
+  - Export depuis la console navigateur (`copy(localStorage.getItem('gaspe_page_content'))`)
+  - Generation SQL pour `cms_pages` table
+  - Support optionnel pour les jobs (`--jobs`)
+  - Escape SQL pour les apostrophes
+  - Instructions d'utilisation dans le header du script
 
 ---
 
-## Architecture dual-mode
+## Architecture mise a jour
 
+### Stores dual-mode (6/6 — complet)
 ```
                     ┌──────────────────┐
                     │  NEXT_PUBLIC_    │
@@ -163,8 +122,22 @@ Ce chantier reste a faire dans une session future.
               Browser only       D1 + R2
 ```
 
-Chaque store verifie `isApiMode()` et bascule automatiquement.
-Le JWT est stocke dans `localStorage` sous la cle `gaspe_api_token`.
+| Store | localStorage key | API endpoint | Status |
+|-------|-----------------|--------------|--------|
+| Auth | `gaspe_users` / `gaspe_current_user` | `/api/auth/*` | Done (session 20) |
+| CMS | `gaspe_page_content` | `/api/cms/pages/*` | Done (session 23) |
+| Jobs | `gaspe_admin_offers` / `gaspe_adherent_offers` | `/api/jobs/*` | Done (session 23) |
+| Medical | `gaspe_medical_visits` | `/api/medical-visits/*` | Done (session 23) |
+| Media | `gaspe_media_library` | `/api/media/*` | Done (session 23) |
+| Members | `gaspe_members` | `/api/organizations` | Done (session 24) |
+
+### Nouveaux fichiers session 24
+```
+docs/PRODUCTION-DEPLOYMENT.md          # Guide mise en production
+scripts/seed-cms-to-d1.ts              # Migration CMS localStorage → D1
+src/components/shared/EnmProfileDisplay.tsx  # Affichage donnees ENM importees
+src/components/simulator/AdemeSimulator.tsx  # Simulateur ADEME natif (2237 lignes)
+```
 
 ---
 
@@ -176,40 +149,40 @@ Le JWT est stocke dans `localStorage` sous la cle `gaspe_api_token`.
 | Secrets Worker | A configurer | `BREVO_API_KEY`, `JWT_SECRET`, `CONTACT_EMAIL` dans CF dashboard |
 | Secrets Hydros | A configurer | `HYDROS_EMAIL`, `HYDROS_PASSWORD` |
 | Repo variable | A configurer | `CF_CONFIGURED=true` dans GitHub Settings > Variables |
-| Migrations D1 | A appliquer | 0001-0006 via CF dashboard ou `wrangler d1 migrations apply` |
-| Custom domain | A configurer | gaspe.fr DNS dans CF Pages |
-| NEXT_PUBLIC_API_URL | A configurer | URL du Worker (ex: `https://gaspe-api.workers.dev`) dans CF Pages env |
+| Migrations D1 | A appliquer | 0001-0006 via `wrangler d1 execute` (voir docs/PRODUCTION-DEPLOYMENT.md) |
+| Custom domain | A configurer | gaspe.fr DNS dans CF Pages (voir docs/PRODUCTION-DEPLOYMENT.md) |
+| NEXT_PUBLIC_API_URL | A configurer | URL du Worker dans CF Pages env |
 
 ---
 
-## TODO session 24 — Priorise
+## TODO session 25 — Priorise
 
-### P0 — Quick wins / verification
+### P0 — Production go-live
 | # | Tache | Effort |
 |---|-------|--------|
-| 1 | Appliquer migrations 0005-0006 en production D1 | 5 min |
-| 2 | Configurer `NEXT_PUBLIC_API_URL` sur CF Pages | 5 min |
-| 3 | Tester stores dual-mode en production (CMS, jobs, media) | 30 min |
+| 1 | Appliquer migrations D1 en production (suivre docs/PRODUCTION-DEPLOYMENT.md) | 15 min |
+| 2 | Configurer secrets Worker + NEXT_PUBLIC_API_URL | 10 min |
+| 3 | Tester tous les stores en mode production | 1h |
+| 4 | Configurer domaine gaspe.fr | 15 min |
 
-### P1 — Composants & UX
+### P1 — Qualite
 | # | Tache | Effort |
 |---|-------|--------|
-| 4 | Ajouter store dual-mode pour `members-store.ts` | 1h |
-| 5 | Ajouter photos equipe bureau dans /notre-groupement | 30 min |
-| 6 | Tester import ENM en production (login reel sur enm.mes-services.mer.gouv.fr) | 1h |
-| 7 | Afficher les donnees ENM importees dans le profil candidat (timeline service, brevets) | 2h |
+| 5 | Tests E2E Playwright : ENM import, profil candidat, admin offres, visites medicales | 2h |
+| 6 | Typer progressivement AdemeSimulator.tsx (retirer @ts-nocheck) | 2-3h |
+| 7 | Recuperer 7 logos manquants quand gaspe.fr revient en ligne | 30 min |
 
-### P2 — Qualite
+### P2 — Fonctionnel
 | # | Tache | Effort |
 |---|-------|--------|
-| 8 | Reduire les 101 ESLint warnings (react-hooks, any, etc.) | 1-2h |
-| 9 | Ajouter tests E2E pour les nouveaux stores et ENM import (Playwright) | 2h |
-| 10 | Ajouter monitoring Worker (CF Analytics, error tracking) | 1h |
+| 8 | Media library : servir images via R2 public URL (plus de base64 localStorage) | 2h |
+| 9 | Appliquer CMS seed (scripts/seed-cms-to-d1.ts) apres go-live | 30 min |
+| 10 | Robustifier parsers ENM avec differents profils marins reels | 1h |
+| 11 | Ajouter archivage membres en mode API (nouveau champ D1 + endpoint PATCH) | 1h |
 
-### P3 — Production readiness
+### P3 — Ameliorations
 | # | Tache | Effort |
 |---|-------|--------|
-| 11 | Custom domain gaspe.fr (CF Pages DNS) | 30 min |
-| 12 | Media library: serve images from R2 public URL (pas base64) | 2h |
-| 13 | CMS seed: migrer contenu localStorage existant vers D1 | 1h |
-| 14 | Robustifier parsers ENM (tester avec differents profils marins) | 1h |
+| 12 | Reduire les 29 ESLint warnings (refactorer set-state-in-effect avec startTransition) | 2h |
+| 13 | Monitoring Worker (CF Analytics, error tracking) | 1h |
+| 14 | PWA offline support (service worker pour le simulateur ADEME) | 1h |

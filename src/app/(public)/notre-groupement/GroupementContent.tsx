@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
-import { getActiveMembers } from "@/lib/members-store";
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { MemberLogo } from "@/components/shared/MemberLogo";
 
 const engagements = [
@@ -97,7 +97,12 @@ const timeline = [
 export function GroupementContent() {
   const ref = useScrollReveal();
   const [memberFilter, setMemberFilter] = useState<"all" | "titulaire" | "associe">("all");
-  const members = getActiveMembers();
+  const [members, setMembers] = useState<StoredMember[]>([]);
+
+  useEffect(() => {
+    getActiveMembers().then(setMembers);
+  }, []);
+
   const filtered = memberFilter === "all" ? members : members.filter((m) => m.category === memberFilter);
   const titulaires = members.filter((m) => m.category === "titulaire");
   const associes = members.filter((m) => m.category === "associe");
@@ -157,6 +162,37 @@ export function GroupementContent() {
                 <p className="text-[10px] text-foreground-muted mt-0.5">{member.city}</p>
               </Link>
             ))}
+          </div>
+
+          {/* CTA carte interactive */}
+          <div className="mt-10 reveal">
+            <Link
+              href="/nos-adherents"
+              className="group block rounded-2xl bg-gradient-to-r from-[var(--gaspe-teal-600)] to-[var(--gaspe-teal-700)] p-6 sm:p-8 text-white hover:shadow-xl transition-all"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-heading text-lg font-bold">Carte interactive</p>
+                    <p className="text-sm text-white/70 mt-0.5">
+                      Visualisez nos {members.length} compagnies sur la carte de France et Outre-mer
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
+                  Voir la carte
+                  <svg className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

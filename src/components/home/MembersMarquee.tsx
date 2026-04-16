@@ -10,7 +10,7 @@ export function MembersMarquee() {
   const [titulaires, setTitulaires] = useState<StoredMember[]>([]);
 
   useEffect(() => {
-    setTitulaires(getActiveMembers().filter((m) => m.category === "titulaire"));
+    getActiveMembers().then((all) => setTitulaires(all.filter((m) => m.category === "titulaire")));
   }, []);
 
   return (
