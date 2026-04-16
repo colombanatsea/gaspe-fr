@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 
-const HERO_VIDEO_URL = "https://canva.link/fmrz5m10p1no8wd";
-
 export function HeroSection() {
   const cmsTitle = useCmsContent("homepage", "hero-title");
   const cmsSubtitle = useCmsContent("homepage", "hero-subtitle");
@@ -13,22 +11,23 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
-      {/* Video background (Canva embed) */}
+      {/* Video background */}
       <div className="pointer-events-none absolute inset-0">
-        <iframe
-          src={HERO_VIDEO_URL}
-          title="GASPE — Vidéo de présentation"
-          className="absolute inset-0 h-full w-full border-0"
-          style={{ transform: "scale(1.15)", transformOrigin: "center center" }}
-          allow="autoplay"
-          loading="lazy"
-        />
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/assets/acf_video.MP4" type="video/mp4" />
+        </video>
       </div>
 
       {/* Dark overlay for text readability */}
-      <div className="pointer-events-none absolute inset-0 bg-[var(--gaspe-neutral-950)]/65" />
+      <div className="pointer-events-none absolute inset-0 bg-[var(--gaspe-neutral-950)]/60" />
       {/* Left-side gradient for text contrast */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/80 via-[var(--gaspe-neutral-950)]/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-950)]/85 via-[var(--gaspe-neutral-950)]/40 to-transparent" />
 
       {/* Content overlay */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
