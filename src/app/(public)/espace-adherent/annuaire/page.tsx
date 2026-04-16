@@ -48,7 +48,7 @@ export default function AdherentAnnuairePage() {
         (u) => u.role === "adherent" && u.approved && !u.archived && u.id !== user!.id
       );
       setPeers(adherents);
-      setMembers(getActiveMembers());
+      setMembers(await getActiveMembers());
     }
     if (user && user.role === "adherent") load();
   }, [user, getAllUsers]);

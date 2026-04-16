@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.10.0
+- **Version**: v2.11.0
 
 ## Commands
 ```bash
@@ -15,7 +15,7 @@ npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
 npm run test         # unit tests (Vitest, 171 tests, 17 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, ~35 warnings — mostly react-hooks/set-state-in-effect)
+npm run lint         # ESLint (0 errors, ~29 warnings — react-hooks/set-state-in-effect only)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -156,9 +156,10 @@ src/
 │   ├── layout/            # Header, Footer, AdminSidebar, AdminMobileNav, MobileNav
 │   ├── map/               # MemberMap (Leaflet, lazy-loaded)
 │   ├── globe/             # GaspeGlobe (Three.js, lazy-loaded)
+│   ├── simulator/         # AdemeSimulator (Recharts, lazy-loaded, ssr: false)
 │   ├── news/              # News-related components
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
-│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport
+│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay
 │   └── ui/                # Badge, Button, Card, ThemeToggle
 ├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications)
 ├── lib/
@@ -288,18 +289,18 @@ All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` 
 | Jobs | `gaspe_admin_offers` / `gaspe_adherent_offers` | `/api/jobs/*` | Done (session 23) |
 | Medical | `gaspe_medical_visits` | `/api/medical-visits/*` | Done (session 23) |
 | Media | `gaspe_media_library` | `/api/media/*` | Done (session 23) |
-| Members | `gaspe_members` | Not yet | localStorage only |
+| Members | `gaspe_members` | `/api/organizations` | Done (session 24) |
 
 Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
 
 ## Known limitations
 - **Domain gaspe.fr** — manual CF Pages DNS config needed
-- **ADEME simulator** — still iframe to external URL (native component not yet built)
+- **ADEME simulator** — ported to native Next.js component (lazy-loaded, ssr: false)
 - **CSP unsafe-inline** — required by Next.js hydration
 - **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
 - **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
 - **CF secrets** — Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
-- **Members store** — still localStorage only (no D1 backend yet)
+- **Members store** — dual-mode via /api/organizations (read-only in API mode, archive feature localStorage only)
 
 ## Session history
 | Session | Version | Key deliverables |
@@ -314,3 +315,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 20 | 2.7 | Organisation hierarchy, newsletter 10 catégories, invitations |
 | 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
 | 23 | 2.10.0 | Frontend API stores, ENM portal import, profile photo/LinkedIn, 15 new endpoints, migrations 0005-0006 |
+| 24 | 2.11.0 | Members dual-mode store, ENM profile display, ADEME native simulator, production deployment guide, CMS seed script |

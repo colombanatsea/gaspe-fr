@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { publishedJobs } from "@/data/jobs";
 import { computeMatchScore, MATCH_COLORS } from "@/lib/matching";
 import { EnmImport } from "@/components/shared/EnmImport";
+import { EnmProfileDisplay } from "@/components/shared/EnmProfileDisplay";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -522,6 +523,9 @@ export default function EspaceCandidatPage() {
 
           {/* ENM Import */}
           <EnmImport />
+
+          {/* ENM Profile Data (sea service timeline, certificates, medical) */}
+          <EnmProfileDisplay user={user} />
 
           {/* Saved offers */}
           <section id="saved">

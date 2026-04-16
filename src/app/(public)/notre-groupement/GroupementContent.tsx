@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
-import { getActiveMembers } from "@/lib/members-store";
+import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { MemberLogo } from "@/components/shared/MemberLogo";
 
 const engagements = [
@@ -97,7 +97,12 @@ const timeline = [
 export function GroupementContent() {
   const ref = useScrollReveal();
   const [memberFilter, setMemberFilter] = useState<"all" | "titulaire" | "associe">("all");
-  const members = getActiveMembers();
+  const [members, setMembers] = useState<StoredMember[]>([]);
+
+  useEffect(() => {
+    getActiveMembers().then(setMembers);
+  }, []);
+
   const filtered = memberFilter === "all" ? members : members.filter((m) => m.category === memberFilter);
   const titulaires = members.filter((m) => m.category === "titulaire");
   const associes = members.filter((m) => m.category === "associe");

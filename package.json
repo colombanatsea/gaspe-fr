@@ -1,6 +1,6 @@
 {
   "name": "gaspe-fr",
-  "version": "2.10.0",
+  "version": "2.11.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -17,6 +17,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
+    "recharts": "^3.8.1",
     "tailwind-merge": "^3.0.2",
     "three": "^0.160.0",
     "zod": "^4.3.6"

@@ -30,22 +30,22 @@ vi.mock("@/data/members", () => ({
 }));
 
 describe("members-store", () => {
-  it("seeds from static data on first call", () => {
-    const members = getStoredMembers();
+  it("seeds from static data on first call", async () => {
+    const members = await getStoredMembers();
     expect(members).toHaveLength(2);
     expect(members[0].name).toBe("Compagnie A");
     expect(members[0].archived).toBe(false);
     expect(localStorage.getItem(MEMBERS_KEY)).not.toBeNull();
   });
 
-  it("returns cached data on subsequent calls", () => {
-    getStoredMembers(); // seeds
-    const members = getStoredMembers(); // reads from LS with Zod validation
+  it("returns cached data on subsequent calls", async () => {
+    await getStoredMembers(); // seeds
+    const members = await getStoredMembers(); // reads from LS with Zod validation
     expect(members).toHaveLength(2);
   });
 
-  it("saves members to localStorage", () => {
-    const members = getStoredMembers();
+  it("saves members to localStorage", async () => {
+    const members = await getStoredMembers();
     members[0].archived = true;
     saveMembers(members);
 
@@ -54,19 +54,19 @@ describe("members-store", () => {
     expect(parsed[0].archived).toBe(true);
   });
 
-  it("getActiveMembers filters out archived", () => {
-    const members = getStoredMembers();
+  it("getActiveMembers filters out archived", async () => {
+    const members = await getStoredMembers();
     members[1].archived = true;
     saveMembers(members);
 
-    const active = getActiveMembers();
+    const active = await getActiveMembers();
     expect(active).toHaveLength(1);
     expect(active[0].name).toBe("Compagnie A");
   });
 
-  it("falls back to static data on corrupted localStorage", () => {
+  it("falls back to static data on corrupted localStorage", async () => {
     localStorage.setItem(MEMBERS_KEY, "not valid json {{{");
-    const members = getStoredMembers();
+    const members = await getStoredMembers();
     expect(members).toHaveLength(2);
     expect(members[0].name).toBe("Compagnie A");
   });

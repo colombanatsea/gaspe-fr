@@ -61,8 +61,8 @@ export default function AdminMembresPage() {
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [form, setForm] = useState<StoredMember>({ ...emptyForm });
 
-  const refresh = useCallback(() => {
-    setMembers(getStoredMembers());
+  const refresh = useCallback(async () => {
+    setMembers(await getStoredMembers());
   }, []);
 
   useEffect(() => {
@@ -108,9 +108,9 @@ export default function AdminMembresPage() {
     setShowForm(true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.name.trim()) return;
-    const list = getStoredMembers();
+    const list = await getStoredMembers();
     const slug = form.slug || slugify(form.name);
     const entry: StoredMember = { ...form, slug };
 
@@ -130,22 +130,22 @@ export default function AdminMembresPage() {
     refresh();
   }
 
-  function handleArchive(m: StoredMember) {
+  async function handleArchive(m: StoredMember) {
     if (!confirm(`Archiver ${m.name} ?`)) return;
-    const list = getStoredMembers().map((x) => (x.slug === m.slug ? { ...x, archived: true } : x));
+    const list = (await getStoredMembers()).map((x) => (x.slug === m.slug ? { ...x, archived: true } : x));
     saveMembers(list);
     refresh();
   }
 
-  function handleUnarchive(m: StoredMember) {
-    const list = getStoredMembers().map((x) => (x.slug === m.slug ? { ...x, archived: false } : x));
+  async function handleUnarchive(m: StoredMember) {
+    const list = (await getStoredMembers()).map((x) => (x.slug === m.slug ? { ...x, archived: false } : x));
     saveMembers(list);
     refresh();
   }
 
-  function handleDelete(m: StoredMember) {
+  async function handleDelete(m: StoredMember) {
     if (!confirm(`Supprimer définitivement ${m.name} ? Cette action est irréversible.`)) return;
-    const list = getStoredMembers().filter((x) => x.slug !== m.slug);
+    const list = (await getStoredMembers()).filter((x) => x.slug !== m.slug);
     saveMembers(list);
     refresh();
   }

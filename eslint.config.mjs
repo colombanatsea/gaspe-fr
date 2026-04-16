@@ -21,6 +21,18 @@ const eslintConfig = defineConfig([
       "react-hooks/preserve-manual-memoization": "warn",
     },
   },
+  // Ported external files — different code style, relaxed linting
+  {
+    files: ["src/components/simulator/**"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react/no-unescaped-entities": "off",
+      "prefer-const": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     ".next/**",
