@@ -92,6 +92,9 @@ interface DbUser {
   experience: string | null;
   certifications: string | null;
   cv_filename: string | null;
+  profile_photo: string | null;
+  linkedin_url: string | null;
+  company_linkedin_url: string | null;
   membership_status: string | null;
   organization_id: string | null;
   is_primary: number;
@@ -123,6 +126,9 @@ function toFrontendUser(row: DbUser) {
     experience: row.experience ?? undefined,
     certifications: row.certifications ?? undefined,
     cvFilename: row.cv_filename ?? undefined,
+    profilePhoto: row.profile_photo ?? undefined,
+    linkedinUrl: row.linkedin_url ?? undefined,
+    companyLinkedinUrl: row.company_linkedin_url ?? undefined,
     membershipStatus: row.membership_status ?? undefined,
     organizationId: row.organization_id ?? undefined,
     isPrimary: row.is_primary === 1,
@@ -614,9 +620,11 @@ async function handleUpdateUser(request: Request, env: Env, corsHeaders: Record<
     companyRole: "company_role", companyDescription: "company_description",
     companyLogo: "company_logo", companyAddress: "company_address",
     companyEmail: "company_email", companyPhone: "company_phone",
+    companyLinkedinUrl: "company_linkedin_url",
     currentPosition: "current_position", desiredPosition: "desired_position",
     preferredZone: "preferred_zone", experience: "experience",
     certifications: "certifications", cvFilename: "cv_filename",
+    profilePhoto: "profile_photo", linkedinUrl: "linkedin_url",
     membershipStatus: "membership_status",
   };
 

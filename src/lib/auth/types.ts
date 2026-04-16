@@ -131,6 +131,7 @@ export interface User {
   companyAddress?: string;
   companyEmail?: string;
   companyPhone?: string;
+  companyLinkedinUrl?: string;
   vessels?: Vessel[];
   membershipStatus?: MembershipStatus;
   /** Candidat-specific */
@@ -142,6 +143,8 @@ export interface User {
   experience?: string;
   certifications?: string;
   cvFilename?: string;
+  profilePhoto?: string; // base64 data URL
+  linkedinUrl?: string;
   /** Structured certifications (replaces freetext) */
   structuredCertifications?: {
     certId: string;

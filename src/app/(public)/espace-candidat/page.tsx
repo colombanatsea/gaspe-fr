@@ -23,6 +23,8 @@ function profileCompletion(user: User): number {
     { filled: !!user.experience?.trim(), weight: 15 },
     { filled: !!user.certifications?.trim(), weight: 15 },
     { filled: !!user.cvFilename?.trim(), weight: 10 },
+    { filled: !!user.profilePhoto?.trim(), weight: 5 },
+    { filled: !!user.linkedinUrl?.trim(), weight: 5 },
     { filled: (user.structuredCertifications ?? []).length > 0, weight: 5 },
     { filled: (user.seaService ?? []).length > 0, weight: 5 },
   ];
@@ -42,6 +44,8 @@ export default function EspaceCandidatPage() {
     experience: "",
     certifications: "",
     cvFilename: "",
+    profilePhoto: "",
+    linkedinUrl: "",
   });
   const [formationsCount, setFormationsCount] = useState(0);
 
@@ -57,6 +61,8 @@ export default function EspaceCandidatPage() {
       experience: user.experience ?? "",
       certifications: user.certifications ?? "",
       cvFilename: user.cvFilename ?? "",
+      profilePhoto: user.profilePhoto ?? "",
+      linkedinUrl: user.linkedinUrl ?? "",
     });
 
     // Count formations
@@ -76,6 +82,8 @@ export default function EspaceCandidatPage() {
       experience: form.experience,
       certifications: form.certifications,
       cvFilename: form.cvFilename,
+      profilePhoto: form.profilePhoto,
+      linkedinUrl: form.linkedinUrl,
     } as User);
     setEditing(false);
   }, [user, form, updateUser]);
@@ -100,6 +108,26 @@ export default function EspaceCandidatPage() {
       return;
     }
     setForm((p) => ({ ...p, cvFilename: file.name }));
+  };
+
+  const [photoError, setPhotoError] = useState("");
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setPhotoError("");
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Format accepté : JPG, PNG, WebP ou GIF.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError("La photo ne doit pas dépasser 2 Mo.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((p) => ({ ...p, profilePhoto: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
   };
 
   if (!user || user.role !== "candidat") return null;
@@ -239,6 +267,59 @@ export default function EspaceCandidatPage() {
 
               {editing ? (
                 <div className="space-y-4">
+                  {/* Photo de profil */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Photo de profil</label>
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 shrink-0 rounded-full bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden">
+                        {form.profilePhoto ? (
+                          <img src={form.profilePhoto} alt="Photo" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-xl font-bold text-[var(--gaspe-teal-600)]">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-teal transition-colors">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                          </svg>
+                          Changer la photo
+                          <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                        </label>
+                        {form.profilePhoto && (
+                          <button
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, profilePhoto: "" }))}
+                            className="ml-2 text-xs text-red-500 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                        {photoError && <p className="text-xs text-red-500 mt-1">{photoError}</p>}
+                        <p className="text-xs text-foreground-muted mt-1">JPG, PNG, WebP. Max 2 Mo.</p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* LinkedIn */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground">Profil LinkedIn</label>
+                    <div className="relative mt-1">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg className="h-4 w-4 text-foreground-muted" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"/>
+                        </svg>
+                      </div>
+                      <input
+                        type="url"
+                        value={form.linkedinUrl}
+                        onChange={(e) => setForm((p) => ({ ...p, linkedinUrl: e.target.value }))}
+                        className={`${inputClass} pl-9`}
+                        placeholder="https://linkedin.com/in/votre-profil"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground">Téléphone</label>
                     <input
@@ -360,15 +441,38 @@ export default function EspaceCandidatPage() {
                   </div>
                 </div>
               ) : (
+                <div className="space-y-4">
+                  {/* Photo + identity row */}
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="h-14 w-14 shrink-0 rounded-full bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden">
+                      {user.profilePhoto ? (
+                        <img src={user.profilePhoto} alt={user.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-bold text-[var(--gaspe-teal-600)]">
+                          {user.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                      <p className="text-xs text-foreground-muted">{user.email}</p>
+                      {user.linkedinUrl && (
+                        <a href={user.linkedinUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--gaspe-teal-600)] hover:underline mt-0.5">
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"/>
+                          </svg>
+                          LinkedIn
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  {!user.profilePhoto && (
+                    <p className="text-xs text-amber-600">Photo de profil non ajoutée</p>
+                  )}
+                  {!user.linkedinUrl && (
+                    <p className="text-xs text-amber-600">Profil LinkedIn non renseigné</p>
+                  )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Nom</p>
-                    <p className="text-sm font-semibold text-foreground">{user.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Email</p>
-                    <p className="text-sm text-foreground">{user.email}</p>
-                  </div>
                   <div>
                     <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">Téléphone</p>
                     <p className="text-sm text-foreground">{user.phone || "Non renseigné"}</p>
@@ -409,6 +513,7 @@ export default function EspaceCandidatPage() {
                       <p className="text-sm text-amber-600">Non renseignées</p>
                     )}
                   </div>
+                </div>
                 </div>
               )}
             </Card>
