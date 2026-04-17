@@ -112,12 +112,14 @@ export default function AdherentOffresPage() {
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") {
-      router.push("/connexion");
-      return;
-    }
-    setOffers(readOffers().filter((o) => o.ownerId === user.id));
+    if (!user || user.role !== "adherent") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent") {
+    setInitialized(true);
+    setOffers(readOffers().filter((o) => o.ownerId === user.id));
+  }
 
   if (!user || user.role !== "adherent") return null;
 

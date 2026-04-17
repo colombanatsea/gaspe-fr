@@ -41,12 +41,14 @@ export default function CandidatFormationsPage() {
   const [formations, setFormations] = useState<Formation[]>([]);
 
   useEffect(() => {
-    if (!user || user.role !== "candidat") {
-      router.push("/connexion");
-      return;
-    }
-    setFormations(readFormations());
+    if (!user || user.role !== "candidat") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "candidat") {
+    setInitialized(true);
+    setFormations(readFormations());
+  }
 
   if (!user || user.role !== "candidat") return null;
 

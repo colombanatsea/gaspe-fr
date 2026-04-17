@@ -66,11 +66,8 @@ export default function AdminMembresPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
-      router.push("/connexion");
-      return;
-    }
-    refresh();
+    if (!user || user.role !== "admin") router.push("/connexion");
+    else refresh();
   }, [user, router, refresh]);
 
   // ------- Filters -------

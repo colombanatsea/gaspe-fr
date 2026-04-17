@@ -25,8 +25,14 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const handleMobileClose = useCallback(() => setMobileOpen(false), []);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const { user, isAuthenticated, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
+
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setUserMenuOpen(false);
+  }
 
   // Close user menu on click outside
   useEffect(() => {
@@ -38,11 +44,6 @@ export function Header() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  // Close menu on route change
-  useEffect(() => {
-    setUserMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border-light">

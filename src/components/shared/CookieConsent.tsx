@@ -7,16 +7,11 @@ const CONSENT_KEY = "gaspe_cookie_consent";
 type ConsentState = "pending" | "accepted" | "rejected";
 
 export function CookieConsent() {
-  const [consent, setConsent] = useState<ConsentState>("accepted"); // default to hide
-
-  useEffect(() => {
+  const [consent, setConsent] = useState<ConsentState>(() => {
+    if (typeof window === "undefined") return "accepted";
     const stored = localStorage.getItem(CONSENT_KEY);
-    if (!stored) {
-      setConsent("pending");
-    } else {
-      setConsent(stored as ConsentState);
-    }
-  }, []);
+    return stored ? (stored as ConsentState) : "pending";
+  });
 
   useEffect(() => {
     // Load CF Web Analytics only if consent is accepted

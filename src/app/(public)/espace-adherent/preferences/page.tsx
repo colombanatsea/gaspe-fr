@@ -17,12 +17,18 @@ export default function PreferencesPage() {
 
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    if (!isApiMode()) { setLoading(false); return; }
+    if (!isApiMode()) return;
     ApiAuthStore.fetchPreferences().then((p) => {
       setPrefs(p);
       setLoading(false);
     });
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent" && !isApiMode()) {
+    setInitialized(true);
+    setLoading(false);
+  }
 
   const handleToggle = async (key: string) => {
     if (!prefs) return;

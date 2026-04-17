@@ -1,4 +1,4 @@
-// @ts-nocheck — Ported from standalone sim-ademe.jsx, untyped React component
+// Ported from standalone sim-ademe.jsx — fully typed
 "use client";
 /**
  * ============================================================================
@@ -37,12 +37,338 @@
  * ============================================================================
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, PieChart, Pie, Cell
 } from "recharts";
+
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+type EntSize = "PE" | "ME" | "GE";
+type ZoneAFR = "hors" | "zoneC" | "zoneA";
+type ChargeMode = "opportunity" | "overnight";
+
+interface FuelDef {
+  id: string;
+  l: string;
+  cat: string;
+  co2: number;
+  price: number;
+  pGr: number;
+  note: string;
+  unit?: string;
+  adv?: boolean;
+}
+
+interface TechDef {
+  id: string;
+  l: string;
+  gL: number;
+  gM: number;
+  gH: number;
+  ox: number;
+  retro: string;
+  n: string;
+  cat: string;
+  trl: number;
+  adv?: boolean;
+}
+
+interface VesselDefaults {
+  loa: number;
+  gt: number;
+  pP: number;
+  pA: number;
+  pPeak: number;
+  spd: number;
+  fc: number;
+  pTr: number;
+  pMa: number;
+  pQu: number;
+  opD: number;
+  rD: number;
+  cDur: number;
+  qT: number;
+  pax: number;
+  veh: number;
+  opex: number;
+  crew: number;
+  ins: number;
+  dd: number;
+  ddC: number;
+  mktV: number;
+  rev: number;
+  debt: number;
+  dspR: number;
+  lifeR: number;
+}
+
+interface VesselType {
+  id: string;
+  l: string;
+  d: VesselDefaults;
+}
+
+interface Region {
+  id: string;
+  l: string;
+  zone: ZoneAFR;
+}
+
+interface EmFact {
+  sox: number;
+  nox: number;
+  pm: number;
+  src: string;
+}
+
+interface RatesBySize {
+  PE: number;
+  ME: number;
+  GE: number;
+}
+
+interface AdemeRates {
+  navPropre: Record<string, RatesBySize>;
+  navEmissionNulle: Record<string, RatesBySize>;
+  amelioContrefactuel: Record<string, RatesBySize>;
+  amelioSans: Record<string, RatesBySize>;
+  etudes: Record<string, RatesBySize>;
+  industrielPME: Record<string, RatesBySize>;
+}
+
+interface ExpenseCat {
+  id: string;
+  l: string;
+  poste: string;
+  sub: string;
+  ex: string;
+  plafond?: number;
+}
+
+interface DnshAxis {
+  id: string;
+  l: string;
+  icon: string;
+  auto: boolean;
+  template: string;
+}
+
+type FuelMix = Record<string, number>;
+
+interface TechConfig {
+  a?: boolean;
+  year?: number;
+}
+
+type TechsMap = Record<string, TechConfig>;
+
+interface Trajectory {
+  name: string;
+  fuelMix: FuelMix;
+  techs: TechsMap;
+  iC: number;
+  iE: number;
+  iI: number;
+  gridCost: number;
+}
+
+interface Vessel extends VesselDefaults {
+  type: string;
+  name: string;
+  entSize: EntSize;
+  zoneAFR: ZoneAFR;
+  chargeMode: ChargeMode;
+  region?: string;
+  serviceType?: string;
+  [key: string]: unknown;
+}
+
+interface ProjectParams {
+  sy: number;
+  dur: number;
+  disc: number;
+  cont: number;
+  fpG: number;
+}
+
+interface FuelRef {
+  id: string;
+  price: number;
+  co2: number;
+}
+
+interface BudgetItem {
+  id: string;
+  montant: number;
+}
+
+interface DnshItem {
+  id: string;
+  text: string;
+  ok: boolean;
+  fournisseur?: string;
+  certification?: string;
+  antifouling?: string;
+}
+
+interface Contrefactuel {
+  type: string;
+  coutEntretien?: number;
+  coutNewbuild?: number;
+  delaiReport?: number;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  upd: string;
+  thematique: number;
+  v: Vessel;
+  p: ProjectParams;
+  ref: { fuels: FuelRef[] };
+  trajs: Trajectory[];
+  contrefactuel: Contrefactuel;
+  budget: BudgetItem[];
+  dnsh: DnshItem[];
+  autresAides?: number;
+  autresAidesDetail?: string;
+}
+
+interface ProjectListEntry {
+  id: string;
+  name: string;
+  upd: string;
+  vType?: string;
+  vName?: string;
+}
+
+interface YearResult {
+  yr: number;
+  inv: number;
+  ex: number;
+  en: number;
+  cr: number;
+  ins: number;
+  dd: number;
+  tot: number;
+  disc: number;
+  co2: number;
+  cC: number;
+  cCO2: number;
+}
+
+interface ScenarioResult {
+  ccv: number;
+  co2: number;
+  rv: number;
+  yrs: YearResult[];
+  fuel?: number[];
+}
+
+interface TrajectoryResult {
+  name: string;
+  idx: number;
+  totI: number;
+  gain: { m: number };
+  base: ScenarioResult;
+  deg: ScenarioResult;
+  fav: ScenarioResult;
+}
+
+interface BattResult {
+  kWh: number;
+  constraint: string;
+  chargePower: number;
+  eTrip: number;
+  loadFactor: number;
+  costBatt: number;
+  costCharger: number;
+  gridConnect: number;
+  eqCyclesAn: number;
+  dod: number;
+  lifeCycles: number;
+  lifeYrs: number;
+  cRate: number;
+  costPerKwh: number;
+  cP?: number;
+}
+
+interface BiofuelResult {
+  tankClean: number;
+  filterUpgrade: number;
+  sealReplace: number;
+  fuelHeating: number;
+  monitoring: number;
+  certification: number;
+  engineConv: number;
+  tankInstall: number;
+  safety: number;
+  ingenierie: number;
+  totalEquip: number;
+  total: number;
+  notes: string[];
+  hasBio: boolean;
+  hasB30tech: boolean;
+  hasDual: boolean;
+}
+
+interface AideResult {
+  taux: number;
+  aide: number;
+  regime: string;
+  cls: string;
+  plafond: number;
+}
+
+interface ScoringResult {
+  total: number;
+  noteEnviron: number;
+  noteAide: number;
+  noteTechEco: number;
+  co2Evite: number;
+  co2Ref: number;
+  co2Alt: number;
+  gainPct: number;
+  ratioEuroParTonne: number;
+  triSansAide: number | null;
+  triAvecAide: number | null;
+  refYears: number;
+}
+
+interface CaseRef {
+  id: string;
+  n: string;
+  co: string;
+  yr: number;
+  vt: string[];
+  tr: string[];
+  loa: number;
+  batt: number;
+  rot: number;
+  nm: number;
+  retro: boolean;
+  co2: number;
+  nox: number;
+  s: string;
+  d: string;
+  url?: string;
+}
+
+interface CaseRefScored extends CaseRef {
+  score: number;
+}
+
+interface StepDef {
+  n: number;
+  l: string;
+  icon: string;
+  min: number;
+}
 
 // ============================================================================
 // SECTION 1 : CONSTANTES & DONNÉES
@@ -68,7 +394,7 @@ const GASPE_A_BLANC = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/4gHYSU
 // Sources: IMO GHG Study 2020, ADEME 2024
 // Prix MDO ajusté post-crise Iran (fermeture Ormuz fév. 2026)
 // Source prix: EIA STEO mars 2026 (Brent ~80 $/bbl horizon H2 2026)
-const DEF_FUELS = [
+const DEF_FUELS: FuelDef[] = [
   { id: "mdo",  l: "MDO (Marine Diesel Oil)",    cat: "Fossile",        co2: 3.206, price: 850,  pGr: 4, note: "Référence · prix post-crise Iran" },
   { id: "b30",  l: "B30 (blend 30% bio)",        cat: "Drop-in",        co2: 2.244, price: 1050, pGr: 2, note: "Sans modification moteur" },
   { id: "fame", l: "Biodiesel FAME B100",         cat: "Bio",            co2: 0.641, price: 1500, pGr: 1, note: "Drop-in diesel, joints à vérifier" },
@@ -80,7 +406,7 @@ const DEF_FUELS = [
 
 // --- Technologies avec TRL (nouveau) ---
 // Sources: IMO, DNV, BNEF 2024, ADEME fiches leviers 2025
-const TECHS = [
+const TECHS: TechDef[] = [
   { id: "helice",    l: "Hélice optimisée",             gL: .03, gM: .05, gH: .08, ox: 5,  retro: "2-4 sem.", n: "Tous profils",       cat: "Efficacité",       trl: 9 },
   { id: "antifouling",l: "Antifouling avancé",           gL: .02, gM: .03, gH: .05, ox: 20, retro: "1-2 sem.", n: "Renouvelable",        cat: "Efficacité",       trl: 9 },
   { id: "slowsteam", l: "Réduction vitesse",             gL: .10, gM: .15, gH: .25, ox: 0,  retro: "Immédiat",  n: "Impact temps trajet", cat: "Opérationnel",     trl: 9 },
@@ -96,7 +422,7 @@ const TECHS = [
 ];
 
 // --- Types de navires avec valeurs par défaut ---
-const VT = [
+const VT: VesselType[] = [
   { id: "bac",      l: "Bac estuarien / passage d'eau",      d: { loa: 45, gt: 400, pP: 800,  pA: 200,  pPeak: 1200, spd: 8,  fc: 80,  pTr: 40, pMa: 30, pQu: 30, opD: 300, rD: 40, cDur: 8,  qT: 5,  pax: 0,   veh: 50,  opex: 800,  crew: 500, ins: 60,  dd: 120, ddC: 5, mktV: 5000,  rev: 2000,  debt: 0, dspR: 10, lifeR: 15 }},
   { id: "navette",  l: "Navette passagers",                   d: { loa: 25, gt: 150, pP: 600,  pA: 100,  pPeak: 800,  spd: 12, fc: 40,  pTr: 60, pMa: 20, pQu: 20, opD: 300, rD: 30, cDur: 20, qT: 10, pax: 200, veh: 0,   opex: 500,  crew: 400, ins: 50,  dd: 100, ddC: 5, mktV: 3000,  rev: 1500,  debt: 0, dspR: 8,  lifeR: 18 }},
   { id: "ferry",    l: "Ferry insulaire (ropax)",             d: { loa: 80, gt: 3000, pP: 8000, pA: 1500, pPeak: 10000, spd: 15, fc: 600, pTr: 70, pMa: 15, pQu: 15, opD: 330, rD: 6,  cDur: 60, qT: 30, pax: 600, veh: 120, opex: 3000, crew: 2000, ins: 350, dd: 800, ddC: 5, mktV: 25000, rev: 12000, debt: 5000, dspR: 10, lifeR: 15 }},
@@ -109,7 +435,7 @@ const VT = [
 
 // --- Régions françaises → Zone AFR automatique ---
 // Source: Décret n° 2022-968 du 30 juin 2022 relatif aux zones d'aide à finalité régionale
-const REGIONS = [
+const REGIONS: Region[] = [
   { id: "metropole_standard", l: "Métropole (hors zone AFR)", zone: "hors" },
   { id: "bretagne",       l: "Bretagne",                           zone: "hors" },
   { id: "normandie",      l: "Normandie",                          zone: "hors" },
@@ -131,7 +457,7 @@ const REGIONS = [
 ];
 // --- Facteurs d'émission SOx/NOx/PM (g/kWh) ---
 // Sources: IMO MEPC.1/Circ.684, ENTEC 2005, Cooper & Gustafsson 2004
-const EMFACT = {
+const EMFACT: Record<string, EmFact> = {
   mdo:  { sox: 10.3, nox: 9.8, pm: 0.38, src: "IMO MEPC.1/Circ.684, Tier II" },
   b30:  { sox: 7.2,  nox: 8.8, pm: 0.32, src: "Bates et al. 2021, 30% FAME blend" },
   fame: { sox: 0.8,  nox: 7.5, pm: 0.18, src: "Jayaram et al. 2011, B100" },
@@ -144,7 +470,7 @@ const EMFACT = {
 // --- Taux d'aide ADEME (LDACEE) ---
 // Source: CdC AAP ADEME 2026, Annexe 2, pages 35-36
 // Vérifié le 2 avril 2026 · conforme au régime SA.111726
-const ADEME_RATES = {
+const ADEME_RATES: AdemeRates = {
   // Thématique 1 : Décarbonation directe des navires
   navPropre:           { "-":     { PE: 50,   ME: 40,   GE: 20   }},
   navEmissionNulle:    { "-":     { PE: 60,   ME: 50,   GE: 30   }},
@@ -163,7 +489,7 @@ const ADEME_RATES = {
 
 // --- Catégorisation des dépenses ADEME (Guide 2026, type "Investissement") ---
 // Source: Guide de catégorisation des dépenses ADEME 2026, page 5
-const ADEME_EXPENSE_CATS = [
+const ADEME_EXPENSE_CATS: ExpenseCat[] = [
   { id: "equip_prop",  l: "Équipements de propulsion bas carbone",     poste: "Équipements / Investissements", sub: "Équipements process",         ex: "Moteur hybride, pod électrique, pile H₂" },
   { id: "equip_stock", l: "Systèmes de stockage d'énergie",           poste: "Équipements / Investissements", sub: "Équipements process",         ex: "Batteries LFP, réservoirs H₂" },
   { id: "infra",       l: "Infrastructure de charge / avitaillement",  poste: "Équipements / Investissements", sub: "Aménagements et constructions", ex: "Bornes, câbles, transformateurs" },
@@ -178,7 +504,7 @@ const ADEME_EXPENSE_CATS = [
 
 // --- DNSH : 6 objectifs de la Taxonomie UE ---
 // Source: CdC AAP ADEME 2026, Annexe 1 (art. 17 règlement 2020/852)
-const DNSH_AXES = [
+const DNSH_AXES: DnshAxis[] = [
   { id: "attenuation",    l: "Atténuation du changement climatique",         icon: "🌡️", auto: true,  template: "Le projet réduit les émissions de {co2} tCO₂/an (−{pctCo2}% vs référence), contribuant directement à l'objectif OMI de −20% en 2030." },
   { id: "adaptation",     l: "Adaptation au changement climatique",          icon: "🌊", auto: false, template: "Les équipements installés sont conçus pour fonctionner dans les conditions climatiques projetées (hausse du niveau marin, tempêtes plus fréquentes). Durée de vie de conception ≥ 15 ans." },
   { id: "eau",            l: "Utilisation durable de l'eau et ressources marines", icon: "💧", auto: false, template: "Le navire respecte la Convention BWM (gestion des eaux de ballast). Aucun rejet polluant additionnel. Peintures antifouling conformes Convention AFS 2001." },
@@ -193,7 +519,7 @@ const DNSH_AXES = [
  * dimBiofuel · Estimation couts conversion biocarburant
  * Sources : Ship Universe 2025, DNV White Paper 2025, VPS Biofuels 2024
  */
-function dimBiofuel(v, techs, fuelMix) {
+function dimBiofuel(v: Vessel, techs: TechsMap | undefined, fuelMix: FuelMix): BiofuelResult | null {
   const pP = v.pP || 800;
   const gt = v.gt || 400;
   const hasFAME = (fuelMix.fame || 0) > 0;
@@ -206,7 +532,7 @@ function dimBiofuel(v, techs, fuelMix) {
 
   let tankClean = 0, filterUpgrade = 0, sealReplace = 0, fuelHeating = 0;
   let monitoring = 0, certification = 0, engineConv = 0, tankInstall = 0, safety = 0;
-  let notes = [];
+  const notes: string[] = [];
 
   if (hasBio) {
     // Conversion HVO/FAME B100
@@ -254,7 +580,7 @@ function dimBiofuel(v, techs, fuelMix) {
 }
 
 // Algorithme matchCases() : score de pertinence 0-100% sur 7 critères
-const CASE_DB = [
+const CASE_DB: CaseRef[] = [
   { id:"ampere", n:"MF Ampere", co:"NO", yr:2015, vt:["bac","ferry"], tr:["full_elec"], loa:80, batt:1000, rot:34, nm:3.2, retro:false,
     co2:-570, nox:-15, s:"Norled 2025; Siemens Energy; EAFO", d:"80m alu catamaran, 120 véh./360 pax, Lavik-Oppedal. 1 MWh Corvus. Réduction 95% GES. > 100 000 traversées." },
   { id:"ellen", n:"E-ferry Ellen", co:"DK", yr:2019, vt:["ferry"], tr:["full_elec"], loa:60, batt:4300, rot:7, nm:22, retro:false,
@@ -301,12 +627,12 @@ const CASE_DB = [
     co2:0, nox:0, s:"DNV White Paper 2025; Interviews armateurs", d:"1.6 Mt biocarburants maritimes en 2024 (Singapour + Rotterdam). B24/B30 a +30-60% vs VLSFO. Drop-in = zero retrofit.", url:"https://www.dnv.com/expert-story/maritime-impact/maximizing-the-potential-of-biofuels-in-shipping/" },
 ];
 
-function matchCases(proj) {
+function matchCases(proj: Project | null): CaseRefScored[] {
   if (!proj) return [];
   const v = proj.v;
   const fuelMix = proj.trajs?.[1]?.fuelMix || {};
   const techs = proj.trajs?.[1]?.techs || {};
-  const trTypes = [];
+  const trTypes: string[] = [];
   if (fuelMix.elec > 50 && !fuelMix.mdo) trTypes.push("full_elec");
   else if (fuelMix.elec > 0) trTypes.push("hybride");
   if (fuelMix.hvo > 0) trTypes.push("hvo");
@@ -337,25 +663,25 @@ const AAP_PREDEPOT_DEADLINE = new Date("2026-06-22T23:59:00"); // 2 semaines ava
 // ============================================================================
 
 // --- Formatage ---
-const fmt = (n, d = 0) => typeof n === "number" ? n.toLocaleString("fr-FR", { maximumFractionDigits: d }) : " - ";
-const fK = n => fmt(Math.round(n)) + " k€";
-const fPct = n => (n * 100).toFixed(1) + "%";
+const fmt = (n: number | unknown, d = 0): string => typeof n === "number" ? n.toLocaleString("fr-FR", { maximumFractionDigits: d }) : " - ";
+const fK = (n: number): string => fmt(Math.round(n)) + " k€";
+const fPct = (n: number): string => (n * 100).toFixed(1) + "%";
 
 // --- Jours restants avant la deadline ---
-function joursRestants() {
+function joursRestants(): number {
   const now = new Date();
-  const diff = AAP_DEADLINE - now;
+  const diff = AAP_DEADLINE.getTime() - now.getTime();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
 // --- Prix carburant avec référencement utilisateur ---
-function getFuelPrice(proj, fid) {
-  const ref = proj.ref?.fuels?.find(x => x.id === fid);
-  return ref ? ref.price : (DEF_FUELS.find(x => x.id === fid)?.price || 850);
+function getFuelPrice(proj: Project, fid: string): number {
+  const ref = proj.ref?.fuels?.find((x: FuelRef) => x.id === fid);
+  return ref ? ref.price : (DEF_FUELS.find((x: FuelDef) => x.id === fid)?.price || 850);
 }
-function getFuelCO2(proj, fid) {
-  const ref = proj.ref?.fuels?.find(x => x.id === fid);
-  return ref ? ref.co2 : (DEF_FUELS.find(x => x.id === fid)?.co2 || 3.206);
+function getFuelCO2(proj: Project, fid: string): number {
+  const ref = proj.ref?.fuels?.find((x: FuelRef) => x.id === fid);
+  return ref ? ref.co2 : (DEF_FUELS.find((x: FuelDef) => x.id === fid)?.co2 || 3.206);
 }
 
 /**
@@ -369,7 +695,7 @@ function getFuelCO2(proj, fid) {
  * - Coût : 450 €/kWh installé maritime (Corvus 2024), 200 €/kW chargeur
  * - Cycles : 5000 à 80% DoD (Preger et al. 2020, LFP)
  */
-function dimBatt(v) {
+function dimBatt(v: Vessel): BattResult {
   const pTr = (v.pTr || 60) / 100, pMa = (v.pMa || 20) / 100, pQu = (v.pQu || 20) / 100;
   const lf = pTr * 1.0 + pMa * Math.min(v.pPeak / v.pP, 1.5) + pQu * (v.pA / v.pP);
   const eTrip = v.pP * v.cDur / 60 * lf;
@@ -422,7 +748,7 @@ function dimBatt(v) {
  * Pour chaque trajectoire : calcule CCV actualisé, émissions CO₂ cumulées,
  * en 3 scénarios (base, dégradé, favorable).
  */
-function compute(proj) {
+function compute(proj: Project): TrajectoryResult[] {
   const { v, p, trajs } = proj;
   const N = p.dur; const r = p.disc / 100; const fg = p.fpG / 100;
   const pTr = (v.pTr || 60) / 100, pMa = (v.pMa || 20) / 100, pQu = (v.pQu || 20) / 100;
@@ -432,19 +758,19 @@ function compute(proj) {
   const MDO_DENSITY = 0.85; // kg/L
   const hFuel = v.fc * MDO_DENSITY * v.opD * (v.rD * v.cDur / 60) / 1000 * loadFactor;
   const battLife = dimBatt(v).lifeYrs;
-  return trajs.map((tj, ti) => {
-    const at = Object.entries(tj.techs || {}).filter(([, x]) => x?.a);
+  return trajs.map((tj: Trajectory, ti: number) => {
+    const at = Object.entries(tj.techs || {}).filter(([, x]) => (x as TechConfig)?.a);
     const totI = (tj.iC || 0) + (tj.iE || 0) + (tj.iI || 0) + (tj.gridCost || 0);
     const contA = totI * p.cont / 100;
-    const calc = cs => {
-      let cC = 0, cCO2 = 0; const yrs = [];
+    const calc = (cs: string) => {
+      let cC = 0, cCO2 = 0; const yrs: YearResult[] = [];
       for (let t = 0; t < N; t++) {
         const yr = p.sy + t; const df = Math.pow(1 + r, t);
         const fp = getFuelPrice(proj, "mdo") * Math.pow(1 + fg, t);
-        const mix = tj.fuelMix || { mdo: 100 };
-        const mixT = Object.values(mix).reduce((a, b) => a + b, 0) || 100;
+        const mix: FuelMix = tj.fuelMix || { mdo: 100 };
+        const mixT = Object.values(mix).reduce((a: number, b: number) => a + b, 0) || 100;
         let wCO2 = 0, wCost = 0;
-        Object.entries(mix).forEach(([fid, pct]) => {
+        Object.entries(mix).forEach(([fid, pct]: [string, number]) => {
           if (pct > 0) {
             const sh = pct / mixT;
             wCO2 += sh * (getFuelCO2(proj, fid) / 3.206);
@@ -456,7 +782,7 @@ function compute(proj) {
         // Source : MAN Energy Solutions 2023, typical SFOC degradation for medium-speed diesels
         const fossilDeg = ti === 0 ? Math.pow(1.015, t) : 1; // +1.5%/an conso fossile
         let prd = fossilDeg;
-        at.forEach(([tid, cfg]) => {
+        at.forEach(([tid, cfg]: [string, TechConfig]) => {
           const tech = TECHS.find(x => x.id === tid);
           if (tech) {
             const depY = (cfg.year || p.sy) - p.sy;
@@ -506,12 +832,12 @@ function compute(proj) {
  * - "propre" : ≥ 25% énergie zéro-CO₂ ou EEDI −10%
  * - "efficace" : plus efficace que le contrefactuel
  */
-function classifyVessel(fuelMix) {
+function classifyVessel(fuelMix: FuelMix | undefined): string {
   if (!fuelMix) return "efficace";
-  const mixT = Object.values(fuelMix).reduce((a, b) => a + b, 0) || 100;
+  const mixT = Object.values(fuelMix).reduce((a: number, b: number) => a + b, 0) || 100;
   const zeroPct = Object.entries(fuelMix)
     .filter(([fid]) => ["elec", "h2", "ops"].includes(fid))
-    .reduce((s, [, pct]) => s + pct, 0) / mixT;
+    .reduce((s: number, [, pct]: [string, number]) => s + pct, 0) / mixT;
   if (zeroPct >= 0.99) return "emissionNulle";
   if (zeroPct >= 0.25) return "propre";
   return "efficace";
@@ -525,7 +851,7 @@ function classifyVessel(fuelMix) {
  * taux dépend de : classification navire, taille entreprise, zone AFR,
  * et existence d'un scénario contrefactuel crédible
  */
-function computeAide(proj, surcout) {
+function computeAide(proj: Project, surcout: number): AideResult {
   const { v } = proj;
   const cls = classifyVessel(proj.trajs?.[1]?.fuelMix);
   const size = v.entSize || "PE";
@@ -534,10 +860,10 @@ function computeAide(proj, surcout) {
   let regime = "";
 
   if (cls === "emissionNulle") {
-    taux = ADEME_RATES.navEmissionNulle["-"][size];
+    taux = ADEME_RATES.navEmissionNulle["-"]?.[size] ?? 0;
     regime = "Navire à émission nulle (Section 6.3, SA.111726)";
   } else if (cls === "propre") {
-    taux = ADEME_RATES.navPropre["-"][size];
+    taux = ADEME_RATES.navPropre["-"]?.[size] ?? 0;
     regime = "Navire propre (Section 6.3, SA.111726)";
   } else {
     // Efficacité énergétique · taux dépend du contrefactuel
@@ -562,15 +888,15 @@ function computeAide(proj, surcout) {
  * Période de référence thématique 1 : 5 ans
  * Le score est indicatif · l'ADEME classe les projets entre eux
  */
-function computeScoring(proj, res, aide) {
+function computeScoring(proj: Project, res: TrajectoryResult[] | null, aide: number): ScoringResult | null {
   if (!res || res.length < 2) return null;
   const ref = res[0];   // trajectoire actuelle (fossile)
   const alt = res[1];   // trajectoire décarbonée
 
   // Période de référence : 5 ans
   const refYears = Math.min(5, ref.base.yrs.length);
-  const co2Ref = ref.base.yrs.slice(0, refYears).reduce((s, y) => s + y.co2, 0);
-  const co2Alt = alt.base.yrs.slice(0, refYears).reduce((s, y) => s + y.co2, 0);
+  const co2Ref = ref.base.yrs.slice(0, refYears).reduce((s: number, y: YearResult) => s + y.co2, 0);
+  const co2Alt = alt.base.yrs.slice(0, refYears).reduce((s: number, y: YearResult) => s + y.co2, 0);
   const co2Evite = co2Ref - co2Alt; // en tonnes
 
   // 1. Efficacité environnementale (45 pts)
@@ -600,7 +926,7 @@ function computeScoring(proj, res, aide) {
   let noteTechEco = 0;
   // TRL (max 5 pts)
   const minTRL = Math.min(...Object.entries(proj.trajs?.[1]?.techs || {})
-    .filter(([, x]) => x?.a)
+    .filter(([, x]) => (x as TechConfig)?.a)
     .map(([tid]) => TECHS.find(t => t.id === tid)?.trl || 7));
   noteTechEco += minTRL >= 9 ? 5 : minTRL >= 8 ? 4 : 3;
   // Réduction hors-GES (max 5 pts)
@@ -636,7 +962,7 @@ function computeScoring(proj, res, aide) {
  * Exigence CdC p.28 : TRI avant impôts, après toutes aides publiques
  * Calculé sur les cash-flows différentiels (projet décarboné vs contrefactuel)
  */
-function computeTRI(cashflows) {
+function computeTRI(cashflows: number[]): number | null {
   if (!cashflows || cashflows.length < 2) return null;
   let r = 0.10; // estimation initiale 10%
   for (let iter = 0; iter < 100; iter++) {
@@ -659,7 +985,7 @@ function computeTRI(cashflows) {
 // ============================================================================
 
 // --- Tooltip informatif ---
-const Tip = ({ text }) => {
+const Tip = ({ text }: { text: string }) => {
   const [o, setO] = useState(false);
   return (
     <span className="relative inline-block ml-1">
@@ -676,12 +1002,12 @@ const Tip = ({ text }) => {
 };
 
 // --- Input numérique ---
-const In = ({ l, v, onChange: oc, t = "number", u, n, min, h }) => (
+const In = ({ l, v, onChange: oc, t = "number", u, n, min, h }: { l: string; v: string | number; onChange: (val: number) => void; t?: string; u?: string; n?: string; min?: number; h?: string }) => (
   <div className="mb-2">
     <label className="block text-xs font-semibold mb-0.5" style={{ color: D }}>{l}{h && <Tip text={h} />}</label>
     <div className="flex items-center gap-1">
       <input type={t} value={v} min={min || 0}
-        onChange={e => oc(t === "number" ? Math.max(min || 0, parseFloat(e.target.value) || 0) : e.target.value)}
+        onChange={e => oc(Math.max(min || 0, parseFloat(e.target.value) || 0))}
         className="border rounded px-2 py-1.5 text-sm w-full focus:outline-none focus:ring-2"
         style={{ borderColor: "#ddd", outlineColor: T }} />
       {u && <span className="text-xs shrink-0" style={{ color: "#aaa" }}>{u}</span>}
@@ -691,7 +1017,7 @@ const In = ({ l, v, onChange: oc, t = "number", u, n, min, h }) => (
 );
 
 // --- Select ---
-const Se = ({ l, v, onChange: oc, opts, h }) => (
+const Se = ({ l, v, onChange: oc, opts, h }: { l: string; v: string | number; onChange: (val: string) => void; opts: Array<{ v: string | number; l: string }>; h?: string }) => (
   <div className="mb-2">
     <label className="block text-xs font-semibold mb-0.5" style={{ color: D }}>{l}{h && <Tip text={h} />}</label>
     <select value={v} onChange={e => oc(e.target.value)}
@@ -702,7 +1028,7 @@ const Se = ({ l, v, onChange: oc, opts, h }) => (
 );
 
 // --- Card avec bordure accent ---
-const Cd = ({ title: tl, children: ch, accent: ac }) => (
+const Cd = ({ title: tl, children: ch, accent: ac, ...rest }: { title?: string; children: ReactNode; accent?: string; "data-protected"?: string }) => (
   <div className="rounded-xl border p-4 mb-3"
     style={{ borderColor: ac || "#e5e7eb", background: "white", borderLeftWidth: ac ? 3 : 1 }}>
     {tl && <h3 className="font-bold text-sm mb-2" style={{ color: D }}>{tl}</h3>}
@@ -711,7 +1037,7 @@ const Cd = ({ title: tl, children: ch, accent: ac }) => (
 );
 
 // --- Stat affichée ---
-const St = ({ l, v, c = D }) => (
+const St = ({ l, v, c = D }: { l: string; v: string; c?: string }) => (
   <div className="text-center p-2">
     <div className="text-lg font-bold" style={{ color: c }}>{v}</div>
     <div className="text-xs" style={{ color: "#999" }}>{l}</div>
@@ -721,7 +1047,7 @@ const St = ({ l, v, c = D }) => (
 // --- Bannière deadline ---
 const DeadlineBanner = () => {
   const j = joursRestants();
-  const jpd = Math.max(0, Math.ceil((AAP_PREDEPOT_DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
+  const jpd = Math.max(0, Math.ceil((AAP_PREDEPOT_DEADLINE.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
   const urgent = j < 30;
   return (
     <div className="text-center py-2 px-4 text-sm font-bold"
@@ -733,7 +1059,7 @@ const DeadlineBanner = () => {
 };
 
 // --- Barre de progression 7 étapes ---
-const STEPS = [
+const STEPS: StepDef[] = [
   { n: 1, l: "Mon navire",       icon: "⚓", min: 5 },
   { n: 2, l: "Mon projet",       icon: "🔋", min: 8 },
   { n: 3, l: "Contrefactuel",    icon: "⚖️", min: 3 },
@@ -743,7 +1069,7 @@ const STEPS = [
   { n: 7, l: "Dossier",          icon: "📄", min: 2 },
 ];
 
-const StepBar = ({ step, setStep, maxStep }) => (
+const StepBar = ({ step, setStep, maxStep }: { step: number; setStep: (n: number) => void; maxStep: number }) => (
   <div className="flex items-center gap-1 px-2 py-2 overflow-x-auto" style={{ background: "white", borderBottom: "1px solid #e5e7eb" }}>
     {STEPS.map(s => {
       const active = s.n === step;
@@ -775,14 +1101,14 @@ const StepBar = ({ step, setStep, maxStep }) => (
 /**
  * État initial d'un projet ADEME
  */
-function defProjet() {
+function defProjet(): Project {
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
     name: "Nouveau projet ADEME",
     upd: new Date().toISOString(),
     thematique: 1, // 1 ou 2
     v: {
-      type: "bac", name: "", entSize: "PE", zoneAFR: "hors", chargeMode: "opportunity",
+      type: "bac", name: "", entSize: "PE" as EntSize, zoneAFR: "hors" as ZoneAFR, chargeMode: "opportunity" as ChargeMode,
       ...VT[0].d,
     },
     p: { sy: 2026, dur: 15, disc: 5, cont: 12, fpG: 4 },
@@ -799,31 +1125,31 @@ function defProjet() {
 
 // --- Persistance localStorage multi-projet ---
 const SK_LIST = "ademe2026_list";
-function ldList() {
+function ldList(): ProjectListEntry[] {
   try { const r = localStorage.getItem(SK_LIST); return r ? JSON.parse(r) : []; } catch { return []; }
 }
-function svList(list) {
+function svList(list: ProjectListEntry[]): void {
   try { localStorage.setItem(SK_LIST, JSON.stringify(list)); } catch { /* noop */ }
 }
-function ldProj(id) {
+function ldProj(id: string): Project | null {
   if (!id) return null;
   try { const r = localStorage.getItem("ademe2026:" + id); return r ? JSON.parse(r) : null; } catch { return null; }
 }
-function svProj(p) {
+function svProj(p: Project): void {
   try {
     p.upd = new Date().toISOString();
     localStorage.setItem("ademe2026:" + p.id, JSON.stringify(p));
     const list = ldList();
-    const entry = { id: p.id, name: p.name, upd: p.upd, vType: p.v?.type, vName: p.v?.name };
-    const idx = list.findIndex(x => x.id === p.id);
+    const entry: ProjectListEntry = { id: p.id, name: p.name, upd: p.upd, vType: p.v?.type, vName: p.v?.name };
+    const idx = list.findIndex((x: ProjectListEntry) => x.id === p.id);
     if (idx >= 0) list[idx] = entry; else list.push(entry);
     svList(list);
   } catch { /* noop */ }
 }
-function rmProj(id) {
+function rmProj(id: string): void {
   try {
     localStorage.removeItem("ademe2026:" + id);
-    svList(ldList().filter(x => x.id !== id));
+    svList(ldList().filter((x: ProjectListEntry) => x.id !== id));
   } catch { /* noop */ }
 }
 
@@ -832,8 +1158,8 @@ function rmProj(id) {
 // ============================================================================
 
 export default function AdemeSimulator() {
-  const [projList, setProjList] = useState([]);
-  const [proj, setProj] = useState(null);
+  const [projList, setProjList] = useState<ProjectListEntry[]>([]);
+  const [proj, setProj] = useState<Project | null>(null);
   const [step, setStep] = useState(0); // 0 = accueil, 1-7 = étapes
   const [maxStep, setMaxStep] = useState(1);
   const [saved, setSaved] = useState(false);
@@ -842,9 +1168,10 @@ export default function AdemeSimulator() {
   useEffect(() => { setProjList(ldList()); }, []);
 
   // Sauvegarder à chaque modification
-  const upd = useCallback(fn => {
+  const upd = useCallback((fn: ((prev: Project) => Project) | Partial<Project>) => {
     setProj(prev => {
-      const next = typeof fn === "function" ? fn(prev) : { ...prev, ...fn };
+      if (!prev) return prev;
+      const next: Project = typeof fn === "function" ? fn(prev) : { ...prev, ...fn };
       svProj(next);
       setProjList(ldList());
       setSaved(true);
@@ -853,8 +1180,8 @@ export default function AdemeSimulator() {
     });
   }, []);
 
-  const uV = useCallback((k, val) => upd(p => ({ ...p, v: { ...p.v, [k]: val } })), [upd]);
-  const uP = useCallback((k, val) => upd(p => ({ ...p, p: { ...p.p, [k]: val } })), [upd]);
+  const uV = useCallback((k: string, val: unknown) => upd((p: Project) => ({ ...p, v: { ...p.v, [k]: val } })), [upd]);
+  const uP = useCallback((k: string, val: unknown) => upd((p: Project) => ({ ...p, p: { ...p.p, [k]: val } })), [upd]);
 
   // Résultats CCV (mémoïsés)
   const res = useMemo(() => proj ? compute(proj) : null, [proj]);
@@ -870,7 +1197,7 @@ export default function AdemeSimulator() {
   const prevStep = () => setStep(Math.max(1, step - 1));
 
   // --- Ouvrir un projet existant ---
-  const openProj = (id) => {
+  const openProj = (id: string) => {
     const p = ldProj(id);
     if (p) { setProj(p); setStep(1); setMaxStep(7); }
   };
@@ -886,7 +1213,7 @@ export default function AdemeSimulator() {
   };
 
   // --- Supprimer un projet ---
-  const deleteProj = (id) => {
+  const deleteProj = (id: string) => {
     if (confirm("Supprimer ce projet ? Cette action est irréversible.")) {
       rmProj(id);
       setProjList(ldList());
@@ -1030,8 +1357,8 @@ export default function AdemeSimulator() {
   // Émissions sur 5 ans pour le DNSH
   const emissionsRef5 = res?.[0]?.base?.yrs?.slice(0, 5) || [];
   const emissionsAlt5 = res?.[1]?.base?.yrs?.slice(0, 5) || [];
-  const co2Ref5 = emissionsRef5.reduce((s, y) => s + y.co2, 0);
-  const co2Alt5 = emissionsAlt5.reduce((s, y) => s + y.co2, 0);
+  const co2Ref5 = emissionsRef5.reduce((s: number, y: YearResult) => s + y.co2, 0);
+  const co2Alt5 = emissionsAlt5.reduce((s: number, y: YearResult) => s + y.co2, 0);
   const hFuelBase = (() => {
     const v = proj.v;
     const pTr = (v.pTr || 60) / 100, pMa = (v.pMa || 20) / 100, pQu = (v.pQu || 20) / 100;
@@ -1067,7 +1394,7 @@ export default function AdemeSimulator() {
         <div className="flex items-center justify-around px-3 py-2 text-xs" style={{ background: D + "08", borderBottom: "1px solid #e5e7eb" }}>
           <span><span className="font-bold" style={{ color: GR }}>CO₂ évité</span> ~{fmt(Math.round((res[0].base.co2 - res[1].base.co2) / proj.p.dur))} t/an</span>
           <span><span className="font-bold" style={{ color: T }}>Aide</span> ~{fK(aide.aide)}</span>
-          <span style={{ color: scoring?.ratioEuroParTonne > 200 ? AC : "#666" }}><span className="font-bold">Ratio</span> {scoring?.ratioEuroParTonne || "..."} €/tCO₂</span>
+          <span style={{ color: (scoring?.ratioEuroParTonne ?? 0) > 200 ? AC : "#666" }}><span className="font-bold">Ratio</span> {scoring?.ratioEuroParTonne || "..."} €/tCO₂</span>
         </div>
       )}
 
@@ -1302,19 +1629,19 @@ export default function AdemeSimulator() {
             <Cd title="Investissements previsionnels (estimation)">
               <div className="grid grid-cols-2 gap-3">
                 <In l="Coque / structure" v={proj.trajs?.[1]?.iC || 0}
-                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iC: v }; return { ...p, trajs: ts }; })}
+                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iC: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h="Adaptation coque, renforcements structurels" />
                 <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Systeme energetique (batteries, H2)" : bioEstim ? "Equipements conversion carburant" : "Systeme energetique"}
                   v={proj.trajs?.[1]?.iE || (batt && batt.kWh > 0 ? batt.costBatt : bioEstim ? bioEstim.totalEquip : 0)}
-                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iE: v }; return { ...p, trajs: ts }; })}
+                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iE: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Batteries, piles H2, convertisseurs" : "Cuves, filtres, joints, chauffage carburant, conversion moteur"} />
                 <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Infrastructure charge" : bioEstim?.hasDual ? "Reservoirs GNL" : "Avitaillement / logistique"}
                   v={proj.trajs?.[1]?.iI || (batt && batt.kWh > 0 ? batt.costCharger : bioEstim?.tankInstall || 0)}
-                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iI: v }; return { ...p, trajs: ts }; })}
+                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iI: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Bornes, cables, transformateurs" : "Logistique avitaillement, stockage, reservoirs"} />
                 <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement reseau" : "Certification / essais"}
                   v={proj.trajs?.[1]?.gridCost || (batt && batt.kWh > 0 ? batt.gridConnect : bioEstim?.certification || 0)}
-                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], gridCost: v }; return { ...p, trajs: ts }; })}
+                  onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], gridCost: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement ENEDIS / reseau" : "Bureau Veritas, DNV, essais moteur, certification ISO"} />
               </div>
               {res && res[1] && (
@@ -1332,10 +1659,11 @@ export default function AdemeSimulator() {
               const allScored = CASE_DB.map(c => ({ ...c, sc: cases.find(x => x.id === c.id)?.score || 0 })).sort((a, b) => b.sc - a.sc);
               const top = allScored.slice(0, 5);
               const rest = allScored.slice(5);
-              const renderRef = (c, compact) => (
+              const countryFlags: Record<string, string> = {"NO":"🇳🇴","DK":"🇩🇰","FR":"🇫🇷","BE":"🇧🇪","US":"🇺🇸","IE":"🇮🇪","INT":"🌍","SE":"🇸🇪","NZ":"🇳🇿","UY":"🇺🇾","JP":"🇯🇵","EU":"🇪🇺"};
+              const renderRef = (c: typeof allScored[number], compact: boolean) => (
                 <div key={c.id} className={"p-" + (compact ? "2" : "2") + " rounded-lg mb-2 text-xs"} style={{ background: compact ? "#f8f8f8" : LB, borderLeft: "3px solid " + (c.sc > 60 ? GR : c.sc > 30 ? T : "#ddd") }}>
                   <div className="flex justify-between items-start mb-1">
-                    <span className="font-bold" style={{ color: compact ? "#888" : D }}>{{"NO":"🇳🇴","DK":"🇩🇰","FR":"🇫🇷","BE":"🇧🇪","US":"🇺🇸","IE":"🇮🇪","INT":"🌍","SE":"🇸🇪","NZ":"🇳🇿","UY":"🇺🇾","JP":"🇯🇵","EU":"🇪🇺"}[c.co]||"🚢"} {c.n} ({c.yr})</span>
+                    <span className="font-bold" style={{ color: compact ? "#888" : D }}>{countryFlags[c.co]||"🚢"} {c.n} ({c.yr})</span>
                     {c.sc > 0 && <span className="px-1.5 py-0.5 rounded font-bold" style={{ background: c.sc > 60 ? GR : c.sc > 30 ? T : "#ccc", color: "white", fontSize: 9 }}>{c.sc}%</span>}
                   </div>
                   <p style={{ color: compact ? "#aaa" : "#555" }}>{compact ? c.d.slice(0, 90) + "..." : c.d}</p>
@@ -1546,7 +1874,7 @@ export default function AdemeSimulator() {
                       let t = axis.template;
                       if (scoring) {
                         t = t.replace("{co2}", fmt(Math.abs(scoring.co2Evite / 5)));
-                        t = t.replace("{pctCo2}", scoring.gainPct);
+                        t = t.replace("{pctCo2}", String(scoring.gainPct));
                       }
                       const mixAlt = proj.trajs?.[1]?.fuelMix || {};
                       const mixT = Object.values(mixAlt).reduce((a,b) => a+b, 0) || 100;
@@ -1776,10 +2104,10 @@ export default function AdemeSimulator() {
                 Le cumul ne doit pas dépasser les plafonds du régime d'aide applicable.
               </p>
               <In l="Autres aides publiques sollicitées pour ce projet" v={proj.autresAides || 0}
-                onChange={v => upd(p => ({ ...p, autresAides: v }))}
+                onChange={v => upd(p => ({ ...p, autresAides: Number(v) }))}
                 u="k€" h="Fonds vert, FEDER, régions, BPI, France 2030... Le total (aide ADEME + autres) ne peut pas dépasser le surcoût éligible." />
               <In l="Nom des dispositifs" v={proj.autresAidesDetail || ""} t="text"
-                onChange={v => upd(p => ({ ...p, autresAidesDetail: v }))}
+                onChange={v => upd(p => ({ ...p, autresAidesDetail: String(v) }))}
                 n="Ex : Fonds vert 150 k€, Région Bretagne 80 k€" />
               {(aide.aide + (proj.autresAides || 0)) > surcout && surcout > 0 && (
                 <div className="text-xs p-2 rounded mt-2 font-bold" style={{ background: AC + "15", color: AC }}>
@@ -1958,7 +2286,7 @@ export default function AdemeSimulator() {
 
             {/* Checklist pièces */}
             <Cd title="✅ Checklist des pièces à joindre">
-              {[
+              {([
                 ["Annexe 1 · Presentation projet (pre-depot)", true, null],
                 ["Annexe 2 · Fiche laureat", false, "https://agirpourlatransition.ademe.fr"],
                 ["Annexe 3.a · Descriptif detaille du projet", true, null],
@@ -1971,7 +2299,7 @@ export default function AdemeSimulator() {
                 ["3 dernieres liasses fiscales", false, "https://www.impots.gouv.fr/professionnel"],
                 ["Devis / lettres d'intention fournisseurs", false, null],
                 ["Contrat d'avitaillement ou LOI (si carburant alternatif)", false, null],
-              ].map(([label, auto, url], i) => (
+              ] as [string, boolean, string | null][]).map(([label, auto, url], i) => (
                 <div key={i} className="flex items-center gap-2 text-xs py-1">
                   <span>{auto ? "✅" : "⬜"}</span>
                   <span style={{ color: auto ? GR : "#666" }}>{label}</span>
@@ -2099,7 +2427,7 @@ export default function AdemeSimulator() {
                 '<tr><th>LOA</th><td>' + proj.v.loa + ' m</td><th>Jauge</th><td>' + proj.v.gt + ' GT</td></tr>' +
                 '<tr><th>Puissance</th><td>' + proj.v.pP + ' kW</td><th>Classification</th><td>' + (cls === 'emissionNulle' ? 'Emission nulle' : cls === 'propre' ? 'Navire propre' : 'Efficacite amelioree') + '</td></tr>' +
                 '<tr><th>Taille entreprise</th><td>' + proj.v.entSize + '</td><th>Region</th><td>' + (REGIONS.find(r=>r.id===proj.v.region)?.l || '-') + '</td></tr>' +
-                '<tr><th>Cadre exploitation</th><td>' + ({"dsp":"DSP","sp":"Service public","agrement":"Agrement","prive":"Prive"}[proj.v.serviceType] || "DSP") + '</td>' + (Object.entries(proj.trajs?.[1]?.fuelMix || {}).some(([k, v]) => ["elec", "h2"].includes(k) && v > 0) ? '<th>Mode recharge</th><td>' + (proj.v.chargeMode === "overnight" ? "Nuit uniquement" : "Au quai (opportunity)") + '</td>' : '<th></th><td></td>') + '</tr></table>' +
+                '<tr><th>Cadre exploitation</th><td>' + (({"dsp":"DSP","sp":"Service public","agrement":"Agrement","prive":"Prive"} as Record<string, string>)[proj.v.serviceType || "dsp"] || "DSP") + '</td>' + (Object.entries(proj.trajs?.[1]?.fuelMix || {}).some(([k, v]) => ["elec", "h2"].includes(k) && v > 0) ? '<th>Mode recharge</th><td>' + (proj.v.chargeMode === "overnight" ? "Nuit uniquement" : "Au quai (opportunity)") + '</td>' : '<th></th><td></td>') + '</tr></table>' +
 
                 // 2. Projet
                 '<h2>2. Projet de decarbonation</h2>' +
@@ -2155,7 +2483,7 @@ export default function AdemeSimulator() {
                 '<h2>Annexe 4 : Aides publiques sollicitees</h2>' +
                 '<table><tr><th>Dispositif</th><th style="text-align:right">Montant (k EUR)</th></tr>' +
                 '<tr><td>ADEME AAP 2026</td><td style="text-align:right">' + fK(aide.aide) + '</td></tr>' +
-                (proj.autresAides > 0 ? '<tr><td>' + (proj.autresAidesDetail || 'Autres aides') + '</td><td style="text-align:right">' + fK(proj.autresAides) + '</td></tr>' : '') +
+                ((proj.autresAides ?? 0) > 0 ? '<tr><td>' + (proj.autresAidesDetail || 'Autres aides') + '</td><td style="text-align:right">' + fK(proj.autresAides ?? 0) + '</td></tr>' : '') +
                 '<tr style="font-weight:bold;background:#EAF4F7"><td>Total aides sollicitees</td><td style="text-align:right">' + fK(aide.aide + (proj.autresAides || 0)) + '</td></tr></table>' +
 
                 // Footer fixe
@@ -2170,7 +2498,7 @@ export default function AdemeSimulator() {
                 const blob = new Blob([html], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
                 const w = window.open(url, '_blank');
-                w.onload = () => { setTimeout(() => w.print(), 300); };
+                if (w) { w.onload = () => { setTimeout(() => w.print(), 300); }; }
               }}
                 className="px-6 py-2.5 rounded-xl text-white font-bold text-sm" style={{ background: PU }}>
                 🖨️ Exporter pre-dossier PDF (format A4)

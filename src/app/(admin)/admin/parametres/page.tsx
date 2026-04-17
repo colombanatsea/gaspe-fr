@@ -34,10 +34,15 @@ export default function AdminParametresPage() {
   const [passwordMsg, setPasswordMsg] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
+    if (!user || user.role !== "admin") router.push("/connexion");
+  }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "admin") {
+    setInitialized(true);
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) setSettings(JSON.parse(raw));
-  }, [user, router]);
+  }
 
   if (!user || user.role !== "admin") return null;
 

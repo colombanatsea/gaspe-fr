@@ -122,6 +122,9 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         });
 
         mapRef.current = map;
+        map.whenReady(() => {
+          setTimeout(() => map.invalidateSize(), 200);
+        });
         setMapReady(true);
       }
 

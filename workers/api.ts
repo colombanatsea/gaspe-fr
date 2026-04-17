@@ -320,7 +320,7 @@ export default {
 
       // ── Organizations ──
       if (path === "/api/organizations" && request.method === "GET") {
-        return handleListOrganizations(env, corsHeaders);
+        return handleListOrganizations(request, env, corsHeaders);
       }
       if (path.match(/^\/api\/organizations\/[^/]+$/) && request.method === "GET") {
         const orgId = path.split("/api/organizations/")[1];
@@ -885,6 +885,7 @@ interface DbOrganization {
   description: string | null;
   employee_count: number | null; ship_count: number | null;
   membership_status: string | null;
+  archived: number | null;
   created_at: string; updated_at: string;
 }
 
@@ -899,12 +900,18 @@ function toFrontendOrg(row: DbOrganization) {
     phone: row.phone ?? undefined, description: row.description ?? undefined,
     employeeCount: row.employee_count ?? undefined, shipCount: row.ship_count ?? undefined,
     membershipStatus: row.membership_status ?? undefined,
+    archived: row.archived === 1,
     createdAt: row.created_at, updatedAt: row.updated_at,
   };
 }
 
-async function handleListOrganizations(env: Env, corsHeaders: Record<string, string>) {
-  const { results } = await env.DB.prepare("SELECT * FROM organizations ORDER BY name").all<DbOrganization>();
+async function handleListOrganizations(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const url = new URL(request.url);
+  const includeArchived = url.searchParams.get("include_archived") === "1";
+  const query = includeArchived
+    ? "SELECT * FROM organizations ORDER BY name"
+    : "SELECT * FROM organizations WHERE archived = 0 OR archived IS NULL ORDER BY name";
+  const { results } = await env.DB.prepare(query).all<DbOrganization>();
   return json({ organizations: (results ?? []).map(toFrontendOrg) }, corsHeaders);
 }
 
@@ -946,15 +953,15 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
     logoUrl: "logo_url", websiteUrl: "website_url", address: "address",
     email: "email", phone: "phone", description: "description",
     employeeCount: "employee_count", shipCount: "ship_count",
-    membershipStatus: "membership_status",
+    membershipStatus: "membership_status", archived: "archived",
   };
 
   const updates: string[] = [];
   const values: unknown[] = [];
   for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
     if (frontendKey in body) {
-      // membershipStatus can only be changed by admin
-      if (frontendKey === "membershipStatus" && payload.role !== "admin") continue;
+      // membershipStatus and archived can only be changed by admin
+      if ((frontendKey === "membershipStatus" || frontendKey === "archived") && payload.role !== "admin") continue;
       updates.push(`${dbCol} = ?`);
       values.push(body[frontendKey]);
     }

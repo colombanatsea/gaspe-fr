@@ -45,12 +45,14 @@ export default function AdherentDocumentsPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") {
-      router.push("/connexion");
-      return;
-    }
-    setDocuments(readDocuments());
+    if (!user || user.role !== "adherent") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent") {
+    setInitialized(true);
+    setDocuments(readDocuments());
+  }
 
   if (!user || user.role !== "adherent") return null;
 

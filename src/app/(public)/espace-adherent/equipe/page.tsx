@@ -39,9 +39,15 @@ export default function EquipePage() {
 
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    if (!isApiMode()) { setLoading(false); return; }
+    if (!isApiMode()) return;
     refresh();
   }, [user, router, refresh]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent" && !isApiMode()) {
+    setInitialized(true);
+    setLoading(false);
+  }
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -35,18 +35,18 @@ export default function AdherentProfilPage() {
     }
   }, [user, router]);
 
-  useEffect(() => {
-    if (user) {
-      setCompanyRole(user.companyRole ?? "");
-      setCompanyDescription(user.companyDescription ?? "");
-      setCompanyLogo(user.companyLogo ?? "");
-      setCompanyAddress(user.companyAddress ?? "");
-      setCompanyEmail(user.companyEmail ?? "");
-      setCompanyPhone(user.companyPhone ?? "");
-      setCompanyLinkedinUrl(user.companyLinkedinUrl ?? "");
-      setVessels(user.vessels ?? []);
-    }
-  }, [user]);
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+  if (prevUserId !== user?.id && user) {
+    setPrevUserId(user.id);
+    setCompanyRole(user.companyRole ?? "");
+    setCompanyDescription(user.companyDescription ?? "");
+    setCompanyLogo(user.companyLogo ?? "");
+    setCompanyAddress(user.companyAddress ?? "");
+    setCompanyEmail(user.companyEmail ?? "");
+    setCompanyPhone(user.companyPhone ?? "");
+    setCompanyLinkedinUrl(user.companyLinkedinUrl ?? "");
+    setVessels(user.vessels ?? []);
+  }
 
   if (!user || user.role !== "adherent") return null;
 

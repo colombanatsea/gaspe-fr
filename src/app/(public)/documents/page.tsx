@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -140,7 +140,7 @@ function PdfIcon({ className }: { className?: string }) {
 function DocumentsContent() {
   const revealRef = useScrollReveal();
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [toast, setToast] = useState("");
 
@@ -150,14 +150,6 @@ function DocumentsContent() {
       setTimeout(() => setToast(""), 4000);
     }
   }
-
-  // Read ?q= parameter on load
-  useEffect(() => {
-    const q = searchParams.get("q");
-    if (q) {
-      setSearch(q);
-    }
-  }, [searchParams]);
 
   const filtered = useMemo(() => {
     let items = [...documents];

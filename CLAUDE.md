@@ -7,25 +7,32 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.11.0
+- **Version**: v2.12.0
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 171 tests, 17 files)
+npm run test         # unit tests (Vitest, 191 tests, 18 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, ~29 warnings — react-hooks/set-state-in-effect only)
+npm run lint         # ESLint (0 errors, 4 warnings — async set-state-in-effect only)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
-## Deployment (Cloudflare Pages)
-- URL: https://gaspe-fr.pages.dev
+## Deployment (Cloudflare Pages) — ✅ EN SERVICE
+- URL frontend: https://gaspe-fr.pages.dev
+- URL Worker: https://gaspe-api.hello-0d0.workers.dev
 - Framework preset: None (NOT Next.js)
 - Build output: `out`
 - NODE_VERSION: 20
 - D1 binding: DB → gaspe-db (database_id: 3c26d76d-e348-4dda-a20f-e0fdc0bda55e)
 - Static export: `output: 'export'` in next.config.ts
+- ✅ Secrets Worker configurés (JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL, HYDROS_*)
+- ✅ NEXT_PUBLIC_API_URL set sur CF Pages → mode API actif
+- ✅ CF_CONFIGURED=true (GitHub repo var) → workflow deploy-worker actif
+- ✅ Migrations D1 appliquées : 0001-0006 (vérifié via /api/organizations renvoyant 31 orgs)
+- ⏳ Migration 0007 (org_archived) à appliquer au merge de v2.12.0 sur main
+- Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
 - GitHub Actions: `.github/workflows/ci.yml` — push/PR to main: install → typecheck → lint → test → build
@@ -177,7 +184,7 @@ src/
 │   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
-│   └── __tests__/         # Unit tests (171 tests, 17 files)
+│   └── __tests__/         # Unit tests (191 tests, 18 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
@@ -191,6 +198,7 @@ workers/
     ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
     └── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
     └── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
+    └── 0007_org_archived.sql             # Organization archived flag + index
 ```
 
 ## Worker API — 39 endpoints
@@ -255,8 +263,8 @@ workers/
 | `media_files` | Media file metadata (actual files in R2) |
 
 ## Testing
-- **Unit tests**: Vitest — 171 tests, 17 spec files
-- **E2E tests**: Playwright — 9 spec files
+- **Unit tests**: Vitest — 191 tests, 18 spec files
+- **E2E tests**: Playwright — 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
 ## SEO
@@ -295,13 +303,13 @@ All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` 
 Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
 
 ## Known limitations
-- **Domain gaspe.fr** — manual CF Pages DNS config needed
+- **Domain gaspe.fr** — manual CF Pages DNS config needed (frontend tourne sur gaspe-fr.pages.dev)
 - **ADEME simulator** — ported to native Next.js component (lazy-loaded, ssr: false)
 - **CSP unsafe-inline** — required by Next.js hydration
 - **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
 - **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
 - **CF secrets** — Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
-- **Members store** — dual-mode via /api/organizations (read-only in API mode, archive feature localStorage only)
+- **Members store** — dual-mode via /api/organizations (archive supported in API mode since v2.12, migration 0007)
 - **ENM import** — copy-paste from portal (FranceConnect auth prevents direct API access)
 
 ## Session history
@@ -318,3 +326,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
 | 23 | 2.10.0 | Frontend API stores, ENM portal import, profile photo/LinkedIn, 15 new endpoints, migrations 0005-0006 |
 | 24 | 2.11.0 | Members dual-mode store, ENM wizard + copy-paste parser, video hero, wrangler fix, ADEME native simulator, production deployment guide, CMS seed script |
+| 25 | 2.12.0 | ESLint 29→4 warnings, 6 logos downloaded, member archiving API (migration 0007), ENM parser refined + 20 tests, E2E tests (ENM, medical), map invalidateSize fix |

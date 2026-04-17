@@ -44,12 +44,14 @@ export default function AdherentFormationsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") {
-      router.push("/connexion");
-      return;
-    }
-    setFormations(readFormations());
+    if (!user || user.role !== "adherent") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent") {
+    setInitialized(true);
+    setFormations(readFormations());
+  }
 
   if (!user || user.role !== "adherent") return null;
 
