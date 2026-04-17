@@ -19,13 +19,20 @@ npm run lint         # ESLint (0 errors, 4 warnings — async set-state-in-effec
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
-## Deployment (Cloudflare Pages)
-- URL: https://gaspe-fr.pages.dev
+## Deployment (Cloudflare Pages) — ✅ EN SERVICE
+- URL frontend: https://gaspe-fr.pages.dev
+- URL Worker: https://gaspe-api.hello-0d0.workers.dev
 - Framework preset: None (NOT Next.js)
 - Build output: `out`
 - NODE_VERSION: 20
 - D1 binding: DB → gaspe-db (database_id: 3c26d76d-e348-4dda-a20f-e0fdc0bda55e)
 - Static export: `output: 'export'` in next.config.ts
+- ✅ Secrets Worker configurés (JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL, HYDROS_*)
+- ✅ NEXT_PUBLIC_API_URL set sur CF Pages → mode API actif
+- ✅ CF_CONFIGURED=true (GitHub repo var) → workflow deploy-worker actif
+- ✅ Migrations D1 appliquées : 0001-0006 (vérifié via /api/organizations renvoyant 31 orgs)
+- ⏳ Migration 0007 (org_archived) à appliquer au merge de v2.12.0 sur main
+- Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
 - GitHub Actions: `.github/workflows/ci.yml` — push/PR to main: install → typecheck → lint → test → build
@@ -296,7 +303,7 @@ All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` 
 Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
 
 ## Known limitations
-- **Domain gaspe.fr** — manual CF Pages DNS config needed
+- **Domain gaspe.fr** — manual CF Pages DNS config needed (frontend tourne sur gaspe-fr.pages.dev)
 - **ADEME simulator** — ported to native Next.js component (lazy-loaded, ssr: false)
 - **CSP unsafe-inline** — required by Next.js hydration
 - **Client-side SHA-256** in demo mode only — production uses server-side PBKDF2
