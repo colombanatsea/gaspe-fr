@@ -240,9 +240,14 @@ export default function AdminFormationsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    setFormations(getFormations());
+    if (!user || user.role !== "admin") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "admin") {
+    setInitialized(true);
+    setFormations(getFormations());
+  }
 
   if (!user || user.role !== "admin") return null;
 

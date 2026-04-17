@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
@@ -55,13 +55,9 @@ function getAdherentProfile(memberName: string): AdherentProfile | null {
 
 export function MemberDetail({ slug }: { slug: string }) {
   const member = members.find((m) => m.slug === slug);
-  const [profile, setProfile] = useState<AdherentProfile | null>(null);
-
-  useEffect(() => {
-    if (member) {
-      setProfile(getAdherentProfile(member.name));
-    }
-  }, [member]);
+  const [profile] = useState<AdherentProfile | null>(() =>
+    member ? getAdherentProfile(member.name) : null
+  );
 
   if (!member) {
     return (

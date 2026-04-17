@@ -56,8 +56,16 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
     }
   }, []);
 
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open && !isApiMode()) {
+      setItems(getMedia().map((i) => ({ ...i, uploadedAt: i.uploadedAt })));
+    }
+  }
+
   useEffect(() => {
-    if (open) refreshItems();
+    if (open && isApiMode()) refreshItems();
   }, [open, refreshItems]);
 
   async function handleFiles(files: FileList | null) {

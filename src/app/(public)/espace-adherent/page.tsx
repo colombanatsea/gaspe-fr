@@ -22,23 +22,20 @@ export default function EspaceAdherentPage() {
   const [documentsCount, setDocumentsCount] = useState(0);
 
   useEffect(() => {
-    if (!user || user.role !== "adherent") {
-      router.push("/connexion");
-      return;
-    }
+    if (!user || user.role !== "adherent") router.push("/connexion");
+  }, [user, router]);
 
-    // Count offers
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "adherent") {
+    setInitialized(true);
     try {
       const offers = JSON.parse(localStorage.getItem(OFFERS_KEY) ?? "[]");
       const myOffers = offers.filter((o: { ownerId: string }) => o.ownerId === user.id);
       setOffersCount(myOffers.length);
       setActiveOffersCount(myOffers.filter((o: { status: string }) => o.status === "active").length);
-      // Count applications across all my offers
       const allApplications = myOffers.reduce((acc: number, o: { applications?: number }) => acc + (o.applications ?? 0), 0);
       setApplicationsCount(allApplications);
     } catch { /* empty */ }
-
-    // Count formations
     try {
       const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
       setFormationsCount(formations.length);
@@ -47,13 +44,11 @@ export default function EspaceAdherentPage() {
       );
       setMyFormationsCount(myRegistrations.length);
     } catch { /* empty */ }
-
-    // Count documents
     try {
       const documents = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? "[]");
       setDocumentsCount(documents.length);
     } catch { /* empty */ }
-  }, [user, router]);
+  }
 
   if (!user || user.role !== "adherent") return null;
 

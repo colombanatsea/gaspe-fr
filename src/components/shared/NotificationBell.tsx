@@ -79,7 +79,16 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
+  const [prevUserId, setPrevUserId] = useState(user?.id);
   const ref = useRef<HTMLDivElement>(null);
+
+  if (prevUserId !== user?.id) {
+    setPrevUserId(user?.id);
+    if (user) {
+      setNotifications(getNotifications(user.id));
+      setUnread(getUnreadCount(user.id));
+    }
+  }
 
   const refresh = useCallback(() => {
     if (!user) return;
@@ -87,9 +96,7 @@ export default function NotificationBell() {
     setUnread(getUnreadCount(user.id));
   }, [user]);
 
-  // Initial load + poll every 5 s for new notifications
   useEffect(() => {
-    refresh();
     const interval = setInterval(refresh, 5000);
     return () => clearInterval(interval);
   }, [refresh]);

@@ -51,8 +51,36 @@ export interface ParsedEnmData {
   enmMarinId?: string;
 }
 
+/** Try to parse tab-separated table rows (ENM portal table copy-paste) */
+function parseTabSeparatedService(text: string): ParsedSeaService[] {
+  const results: ParsedSeaService[] = [];
+  const lines = text.split("\n").filter((l) => l.includes("\t") && /\d{2}\/\d{2}\/\d{4}/.test(l));
+  for (let i = 0; i < lines.length; i++) {
+    const cols = lines[i].split("\t").map((c) => c.trim());
+    if (cols.length < 3) continue;
+    const dateMatch = cols.join(" ").match(/(\d{2}\/\d{2}\/\d{4})\s*[-–]?\s*(\d{2}\/\d{2}\/\d{4})/);
+    const imoMatch = cols.join(" ").match(/(\d{7})/);
+    if (dateMatch) {
+      results.push({
+        id: `enm-tab-${Date.now()}-${i}`,
+        startDate: parseFrenchDate(dateMatch[1]),
+        endDate: parseFrenchDate(dateMatch[2]),
+        vesselName: cols.find((c) => c.length > 3 && !/\d{2}\/\d{2}/.test(c) && !/^\d+$/.test(c)) ?? "Navire inconnu",
+        vesselImo: imoMatch?.[1] ?? "",
+        rank: cols.find((c) => /capitaine|matelot|lieutenant|officier|patron|mécanicien|mecanicien/i.test(c)) ?? "",
+        category: cols.find((c) => /^[1-5]$/.test(c)) ?? "",
+      });
+    }
+  }
+  return results;
+}
+
 /** Parse sea service lines from pasted text */
 export function parseSeaServiceText(text: string): ParsedSeaService[] {
+  // Try tab-separated format first (direct table copy)
+  const tabResults = parseTabSeparatedService(text);
+  if (tabResults.length > 0) return tabResults;
+
   const results: ParsedSeaService[] = [];
 
   // Pattern: date range (DD/MM/YYYY - DD/MM/YYYY) + vessel name + IMO + rank + category
@@ -63,8 +91,8 @@ export function parseSeaServiceText(text: string): ParsedSeaService[] {
   const vesselPattern = /([A-ZÀ-Ü][A-ZÀ-Ü0-9\s.'-]{2,}?)\s*[-–(]\s*(\d{4,7})/g;
   const vessels = [...text.matchAll(vesselPattern)];
 
-  // Ranks
-  const rankPattern = /(?:CAPITAINE|LIEUTENANT|SECOND CAPITAINE|CHEF MECANICIEN|CHEF MÉCANICIEN|OFFICIER[A-ZÉÈ\s]*|MATELOT|BOSCO|MAITRE|MAÎTRE|PATRON|MÉCANICIEN|MECANICIEN|TIMONIER)/gi;
+  // Ranks (expanded list covering ENM portal values)
+  const rankPattern = /(?:CAPITAINE|LIEUTENANT|SECOND CAPITAINE|SECOND|CHEF MECANICIEN|CHEF MÉCANICIEN|OFFICIER[A-ZÉÈ\s]*|MATELOT|BOSCO|MAITRE|MAÎTRE|PATRON|MÉCANICIEN|MECANICIEN|TIMONIER|GRAISSEUR|CUISINIER|COMMISSAIRE|RADIO|GABIER|CHAUFFEUR|PILOTE|MOUSSE|NOVICE)/gi;
   const ranks = [...text.matchAll(rankPattern)];
 
   // Categories: "Cat.: X" or "Catégorie X" or just isolated numbers after rank context

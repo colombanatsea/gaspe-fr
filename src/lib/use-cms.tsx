@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getPageContent, apiGetPageContent, type PageSection } from "@/lib/cms-store";
+import { getPageContent, apiGetPageContent } from "@/lib/cms-store";
 import { isApiMode } from "@/lib/api-client";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 
@@ -11,27 +11,26 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
  * Supports both localStorage (demo) and API (production) modes.
  */
 export function useCmsContent(pageId: string, sectionId: string, fallback: string = ""): string {
-  const [content, setContent] = useState(fallback);
+  const [content, setContent] = useState(() => {
+    if (typeof window === "undefined" || isApiMode()) return fallback;
+    const page = getPageContent(pageId);
+    if (page) {
+      const section = page.sections.find((s) => s.id === sectionId);
+      if (section && section.content.trim()) return section.content;
+    }
+    return fallback;
+  });
 
   useEffect(() => {
-    if (isApiMode()) {
-      apiGetPageContent(pageId).then((page) => {
-        if (page) {
-          const section = page.sections.find((s) => s.id === sectionId);
-          if (section && section.content.trim()) {
-            setContent(section.content);
-          }
-        }
-      });
-    } else {
-      const page = getPageContent(pageId);
+    if (!isApiMode()) return;
+    apiGetPageContent(pageId).then((page) => {
       if (page) {
         const section = page.sections.find((s) => s.id === sectionId);
         if (section && section.content.trim()) {
           setContent(section.content);
         }
       }
-    }
+    });
   }, [pageId, sectionId]);
 
   return content;
@@ -42,26 +41,28 @@ export function useCmsContent(pageId: string, sectionId: string, fallback: strin
  * Returns a map of sectionId → content (only non-empty sections).
  */
 export function useCmsPage(pageId: string): Record<string, string> {
-  const [sections, setSections] = useState<Record<string, string>>({});
+  const [sections, setSections] = useState<Record<string, string>>(() => {
+    if (typeof window === "undefined" || isApiMode()) return {};
+    const page = getPageContent(pageId);
+    if (!page) return {};
+    const map: Record<string, string> = {};
+    for (const s of page.sections) {
+      if (s.content.trim()) map[s.id] = s.content;
+    }
+    return map;
+  });
 
   useEffect(() => {
-    function processPage(page: { sections: PageSection[] } | null) {
+    if (!isApiMode()) return;
+    apiGetPageContent(pageId).then((page) => {
       if (page) {
         const map: Record<string, string> = {};
         for (const s of page.sections) {
-          if (s.content.trim()) {
-            map[s.id] = s.content;
-          }
+          if (s.content.trim()) map[s.id] = s.content;
         }
         setSections(map);
       }
-    }
-
-    if (isApiMode()) {
-      apiGetPageContent(pageId).then(processPage);
-    } else {
-      processPage(getPageContent(pageId));
-    }
+    });
   }, [pageId]);
 
   return sections;

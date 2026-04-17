@@ -31,7 +31,7 @@ function orgToMember(org: Record<string, unknown>): StoredMember {
     websiteUrl: (org.websiteUrl as string) ?? undefined,
     employeeCount: (org.employeeCount as number) ?? undefined,
     shipCount: (org.shipCount as number) ?? undefined,
-    archived: false,
+    archived: org.archived === true,
   };
 }
 
@@ -46,8 +46,8 @@ function getLocalMembers(): StoredMember[] {
     return seeded;
   }
   const parsed = safeParse(membersArraySchema, raw, staticMembers as StoredMember[]);
-  // Force re-seed if cached data has stale external URLs (gaspe.fr was down)
-  if (parsed.some((m) => m.logoUrl?.includes("gaspe.fr/wp-content"))) {
+  // Force re-seed if cached data has stale logos (v2.12: replaced placeholders with real logos)
+  if (parsed.some((m) => m.logoUrl?.includes("gaspe.fr/wp-content") || m.logoUrl?.includes("placeholder-"))) {
     const seeded: StoredMember[] = staticMembers.map((m) => ({ ...m, archived: false }));
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
     return seeded;
@@ -112,8 +112,17 @@ export async function updateMember(slug: string, updates: Partial<StoredMember>)
 /** Archive/unarchive a member. */
 export async function toggleMemberArchived(slug: string): Promise<boolean> {
   if (isApiMode()) {
-    // Organization archiving not supported via API yet — would need a new field
-    return false;
+    try {
+      const listRes = await apiFetch<{ organizations?: Record<string, unknown>[] }>("/api/organizations?include_archived=1");
+      const org = (listRes.organizations ?? []).find((o) => o.slug === slug);
+      if (!org) return false;
+      const currentArchived = org.archived === true;
+      const res = await apiFetch<{ success?: boolean }>(`/api/organizations/${org.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ archived: currentArchived ? 0 : 1 }),
+      });
+      return !!res.success;
+    } catch { return false; }
   }
 
   const members = getLocalMembers();

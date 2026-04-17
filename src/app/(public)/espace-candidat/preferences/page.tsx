@@ -17,12 +17,18 @@ export default function CandidatPreferencesPage() {
 
   useEffect(() => {
     if (!user || user.role !== "candidat") { router.push("/connexion"); return; }
-    if (!isApiMode()) { setLoading(false); return; }
+    if (!isApiMode()) return;
     ApiAuthStore.fetchPreferences().then((p) => {
       setPrefs(p);
       setLoading(false);
     });
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "candidat" && !isApiMode()) {
+    setInitialized(true);
+    setLoading(false);
+  }
 
   const handleToggle = async (key: string) => {
     if (!prefs) return;

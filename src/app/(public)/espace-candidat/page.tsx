@@ -52,10 +52,12 @@ export default function EspaceCandidatPage() {
   const [formationsCount, setFormationsCount] = useState(0);
 
   useEffect(() => {
-    if (!user || user.role !== "candidat") {
-      router.push("/connexion");
-      return;
-    }
+    if (!user || user.role !== "candidat") router.push("/connexion");
+  }, [user, router]);
+
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+  if (prevUserId !== user?.id && user?.role === "candidat") {
+    setPrevUserId(user.id);
     setForm({
       currentPosition: user.currentPosition ?? "",
       desiredPosition: user.desiredPosition ?? "",
@@ -66,13 +68,11 @@ export default function EspaceCandidatPage() {
       profilePhoto: user.profilePhoto ?? "",
       linkedinUrl: user.linkedinUrl ?? "",
     });
-
-    // Count formations
     try {
       const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
       setFormationsCount(formations.length);
     } catch { /* empty */ }
-  }, [user, router]);
+  }
 
   const handleSaveProfile = useCallback(() => {
     if (!user) return;

@@ -83,12 +83,14 @@ export default function AdminAgendaPage() {
   });
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
-      router.push("/connexion");
-      return;
-    }
-    setEvents(getEvents());
+    if (!user || user.role !== "admin") router.push("/connexion");
   }, [user, router]);
+
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && user?.role === "admin") {
+    setInitialized(true);
+    setEvents(getEvents());
+  }
 
   if (!user || user.role !== "admin") return null;
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback } from "react";
 import { publishedJobs, ZONE_LABELS } from "@/data/jobs";
 import type { Zone } from "@/data/jobs";
 
@@ -31,19 +30,16 @@ export function JobFilters() {
   const selectedSalary = searchParams.get("salaire") ?? "";
   const searchQuery = searchParams.get("q") ?? "";
 
-  const updateParams = useCallback(
-    (key: string, value: string | string[]) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete(key);
-      if (Array.isArray(value)) {
-        value.forEach((v) => params.append(key, v));
-      } else if (value) {
-        params.set(key, value);
-      }
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams],
-  );
+  const updateParams = (key: string, value: string | string[]) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(key);
+    if (Array.isArray(value)) {
+      value.forEach((v) => params.append(key, v));
+    } else if (value) {
+      params.set(key, value);
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const toggleFilter = (key: string, current: string[], value: string) => {
     const next = current.includes(value)

@@ -6,6 +6,7 @@
 /* ------------------------------------------------------------------ */
 
 import type { User } from "./types";
+import { ApiAuthStore } from "./api-auth-store";
 
 export interface AuthStore {
   /** Read all users */
@@ -84,8 +85,6 @@ export function getAuthStore(): AuthStore {
   if (!_store) {
     // Use API store when NEXT_PUBLIC_API_URL is set (production)
     if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
-      // Dynamic import to avoid bundling ApiAuthStore when not needed
-      const { ApiAuthStore } = require("./api-auth-store");
       _store = new ApiAuthStore();
     } else {
       _store = new LocalStorageAuthStore();

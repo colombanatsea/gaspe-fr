@@ -32,16 +32,15 @@ function resolveTheme(theme: Theme): "light" | "dark" {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolved, setResolved] = useState<"light" | "dark">("light");
-
-  // Read stored theme on mount
-  useEffect(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "system";
+    return (localStorage.getItem(STORAGE_KEY) as Theme) ?? "system";
+  });
+  const [resolved, setResolved] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initial = stored ?? "system";
-    setThemeState(initial);
-    setResolved(resolveTheme(initial));
-  }, []);
+    return resolveTheme(stored ?? "system");
+  });
 
   // Listen for system preference changes
   useEffect(() => {
