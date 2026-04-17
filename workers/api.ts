@@ -908,11 +908,11 @@ function toFrontendOrg(row: DbOrganization) {
 async function handleListOrganizations(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const url = new URL(request.url);
   const includeArchived = url.searchParams.get("include_archived") === "1";
-  const query = includeArchived
-    ? "SELECT * FROM organizations ORDER BY name"
-    : "SELECT * FROM organizations WHERE archived = 0 OR archived IS NULL ORDER BY name";
-  const { results } = await env.DB.prepare(query).all<DbOrganization>();
-  return json({ organizations: (results ?? []).map(toFrontendOrg) }, corsHeaders);
+  // Fetch all then filter in JS — resilient to missing archived column (pre-migration 0007)
+  const { results } = await env.DB.prepare("SELECT * FROM organizations ORDER BY name").all<DbOrganization>();
+  const rows = results ?? [];
+  const filtered = includeArchived ? rows : rows.filter((r) => r.archived !== 1);
+  return json({ organizations: filtered.map(toFrontendOrg) }, corsHeaders);
 }
 
 async function handleGetOrganization(request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string) {
