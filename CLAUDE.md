@@ -123,11 +123,11 @@ Managed via `/espace-adherent/preferences` and `/espace-candidat/preferences`.
 Admin sends via `/admin/newsletter` (category selector + compose → Brevo bulk).
 
 ## ENM — Espace Numérique Maritime (Portail du marin)
-- Import automatique depuis `enm.mes-services.mer.gouv.fr` via login candidat
-- Worker endpoint: `POST /api/enm/import` (JWT auth, login + scraping 3 pages)
+- Import via copier-coller depuis `enm.mes-services.mer.gouv.fr` (FranceConnect auth empêche l'accès API direct)
+- Wizard 4 étapes : instructions → copier-coller texte brut → review tableau → sauvegarde profil
+- Parser : `src/lib/enm-parser.ts` — extraction structurée depuis texte brut (service, brevets, aptitude)
 - Données importées : lignes de service (navire, IMO, fonction, catégorie), titres/brevets (n° ENM, statut), aptitude médicale (décision, validité, restrictions)
-- Frontend: `EnmImport` component (credentials → review table → save to profile)
-- Identifiants ENM jamais stockés — usage unique pour le fetch
+- Frontend: `EnmImport` component (wizard guided flow → review table → save to profile)
 - Mode démo avec données simulées réalistes
 - Types enrichis : `seaService.vesselImo`, `structuredCertifications.enmReference/.status/.title`, `medicalAptitude`, `enmMarinId`
 
@@ -176,6 +176,7 @@ src/
 │   ├── jobs-store.ts      # Jobs dual-mode store (localStorage ↔ D1)
 │   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
+│   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
 │   └── __tests__/         # Unit tests (171 tests, 17 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
@@ -301,6 +302,7 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 - **Hydros publish** — requires manual secret setup (HYDROS_EMAIL/PASSWORD)
 - **CF secrets** — Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
 - **Members store** — dual-mode via /api/organizations (read-only in API mode, archive feature localStorage only)
+- **ENM import** — copy-paste from portal (FranceConnect auth prevents direct API access)
 
 ## Session history
 | Session | Version | Key deliverables |
@@ -315,4 +317,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 20 | 2.7 | Organisation hierarchy, newsletter 10 catégories, invitations |
 | 21 | 2.8.0 | CI/CD fixes (node version, deploy guard), final documentation |
 | 23 | 2.10.0 | Frontend API stores, ENM portal import, profile photo/LinkedIn, 15 new endpoints, migrations 0005-0006 |
-| 24 | 2.11.0 | Members dual-mode store, ENM profile display, ADEME native simulator, production deployment guide, CMS seed script |
+| 24 | 2.11.0 | Members dual-mode store, ENM wizard + copy-paste parser, video hero, wrangler fix, ADEME native simulator, production deployment guide, CMS seed script |

@@ -71,6 +71,36 @@
   - **Aptitude medicale** : carte coloree (vert/rouge), decision, dates, restrictions en badges ambre
 - **Integration** : ajoute dans `espace-candidat/page.tsx` entre EnmImport et les offres sauvegardees
 
+#### ENM Wizard — Import par copier-coller (refonte FranceConnect)
+- **Contexte** : FranceConnect auth sur le portail ENM empeche l'acces API direct (login + scraping impossible)
+- **Solution** : Wizard guide en 4 etapes (instructions → copier-coller texte brut → review tableau → sauvegarde profil)
+- **`src/lib/enm-parser.ts`** (nouveau) : Parser de texte brut ENM
+  - Extraction structuree des lignes de service (navire, IMO, fonction, categorie, dates)
+  - Extraction des titres/brevets (reference ENM, statut, validite)
+  - Extraction de l'aptitude medicale (decision, dates, restrictions)
+- **`src/components/shared/EnmImport.tsx`** : Refactored en wizard 4 etapes
+  - Etape 1 : Instructions pour se connecter au portail ENM via FranceConnect
+  - Etape 2 : Zone de copier-coller texte brut (3 sections : service, brevets, aptitude)
+  - Etape 3 : Review des donnees parsees en tableau
+  - Etape 4 : Sauvegarde dans le profil candidat
+
+#### Hero Video
+- **`acf_video.MP4`** : Video hero en arriere-plan sur la page d'accueil
+- Utilise la balise native `<video>` (autoplay, muted, loop, playsInline)
+- Remplace/complete le hero statique existant
+
+#### Wrangler Fix (v4.83 compatibility)
+- Correction de `migrations_dir` dans `wrangler.toml` pour compatibilite Wrangler v4.83
+- Resout les erreurs de migration D1 lors du deploiement Worker
+
+#### Stale Logos localStorage Fix
+- Correction du cache localStorage pour les logos membres
+- Les logos ne restaient plus bloques sur des versions perimees
+
+#### Map CTA sur /notre-groupement
+- Ajout d'un CTA vers la carte interactive sur la page `/notre-groupement`
+- Centrage de la carte sur Nantes (position centrale pour les membres GASPE)
+
 #### Simulateur ADEME natif (fin de l'iframe)
 - **`src/components/simulator/AdemeSimulator.tsx`** (2237 lignes) : Port complet du simulateur standalone
   - `@ts-nocheck` pour les types (code JSX non type)
@@ -135,6 +165,7 @@
 ```
 docs/PRODUCTION-DEPLOYMENT.md          # Guide mise en production
 scripts/seed-cms-to-d1.ts              # Migration CMS localStorage → D1
+src/lib/enm-parser.ts                  # Parser texte brut ENM (copy-paste from portal)
 src/components/shared/EnmProfileDisplay.tsx  # Affichage donnees ENM importees
 src/components/simulator/AdemeSimulator.tsx  # Simulateur ADEME natif (2237 lignes)
 ```
@@ -168,16 +199,16 @@ src/components/simulator/AdemeSimulator.tsx  # Simulateur ADEME natif (2237 lign
 ### P1 — Qualite
 | # | Tache | Effort |
 |---|-------|--------|
-| 5 | Tests E2E Playwright : ENM import, profil candidat, admin offres, visites medicales | 2h |
-| 6 | Typer progressivement AdemeSimulator.tsx (retirer @ts-nocheck) | 2-3h |
-| 7 | Recuperer 7 logos manquants quand gaspe.fr revient en ligne | 30 min |
+| 5 | Affiner les parsers ENM avec de vrais copier-coller du portail | 1-2h |
+| 6 | Tests E2E Playwright : ENM import, profil candidat, admin offres, visites medicales | 2h |
+| 7 | Typer progressivement AdemeSimulator.tsx (retirer @ts-nocheck) | 2-3h |
+| 8 | Recuperer 7 logos manquants quand gaspe.fr revient en ligne | 30 min |
 
 ### P2 — Fonctionnel
 | # | Tache | Effort |
 |---|-------|--------|
-| 8 | Media library : servir images via R2 public URL (plus de base64 localStorage) | 2h |
-| 9 | Appliquer CMS seed (scripts/seed-cms-to-d1.ts) apres go-live | 30 min |
-| 10 | Robustifier parsers ENM avec differents profils marins reels | 1h |
+| 9 | Media library : servir images via R2 public URL (plus de base64 localStorage) | 2h |
+| 10 | Appliquer CMS seed (scripts/seed-cms-to-d1.ts) apres go-live | 30 min |
 | 11 | Ajouter archivage membres en mode API (nouveau champ D1 + endpoint PATCH) | 1h |
 
 ### P3 — Ameliorations
