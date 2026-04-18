@@ -7,6 +7,12 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { getActiveMembers, type StoredMember } from "@/lib/members-store";
 import { MemberLogo } from "@/components/shared/MemberLogo";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+
+const PAGE_ID = "notre-groupement";
+const D = (sectionId: string) => getCmsDefault(PAGE_ID, sectionId);
 
 const engagements = [
   {
@@ -107,6 +113,26 @@ export function GroupementContent() {
   const titulaires = members.filter((m) => m.category === "titulaire");
   const associes = members.filter((m) => m.category === "associe");
 
+  // CMS-editable content with defaults as fallbacks
+  const adherentsEyebrow = useCmsContent(PAGE_ID, "adherents-eyebrow", D("adherents-eyebrow"));
+  const adherentsTitle = useCmsContent(PAGE_ID, "adherents-title", D("adherents-title"));
+  const adherentsSubtitleTmpl = useCmsContent(PAGE_ID, "adherents-subtitle-template", D("adherents-subtitle-template"));
+  const timelineBadge = useCmsContent(PAGE_ID, "timeline-badge", D("timeline-badge"));
+  const timelineTitle = useCmsContent(PAGE_ID, "timeline-title", D("timeline-title"));
+  const timelineIntro = useCmsContent(PAGE_ID, "timeline-intro", D("timeline-intro"));
+  const missionEyebrow = useCmsContent(PAGE_ID, "mission-eyebrow", D("mission-eyebrow"));
+  const missionTitle = useCmsContent(PAGE_ID, "mission-title", D("mission-title"));
+  const missionDescription = useCmsContent(PAGE_ID, "mission-description", D("mission-description"));
+  const missionBullets = useCmsContent(PAGE_ID, "mission-bullets", D("mission-bullets"));
+  const missionStatYears = useCmsContent(PAGE_ID, "mission-stat-years", D("mission-stat-years"));
+  const missionStatLabel = useCmsContent(PAGE_ID, "mission-stat-label", D("mission-stat-label"));
+  const missionStatDescription = useCmsContent(PAGE_ID, "mission-stat-description", D("mission-stat-description"));
+  const engagementsEyebrow = useCmsContent(PAGE_ID, "engagements-eyebrow", D("engagements-eyebrow"));
+  const engagementsTitle = useCmsContent(PAGE_ID, "engagements-title", D("engagements-title"));
+  const bureauEyebrow = useCmsContent(PAGE_ID, "bureau-eyebrow", D("bureau-eyebrow"));
+  const bureauTitle = useCmsContent(PAGE_ID, "bureau-title", D("bureau-title"));
+  const bureauSubtitle = useCmsContent(PAGE_ID, "bureau-subtitle", D("bureau-subtitle"));
+
   return (
     <div ref={ref}>
       {/* 1. Nos Adherents */}
@@ -114,13 +140,13 @@ export function GroupementContent() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="reveal text-center mb-10">
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gaspe-teal-600)] mb-3">
-              Nos adherents
+              {adherentsEyebrow}
             </p>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              {members.length} compagnies maritimes reunies
+              {members.length} {adherentsTitle}
             </h2>
             <p className="mt-3 text-foreground-muted max-w-2xl mx-auto">
-              {titulaires.length} membres titulaires et {associes.length} membres associes et experts au service du transport maritime de proximite.
+              {titulaires.length} membres titulaires et {associes.length} {adherentsSubtitleTmpl}
             </p>
           </div>
 
@@ -201,15 +227,14 @@ export function GroupementContent() {
       <section className="bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="reveal mb-12">
-            <Badge variant="teal" className="mb-4">Depuis 1951</Badge>
+            <Badge variant="teal" className="mb-4">{timelineBadge}</Badge>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              75 ans de soutien et d&apos;innovation
+              {timelineTitle}
             </h2>
-            <p className="mt-3 max-w-3xl text-foreground-muted leading-relaxed">
-              Depuis 1951, nous nous adaptons aux besoins de la societe et aux
-              progres technologiques, permettant d&apos;assurer une liaison
-              fiable et securisee entre les diverses zones cotieres et fluviales.
-            </p>
+            <div
+              className="mt-3 max-w-3xl text-foreground-muted leading-relaxed [&>p]:m-0"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(timelineIntro) }}
+            />
           </div>
 
           <div className="relative mt-16">
@@ -241,29 +266,19 @@ export function GroupementContent() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="reveal">
               <p className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gaspe-teal-600)] mb-3">
-                Notre raison d&apos;etre
+                {missionEyebrow}
               </p>
               <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl mb-6">
-                Notre mission de service public
+                {missionTitle}
               </h2>
-              <p className="text-foreground-muted leading-relaxed mb-8">
-                Fournir un transport maritime securise, fiable et accessible,
-                tout en contribuant au developpement economique et en respectant
-                les normes environnementales.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "Garantir des services de transport surs et fiables",
-                  "Maintenir une flotte de navires en bon etat et operationnelle",
-                  "Assurer des services reguliers et fiables",
-                  "Proposer des tarifs raisonnables et accessibles",
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 items-start">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--gaspe-teal-600)]" />
-                    <span className="text-foreground-muted">{item}</span>
-                  </li>
-                ))}
-              </ul>
+              <div
+                className="text-foreground-muted leading-relaxed mb-8 [&>p]:m-0"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(missionDescription) }}
+              />
+              <div
+                className="space-y-4 [&>ul]:space-y-4 [&>ul>li]:flex [&>ul>li]:gap-3 [&>ul>li]:items-start [&>ul>li]:text-foreground-muted [&>ul>li]:before:content-[''] [&>ul>li]:before:mt-1.5 [&>ul>li]:before:h-1.5 [&>ul>li]:before:w-1.5 [&>ul>li]:before:shrink-0 [&>ul>li]:before:rounded-full [&>ul>li]:before:bg-[var(--gaspe-teal-600)]"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(missionBullets) }}
+              />
             </div>
 
             <div className="reveal stagger-2">
@@ -273,15 +288,14 @@ export function GroupementContent() {
                   <div className="absolute left-[-10%] bottom-[-10%] h-32 w-32 rounded-full bg-white/5 blur-xl" />
                 </div>
                 <div className="relative z-10">
-                  <p className="font-heading text-6xl font-bold mb-2">75</p>
+                  <p className="font-heading text-6xl font-bold mb-2">{missionStatYears}</p>
                   <p className="text-white/90 font-heading text-lg font-semibold">
-                    ans d&apos;engagement
+                    {missionStatLabel}
                   </p>
-                  <p className="mt-4 text-sm text-white/70 leading-relaxed">
-                    Au service du transport maritime public francais, le GASPE
-                    accompagne les armateurs dans leurs missions essentielles de
-                    continuite territoriale.
-                  </p>
+                  <div
+                    className="mt-4 text-sm text-white/70 leading-relaxed [&>p]:m-0"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(missionStatDescription) }}
+                  />
                   <div className="mt-8 grid grid-cols-2 gap-4">
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
                       <p className="font-heading text-2xl font-bold">27</p>
@@ -304,10 +318,10 @@ export function GroupementContent() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="reveal text-center mb-12">
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gaspe-teal-600)] mb-3">
-              Ce qui nous guide
+              {engagementsEyebrow}
             </p>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              Nos valeurs, nos engagements
+              {engagementsTitle}
             </h2>
           </div>
 
@@ -340,13 +354,13 @@ export function GroupementContent() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="reveal text-center mb-12">
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gaspe-teal-600)] mb-3">
-              Gouvernance
+              {bureauEyebrow}
             </p>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              La composition du bureau
+              {bureauTitle}
             </h2>
             <p className="mt-2 text-foreground-muted">
-              Le bureau est elu chaque annee lors de l&apos;assemblee generale.
+              {bureauSubtitle}
             </p>
           </div>
 

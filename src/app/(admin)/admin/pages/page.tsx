@@ -19,6 +19,7 @@ import {
   type ApiMediaItem,
 } from "@/lib/cms-store";
 import { isApiMode } from "@/lib/api-client";
+import { getCmsDefault } from "@/data/cms-defaults";
 
 export default function AdminPagesPage() {
   const { user } = useAuth();
@@ -41,15 +42,22 @@ export default function AdminPagesPage() {
     const pageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
     if (!pageDef) return;
 
+    // Prefill empty sections with defaults from cms-defaults.ts so admins see
+    // the current live content instead of empty fields.
     const emptySections = pageDef.sections.map((def) => ({
-      id: def.id, label: def.label, type: def.type, content: "",
+      id: def.id, label: def.label, type: def.type,
+      content: getCmsDefault(selectedPageId, def.id),
     }));
 
     function applyStored(stored: PageContent | null) {
       if (stored) {
         const merged = pageDef!.sections.map((def) => {
           const existing = stored.sections.find((s) => s.id === def.id);
-          return existing ?? { id: def.id, label: def.label, type: def.type, content: "" };
+          // If stored content is empty, fall back to the default
+          const content = existing?.content?.trim()
+            ? existing.content
+            : getCmsDefault(selectedPageId, def.id);
+          return { id: def.id, label: def.label, type: def.type, content };
         });
         setSections(merged);
       } else {
