@@ -79,8 +79,10 @@ export async function apiDeleteMedia(id: string): Promise<boolean> {
 export interface PageSection {
   id: string;
   label: string;
-  type: "richtext" | "text" | "image" | "config";
+  type: "richtext" | "text" | "image" | "config" | "list";
   content: string;
+  /** For "list" type: schema of item fields (stored as JSON array of objects) */
+  itemFields?: { id: string; label: string; type: "text" | "richtext" | "url" }[];
 }
 
 export interface PageContent {
@@ -143,7 +145,12 @@ export async function apiSavePageContent(page: PageContent): Promise<boolean> {
 export interface PageDefinition {
   id: string;
   label: string;
-  sections: { id: string; label: string; type: PageSection["type"] }[];
+  sections: {
+    id: string;
+    label: string;
+    type: PageSection["type"];
+    itemFields?: PageSection["itemFields"];
+  }[];
 }
 
 export const PAGE_DEFINITIONS: PageDefinition[] = [
@@ -151,9 +158,10 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     id: "homepage",
     label: "Accueil",
     sections: [
-      { id: "hero-title", label: "Hero — Titre", type: "text" },
+      { id: "hero-eyebrow", label: "Hero — Libellé haut", type: "text" },
+      { id: "hero-title", label: "Hero — Titre (HTML autorisé)", type: "richtext" },
       { id: "hero-subtitle", label: "Hero — Sous-titre", type: "text" },
-      { id: "hero-baseline", label: "Hero — Baseline", type: "text" },
+      { id: "hero-baseline", label: "Hero — Baseline italique", type: "text" },
       { id: "cta-title", label: "CTA — Titre", type: "text" },
       { id: "cta-description", label: "CTA — Description", type: "richtext" },
     ],
@@ -180,25 +188,47 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
       { id: "bureau-eyebrow", label: "§ Bureau — Libellé haut", type: "text" },
       { id: "bureau-title", label: "§ Bureau — Titre", type: "text" },
       { id: "bureau-subtitle", label: "§ Bureau — Sous-titre", type: "text" },
+      { id: "timeline-items", label: "§ Timeline — Éléments", type: "list",
+        itemFields: [
+          { id: "year", label: "Année", type: "text" },
+          { id: "title", label: "Titre", type: "text" },
+          { id: "description", label: "Description", type: "richtext" },
+        ],
+      },
+      { id: "engagements-items", label: "§ Engagements — Cartes", type: "list",
+        itemFields: [
+          { id: "title", label: "Titre", type: "text" },
+          { id: "description", label: "Description", type: "text" },
+          { id: "color", label: "Couleur (teal/green/blue/warm)", type: "text" },
+        ],
+      },
+      { id: "bureau-members", label: "§ Bureau — Membres", type: "list",
+        itemFields: [
+          { id: "name", label: "Nom", type: "text" },
+          { id: "role", label: "Rôle", type: "text" },
+          { id: "company", label: "Compagnie", type: "text" },
+          { id: "href", label: "URL LinkedIn / profil", type: "url" },
+        ],
+      },
     ],
   },
   {
     id: "contact",
     label: "Contact",
     sections: [
-      { id: "address", label: "Adresse", type: "richtext" },
+      { id: "address", label: "Bloc adresse (HTML)", type: "richtext" },
       { id: "email", label: "Email de contact", type: "text" },
-      { id: "phone", label: "Téléphone", type: "text" },
-      { id: "sidebar-info", label: "Encart informatif", type: "richtext" },
+      { id: "sidebar-info", label: "Encart \"Engagé depuis 1951\"", type: "richtext" },
     ],
   },
   {
     id: "footer",
     label: "Pied de page",
     sections: [
-      { id: "newsletter-cta", label: "Texte newsletter", type: "text" },
+      { id: "newsletter-title", label: "Newsletter — Titre", type: "text" },
+      { id: "newsletter-cta", label: "Newsletter — Description", type: "text" },
       { id: "social-linkedin", label: "URL LinkedIn", type: "text" },
-      { id: "social-twitter", label: "URL Twitter/X", type: "text" },
+      { id: "contact-email", label: "Email de contact affiché", type: "text" },
     ],
   },
 ];

@@ -5,6 +5,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { submitContact } from "@/lib/api";
 import { sendContactConfirmation } from "@/lib/email";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+import { getCmsDefault } from "@/data/cms-defaults";
+
+const D = (s: string) => getCmsDefault("contact", s);
 
 interface FormErrors {
   nom?: string;
@@ -50,6 +55,10 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [submitting, setSubmitting] = useState(false);
+
+  const addressHtml = useCmsContent("contact", "address", D("address"));
+  const emailStr = useCmsContent("contact", "email", D("email"));
+  const sidebarInfo = useCmsContent("contact", "sidebar-info", D("sidebar-info"));
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -212,12 +221,10 @@ export default function ContactPage() {
                   <svg className="h-4 w-4 text-[var(--gaspe-teal-600)] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
                   </svg>
-                  <div className="text-foreground-muted">
-                    <p className="font-medium text-foreground">Adresse</p>
-                    <p>Maison de la Mer — Daniel Gilard</p>
-                    <p>Quai de la Fosse</p>
-                    <p>44 000 Nantes</p>
-                  </div>
+                  <div
+                    className="text-foreground-muted [&_p]:m-0 [&_strong]:text-foreground [&_strong]:font-medium"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(addressHtml) }}
+                  />
                 </div>
                 <div className="flex items-start gap-3">
                   <svg className="h-4 w-4 text-[var(--gaspe-teal-600)] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -225,8 +232,8 @@ export default function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-medium text-foreground">Email</p>
-                    <a href="mailto:contact@gaspe.fr" className="text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors">
-                      contact@gaspe.fr
+                    <a href={`mailto:${emailStr}`} className="text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors">
+                      {emailStr}
                     </a>
                   </div>
                 </div>
@@ -240,10 +247,10 @@ export default function ContactPage() {
                 </svg>
                 Engagé depuis 1951
               </h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">
-                Le GASPE fédère les armateurs de services publics
-                maritimes et accompagne la profession dans ses défis quotidiens.
-              </p>
+              <div
+                className="text-sm text-foreground-muted leading-relaxed [&_p]:m-0"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(sidebarInfo) }}
+              />
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
+import { ListEditor } from "@/components/admin/ListEditor";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import {
   PAGE_DEFINITIONS,
@@ -46,6 +47,7 @@ export default function AdminPagesPage() {
     // the current live content instead of empty fields.
     const emptySections = pageDef.sections.map((def) => ({
       id: def.id, label: def.label, type: def.type,
+      itemFields: def.itemFields,
       content: getCmsDefault(selectedPageId, def.id),
     }));
 
@@ -57,7 +59,7 @@ export default function AdminPagesPage() {
           const content = existing?.content?.trim()
             ? existing.content
             : getCmsDefault(selectedPageId, def.id);
-          return { id: def.id, label: def.label, type: def.type, content };
+          return { id: def.id, label: def.label, type: def.type, itemFields: def.itemFields, content };
         });
         setSections(merged);
       } else {
@@ -204,6 +206,12 @@ export default function AdminPagesPage() {
                       onMediaLibraryOpen={() => setShowMediaLibrary(true)}
                     />
                   </ErrorBoundary>
+                ) : section.type === "list" ? (
+                  <ListEditor
+                    value={section.content}
+                    onChange={(json) => updateSection(section.id, json)}
+                    fields={section.itemFields ?? []}
+                  />
                 ) : section.type === "image" ? (
                   <div className="space-y-3">
                     <input
