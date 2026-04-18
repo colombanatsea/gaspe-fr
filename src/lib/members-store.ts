@@ -15,22 +15,27 @@ export interface StoredMember extends Member {
   archived?: boolean;
 }
 
-/** Map API organization response to StoredMember */
+/** Lookup table from static members.ts — used to fill gaps in D1 data */
+const staticBySlug = new Map(staticMembers.map((m) => [m.slug, m]));
+
+/** Map API organization response to StoredMember, enriching from static data */
 function orgToMember(org: Record<string, unknown>): StoredMember {
+  const slug = (org.slug as string) ?? "";
+  const staticM = staticBySlug.get(slug);
   return {
     name: (org.name as string) ?? "",
-    slug: (org.slug as string) ?? "",
+    slug,
     city: (org.city as string) ?? "",
     latitude: (org.latitude as number) ?? 0,
     longitude: (org.longitude as number) ?? 0,
     region: (org.region as string) ?? "",
     territory: (org.territory as "metropole" | "dom-tom") ?? "metropole",
     category: (org.category as "titulaire" | "associe") ?? "titulaire",
-    description: (org.description as string) ?? undefined,
-    logoUrl: (org.logoUrl as string) ?? undefined,
-    websiteUrl: (org.websiteUrl as string) ?? undefined,
-    employeeCount: (org.employeeCount as number) ?? undefined,
-    shipCount: (org.shipCount as number) ?? undefined,
+    description: (org.description as string) ?? staticM?.description,
+    logoUrl: staticM?.logoUrl ?? (org.logoUrl as string) ?? undefined,
+    websiteUrl: (org.websiteUrl as string) ?? staticM?.websiteUrl,
+    employeeCount: (org.employeeCount as number) ?? staticM?.employeeCount,
+    shipCount: (org.shipCount as number) ?? staticM?.shipCount,
     archived: org.archived === true,
   };
 }

@@ -1774,9 +1774,14 @@ function cleanHtmlText(text: string): string {
 // ═══════════════════════════════════════════════════════════
 
 async function handleCmsListPages(env: Env, corsHeaders: Record<string, string>) {
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM cms_pages ORDER BY page_id, section_id"
-  ).all<{ page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }>();
+  let results: { page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }[] | undefined;
+  try {
+    ({ results } = await env.DB.prepare(
+      "SELECT * FROM cms_pages ORDER BY page_id, section_id"
+    ).all<{ page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }>());
+  } catch {
+    return json({ pages: {} }, corsHeaders);
+  }
 
   // Group by page_id
   const pages: Record<string, { pageId: string; sections: { id: string; label: string; type: string; content: string }[]; updatedAt: string }> = {};
@@ -1799,9 +1804,14 @@ async function handleCmsListPages(env: Env, corsHeaders: Record<string, string>)
 }
 
 async function handleCmsGetPage(env: Env, corsHeaders: Record<string, string>, pageId: string) {
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM cms_pages WHERE page_id = ? ORDER BY section_id"
-  ).bind(pageId).all<{ page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }>();
+  let results: { page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }[] | undefined;
+  try {
+    ({ results } = await env.DB.prepare(
+      "SELECT * FROM cms_pages WHERE page_id = ? ORDER BY section_id"
+    ).bind(pageId).all<{ page_id: string; section_id: string; label: string; type: string; content: string; updated_at: string }>());
+  } catch {
+    return json({ page: null }, corsHeaders);
+  }
 
   if (!results || results.length === 0) {
     return json({ page: null }, corsHeaders);
@@ -1834,7 +1844,15 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
 
   const now = new Date().toISOString();
 
-  // Upsert each section
+  // Auto-create table if migration 0005 not yet applied
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cms_pages (
+      page_id TEXT NOT NULL, section_id TEXT NOT NULL, label TEXT NOT NULL DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'text', content TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (page_id, section_id)
+    )`).run();
+  } catch { /* already exists */ }
+
   for (const section of body.sections) {
     await env.DB.prepare(`
       INSERT INTO cms_pages (page_id, section_id, label, type, content, updated_at)
