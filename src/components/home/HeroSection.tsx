@@ -7,11 +7,28 @@ import { getCmsDefault } from "@/data/cms-defaults";
 
 const D = (s: string) => getCmsDefault("homepage", s);
 
+interface QuickStat { value: string; label: string }
+
+function parseList<T>(json: string): T[] {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function HeroSection() {
   const heroEyebrow = useCmsContent("homepage", "hero-eyebrow", D("hero-eyebrow"));
   const heroTitle = useCmsContent("homepage", "hero-title", D("hero-title"));
   const heroSubtitle = useCmsContent("homepage", "hero-subtitle", D("hero-subtitle"));
   const heroBaseline = useCmsContent("homepage", "hero-baseline", D("hero-baseline"));
+  const cta1Label = useCmsContent("homepage", "hero-cta1-label", D("hero-cta1-label"));
+  const cta1Link = useCmsContent("homepage", "hero-cta1-link", D("hero-cta1-link"));
+  const cta2Label = useCmsContent("homepage", "hero-cta2-label", D("hero-cta2-label"));
+  const cta2Link = useCmsContent("homepage", "hero-cta2-link", D("hero-cta2-link"));
+  const quickStatsJson = useCmsContent("homepage", "hero-quick-stats", D("hero-quick-stats"));
+  const quickStats = parseList<QuickStat>(quickStatsJson);
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
@@ -60,31 +77,27 @@ export function HeroSection() {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Button
-              href="/notre-groupement"
+              href={cta1Link || "/notre-groupement"}
               variant="primary"
               className="bg-[var(--gaspe-teal-600)] text-white hover:bg-[var(--gaspe-teal-700)] px-8 py-4 text-base shadow-lg shadow-[var(--gaspe-teal-600)]/25"
             >
-              En savoir plus
+              {cta1Label}
               <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Button>
             <Button
-              href="/nos-compagnies-recrutent"
+              href={cta2Link || "/nos-compagnies-recrutent"}
               variant="secondary"
               className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-base"
             >
-              Nos compagnies recrutent
+              {cta2Label}
             </Button>
           </div>
 
           {/* Quick stats */}
           <div className="mt-16 flex items-center gap-8 border-t border-white/10 pt-8">
-            {[
-              { value: "28", label: "Compagnies" },
-              { value: "111", label: "Navires" },
-              { value: "20M+", label: "Passagers/an" },
-            ].map((stat) => (
+            {quickStats.map((stat) => (
               <div key={stat.label}>
                 <p className="font-heading text-2xl font-bold text-white">{stat.value}</p>
                 <p className="text-xs text-white/40 uppercase tracking-wider">{stat.label}</p>
