@@ -4,7 +4,7 @@ import { Suspense, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 
@@ -347,9 +347,10 @@ function DocumentsContent() {
 export default function DocumentsPage() {
   return (
     <>
-      <PageHeader
-        title="Documents"
-        description="Documents officiels, convention collective, accords de branche et outils pratiques du GASPE."
+      <CmsPageHeader
+        pageId="documents"
+        defaultTitle="Documents"
+        defaultDescription="Documents officiels, convention collective, accords de branche et outils pratiques du GASPE."
         breadcrumbs={[{ label: "Documents" }]}
       />
       <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">

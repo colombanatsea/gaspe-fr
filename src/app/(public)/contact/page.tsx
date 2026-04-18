@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { submitContact } from "@/lib/api";
 import { sendContactConfirmation } from "@/lib/email";
 import { useScrollReveal } from "@/lib/useScrollReveal";
@@ -89,9 +89,10 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageHeader
-        title="Contact"
-        description="Une question ? N'hésitez pas à nous contacter."
+      <CmsPageHeader
+        pageId="contact"
+        defaultTitle="Contact"
+        defaultDescription="Une question ? N'hésitez pas à nous contacter."
         breadcrumbs={[{ label: "Contact" }]}
       />
 

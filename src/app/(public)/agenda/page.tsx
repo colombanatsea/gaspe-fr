@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { formatDate } from "@/lib/utils";
 import type { AgendaEvent } from "@/app/(admin)/admin/agenda/page";
@@ -26,19 +28,22 @@ export default function AgendaPage() {
   const [events] = useState<AgendaEvent[]>(getPublishedEvents);
 
   const isAdherent = user && (user.role === "adherent" || user.role === "admin");
+  const emptyStateMessage = useCmsContent("agenda", "empty-state-message", getCmsDefault("agenda", "empty-state-message"));
+  const restrictedNotice = useCmsContent("agenda", "restricted-notice", getCmsDefault("agenda", "restricted-notice"));
 
   return (
     <>
-      <PageHeader
-        title="Agenda"
-        description="Les événements du GASPE et du secteur maritime."
+      <CmsPageHeader
+        pageId="agenda"
+        defaultTitle="Agenda"
+        defaultDescription="Les événements du GASPE et du secteur maritime."
         breadcrumbs={[{ label: "Agenda" }]}
       />
 
       <ScrollRevealWrapper className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {events.length === 0 ? (
           <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-12 text-center">
-            <p className="text-foreground-muted">Aucun événement à venir pour le moment.</p>
+            <p className="text-foreground-muted">{emptyStateMessage}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -111,7 +116,7 @@ export default function AgendaPage() {
                       </>
                     ) : (
                       <p className="mt-2 text-xs text-foreground-muted italic">
-                        Connectez-vous en tant qu&apos;adhérent pour voir le détail et les documents.
+                        {restrictedNotice}
                       </p>
                     )}
                   </div>

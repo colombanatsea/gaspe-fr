@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
 
 /* ──────────────────────────────────────────────
@@ -745,8 +745,10 @@ export default function DecouvrirEspaceAdherentPage() {
 
   return (
     <>
-      <PageHeader
-        title="Découvrir l'Espace Adhérent"
+      <CmsPageHeader
+        pageId="decouvrir-espace-adherent"
+        defaultTitle="Découvrir l'Espace Adhérent"
+        defaultDescription="Aperçu complet des fonctionnalités réservées aux adhérents du GASPE."
         breadcrumbs={[
           { label: "Accueil", href: "/" },
           { label: "Découvrir l'espace adhérent" },

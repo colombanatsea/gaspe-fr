@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
@@ -45,8 +45,10 @@ export default function SSGMPage() {
 
   return (
     <>
-      <PageHeader
-        title="SSGM & Médecins Agréés"
+      <CmsPageHeader
+        pageId="ssgm"
+        defaultTitle="SSGM & Médecins Agréés"
+        defaultDescription="Services de Santé des Gens de Mer — visites d'aptitude, suivi médical et certificats STCW."
         breadcrumbs={[
           { label: "Accueil", href: "/" },
           { label: "SSGM & Médecins Agréés" },

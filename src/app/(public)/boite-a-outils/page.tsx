@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
@@ -692,9 +692,10 @@ export default function BoiteAOutilsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Boîte à outils CCN 3228"
-        description="Convention Collective Nationale du personnel navigant des passages d'eau — grilles salariales, classifications, congés, régime ENIM et simulateur."
+      <CmsPageHeader
+        pageId="boite-a-outils"
+        defaultTitle="Boîte à outils CCN 3228"
+        defaultDescription="Convention Collective Nationale du personnel navigant des passages d'eau — grilles salariales, classifications, congés, régime ENIM et simulateur."
         breadcrumbs={[{ label: "Boîte à outils" }]}
       />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -62,8 +62,10 @@ export default function TransitionEcologiquePage() {
 
   return (
     <>
-      <PageHeader
-        title="Transition Ecologique"
+      <CmsPageHeader
+        pageId="transition-ecologique"
+        defaultTitle="Transition Ecologique"
+        defaultDescription="Décarbonation du maritime côtier : AAP ADEME 2026, technologies, financements."
         breadcrumbs={[
           { label: "Accueil", href: "/" },
           { label: "Transition Ecologique" },

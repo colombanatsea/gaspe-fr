@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { GroupementContent } from "./GroupementContent";
 
 export const metadata: Metadata = {
@@ -32,9 +32,10 @@ export const metadata: Metadata = {
 export default function NotreGroupementPage() {
   return (
     <>
-      <PageHeader
-        title="Notre Groupement"
-        description="Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entité collaborative qui regroupe des membres engagés dans les services maritimes."
+      <CmsPageHeader
+        pageId="notre-groupement"
+        defaultTitle="Notre Groupement"
+        defaultDescription="Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entité collaborative qui regroupe des membres engagés dans les services maritimes."
         breadcrumbs={[{ label: "Notre Groupement" }]}
       />
       <GroupementContent />
