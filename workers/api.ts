@@ -428,6 +428,26 @@ export default {
         return handleMedicalDelete(request, env, corsHeaders, visitId);
       }
 
+      // ── Newsletter drafts ──
+      if (path === "/api/newsletter/drafts" && request.method === "GET") {
+        return handleNlDraftsList(request, env, corsHeaders);
+      }
+      if (path === "/api/newsletter/drafts" && request.method === "POST") {
+        return handleNlDraftsCreate(request, env, corsHeaders);
+      }
+      if (path.match(/^\/api\/newsletter\/drafts\/[^/]+$/) && request.method === "GET") {
+        const id = path.split("/api/newsletter/drafts/")[1];
+        return handleNlDraftsGet(request, env, corsHeaders, decodeURIComponent(id));
+      }
+      if (path.match(/^\/api\/newsletter\/drafts\/[^/]+$/) && request.method === "PUT") {
+        const id = path.split("/api/newsletter/drafts/")[1];
+        return handleNlDraftsUpdate(request, env, corsHeaders, decodeURIComponent(id));
+      }
+      if (path.match(/^\/api\/newsletter\/drafts\/[^/]+$/) && request.method === "DELETE") {
+        const id = path.split("/api/newsletter/drafts/")[1];
+        return handleNlDraftsDelete(request, env, corsHeaders, decodeURIComponent(id));
+      }
+
       // ── Media Files ──
       if (path === "/api/media" && request.method === "GET") {
         return handleMediaList(request, env, corsHeaders);
@@ -2313,5 +2333,136 @@ async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record
   // Delete metadata
   await env.DB.prepare("DELETE FROM media_files WHERE id = ?").bind(mediaId).run();
 
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Newsletter drafts — CRUD (Phase 1 foundation)
+//  Sending endpoints live separately once Brevo list IDs are configured.
+// ═══════════════════════════════════════════════════════════
+
+interface NlDraftRow {
+  id: string;
+  title: string;
+  subject: string;
+  preheader: string;
+  blocks_json: string;
+  status: "draft" | "sent" | "archived";
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+async function ensureNlDraftsTable(env: Env) {
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS nl_drafts (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      subject TEXT NOT NULL DEFAULT '',
+      preheader TEXT NOT NULL DEFAULT '',
+      blocks_json TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`).run();
+  } catch { /* table may exist with different schema — ignore */ }
+}
+
+async function requireAdmin(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return { error: json({ error: "Accès refusé" }, corsHeaders, 403) };
+  }
+  return { userId: String(payload.sub) };
+}
+
+async function handleNlDraftsList(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  await ensureNlDraftsTable(env);
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT * FROM nl_drafts ORDER BY updated_at DESC"
+    ).all<NlDraftRow>();
+    return json({ drafts: results ?? [] }, corsHeaders);
+  } catch {
+    return json({ drafts: [] }, corsHeaders);
+  }
+}
+
+async function handleNlDraftsGet(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  await ensureNlDraftsTable(env);
+  const row = await env.DB.prepare("SELECT * FROM nl_drafts WHERE id = ?").bind(id).first<NlDraftRow>();
+  return json({ draft: row ?? null }, corsHeaders);
+}
+
+async function handleNlDraftsCreate(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  await ensureNlDraftsTable(env);
+
+  const body = await request.json() as {
+    id?: string;
+    title: string;
+    subject?: string;
+    preheader?: string;
+    blocks?: unknown[];
+  };
+
+  if (!body.title || !body.title.trim()) {
+    return json({ error: "Titre requis" }, corsHeaders, 400);
+  }
+
+  const id = body.id || `nl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const now = new Date().toISOString();
+  const blocksJson = JSON.stringify(body.blocks ?? []);
+
+  await env.DB.prepare(
+    `INSERT INTO nl_drafts (id, title, subject, preheader, blocks_json, status, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?)`
+  ).bind(id, body.title.trim(), body.subject ?? "", body.preheader ?? "", blocksJson, auth.userId, now, now).run();
+
+  const row = await env.DB.prepare("SELECT * FROM nl_drafts WHERE id = ?").bind(id).first<NlDraftRow>();
+  return json({ draft: row }, corsHeaders);
+}
+
+async function handleNlDraftsUpdate(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  await ensureNlDraftsTable(env);
+
+  const body = await request.json() as {
+    title?: string;
+    subject?: string;
+    preheader?: string;
+    blocks?: unknown[];
+  };
+
+  const existing = await env.DB.prepare("SELECT * FROM nl_drafts WHERE id = ?").bind(id).first<NlDraftRow>();
+  if (!existing) return json({ error: "Brouillon introuvable" }, corsHeaders, 404);
+
+  const now = new Date().toISOString();
+  const title = body.title?.trim() ?? existing.title;
+  const subject = body.subject ?? existing.subject;
+  const preheader = body.preheader ?? existing.preheader;
+  const blocksJson = body.blocks ? JSON.stringify(body.blocks) : existing.blocks_json;
+
+  await env.DB.prepare(
+    `UPDATE nl_drafts SET title = ?, subject = ?, preheader = ?, blocks_json = ?, updated_at = ? WHERE id = ?`
+  ).bind(title, subject, preheader, blocksJson, now, id).run();
+
+  return json({ success: true }, corsHeaders);
+}
+
+async function handleNlDraftsDelete(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  await ensureNlDraftsTable(env);
+  await env.DB.prepare("DELETE FROM nl_drafts WHERE id = ?").bind(id).run();
   return json({ success: true }, corsHeaders);
 }
