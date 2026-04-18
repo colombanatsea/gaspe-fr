@@ -82,11 +82,21 @@ export class ApiAuthStore implements AuthStore {
 
   setCurrentUser(user: User | null): void {
     this.cachedUser = user;
+    if (typeof window !== "undefined") {
+      if (user) {
+        localStorage.setItem("gaspe_current_user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("gaspe_current_user");
+      }
+    }
   }
 
   clearSession(): void {
     this.cachedUser = null;
     setToken(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("gaspe_current_user");
+    }
   }
 
   // ── Async API methods (used by AuthContext) ──
