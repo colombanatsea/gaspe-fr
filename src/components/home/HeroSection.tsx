@@ -3,11 +3,15 @@
 import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { getCmsDefault } from "@/data/cms-defaults";
+
+const D = (s: string) => getCmsDefault("homepage", s);
 
 export function HeroSection() {
-  const cmsTitle = useCmsContent("homepage", "hero-title");
-  const cmsSubtitle = useCmsContent("homepage", "hero-subtitle");
-  const cmsBaseline = useCmsContent("homepage", "hero-baseline");
+  const heroEyebrow = useCmsContent("homepage", "hero-eyebrow", D("hero-eyebrow"));
+  const heroTitle = useCmsContent("homepage", "hero-title", D("hero-title"));
+  const heroSubtitle = useCmsContent("homepage", "hero-subtitle", D("hero-subtitle"));
+  const heroBaseline = useCmsContent("homepage", "hero-baseline", D("hero-baseline"));
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
@@ -36,29 +40,22 @@ export function HeroSection() {
           <div className="mb-6 flex items-center gap-3">
             <div className="h-px w-12 gaspe-gradient-animated rounded-full" />
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.25em] text-[var(--gaspe-teal-400)]">
-              Groupement des Armateurs de Services Publics
+              {heroEyebrow}
             </p>
           </div>
 
-          {cmsTitle ? (
-            <h1 className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cmsTitle) }} />
-          ) : (
-            <h1 className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]">
-              Fédérer et représenter{" "}
-              <span className="gaspe-gradient-text">
-                les compagnies maritimes
-              </span>{" "}
-              de proximité
-            </h1>
-          )}
+          <h1
+            className="font-heading text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1]"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(heroTitle) }}
+          />
 
           <p className="mt-6 text-lg text-white/60 leading-relaxed max-w-lg sm:text-xl">
-            {cmsSubtitle || "Le GASPE regroupe les armateurs assurant des missions de service public de transport de passagers sur les lignes côtières nationales."}
+            {heroSubtitle}
           </p>
 
           {/* Tagline */}
           <p className="mt-4 font-heading text-sm font-medium italic text-[var(--gaspe-teal-400)]/80 tracking-wide">
-            {cmsBaseline || "Localement ancrés. Socialement engagés."}
+            {heroBaseline}
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">

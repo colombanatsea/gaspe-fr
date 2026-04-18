@@ -14,91 +14,38 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
 const PAGE_ID = "notre-groupement";
 const D = (sectionId: string) => getCmsDefault(PAGE_ID, sectionId);
 
-const engagements = [
-  {
-    title: "Securite et Conformite",
-    description: "Respect des normes de securite maritime, securite des equipages et passagers.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    ),
-    color: "var(--gaspe-teal-600)",
-    bgColor: "var(--gaspe-teal-50)",
-  },
-  {
-    title: "Protection de l'Environnement",
-    description: "Reduction des emissions polluantes, gestion responsable des dechets.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-      </svg>
-    ),
-    color: "var(--gaspe-green-500)",
-    bgColor: "var(--gaspe-green-50)",
-  },
-  {
-    title: "Responsabilite Sociale",
-    description: "Conditions de travail justes, promotion de la diversite et inclusion.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-      </svg>
-    ),
-    color: "var(--gaspe-blue-600)",
-    bgColor: "var(--gaspe-blue-50)",
-  },
-  {
-    title: "Service Public & Clients",
-    description: "Service fiable et ponctuel, communication transparente.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-      </svg>
-    ),
-    color: "var(--gaspe-warm-500)",
-    bgColor: "var(--gaspe-warm-50)",
-  },
-  {
-    title: "Innovation Continue",
-    description: "Demarche d'amelioration continue des performances.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-      </svg>
-    ),
-    color: "var(--gaspe-teal-600)",
-    bgColor: "var(--gaspe-teal-50)",
-  },
-  {
-    title: "Gestion des Risques",
-    description: "Plans de gestion des risques, continuite des operations.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
-      </svg>
-    ),
-    color: "var(--gaspe-blue-600)",
-    bgColor: "var(--gaspe-blue-50)",
-  },
-];
+function parseList<T>(json: string): T[] {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
-const bureauMembers = [
-  { name: "Baudouin PAPPENS", role: "President", company: "Compagnie Yeu Continent", href: "https://www.linkedin.com/in/baudouin-pappens/" },
-  { name: "Guillaume du FONTENIOUX", role: "Vice-president", company: "Compagnie des Bacs de Loire", href: "https://www.linkedin.com/in/guillaume-du-fontenioux/" },
-  { name: "Marc L'Alexandre", role: "Vice-president", company: "Groupe LHD", href: "https://www.linkedin.com/in/marc-l-alexandre/" },
-  { name: "Nelly DEPARDIEU", role: "Secretaire", company: "Manche Iles Express", href: "https://www.linkedin.com/in/nelly-depardieu/" },
-  { name: "Franck LAUSSEL", role: "Secretaire adjoint", company: undefined, href: "https://www.linkedin.com/in/franck-laussel/" },
-  { name: "Thomas CREPY", role: "Tresorier", company: "Compagnie Oceane", href: "https://www.linkedin.com/in/thomas-crepy/" },
-  { name: "Colomban Monnier", role: "Delegue General", company: "President de la Fondation ENSM", href: "https://colombanatsea.com" },
-];
+// Icon mapping for engagements (by color key)
+const ENGAGEMENT_ICONS: Record<string, { icon: React.ReactElement; color: string; bgColor: string }> = {
+  teal: {
+    icon: <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>,
+    color: "var(--gaspe-teal-600)", bgColor: "var(--gaspe-teal-50)",
+  },
+  green: {
+    icon: <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>,
+    color: "var(--gaspe-green-500)", bgColor: "var(--gaspe-green-50)",
+  },
+  blue: {
+    icon: <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>,
+    color: "var(--gaspe-blue-600)", bgColor: "var(--gaspe-blue-50)",
+  },
+  warm: {
+    icon: <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>,
+    color: "var(--gaspe-warm-500)", bgColor: "var(--gaspe-warm-50)",
+  },
+};
 
-const timeline = [
-  { year: "1951", title: "Creation du GASPE", description: "Fondation du Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau." },
-  { year: "1970s", title: "Developpement du reseau", description: "Expansion des liaisons maritimes de service public sur les cotes francaises." },
-  { year: "2000s", title: "Modernisation des flottes", description: "Investissements majeurs dans la modernisation et la securite des navires." },
-  { year: "2020s", title: "Transition ecologique", description: "Engagement pour la decarbonation et l'innovation environnementale." },
-];
+interface TimelineItem { year: string; title: string; description: string }
+interface EngagementItem { title: string; description: string; color: string }
+interface BureauMember { name: string; role: string; company: string; href: string }
 
 export function GroupementContent() {
   const ref = useScrollReveal();
@@ -132,6 +79,14 @@ export function GroupementContent() {
   const bureauEyebrow = useCmsContent(PAGE_ID, "bureau-eyebrow", D("bureau-eyebrow"));
   const bureauTitle = useCmsContent(PAGE_ID, "bureau-title", D("bureau-title"));
   const bureauSubtitle = useCmsContent(PAGE_ID, "bureau-subtitle", D("bureau-subtitle"));
+
+  // CMS-editable lists
+  const timelineJson = useCmsContent(PAGE_ID, "timeline-items", D("timeline-items"));
+  const engagementsJson = useCmsContent(PAGE_ID, "engagements-items", D("engagements-items"));
+  const bureauJson = useCmsContent(PAGE_ID, "bureau-members", D("bureau-members"));
+  const timeline = parseList<TimelineItem>(timelineJson);
+  const engagements = parseList<EngagementItem>(engagementsJson);
+  const bureauMembers = parseList<BureauMember>(bureauJson);
 
   return (
     <div ref={ref}>
@@ -251,7 +206,10 @@ export function GroupementContent() {
                     <span className="inline-block sm:hidden font-heading text-xs font-bold text-[var(--gaspe-teal-600)] mb-2">{item.year}</span>
                     <p className="hidden sm:block font-heading text-sm font-bold text-[var(--gaspe-teal-600)] mb-1">{item.year}</p>
                     <h3 className="font-heading text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-2 text-sm text-foreground-muted leading-relaxed">{item.description}</p>
+                    <div
+                      className="mt-2 text-sm text-foreground-muted leading-relaxed [&>p]:m-0"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.description) }}
+                    />
                   </div>
                 </div>
               ))}
@@ -326,25 +284,28 @@ export function GroupementContent() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {engagements.map((eng, i) => (
-              <div
-                key={eng.title}
-                className={`reveal-scale stagger-${i + 1} group rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)] p-8 gaspe-card-hover`}
-              >
+            {engagements.map((eng, i) => {
+              const iconConfig = ENGAGEMENT_ICONS[eng.color] ?? ENGAGEMENT_ICONS.teal;
+              return (
                 <div
-                  className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: eng.bgColor, color: eng.color }}
+                  key={eng.title || i}
+                  className={`reveal-scale stagger-${Math.min(i + 1, 6)} group rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)] p-8 gaspe-card-hover`}
                 >
-                  {eng.icon}
+                  <div
+                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: iconConfig.bgColor, color: iconConfig.color }}
+                  >
+                    {iconConfig.icon}
+                  </div>
+                  <h3 className="font-heading text-base font-semibold text-foreground mb-2">
+                    {eng.title}
+                  </h3>
+                  <p className="text-sm text-foreground-muted leading-relaxed">
+                    {eng.description}
+                  </p>
                 </div>
-                <h3 className="font-heading text-base font-semibold text-foreground mb-2">
-                  {eng.title}
-                </h3>
-                <p className="text-sm text-foreground-muted leading-relaxed">
-                  {eng.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -367,7 +328,7 @@ export function GroupementContent() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {bureauMembers.map((member, i) => (
               <a
-                key={member.name}
+                key={member.name || i}
                 href={member.href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -387,7 +348,7 @@ export function GroupementContent() {
                     <Badge variant="teal" className="mt-1.5">
                       {member.role}
                     </Badge>
-                    {member.company && (
+                    {member.company && member.company.trim() && (
                       <p className="mt-2 text-sm text-foreground-muted">
                         {member.company}
                       </p>

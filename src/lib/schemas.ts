@@ -120,7 +120,7 @@ export const mediaArraySchema = z.array(mediaItemSchema);
 const pageSectionSchema = z.object({
   id: z.string(),
   label: z.string(),
-  type: z.enum(["richtext", "text", "image", "config"]),
+  type: z.enum(["richtext", "text", "image", "config", "list"]),
   content: z.string(),
 });
 
