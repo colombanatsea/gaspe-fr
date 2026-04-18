@@ -289,6 +289,45 @@ workers/
 - CORS restricted to gaspe-fr.pages.dev, gaspe.fr, localhost
 - robots.txt blocks indexing of admin/auth pages
 
+## CMS (session 25c — partial coverage)
+Architecture dual-mode : `src/lib/cms-store.ts` + hook `useCmsContent(pageId, sectionId, fallback)` dans `src/lib/use-cms.tsx`.
+
+**Default content** : `src/data/cms-defaults.ts` — contenu affiché si CMS vide, pré-remplit aussi l'éditeur admin.
+
+**Admin** : `/admin/pages` — sélecteur de pages + éditeur par section (text/richtext/image/list).
+
+**Pages câblées (v2.12.2)** :
+- ✅ Homepage : hero (eyebrow/title/subtitle/baseline), CTA (title/description)
+- ✅ Notre Groupement : 18 champs + 3 listes (timeline, engagements, bureau)
+- ✅ Contact : adresse, email, encart
+- ✅ Footer : newsletter (title/description), linkedin, contact email
+
+**Pages à câbler (session 26)** : agenda, boîte-à-outils (intros + guides list), decouvrir-espace-adherent, documents, formations, nos-adherents, nos-compagnies-recrutent, positions, presse, ssgm, transition-ecologique, visites-medicales. Voir `docs/CMS-SPEC.md` pour l'inventaire complet.
+
+**Types de sections CMS** :
+| Type | Storage | Editor UI |
+|------|---------|-----------|
+| `text` | string | input |
+| `richtext` | HTML string | RichTextEditor (Tiptap) |
+| `image` | URL | URL input + Media Library |
+| `config` | string | input |
+| `list` | `JSON.stringify(array)` | ListEditor (add/remove/reorder) |
+
+## Newsletter (v1 Brevo proxy, v2 éditeur à construire session 26)
+**v1 actuelle** : `/admin/newsletter` envoie texte brut via `/api/newsletter/send` → Brevo API. HTML sans charte, pas d'aperçu.
+
+**v2 prévue** (spec : `docs/NEWSLETTER-SPEC.md`) :
+- Éditeur blocs drag-drop (header/paragraph/image/button/columns/footer)
+- Charte GASPE configurable (logo, couleurs)
+- Aperçu live desktop/mobile
+- Test send + envoi production batch
+- Webhook Brevo pour tracking (ouvertures, clics, bounces, désabonnements)
+- Sync contacts Brevo (inscriptions publiques + préférences)
+- Désinscription tokenisée RGPD
+- Dashboard stats par envoi
+
+**Tables D1 à créer (migration 0008)** : `nl_drafts`, `nl_sends`, `nl_events`, `nl_templates`.
+
 ## Dual-mode stores (session 23)
 All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` is set:
 | Store | localStorage key | API endpoint | Status |
@@ -327,3 +366,5 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 23 | 2.10.0 | Frontend API stores, ENM portal import, profile photo/LinkedIn, 15 new endpoints, migrations 0005-0006 |
 | 24 | 2.11.0 | Members dual-mode store, ENM wizard + copy-paste parser, video hero, wrangler fix, ADEME native simulator, production deployment guide, CMS seed script |
 | 25 | 2.12.0 | ESLint 29→4 warnings, 6 logos downloaded, member archiving API (migration 0007), ENM parser refined + 20 tests, E2E tests (ENM, medical), map invalidateSize fix |
+| 25b | 2.12.1 | Hotfixes post-merge : deploy-worker `--remote` flag, defensive D1 queries, login redirect fix, CMS endpoints resilient to missing tables |
+| 25c | 2.12.2 | CMS wired — homepage (hero, CTA), notre-groupement (18 fields + 3 lists), contact, footer. Introduced `list` type with ListEditor component. Specs written : docs/CMS-SPEC.md + docs/NEWSLETTER-SPEC.md |
