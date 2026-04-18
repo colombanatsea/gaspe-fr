@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+
+const DCms = (s: string) => getCmsDefault("decouvrir-espace-adherent", s);
 
 /* ──────────────────────────────────────────────
    Fake data for demonstration
@@ -180,6 +184,9 @@ const TABS: { key: DemoTab; label: string }[] = [
 ];
 
 function DemoBanner() {
+  const bannerTitle = useCmsContent("decouvrir-espace-adherent", "banner-title", DCms("banner-title"));
+  const bannerDescription = useCmsContent("decouvrir-espace-adherent", "banner-description", DCms("banner-description"));
+  const ctaButton = useCmsContent("decouvrir-espace-adherent", "adhesion-cta-button", DCms("adhesion-cta-button"));
   return (
     <div className="rounded-2xl bg-gradient-to-r from-[var(--gaspe-teal-600)] to-[var(--gaspe-teal-700)] p-6 text-white mb-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -189,14 +196,14 @@ function DemoBanner() {
               <span className="text-white">Mode Découverte</span>
             </Badge>
           </div>
-          <h2 className="font-heading text-xl font-bold">Vous explorez l&apos;espace adhérent en mode démo</h2>
+          <h2 className="font-heading text-xl font-bold">{bannerTitle}</h2>
           <p className="mt-1 text-white/80 text-sm">
-            Les données affichées sont fictives. Devenez adhérent pour accéder à votre propre espace personnalisé.
+            {bannerDescription}
           </p>
         </div>
         <Link href="/inscription/adherent">
           <Button className="bg-white text-[var(--gaspe-teal-700)] hover:bg-white/90 whitespace-nowrap">
-            Devenir adhérent
+            {ctaButton}
           </Button>
         </Link>
       </div>
@@ -217,11 +224,13 @@ function AdhesionCTA({ variant = "default" }: { variant?: "default" | "inline" |
   }
 
   if (variant === "card") {
+    const ctaTitle = getCmsDefault("decouvrir-espace-adherent", "adhesion-cta-title");
+    const ctaDescription = getCmsDefault("decouvrir-espace-adherent", "adhesion-cta-description");
     return (
       <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-surface-teal/50 p-6 text-center">
-        <p className="font-heading text-lg font-semibold text-foreground">Prêt à rejoindre le GASPE ?</p>
+        <p className="font-heading text-lg font-semibold text-foreground">{ctaTitle || "Prêt à rejoindre le GASPE ?"}</p>
         <p className="mt-1 text-sm text-foreground-muted">
-          Accédez à l&apos;annuaire, aux documents privés, à la gestion d&apos;offres d&apos;emploi et bien plus.
+          {ctaDescription || "Accédez à l'annuaire, aux documents privés, à la gestion d'offres d'emploi et bien plus."}
         </p>
         <Link href="/inscription/adherent" className="inline-block mt-4">
           <Button>Demander mon adhésion</Button>
