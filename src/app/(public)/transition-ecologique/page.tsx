@@ -6,6 +6,23 @@ import { Badge } from "@/components/ui/Badge";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+
+const D = (s: string) => getCmsDefault("transition-ecologique", s);
+
+interface KeyFigure { value: string; suffix?: string; label: string }
+interface TechnologyItem { name: string; gain: string; trl: string; desc: string }
+
+function parseList<T>(json: string): T[] {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 const AdemeSimulator = dynamic(() => import("@/components/simulator/AdemeSimulator"), {
   ssr: false,
@@ -50,15 +67,21 @@ const ADEME_GUIDES = [
   },
 ];
 
-const KEY_FIGURES = [
-  { value: "70", suffix: "M", label: "Budget AAP 2026" },
-  { value: "6", suffix: "M", label: "Aide max par projet" },
-  { value: "60", suffix: "%", label: "Taux max (PE)" },
-  { value: "12", label: "Technologies couvertes" },
-];
-
 export default function TransitionEcologiquePage() {
   const ref = useScrollReveal();
+
+  const introBadge = useCmsContent("transition-ecologique", "intro-badge", D("intro-badge"));
+  const introTitle = useCmsContent("transition-ecologique", "intro-title", D("intro-title"));
+  const introDescription = useCmsContent("transition-ecologique", "intro-description", D("intro-description"));
+  const deadlineText = useCmsContent("transition-ecologique", "deadline-text", D("deadline-text"));
+  const keyFiguresJson = useCmsContent("transition-ecologique", "key-figures", D("key-figures"));
+  const keyFigures = parseList<KeyFigure>(keyFiguresJson);
+  const simulatorTitle = useCmsContent("transition-ecologique", "simulator-title", D("simulator-title"));
+  const simulatorDescription = useCmsContent("transition-ecologique", "simulator-description", D("simulator-description"));
+  const simulatorDisclaimer = useCmsContent("transition-ecologique", "simulator-disclaimer", D("simulator-disclaimer"));
+  const technologiesTitle = useCmsContent("transition-ecologique", "technologies-title", D("technologies-title"));
+  const technologiesJson = useCmsContent("transition-ecologique", "technologies-items", D("technologies-items"));
+  const technologies = parseList<TechnologyItem>(technologiesJson);
 
   return (
     <>
@@ -80,17 +103,16 @@ export default function TransitionEcologiquePage() {
               <div className="absolute right-[-10%] top-[-20%] h-48 w-48 rounded-full bg-white/10 blur-2xl" />
             </div>
             <div className="relative z-10">
-              <Badge variant="neutral"><span className="text-white">AAP ADEME 2026</span></Badge>
+              <Badge variant="neutral"><span className="text-white">{introBadge}</span></Badge>
               <h2 className="font-heading text-2xl sm:text-3xl font-bold mt-3">
-                Cap sur la decarbonation du maritime cotier
+                {introTitle}
               </h2>
-              <p className="mt-3 text-white/80 max-w-2xl leading-relaxed">
-                Navires hybrides, propulsion 100% electrique, biocarburants, renouvellement de flotte accelere :
-                les compagnies du GASPE sont pionnieres. L&apos;AAP ADEME 2026 finance jusqu&apos;a 6 M EUR par projet
-                pour la decarbonation de vos navires.
-              </p>
+              <div
+                className="mt-3 text-white/80 max-w-2xl leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(introDescription) }}
+              />
               <p className="mt-2 text-white/60 text-sm">
-                Cloture : 6 juillet 2026 · Budget total : 70 M EUR
+                {deadlineText}
               </p>
             </div>
           </div>
@@ -98,10 +120,10 @@ export default function TransitionEcologiquePage() {
 
         {/* Key figures */}
         <div className="reveal stagger-1 grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          {KEY_FIGURES.map((fig) => (
-            <div key={fig.label} className="rounded-xl bg-background border border-border-light p-4 text-center">
+          {keyFigures.map((fig, i) => (
+            <div key={`${fig.label}-${i}`} className="rounded-xl bg-background border border-border-light p-4 text-center">
               <p className="text-2xl font-bold font-heading text-primary">
-                {fig.value}{fig.suffix && <span className="text-lg">{fig.suffix} EUR</span>}
+                {fig.value}{fig.suffix && <span className="text-lg">{fig.suffix === "%" ? "%" : `${fig.suffix} EUR`}</span>}
               </p>
               <p className="text-xs text-foreground-muted">{fig.label}</p>
             </div>
@@ -111,35 +133,27 @@ export default function TransitionEcologiquePage() {
         {/* Simulator embed */}
         <div className="reveal mb-10">
           <h2 className="font-heading text-xl font-bold text-foreground mb-4">
-            Simulateur de pre-dossier ADEME
+            {simulatorTitle}
           </h2>
           <p className="text-sm text-foreground-muted mb-4">
-            Estimez vos aides, calculez votre scoring et preparez votre candidature en 30 minutes.
-            Le simulateur couvre l&apos;electrique, le biocarburant, le dual-fuel et l&apos;optimisation operationnelle.
+            {simulatorDescription}
           </p>
           <div className="rounded-2xl border border-border-light overflow-hidden bg-background">
             <AdemeSimulator />
           </div>
           <p className="mt-2 text-xs text-foreground-muted text-center">
-            Simulateur heberge par GASPE · Donnees indicatives, ne se substituent pas a un conseil professionnel
+            {simulatorDisclaimer}
           </p>
         </div>
 
         {/* Technologies */}
         <div className="reveal mb-10">
           <h2 className="font-heading text-xl font-bold text-foreground mb-4">
-            Technologies de decarbonation
+            {technologiesTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { name: "Electrification complete", gain: "95%", trl: "TRL 9", desc: "Propulsion 100% electrique sur batteries LFP" },
-              { name: "Hybridation diesel-electrique", gain: "25%", trl: "TRL 9", desc: "Combinaison diesel et batteries pour les pics de puissance" },
-              { name: "HVO / FAME (biocarburant)", gain: "85%", trl: "TRL 9", desc: "Carburants biosources en drop-in ou conversion" },
-              { name: "Pile a combustible H2", gain: "90%", trl: "TRL 7", desc: "Hydrogene vert pour les navires hauturiers" },
-              { name: "Propulsion velique", gain: "10%", trl: "TRL 8", desc: "Assistance vile sur les traversees longues" },
-              { name: "Routage IA", gain: "15%", trl: "TRL 8", desc: "Optimisation maree et courant par intelligence artificielle" },
-            ].map((tech) => (
-              <Card key={tech.name}>
+            {technologies.map((tech, i) => (
+              <Card key={`${tech.name}-${i}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="teal">{tech.gain} CO2</Badge>
                   <Badge variant="neutral">{tech.trl}</Badge>
