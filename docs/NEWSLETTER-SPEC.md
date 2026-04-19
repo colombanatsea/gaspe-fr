@@ -420,20 +420,24 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 
 ## 8. Roadmap d'implémentation
 
-### Phase 1 : Foundation (3h)
-- [ ] Migration 0008_newsletter.sql (drafts, sends, events, templates)
-- [ ] Renderer HTML (lib `newsletter/render.ts`)
-- [ ] Templates de base : header, paragraph, button, footer
-- [ ] Endpoints Worker : `POST /drafts`, `GET /drafts/:id`, `PUT /drafts/:id`
+### Phase 1 : Foundation (3h) — ✅ **DONE (session 26)**
+- [x] Migration `workers/migrations/0008_newsletter.sql` (nl_drafts, nl_sends, nl_events, nl_templates)
+- [x] Renderer HTML charté GASPE (`src/lib/newsletter/render.ts`, table-based, inline CSS, Outlook-safe)
+- [x] 9 types de blocs : header, heading, paragraph, image, button, divider, columns, spacer, footer
+- [x] HTML sanitization (strip script/style/iframe, on* handlers, javascript: URLs)
+- [x] Variables `{{firstname}}` / `{{unsubscribe_url}}` / `{{webversion_url}}`
+- [x] Endpoints Worker drafts : `GET/POST /api/newsletter/drafts`, `GET/PUT/DELETE /api/newsletter/drafts/:id` (JWT+admin)
+- [x] Store dual-mode `src/lib/newsletter/drafts-store.ts` (localStorage ↔ D1)
+- [x] 12 tests renderer dans `src/lib/__tests__/newsletter-render.test.ts`
 
-### Phase 2 : Éditeur admin (5h)
-- [ ] Page `/admin/newsletter` (liste + CRUD brouillons)
-- [ ] Page `/admin/newsletter/:id/edit` (3 colonnes, drag-drop)
-- [ ] Composants `BlockEditor` par type (Header, Heading, Paragraph, Image, Button, Divider, Columns, Footer)
-- [ ] Aperçu iframe live
-- [ ] Sélecteur variables (`{{firstname}}`, etc.)
+### Phase 2 : Éditeur admin (5h) — ✅ **DONE (session 26)**
+- [x] Page `/admin/newsletter/drafts` (liste + CRUD brouillons)
+- [x] Page `/admin/newsletter/edit?id=…` (éditeur 3 colonnes + aperçu live)
+- [x] Composant `NewsletterBlockEditor` : add/reorder/remove/edit par type
+- [x] Aperçu iframe live desktop/mobile
+- [x] Sélecteur variables (`{{firstname}}`, etc.)
 
-### Phase 3 : Envoi production (3h)
+### Phase 3 : Envoi production (3h) — ⏸ bloqué par config Brevo
 - [ ] Endpoint `POST /api/newsletter/:id/test-send`
 - [ ] Endpoint `POST /api/newsletter/:id/send`
 - [ ] Personnalisation par destinataire

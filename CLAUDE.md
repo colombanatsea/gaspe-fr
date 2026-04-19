@@ -3,7 +3,7 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**105 pages** — deployed on Cloudflare Pages (static export)
+**109 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
@@ -13,9 +13,9 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 191 tests, 18 files)
+npm run test         # unit tests (Vitest, 203 tests, 19 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 4 warnings — async set-state-in-effect only)
+npm run lint         # ESLint (0 errors, 5 warnings — async set-state-in-effect only)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -30,8 +30,8 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ Secrets Worker configurés (JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL, HYDROS_*)
 - ✅ NEXT_PUBLIC_API_URL set sur CF Pages → mode API actif
 - ✅ CF_CONFIGURED=true (GitHub repo var) → workflow deploy-worker actif
-- ✅ Migrations D1 appliquées : 0001-0006 (vérifié via /api/organizations renvoyant 31 orgs)
-- ⏳ Migration 0007 (org_archived) à appliquer au merge de v2.12.0 sur main
+- ✅ Migrations D1 appliquées : 0001-0007 (dont 0007 org_archived appliquée via deploy-worker `--remote`)
+- ⏳ Migration 0008 (newsletter v2 : nl_drafts, nl_sends, nl_events, nl_templates) appliquée automatiquement au merge session 26 sur main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -184,11 +184,12 @@ src/
 │   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
-│   └── __tests__/         # Unit tests (191 tests, 18 files)
+│   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
+│   └── __tests__/         # Unit tests (203 tests, 19 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 38 endpoints
+├── api.ts                 # CF Worker: 44 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
@@ -196,9 +197,10 @@ workers/
     ├── 0002_password_reset.sql  # Password reset tokens
     ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
     ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
-    └── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
-    └── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
-    └── 0007_org_archived.sql             # Organization archived flag + index
+    ├── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
+    ├── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
+    ├── 0007_org_archived.sql             # Organization archived flag + index
+    └── 0008_newsletter.sql               # Newsletter v2 — drafts, sends, events, templates
 ```
 
 ## Worker API — 44 endpoints
@@ -245,12 +247,12 @@ workers/
 | /api/media/:id | DELETE | JWT+admin |
 | /api/enm/import | POST | JWT |
 
-## Database (D1 — 17 tables, migration 0008 applied session 26)
+## Database (D1 — 17 tables, migrations 0001-0008 applied)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary |
 | `auth` | PBKDF2 password hashes |
-| `organizations` | 31 GASPE member companies (seeded from members.ts) |
+| `organizations` | 31 GASPE member companies (seeded from members.ts) + archived flag |
 | `newsletter_preferences` | 10 boolean columns per user |
 | `invitations` | Team member invitations (token, 7-day expiry) |
 | `password_reset_tokens` | Reset tokens (1h expiry, single-use) |
@@ -261,9 +263,13 @@ workers/
 | `jobs` | Job offers (admin + adherent created) |
 | `medical_visits` | Sailor medical visit tracking (per-user) |
 | `media_files` | Media file metadata (actual files in R2) |
+| `nl_drafts` | Newsletter v2 drafts (blocks JSON + subject + status) |
+| `nl_sends` | Newsletter v2 send history (draft_id, recipients count, stats) |
+| `nl_events` | Newsletter v2 tracking events (open/click/bounce/unsub from Brevo webhook) |
+| `nl_templates` | Newsletter v2 pre-configured block templates |
 
 ## Testing
-- **Unit tests**: Vitest — 191 tests, 18 spec files
+- **Unit tests**: Vitest — 203 tests, 19 spec files
 - **E2E tests**: Playwright — 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
