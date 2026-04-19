@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
+import { parseList } from "@/lib/stats-placeholders";
 
 const D = (s: string) => getCmsDefault("homepage", s);
 
@@ -41,15 +42,6 @@ const STAT_ICONS: Record<string, React.ReactElement> = {
 };
 
 interface StatItem { value: string; label: string; iconKey: string }
-
-function parseList<T>(json: string): T[] {
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
 
 /** Parse "27", "1 494", "25M", "6,9M" into numeric + suffix */
 function parseNumeric(raw: string): { num: number; suffix: string; isInt: boolean } {
@@ -113,7 +105,6 @@ export function StatsSection() {
   const subtitle = useCmsContent("homepage", "stats-subtitle", D("stats-subtitle"));
   const statsJson = useCmsContent("homepage", "stats-items", D("stats-items"));
   const stats = parseList<StatItem>(statsJson);
-  const gridCols = stats.length === 6 ? "lg:grid-cols-6" : "lg:grid-cols-5";
 
   return (
     <section className="relative bg-background py-20 overflow-hidden" ref={containerRef}>
@@ -138,14 +129,19 @@ export function StatsSection() {
           )}
         </div>
 
-        <div className={`grid grid-cols-2 gap-4 sm:grid-cols-3 ${gridCols}`}>
+        {/*
+          Flex-wrap + largeur fixe par tuile → la dernière rangée se centre
+          automatiquement quand le nombre de stats n'est pas divisible par le
+          nb de colonnes (ex : 5 tuiles sur 3 cols → 3 + 2 centrés).
+        */}
+        <div className="flex flex-wrap justify-center gap-4">
           {stats.map((stat, i) => {
             const { num, suffix, isInt } = parseNumeric(stat.value);
             const icon = STAT_ICONS[stat.iconKey] ?? STAT_ICONS.ship;
             return (
               <div
                 key={`${stat.label}-${i}`}
-                className={`reveal-scale stagger-${i + 1} group relative rounded-2xl bg-white p-6 text-center gaspe-card-hover border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)]`}
+                className={`reveal-scale stagger-${i + 1} group relative rounded-2xl bg-white p-6 text-center gaspe-card-hover border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)] min-w-[160px]`}
               >
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] group-hover:bg-[var(--gaspe-teal-600)] group-hover:text-white transition-colors duration-300">
                   {icon}

@@ -1,29 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { members } from "@/data/members";
+import { compagnies, memberStats } from "@/data/members";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+import { interpolateStats } from "@/lib/stats-placeholders";
+
+const D = (s: string) => getCmsDefault("homepage", s);
 
 export function MapPreview() {
   const ref = useScrollReveal();
-  const metroMembers = members.filter((m) => m.territory === "metropole");
-  const domTomMembers = members.filter((m) => m.territory === "dom-tom");
+  // Compagnies (hors experts) pour les tuiles hexagone / outre-mer.
+  const metroCompanies = memberStats.compagniesHexagone;
+  const domTomCompanies = memberStats.compagniesOutreMer;
+  const regions = memberStats.regions;
 
-  const regions = [...new Set(members.map((m) => m.region))];
+  const mapEyebrow = useCmsContent("homepage", "map-eyebrow", D("map-eyebrow"));
+  const mapTitle = useCmsContent("homepage", "map-title", D("map-title"));
+  const mapSubtitleTmpl = useCmsContent("homepage", "map-subtitle-template", D("map-subtitle-template"));
 
   return (
     <section ref={ref} className="py-20 bg-surface">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="reveal text-center mb-12">
           <p className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gaspe-teal-600)] mb-3">
-            Maillage territorial
+            {mapEyebrow}
           </p>
           <h2 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">
-            Nos adhérents sur le territoire
+            {mapTitle}
           </h2>
           <p className="mt-3 text-foreground-muted max-w-xl mx-auto">
-            {members.length} armateurs assurent les liaisons maritimes de service
-            public en métropole et outre-mer.
+            {interpolateStats(`${compagnies.length} ${mapSubtitleTmpl}`)}
           </p>
         </div>
 
@@ -46,7 +54,7 @@ export function MapPreview() {
                 </span>
               </div>
               <p className="font-heading text-5xl font-bold text-[var(--gaspe-teal-600)]">
-                {metroMembers.length}
+                {metroCompanies}
               </p>
               <p className="mt-1 text-sm text-foreground-muted">
                 compagnies maritimes
@@ -66,7 +74,7 @@ export function MapPreview() {
                 </span>
               </div>
               <p className="font-heading text-5xl font-bold text-[var(--gaspe-blue-600)]">
-                {domTomMembers.length}
+                {domTomCompanies}
               </p>
               <p className="mt-1 text-sm text-foreground-muted">
                 compagnies maritimes
@@ -82,7 +90,7 @@ export function MapPreview() {
                   </svg>
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                  {regions.length} régions
+                  {regions} régions
                 </span>
               </div>
               <p className="font-heading text-lg font-semibold mb-3">

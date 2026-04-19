@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
+import { interpolateStats } from "@/lib/stats-placeholders";
+import { memberStats } from "@/data/members";
 
 const D = (s: string) => getCmsDefault("nos-compagnies-recrutent", s);
 
@@ -17,7 +19,13 @@ interface RecruitHeroProps {
 
 export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
   const ref = useScrollReveal();
-  const heroSubtitle = useCmsContent("nos-compagnies-recrutent", "hero-subtitle", D("hero-subtitle"));
+  const heroEyebrow = useCmsContent("nos-compagnies-recrutent", "hero-eyebrow", D("hero-eyebrow"));
+  const heroTitleBefore = useCmsContent("nos-compagnies-recrutent", "hero-title-before", D("hero-title-before"));
+  const heroTitleHighlight = useCmsContent("nos-compagnies-recrutent", "hero-title-highlight", D("hero-title-highlight"));
+  const heroSubtitle = interpolateStats(useCmsContent("nos-compagnies-recrutent", "hero-subtitle", D("hero-subtitle")));
+  // Priorité : si le compteur explicite (offres actives publiées par compagnies) est 0,
+  // on affiche le chiffre statique des compagnies adhérentes pour ne pas afficher "0".
+  const companiesValue = totalCompanies > 0 ? totalCompanies : memberStats.compagnies;
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
@@ -62,13 +70,13 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
           <div className="reveal stagger-1 flex items-center gap-3 mb-4">
             <div className="h-px w-12 gaspe-gradient-animated rounded-full" />
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.25em] text-[var(--gaspe-teal-400)]">
-              Offres d&apos;emploi
+              {heroEyebrow}
             </p>
           </div>
 
           <h1 className="reveal stagger-2 font-heading text-3xl font-bold text-white sm:text-4xl lg:text-5xl leading-[1.1]">
-            Rejoignez le{" "}
-            <span className="gaspe-gradient-text">service public maritime</span>
+            {heroTitleBefore}{" "}
+            <span className="gaspe-gradient-text">{heroTitleHighlight}</span>
           </h1>
 
           <p className="reveal stagger-3 mt-5 text-lg text-white/60 leading-relaxed max-w-xl">
@@ -95,8 +103,10 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
                 </svg>
               </div>
               <div>
-                <p className="font-heading text-2xl font-bold text-white">{totalCompanies}</p>
-                <p className="text-xs text-white/50">compagnies qui recrutent</p>
+                <p className="font-heading text-2xl font-bold text-white">{companiesValue}</p>
+                <p className="text-xs text-white/50">
+                  {totalCompanies > 0 ? "compagnies qui recrutent" : "compagnies adhérentes"}
+                </p>
               </div>
             </div>
           </div>

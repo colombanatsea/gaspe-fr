@@ -4,24 +4,16 @@ import { Button } from "@/components/ui/Button";
 import { useCmsContent } from "@/lib/use-cms";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { getCmsDefault } from "@/data/cms-defaults";
+import { interpolateStats, parseList } from "@/lib/stats-placeholders";
 
 const D = (s: string) => getCmsDefault("homepage", s);
 
 interface QuickStat { value: string; label: string }
 
-function parseList<T>(json: string): T[] {
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 export function HeroSection() {
   const heroEyebrow = useCmsContent("homepage", "hero-eyebrow", D("hero-eyebrow"));
   const heroTitle = useCmsContent("homepage", "hero-title", D("hero-title"));
-  const heroSubtitle = useCmsContent("homepage", "hero-subtitle", D("hero-subtitle"));
+  const heroSubtitle = interpolateStats(useCmsContent("homepage", "hero-subtitle", D("hero-subtitle")));
   const heroBaseline = useCmsContent("homepage", "hero-baseline", D("hero-baseline"));
   const cta1Label = useCmsContent("homepage", "hero-cta1-label", D("hero-cta1-label"));
   const cta1Link = useCmsContent("homepage", "hero-cta1-link", D("hero-cta1-link"));

@@ -10,18 +10,11 @@ import { MemberLogo } from "@/components/shared/MemberLogo";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { parseList } from "@/lib/stats-placeholders";
+import { memberStats } from "@/data/members";
 
 const PAGE_ID = "notre-groupement";
 const D = (sectionId: string) => getCmsDefault(PAGE_ID, sectionId);
-
-function parseList<T>(json: string): T[] {
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
 
 // Icon mapping for engagements (by color key)
 const ENGAGEMENT_ICONS: Record<string, { icon: React.ReactElement; color: string; bgColor: string }> = {
@@ -45,7 +38,7 @@ const ENGAGEMENT_ICONS: Record<string, { icon: React.ReactElement; color: string
 
 interface TimelineItem { year: string; title: string; description: string }
 interface EngagementItem { title: string; description: string; color: string }
-interface BureauMember { name: string; role: string; company: string; href: string }
+interface BureauMember { name: string; role: string; company: string; href: string; photoUrl?: string }
 
 export function GroupementContent() {
   const ref = useScrollReveal();
@@ -98,10 +91,11 @@ export function GroupementContent() {
               {adherentsEyebrow}
             </p>
             <h2 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-              {members.length} {adherentsTitle}
+              {/* Préfère la source statique membres.ts pour ne pas flasher à 0 puis N au chargement API */}
+              {Math.max(members.length, memberStats.adherents)} {adherentsTitle}
             </h2>
             <p className="mt-3 text-foreground-muted max-w-2xl mx-auto">
-              {titulaires.length} membres titulaires et {associes.length} {adherentsSubtitleTmpl}
+              {memberStats.titulaires} membres titulaires et {memberStats.associes} {adherentsSubtitleTmpl}
             </p>
           </div>
 
@@ -256,7 +250,7 @@ export function GroupementContent() {
                   />
                   <div className="mt-8 grid grid-cols-2 gap-4">
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
-                      <p className="font-heading text-2xl font-bold">27</p>
+                      <p className="font-heading text-2xl font-bold">{memberStats.compagnies}</p>
                       <p className="text-xs text-white/70">Compagnies</p>
                     </div>
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
@@ -336,11 +330,21 @@ export function GroupementContent() {
               >
                 <div className="absolute top-0 left-0 right-0 h-1 gaspe-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gaspe-teal-50)] to-[var(--gaspe-blue-50)] border border-[var(--gaspe-neutral-200)]">
-                    <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">
-                      {member.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                    </span>
-                  </div>
+                  {/* Avatar : photo si fournie via CMS, sinon initiales */}
+                  {member.photoUrl && member.photoUrl.trim() ? (
+                    <img
+                      src={member.photoUrl}
+                      alt={`Photo de ${member.name}`}
+                      loading="lazy"
+                      className="h-12 w-12 shrink-0 rounded-full object-cover border border-[var(--gaspe-neutral-200)]"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gaspe-teal-50)] to-[var(--gaspe-blue-50)] border border-[var(--gaspe-neutral-200)]">
+                      <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">
+                        {member.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <p className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors">
                       {member.name}
@@ -361,8 +365,8 @@ export function GroupementContent() {
         </div>
       </section>
 
-      {/* Sources */}
-      <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8">
+      {/* Sources — espacement aéré au-dessus pour détacher du bloc Bureau */}
+      <section className="mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-8 sm:pt-12">
         <CollapsibleSources>
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
             <li>Statuts du GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondee en 1951</li>

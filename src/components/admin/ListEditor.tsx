@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { RichTextEditor } from "./RichTextEditor";
+import { MediaLibrary } from "./MediaLibrary";
+import { isApiMode } from "@/lib/api-client";
+import type { MediaItem, ApiMediaItem } from "@/lib/cms-store";
 
-type FieldType = "text" | "richtext" | "url";
+type FieldType = "text" | "richtext" | "url" | "image";
 
 interface ListField {
   id: string;
@@ -42,6 +45,7 @@ function emptyItem(fields: ListField[]): Item {
 
 export function ListEditor({ value, onChange, fields }: ListEditorProps) {
   const items = useMemo(() => parseItems(value, fields), [value, fields]);
+  const [mediaTarget, setMediaTarget] = useState<{ index: number; fieldId: string } | null>(null);
 
   function update(next: Item[]) {
     onChange(JSON.stringify(next));
@@ -52,6 +56,19 @@ export function ListEditor({ value, onChange, fields }: ListEditorProps) {
       i === index ? { ...item, [fieldId]: fieldValue } : item
     );
     update(next);
+  }
+
+  function handleMediaSelect(media: MediaItem | ApiMediaItem) {
+    if (!mediaTarget) return;
+    // localStorage : base64 data URL ; API/R2 : URL publique /api/media/raw/:key.
+    const apiBase = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_API_URL ?? "") : "";
+    const url = "data" in media
+      ? media.data
+      : isApiMode() && apiBase
+        ? `${apiBase}/api/media/raw/${(media as ApiMediaItem).r2Key}`
+        : "";
+    if (url) updateItem(mediaTarget.index, mediaTarget.fieldId, url);
+    setMediaTarget(null);
   }
 
   function addItem() {
@@ -135,6 +152,46 @@ export function ListEditor({ value, onChange, fields }: ListEditorProps) {
                     onChange={(html) => updateItem(index, field.id, html)}
                     minHeight={100}
                   />
+                ) : field.type === "image" ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3">
+                      {item[field.id] && (
+                        <img
+                          src={item[field.id]}
+                          alt="Aperçu"
+                          loading="lazy"
+                          className="h-16 w-16 shrink-0 rounded-lg object-cover border border-[var(--gaspe-neutral-200)]"
+                        />
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="url"
+                          value={item[field.id] || ""}
+                          onChange={(e) => updateItem(index, field.id, e.target.value)}
+                          placeholder="URL de l'image ou /assets/…"
+                          className="w-full rounded-lg border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+                        />
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setMediaTarget({ index, fieldId: field.id })}
+                            className="text-xs font-medium text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] underline"
+                          >
+                            Choisir depuis la bibliothèque
+                          </button>
+                          {item[field.id] && (
+                            <button
+                              type="button"
+                              onClick={() => updateItem(index, field.id, "")}
+                              className="text-xs text-red-600 hover:text-red-700 underline"
+                            >
+                              Retirer
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <input
                     type={field.type === "url" ? "url" : "text"}
@@ -157,6 +214,12 @@ export function ListEditor({ value, onChange, fields }: ListEditorProps) {
       >
         + Ajouter un élément
       </button>
+
+      <MediaLibrary
+        open={mediaTarget !== null}
+        onClose={() => setMediaTarget(null)}
+        onSelect={handleMediaSelect}
+      />
     </div>
   );
 }
