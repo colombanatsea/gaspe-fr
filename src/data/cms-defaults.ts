@@ -14,27 +14,30 @@
 
 export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
   homepage: {
-    "hero-eyebrow": "Groupement des Armateurs de Services Publics",
-    "hero-title": "Fédérer et représenter <span class=\"gaspe-gradient-text\">les compagnies maritimes</span> de proximité",
-    "hero-subtitle": "Le GASPE regroupe les armateurs assurant des missions de service public de transport de passagers sur les lignes côtières nationales.",
-    "hero-baseline": "Localement ancrés. Socialement engagés.",
+    "hero-eyebrow": "Organisation Patronale Représentative",
+    "hero-title": "Fédérer et représenter <span class=\"gaspe-gradient-text\">les compagnies maritimes</span> côtières françaises",
+    "hero-subtitle": "Le GASPE regroupe les armateurs assurant des missions de service public de transport de passagers sur les lignes côtières nationales, des excursions touristiques, du transport de fret et des services maritimes côtiers.",
+    "hero-baseline": "D'un littoral à l'autre. Localement ancrés. Socialement engagés.",
     "hero-cta1-label": "En savoir plus",
     "hero-cta1-link": "/notre-groupement",
     "hero-cta2-label": "Nos compagnies recrutent",
     "hero-cta2-link": "/nos-compagnies-recrutent",
+    // Les placeholders `{adherents}` et `{navires}` sont remplacés au rendu
+    // par les valeurs calculées depuis `src/data/members.ts`.
     "hero-quick-stats": JSON.stringify([
-      { value: "27", label: "Compagnies adhérentes" },
-      { value: "1 494", label: "Marins français" },
-      { value: "25M", label: "Passagers / an" },
+      { value: "{adherents}", label: "Adhérents" },
+      { value: "{navires}", label: "Navires" },
+      { value: "25M+", label: "Passagers" },
     ]),
-    "stats-eyebrow": "Les chiffres 2024",
+    "stats-eyebrow": "Des chiffres qui parlent",
     "stats-title": "Le GASPE en chiffres",
     "stats-subtitle": "Un écosystème maritime de proximité qui rayonne sur tout le littoral français.",
+    // Mêmes sources que le hero pour navires/passagers → cohérence visuelle.
     "stats-items": JSON.stringify([
-      { value: "27", label: "Compagnies adhérentes", iconKey: "ship" },
+      { value: "{adherents}", label: "Adhérents", iconKey: "ship" },
       { value: "1 494", label: "Marins français", iconKey: "users" },
-      { value: "155", label: "Navires sous pavillon français", iconKey: "anchor" },
-      { value: "25M", label: "Passagers par an", iconKey: "passengers" },
+      { value: "{navires}", label: "Navires", iconKey: "anchor" },
+      { value: "25M+", label: "Passagers / an", iconKey: "passengers" },
       { value: "6,9M", label: "Véhicules transportés", iconKey: "car" },
     ]),
     "news-eyebrow": "Positions & Actualités",
@@ -66,29 +69,33 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
         colorKey: "teal",
       },
     ]),
-    "cta-title": "Rejoignez le service public maritime",
+    "cta-title": "Rejoignez les armateurs côtiers",
     "cta-description": "<p>Nos compagnies recrutent des profils variés : officiers, matelots, mécaniciens, personnels à terre. Découvrez les opportunités.</p>",
+    // Map / territoire (utilisé par MapPreview)
+    "map-eyebrow": "Maillage territorial",
+    "map-title": "Nos adhérents sur le territoire",
+    "map-subtitle-template": "armateurs assurent la continuité territoriale et contribuent au développement économique dans l'hexagone et en outre-mer.",
   },
 
   "notre-groupement": {
     "page-header-title": "Notre Groupement",
-    "page-header-description": "Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entité collaborative qui regroupe des membres engagés dans les services maritimes.",
+    "page-header-description": "Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une organisation patronale représentative qui regroupe des membres engagés dans la défense du secteur maritime côtier et les services publics maritimes.",
 
     // Section 1: Nos adhérents
     "adherents-eyebrow": "Nos adhérents",
-    "adherents-title": "compagnies maritimes réunies",
+    "adherents-title": "adhérents maritimes réunis",
     "adherents-subtitle-template": "membres titulaires et membres associés et experts au service du transport maritime de proximité.",
 
     // Section 2: Timeline
     "timeline-badge": "Depuis 1951",
     "timeline-title": "75 ans de soutien et d'innovation",
-    "timeline-intro": "<p>Depuis 1951, nous nous adaptons aux besoins de la société et aux progrès technologiques, permettant d'assurer une liaison fiable et sécurisée entre les diverses zones côtières et fluviales.</p>",
+    "timeline-intro": "<p>Depuis 1951, nous nous adaptons aux besoins de la société et aux progrès technologiques, permettant d'assurer une liaison fiable et sécurisée entre les diverses zones côtières et estuariennes.</p>",
 
     // Section 3: Mission
     "mission-eyebrow": "Notre raison d'être",
     "mission-title": "Notre mission de service public",
-    "mission-description": "<p>Fournir un transport maritime sécurisé, fiable et accessible, tout en contribuant au développement économique et en respectant les normes environnementales.</p>",
-    "mission-bullets": "<ul><li>Garantir des services de transport sûrs et fiables</li><li>Maintenir une flotte de navires en bon état et opérationnelle</li><li>Assurer des services réguliers et fiables</li><li>Proposer des tarifs raisonnables et accessibles</li></ul>",
+    "mission-description": "<p>Fournir un transport maritime sécurisé, fiable et accessible, tout en contribuant au développement économique et en respectant les normes sociales et environnementales.</p>",
+    "mission-bullets": "<ul><li>Garantir des services de transport sûrs et fiables</li><li>Maintenir une flotte de navires en bon état et opérationnelle</li><li>Assurer des services réguliers et fiables</li><li>Assurer la continuité territoriale</li></ul>",
     "mission-stat-years": "75",
     "mission-stat-label": "ans d'engagement",
     "mission-stat-description": "<p>Au service du transport maritime public français, le GASPE accompagne les armateurs dans leurs missions essentielles de continuité territoriale.</p>",
@@ -118,20 +125,20 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
       { title: "Gestion des Risques", description: "Plans de gestion des risques, continuité des opérations.", color: "blue" },
     ]),
     "bureau-members": JSON.stringify([
-      { name: "Baudouin PAPPENS", role: "Président", company: "Compagnie Yeu Continent", href: "https://www.linkedin.com/in/baudouin-pappens/" },
-      { name: "Guillaume du FONTENIOUX", role: "Vice-président", company: "Compagnie des Bacs de Loire", href: "https://www.linkedin.com/in/guillaume-du-fontenioux/" },
-      { name: "Marc L'Alexandre", role: "Vice-président", company: "Groupe LHD", href: "https://www.linkedin.com/in/marc-l-alexandre/" },
-      { name: "Nelly DEPARDIEU", role: "Secrétaire", company: "Manche Iles Express", href: "https://www.linkedin.com/in/nelly-depardieu/" },
-      { name: "Franck LAUSSEL", role: "Secrétaire adjoint", company: "", href: "https://www.linkedin.com/in/franck-laussel/" },
-      { name: "Thomas CREPY", role: "Trésorier", company: "Compagnie Océane", href: "https://www.linkedin.com/in/thomas-crepy/" },
-      { name: "Colomban Monnier", role: "Délégué Général", company: "Président de la Fondation ENSM", href: "https://colombanatsea.com" },
+      { name: "Baudouin PAPPENS", role: "Président", company: "Compagnie Yeu Continent", href: "https://www.linkedin.com/in/baudouin-pappens/", photoUrl: "" },
+      { name: "Guillaume du FONTENIOUX", role: "Vice-président", company: "Compagnie des Bacs de Loire", href: "https://www.linkedin.com/in/guillaume-du-fontenioux/", photoUrl: "" },
+      { name: "Marc L'Alexandre", role: "Vice-président", company: "Groupe LHD", href: "https://www.linkedin.com/in/marc-l-alexandre/", photoUrl: "" },
+      { name: "Nelly DEPARDIEU", role: "Secrétaire", company: "Manche Iles Express", href: "https://www.linkedin.com/in/nelly-depardieu/", photoUrl: "" },
+      { name: "Franck LAUSSEL", role: "Secrétaire adjoint", company: "", href: "https://www.linkedin.com/in/franck-laussel/", photoUrl: "" },
+      { name: "Thomas CREPY", role: "Trésorier", company: "Compagnie Océane", href: "https://www.linkedin.com/in/thomas-crepy/", photoUrl: "" },
+      { name: "Colomban Monnier", role: "Délégué Général", company: "Président de la Fondation ENSM", href: "https://colombanatsea.com", photoUrl: "" },
     ]),
   },
 
   contact: {
     "page-header-title": "Contact",
     "page-header-description": "Une question ? N'hésitez pas à nous contacter.",
-    address: "<p><strong>Adresse</strong></p><p>Maison de la Mer — Daniel Gilard</p><p>Quai de la Fosse</p><p>44 000 Nantes</p>",
+    address: "<p><strong>Adresse</strong></p><p>Maison de la Mer – Daniel Gilard</p><p>Quai de la Fosse</p><p>44 000 Nantes</p>",
     email: "contact@gaspe.fr",
     "sidebar-info": "<p>Le GASPE fédère les armateurs de services publics maritimes et accompagne la profession dans ses défis quotidiens.</p>",
     "form-subjects": JSON.stringify([
@@ -180,13 +187,15 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
   "nos-compagnies-recrutent": {
     "page-header-title": "Nos Compagnies Recrutent",
     "page-header-description": "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
-    "hero-title": "Nos compagnies recrutent",
+    "hero-eyebrow": "Offres d'emploi",
+    "hero-title-before": "Rejoignez la",
+    "hero-title-highlight": "navigation côtière",
     "hero-subtitle": "Rejoignez le service public maritime : officiers, matelots, mécaniciens, personnels à terre.",
     "filters-heading": "Filtres",
     "quick-stats": JSON.stringify([
       { value: "1 494", label: "Collaborateurs" },
-      { value: "155", label: "Navires" },
-      { value: "27", label: "Compagnies" },
+      { value: "165", label: "Navires" },
+      { value: "31", label: "Adhérents" },
     ]),
   },
 
@@ -201,7 +210,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
 
   ssgm: {
     "page-header-title": "SSGM & Médecins Agréés",
-    "page-header-description": "Services de Santé des Gens de Mer — visites d'aptitude, suivi médical et certificats STCW.",
+    "page-header-description": "Services de Santé des Gens de Mer – visites d'aptitude, suivi médical et certificats STCW.",
     "intro-title": "Services de Santé des Gens de Mer",
     "intro-paragraph1": "<p>Les SSGM sont les services de santé dédiés aux gens de mer. Ils assurent les visites médicales d'aptitude à la navigation, le suivi médical des marins et la délivrance des certificats médicaux requis par la réglementation maritime (STCW, Code du travail maritime).</p>",
     "intro-paragraph2": "<p>Tout marin professionnel doit passer une visite médicale d'aptitude avant son embarquement, puis un renouvellement tous les 2 ans (annuel pour certaines catégories).</p>",
@@ -237,7 +246,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
 
   "boite-a-outils": {
     "page-header-title": "Boîte à outils CCN 3228",
-    "page-header-description": "Convention Collective Nationale du personnel navigant des passages d'eau — grilles salariales, classifications, congés, régime ENIM et simulateur.",
+    "page-header-description": "Convention Collective Nationale du personnel navigant des passages d'eau – grilles salariales, classifications, congés, régime ENIM et simulateur.",
     "disclaimer": "<p>Les informations présentées ici sont fournies à titre indicatif. En cas de doute, consultez la <a href=\"https://www.legifrance.gouv.fr\">CCN 3228 officielle sur Legifrance</a>.</p>",
   },
 
@@ -275,7 +284,8 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
 
   footer: {
     "newsletter-title": "Restez informé des actualités maritimes",
-    "newsletter-cta": "Positions, événements, offres d'emploi — directement dans votre boîte mail.",
+    // Tiret semi-quadratique (–) et non tiret quadratique (—) : règle typo GASPE.
+    "newsletter-cta": "Positions, événements, offres d'emploi – directement dans votre boîte mail.",
     "social-linkedin": "https://www.linkedin.com/company/gaspe-groupement-des-armateurs-de-services-publics-maritimes/",
     "contact-email": "contact@gaspe.fr",
   },

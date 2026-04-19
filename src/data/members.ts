@@ -326,6 +326,7 @@ export const members: Member[] = [
     region: "Île-de-France",
     territory: "metropole",
     category: "associe",
+    memberType: "expert",
     description: "Capstan Avocats est un cabinet d'avocats spécialisé en droit social et maritime, au service du secteur maritime.",
     logoUrl: "/assets/logos/image12.png",
   },
@@ -365,6 +366,7 @@ export const members: Member[] = [
     region: "Nouvelle-Aquitaine",
     territory: "metropole",
     category: "associe",
+    memberType: "expert",
     description: "Filhet Allard Maritime est un courtier en assurances maritimes au service du secteur maritime, basé à Mérignac.",
     logoUrl: "/assets/logos/LOGO-FAM.png",
   },
@@ -377,6 +379,7 @@ export const members: Member[] = [
     region: "Pays de la Loire",
     territory: "metropole",
     category: "associe",
+    memberType: "expert",
     description: "Howden est un courtier en assurances et réassurance au service du secteur maritime, basé à Nantes.",
     logoUrl: "/assets/logos/Howden.png",
     websiteUrl: "https://www.howdengroup.com/fr-fr",
@@ -430,6 +433,7 @@ export const members: Member[] = [
     region: "Pays de la Loire",
     territory: "metropole",
     category: "associe",
+    memberType: "expert",
     description: "Le Syndicat Professionnel Lamanage des ports de la Manche et de l'Atlantique (SPLMNA) est un syndicat professionnel des lamaneurs au service du secteur maritime.",
     logoUrl: "/assets/logos/image2.png",
     websiteUrl: "https://lamanage-syndicatpro.fr/",
@@ -457,3 +461,41 @@ export const titulaires = members.filter((m) => m.category === "titulaire");
 
 /** Helper: associés & experts only */
 export const associes = members.filter((m) => m.category === "associe");
+
+/** Experts = associés non-compagnies (avocats, courtiers, syndicats…) */
+export const experts = members.filter((m) => m.memberType === "expert");
+
+/** Compagnies = titulaires + associés compagnies (par défaut toute titulaire, ou memberType explicite) */
+export const compagnies = members.filter((m) => m.memberType !== "expert");
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Compteurs dérivés — utilisés partout sur le site pour rester
+ * cohérents quand on ajoute/retire/modifie un adhérent.
+ * ═══════════════════════════════════════════════════════════════════
+ */
+export const memberStats = {
+  /** Total adhérents : titulaires + associés (compagnies et experts) */
+  adherents: members.length,
+  /** Compagnies uniquement (pour "X compagnies maritimes réunies") */
+  compagnies: compagnies.length,
+  /** Titulaires de droit (membres votants) */
+  titulaires: titulaires.length,
+  /** Associés (compagnies associées + experts) */
+  associes: associes.length,
+  /** Experts (partenaires métier sans flotte) */
+  experts: experts.length,
+  /** Compagnies en métropole (pour la tuile "X dans l'hexagone") */
+  compagniesHexagone: compagnies.filter((m) => m.territory === "metropole").length,
+  /** Compagnies en outre-mer */
+  compagniesOutreMer: compagnies.filter((m) => m.territory === "dom-tom").length,
+  /** Total adhérents en métropole (toutes catégories) */
+  adherentsHexagone: members.filter((m) => m.territory === "metropole").length,
+  /** Total adhérents en outre-mer */
+  adherentsOutreMer: members.filter((m) => m.territory === "dom-tom").length,
+  /** Nombre de régions distinctes */
+  regions: new Set(members.map((m) => m.region)).size,
+  /** Somme des navires déclarés (compagnies uniquement) */
+  totalShips: compagnies.reduce((sum, m) => sum + (m.shipCount ?? 0), 0),
+  /** Somme des effectifs déclarés (compagnies uniquement) */
+  totalEmployees: compagnies.reduce((sum, m) => sum + (m.employeeCount ?? 0), 0),
+} as const;

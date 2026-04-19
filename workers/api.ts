@@ -448,7 +448,18 @@ export default {
         return handleNlDraftsDelete(request, env, corsHeaders, decodeURIComponent(id));
       }
 
+      // ── Newsletter subscribers (admin) ──
+      if (path === "/api/newsletter/subscribers" && request.method === "GET") {
+        return handleNewsletterSubscribers(request, env, corsHeaders);
+      }
+
       // ── Media Files ──
+      // Public raw fetch : sert un blob R2 directement (pour afficher photos bureau, etc.).
+      // Le key R2 peut contenir des slashes (ex: "media/uuid-file.jpg") donc on prend tout ce qui suit.
+      if (path.startsWith("/api/media/raw/") && request.method === "GET") {
+        const r2Key = decodeURIComponent(path.slice("/api/media/raw/".length));
+        return handleMediaRaw(env, corsHeaders, r2Key);
+      }
       if (path === "/api/media" && request.method === "GET") {
         return handleMediaList(request, env, corsHeaders);
       }
@@ -1264,6 +1275,66 @@ async function handleContact(request: Request, env: Env, corsHeaders: Record<str
 // ═══════════════════════════════════════════════════════════
 //  Newsletter subscription
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * Admin only — renvoie la liste complète des abonnés newsletter avec
+ *   - le détail par catégorie (10 booleans de `newsletter_preferences`)
+ *   - les inscrits "legacy" (email seul, table `newsletter`) ajoutés via le formulaire public
+ *
+ * Utilisé par `/admin/newsletter/abonnes` pour permettre à la GASPE de voir
+ * dynamiquement qui est abonné à quelle catégorie, avec filtrage et export CSV.
+ */
+async function handleNewsletterSubscribers(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const admin = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first<{ role: string }>();
+  if (!admin || admin.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
+
+  // Users + préférences jointes (null si l'utilisateur n'a jamais configuré ses préférences)
+  let users: Array<Record<string, unknown>> = [];
+  try {
+    const { results } = await env.DB.prepare(`
+      SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.status,
+             p.informations_generales, p.ag, p.emploi, p.formation, p.veille_juridique,
+             p.veille_sociale, p.veille_surete_securite, p.veille_data,
+             p.veille_environnement, p.actualites
+      FROM users u
+      LEFT JOIN newsletter_preferences p ON p.user_id = u.id
+      WHERE u.status = 'approved'
+      ORDER BY u.created_at DESC
+    `).all();
+    users = results ?? [];
+  } catch { /* tables may not exist in fresh deployment */ }
+
+  let legacy: Array<{ email: string; subscribed_at?: string }> = [];
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT email, subscribed_at FROM newsletter ORDER BY subscribed_at DESC"
+    ).all<{ email: string; subscribed_at?: string }>();
+    legacy = results ?? [];
+  } catch { /* legacy table may be empty */ }
+
+  // Comptage par catégorie pour donner un aperçu rapide côté UI
+  const categoryKeys = [
+    "informations_generales", "ag", "emploi", "formation",
+    "veille_juridique", "veille_sociale", "veille_surete_securite",
+    "veille_data", "veille_environnement", "actualites",
+  ] as const;
+  const counts: Record<string, number> = {};
+  for (const key of categoryKeys) {
+    counts[key] = users.filter((u) => u[key] === 1).length;
+  }
+
+  return json({
+    users,
+    legacy,
+    counts,
+    totalUsers: users.length,
+    totalLegacy: legacy.length,
+  }, corsHeaders);
+}
 
 async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const body = await request.json() as Record<string, string>;
@@ -2334,6 +2405,27 @@ async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record
   await env.DB.prepare("DELETE FROM media_files WHERE id = ?").bind(mediaId).run();
 
   return json({ success: true }, corsHeaders);
+}
+
+/**
+ * Public raw media serving — GET /api/media/raw/:r2Key
+ * Pas d'auth : les images uploadées via CMS sont destinées à être affichées
+ * publiquement (photos bureau, illustrations de pages, etc.).
+ * Clé R2 nettoyée pour n'accepter que les préfixes connus.
+ */
+async function handleMediaRaw(env: Env, corsHeaders: Record<string, string>, r2Key: string) {
+  // Seules les clés sous "media/" sont exposées publiquement (le reste R2 est privé).
+  if (!r2Key.startsWith("media/") || r2Key.includes("..")) {
+    return new Response("Not found", { status: 404, headers: corsHeaders });
+  }
+  const object = await env.UPLOADS.get(r2Key);
+  if (!object) return new Response("Not found", { status: 404, headers: corsHeaders });
+
+  const headers = new Headers(corsHeaders);
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "public, max-age=86400, immutable");
+  return new Response(object.body, { headers });
 }
 
 // ═══════════════════════════════════════════════════════════

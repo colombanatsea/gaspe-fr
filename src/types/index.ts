@@ -16,6 +16,13 @@ export interface Member {
   region: string;
   territory: "metropole" | "dom-tom";
   category: "titulaire" | "associe";
+  /**
+   * Type d'adhérent :
+   * - "compagnie" : armateur/opérateur maritime (toutes les titulaires + 6 associés compagnies)
+   * - "expert"    : partenaire métier (avocat, assureur, syndicat…) — uniquement parmi les associés
+   * Défaut : "compagnie" si non précisé, "expert" sinon géré au filtrage.
+   */
+  memberType?: "compagnie" | "expert";
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;

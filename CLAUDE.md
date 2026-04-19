@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.13.0 (CMS complet + newsletter v2 foundation)
+- **Version**: v2.13.1 (audit éditorial + stats dynamiques + page abonnés newsletter)
 
 ## Commands
 ```bash
@@ -57,10 +57,17 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - All colors use CSS variables `var(--gaspe-*)` — zero hardcoded hex in components
 
 ## Content rules
-- Baseline: "Localement ancrés. Socialement engagés."
-- Hero: "Fédérer et représenter les compagnies maritimes de proximité"
-- All member data comes from `src/data/members.ts` (31 membres with descriptions) + D1 `organizations` table
-- Stats: 1951, 27 compagnies, 1494 marins francais, 155 navires, 25M passagers, 6.9M vehicules, 200M EUR CA
+- Baseline: "D'un littoral à l'autre. Localement ancrés. Socialement engagés."
+- Hero eyebrow: "Organisation Patronale Représentative"
+- Hero title: "Fédérer et représenter les compagnies maritimes côtières françaises"
+- CTA title: "Rejoignez les armateurs côtiers"
+- Typo : **tiret semi-quadratique `–`** autorisé, **tiret quadratique `—` interdit** dans les textes éditoriaux GASPE
+- All member data comes from `src/data/members.ts` (31 adhérents : 21 titulaires + 10 associés/experts) + D1 `organizations` table
+- Répartition : **27 compagnies** (21 titulaires + 6 associés compagnies) + **4 experts** (Capstan Avocats, Filhet Allard, Howden, SPLMNA)
+- Territoire : **23 compagnies hexagone + 4 outre-mer** (calculé dynamiquement via `memberStats.compagniesHexagone/OutreMer`)
+- Stats : 1951, 27 compagnies, 1 494 marins français, 165 navires, 25M+ passagers, 6,9M véhicules, 200M€ CA
+- Compteurs dérivés : `src/data/members.ts` exporte `memberStats` (adherents, compagnies, titulaires, associes, experts, compagniesHexagone/OutreMer, regions, totalShips, totalEmployees)
+- Placeholders CMS : les valeurs saisies dans le CMS peuvent utiliser `{adherents}`, `{compagnies}`, `{navires}`, `{compagniesHexagone}`, `{compagniesOutreMer}`, etc. — remplacés au rendu via `src/lib/stats-placeholders.ts`
 - Job offers in `src/data/jobs.ts` (12 offres) + dual-mode store (localStorage/D1)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
 - SSGM centers in `src/data/ssgm.ts` (25 centres, 10 médecins agréés, types de visites)
@@ -128,6 +135,7 @@ Auth uses `AuthStore` interface (`src/lib/auth/auth-store.ts`) with two backends
 Preferences stored in D1 `newsletter_preferences` table (per-user, per-category boolean).
 Managed via `/espace-adherent/preferences` and `/espace-candidat/preferences`.
 Admin sends via `/admin/newsletter` (category selector + compose → Brevo bulk).
+Admin consulte les abonnés via `/admin/newsletter/abonnes` (table + filtre par catégorie + search + export CSV ; inclut les inscrits legacy sans préférences).
 
 ## ENM — Espace Numérique Maritime (Portail du marin)
 - Import via copier-coller depuis `enm.mes-services.mer.gouv.fr` (FranceConnect auth empêche l'accès API direct)
@@ -189,7 +197,7 @@ src/
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 44 endpoints
+├── api.ts                 # CF Worker: 46 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
@@ -203,10 +211,12 @@ workers/
     └── 0008_newsletter.sql               # Newsletter v2 — drafts, sends, events, templates
 ```
 
-## Worker API — 44 endpoints
+## Worker API — 46 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
+| /api/media/raw/:key* | GET | — |
+| /api/newsletter/subscribers | GET | JWT+admin |
 | /api/auth/register | POST | — |
 | /api/auth/login | POST | — |
 | /api/auth/logout | POST | — |
@@ -405,3 +415,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 25b | 2.12.1 | Hotfixes post-merge : deploy-worker `--remote` flag, defensive D1 queries, login redirect fix, CMS endpoints resilient to missing tables |
 | 25c | 2.12.2 | CMS wired — homepage (hero, CTA), notre-groupement (18 fields + 3 lists), contact, footer. Introduced `list` type with ListEditor component. Specs written : docs/CMS-SPEC.md + docs/NEWSLETTER-SPEC.md |
 | 26 | 2.13.0 | CMS complet — 18 pages éditables (100+ sections), CmsPageHeader wrapper, admin UX (collapsible groups, search, modified indicator, iframe preview, reset), seed script + guide utilisateur. Newsletter v2 foundation — migration 0008, renderer HTML charté GASPE (9 block types), drafts CRUD (5 Worker endpoints), admin éditeur blocs + aperçu live, 12 tests renderer. Envoi production Brevo en attente de la config (list IDs) |
+| 27 | 2.13.1 | Audit éditorial homepage + notre-groupement + recrutent : hero eyebrow "Organisation Patronale Représentative", hero title "compagnies maritimes côtières françaises", baseline "D'un littoral à l'autre…", CTA "Rejoignez les armateurs côtiers", em-dashes → en-dashes dans marketing. Dérivation dynamique des compteurs via `memberStats` (27 compagnies, 23 hexagone + 4 outre-mer, 31 adhérents) + placeholders `{adherents}`, `{navires}`… dans CMS. Type `memberType: "compagnie"\|"expert"` sur Member (4 experts : Capstan, Filhet Allard, Howden, SPLMNA). Alignement tuiles stats via flex-wrap centré. Upload photo bureau via CMS (ListEditor type `image` + endpoint public `/api/media/raw/:key`). Admin `/admin/newsletter/abonnes` (table + filtres + export CSV). |

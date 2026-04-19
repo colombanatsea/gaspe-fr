@@ -82,7 +82,7 @@ export interface PageSection {
   type: "richtext" | "text" | "image" | "config" | "list";
   content: string;
   /** For "list" type: schema of item fields (stored as JSON array of objects) */
-  itemFields?: { id: string; label: string; type: "text" | "richtext" | "url" }[];
+  itemFields?: { id: string; label: string; type: "text" | "richtext" | "url" | "image" }[];
 }
 
 export interface PageContent {
@@ -158,6 +158,9 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     id: "homepage",
     label: "Accueil",
     sections: [
+      { id: "map-eyebrow", label: "Territoire — Libellé haut", type: "text" },
+      { id: "map-title", label: "Territoire — Titre", type: "text" },
+      { id: "map-subtitle-template", label: "Territoire — Sous-titre (template)", type: "text" },
       { id: "hero-eyebrow", label: "Hero — Libellé haut", type: "text" },
       { id: "hero-title", label: "Hero — Titre (HTML autorisé)", type: "richtext" },
       { id: "hero-subtitle", label: "Hero — Sous-titre", type: "text" },
@@ -243,6 +246,7 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
           { id: "role", label: "Rôle", type: "text" },
           { id: "company", label: "Compagnie", type: "text" },
           { id: "href", label: "URL LinkedIn / profil", type: "url" },
+          { id: "photoUrl", label: "Photo (URL ou upload)", type: "image" },
         ],
       },
     ],
@@ -315,12 +319,14 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     sections: [
       { id: "page-header-title", label: "Header — Titre", type: "text" },
       { id: "page-header-description", label: "Header — Description", type: "text" },
-      { id: "hero-title", label: "Hero — Titre", type: "text" },
+      { id: "hero-eyebrow", label: "Hero — Libellé haut", type: "text" },
+      { id: "hero-title-before", label: "Hero — Titre (avant highlight)", type: "text" },
+      { id: "hero-title-highlight", label: "Hero — Mot mis en avant", type: "text" },
       { id: "hero-subtitle", label: "Hero — Sous-titre", type: "text" },
       { id: "filters-heading", label: "Filtres — Titre", type: "text" },
       { id: "quick-stats", label: "Mini-stats (3 cartes)", type: "list",
         itemFields: [
-          { id: "value", label: "Valeur", type: "text" },
+          { id: "value", label: "Valeur (placeholders : {adherents}, {navires}, {compagnies}…)", type: "text" },
           { id: "label", label: "Libellé", type: "text" },
         ],
       },
