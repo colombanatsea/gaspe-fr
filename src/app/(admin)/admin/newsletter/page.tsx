@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -119,11 +120,22 @@ export default function AdminNewsletterPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter</h1>
-        <p className="mt-1 text-sm text-foreground-muted">
-          Envoyez des newsletters ciblées par catégorie aux abonnés.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter — Envoi rapide</h1>
+          <p className="mt-1 text-sm text-foreground-muted">
+            Envoyez des newsletters texte ciblées par catégorie (v1).
+          </p>
+        </div>
+        <Link
+          href="/admin/newsletter/drafts"
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-teal-200)] bg-[var(--gaspe-teal-50)] px-4 py-2 text-sm font-semibold text-[var(--gaspe-teal-700)] hover:bg-[var(--gaspe-teal-100)] transition-colors"
+        >
+          Éditeur blocs (v2 — beta)
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </Link>
       </div>
 
       {/* Category selector */}

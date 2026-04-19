@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 
 export default function MentionsLegalesPage() {
   return (
     <>
-      <PageHeader
-        title="Mentions légales"
-        description="Informations légales relatives au site gaspe.fr"
+      <CmsPageHeader
+        pageId="mentions-legales"
+        defaultTitle="Mentions légales"
+        defaultDescription="Informations légales relatives au site gaspe.fr"
         breadcrumbs={[{ label: "Mentions légales" }]}
       />
 

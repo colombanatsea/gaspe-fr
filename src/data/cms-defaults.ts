@@ -18,11 +18,62 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "hero-title": "Fédérer et représenter <span class=\"gaspe-gradient-text\">les compagnies maritimes</span> de proximité",
     "hero-subtitle": "Le GASPE regroupe les armateurs assurant des missions de service public de transport de passagers sur les lignes côtières nationales.",
     "hero-baseline": "Localement ancrés. Socialement engagés.",
+    "hero-cta1-label": "En savoir plus",
+    "hero-cta1-link": "/notre-groupement",
+    "hero-cta2-label": "Nos compagnies recrutent",
+    "hero-cta2-link": "/nos-compagnies-recrutent",
+    "hero-quick-stats": JSON.stringify([
+      { value: "27", label: "Compagnies adhérentes" },
+      { value: "1 494", label: "Marins français" },
+      { value: "25M", label: "Passagers / an" },
+    ]),
+    "stats-eyebrow": "Les chiffres 2024",
+    "stats-title": "Le GASPE en chiffres",
+    "stats-subtitle": "Un écosystème maritime de proximité qui rayonne sur tout le littoral français.",
+    "stats-items": JSON.stringify([
+      { value: "27", label: "Compagnies adhérentes", iconKey: "ship" },
+      { value: "1 494", label: "Marins français", iconKey: "users" },
+      { value: "155", label: "Navires sous pavillon français", iconKey: "anchor" },
+      { value: "25M", label: "Passagers par an", iconKey: "passengers" },
+      { value: "6,9M", label: "Véhicules transportés", iconKey: "car" },
+    ]),
+    "news-eyebrow": "Positions & Actualités",
+    "news-title": "Nos dernières positions",
+    "news-description": "Découvrez les prises de position du GASPE sur les enjeux maritimes.",
+    "news-items": JSON.stringify([
+      {
+        title: "Transition énergétique des flottes",
+        excerpt: "Les armateurs du GASPE s'engagent pour la décarbonation des liaisons maritimes de service public.",
+        category: "Position",
+        date: "Février 2026",
+        iconKey: "sun",
+        colorKey: "green",
+      },
+      {
+        title: "Accessibilité PMR sur les liaisons maritimes",
+        excerpt: "Le GASPE publie ses recommandations pour améliorer l'accès aux personnes à mobilité réduite.",
+        category: "Position",
+        date: "Janvier 2026",
+        iconKey: "users",
+        colorKey: "blue",
+      },
+      {
+        title: "Continuité territoriale et service public",
+        excerpt: "Position du GASPE sur le maintien des liaisons essentielles vers les îles françaises.",
+        category: "Position",
+        date: "Décembre 2025",
+        iconKey: "map",
+        colorKey: "teal",
+      },
+    ]),
     "cta-title": "Rejoignez le service public maritime",
     "cta-description": "<p>Nos compagnies recrutent des profils variés : officiers, matelots, mécaniciens, personnels à terre. Découvrez les opportunités.</p>",
   },
 
   "notre-groupement": {
+    "page-header-title": "Notre Groupement",
+    "page-header-description": "Le Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau (GASPE), est une entité collaborative qui regroupe des membres engagés dans les services maritimes.",
+
     // Section 1: Nos adhérents
     "adherents-eyebrow": "Nos adhérents",
     "adherents-title": "compagnies maritimes réunies",
@@ -78,9 +129,148 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
   },
 
   contact: {
+    "page-header-title": "Contact",
+    "page-header-description": "Une question ? N'hésitez pas à nous contacter.",
     address: "<p><strong>Adresse</strong></p><p>Maison de la Mer — Daniel Gilard</p><p>Quai de la Fosse</p><p>44 000 Nantes</p>",
     email: "contact@gaspe.fr",
     "sidebar-info": "<p>Le GASPE fédère les armateurs de services publics maritimes et accompagne la profession dans ses défis quotidiens.</p>",
+    "form-subjects": JSON.stringify([
+      { value: "adhesion", label: "Adhésion au GASPE" },
+      { value: "recrutement", label: "Recrutement / Emploi" },
+      { value: "formation", label: "Formations" },
+      { value: "presse", label: "Presse" },
+      { value: "partenariat", label: "Partenariat" },
+      { value: "autre", label: "Autre" },
+    ]),
+    "success-message": "Merci ! Votre message a bien été envoyé, nous reviendrons vers vous rapidement.",
+    "error-message": "Une erreur est survenue. Merci de réessayer ou de nous écrire directement à contact@gaspe.fr.",
+  },
+
+  agenda: {
+    "page-header-title": "Agenda",
+    "page-header-description": "Les événements du GASPE et du secteur maritime.",
+    "empty-state-message": "Aucun événement à venir pour le moment.",
+    "restricted-notice": "Connectez-vous en tant qu'adhérent pour voir le détail et les documents.",
+  },
+
+  documents: {
+    "page-header-title": "Documents",
+    "page-header-description": "Documents officiels, convention collective, accords de branche et outils pratiques du GASPE.",
+    "toolkit-cta-title": "Boîte à outils CCN 3228",
+    "toolkit-cta-description": "Grilles salariales, classifications, congés, régime ENIM et simulateur de rémunération.",
+    "toolkit-cta-button": "Découvrir la boîte à outils",
+    "search-placeholder": "Rechercher un document…",
+    "empty-state": "Aucun document ne correspond à votre recherche.",
+  },
+
+  formations: {
+    "page-header-title": "Formations",
+    "page-header-description": "Les formations maritimes proposées par le GASPE et ses partenaires pour accompagner les professionnels du secteur.",
+  },
+
+  "nos-adherents": {
+    "page-header-title": "Nos Adhérents",
+    "page-header-description": "Les 27 compagnies maritimes membres du GASPE réparties sur le littoral français.",
+    "geoloc-button-label": "Autour de moi",
+    "titulaires-heading": "Membres Titulaires",
+    "associes-heading": "Membres Associés & Experts",
+    "empty-state": "Aucun adhérent trouvé.",
+  },
+
+  "nos-compagnies-recrutent": {
+    "page-header-title": "Nos Compagnies Recrutent",
+    "page-header-description": "Découvrez les offres d'emploi proposées par les compagnies maritimes adhérentes du GASPE.",
+    "hero-title": "Nos compagnies recrutent",
+    "hero-subtitle": "Rejoignez le service public maritime : officiers, matelots, mécaniciens, personnels à terre.",
+    "filters-heading": "Filtres",
+    "quick-stats": JSON.stringify([
+      { value: "1 494", label: "Collaborateurs" },
+      { value: "155", label: "Navires" },
+      { value: "27", label: "Compagnies" },
+    ]),
+  },
+
+  positions: {
+    "page-header-title": "Positions",
+    "page-header-description": "Les positions du GASPE sur les grands enjeux du transport maritime de service public.",
+    "search-placeholder": "Rechercher une position…",
+    "positions-section-title": "Positions du GASPE",
+    "presse-section-title": "Espace Presse",
+    "presse-description": "<p>Contact presse : <a href=\"mailto:contact@gaspe.fr\">contact@gaspe.fr</a></p>",
+  },
+
+  ssgm: {
+    "page-header-title": "SSGM & Médecins Agréés",
+    "page-header-description": "Services de Santé des Gens de Mer — visites d'aptitude, suivi médical et certificats STCW.",
+    "intro-title": "Services de Santé des Gens de Mer",
+    "intro-paragraph1": "<p>Les SSGM sont les services de santé dédiés aux gens de mer. Ils assurent les visites médicales d'aptitude à la navigation, le suivi médical des marins et la délivrance des certificats médicaux requis par la réglementation maritime (STCW, Code du travail maritime).</p>",
+    "intro-paragraph2": "<p>Tout marin professionnel doit passer une visite médicale d'aptitude avant son embarquement, puis un renouvellement tous les 2 ans (annuel pour certaines catégories).</p>",
+    "empty-state": "Aucun centre ne correspond à votre recherche.",
+  },
+
+  "transition-ecologique": {
+    "page-header-title": "Transition Ecologique",
+    "page-header-description": "Décarbonation du maritime côtier : AAP ADEME 2026, technologies, financements.",
+    "intro-badge": "AAP ADEME 2026",
+    "intro-title": "Cap sur la decarbonation du maritime cotier",
+    "intro-description": "<p>Navires hybrides, propulsion 100% electrique, biocarburants, renouvellement de flotte accelere : les compagnies du GASPE sont pionnieres. L'AAP ADEME 2026 finance jusqu'a 6 M EUR par projet pour la decarbonation de vos navires.</p>",
+    "deadline-text": "Cloture : 6 juillet 2026 · Budget total : 70 M EUR",
+    "key-figures": JSON.stringify([
+      { value: "70", suffix: "M", label: "Budget AAP ADEME" },
+      { value: "6", suffix: "M", label: "Aide max par projet" },
+      { value: "60", suffix: "%", label: "Taux max (PE)" },
+      { value: "12", label: "Technologies couvertes" },
+    ]),
+    "simulator-title": "Simulateur de pre-dossier ADEME",
+    "simulator-description": "Estimez vos aides, calculez votre scoring et preparez votre candidature en 30 minutes. Le simulateur couvre l'electrique, le biocarburant, le dual-fuel et l'optimisation operationnelle.",
+    "simulator-disclaimer": "Simulateur heberge par GASPE · Donnees indicatives, ne se substituent pas a un conseil professionnel",
+    "technologies-title": "Technologies de decarbonation",
+    "technologies-items": JSON.stringify([
+      { name: "Electrification complete", gain: "95%", trl: "TRL 9", desc: "Propulsion 100% electrique sur batteries LFP" },
+      { name: "Hybridation diesel-electrique", gain: "25%", trl: "TRL 9", desc: "Combinaison diesel et batteries pour les pics de puissance" },
+      { name: "HVO / FAME (biocarburant)", gain: "85%", trl: "TRL 9", desc: "Carburants biosources en drop-in ou conversion" },
+      { name: "Pile a combustible H2", gain: "90%", trl: "TRL 7", desc: "Hydrogene vert pour les navires hauturiers" },
+      { name: "Propulsion velique", gain: "10%", trl: "TRL 8", desc: "Assistance vile sur les traversees longues" },
+      { name: "Routage IA", gain: "15%", trl: "TRL 8", desc: "Optimisation maree et courant par intelligence artificielle" },
+    ]),
+  },
+
+  "boite-a-outils": {
+    "page-header-title": "Boîte à outils CCN 3228",
+    "page-header-description": "Convention Collective Nationale du personnel navigant des passages d'eau — grilles salariales, classifications, congés, régime ENIM et simulateur.",
+    "disclaimer": "<p>Les informations présentées ici sont fournies à titre indicatif. En cas de doute, consultez la <a href=\"https://www.legifrance.gouv.fr\">CCN 3228 officielle sur Legifrance</a>.</p>",
+  },
+
+  "decouvrir-espace-adherent": {
+    "page-header-title": "Découvrir l'Espace Adhérent",
+    "page-header-description": "Aperçu complet des fonctionnalités réservées aux adhérents du GASPE.",
+    "banner-title": "Espace de démonstration",
+    "banner-description": "Les données affichées ici sont fictives. Inscrivez-vous pour accéder à votre espace réel.",
+    "adhesion-cta-title": "Envie d'accéder à votre espace adhérent ?",
+    "adhesion-cta-description": "Demandez votre adhésion et bénéficiez de toutes les fonctionnalités.",
+    "adhesion-cta-button": "Demander l'adhésion",
+  },
+
+  "mentions-legales": {
+    "page-header-title": "Mentions légales",
+    "page-header-description": "Informations légales relatives au site gaspe.fr",
+  },
+
+  confidentialite: {
+    "page-header-title": "Politique de confidentialité",
+    "page-header-description": "Comment nous protégeons vos données personnelles",
+  },
+
+  cgu: {
+    "page-header-title": "Conditions générales d'utilisation",
+    "page-header-description": "Règles d'utilisation du site gaspe.fr et de ses services",
+  },
+
+  presse: {
+    "page-header-title": "Presse",
+    "redirect-title": "Page déplacée",
+    "redirect-description": "<p>Retrouvez l'espace presse dans la page Positions.</p>",
+    "redirect-cta": "Voir les Positions",
   },
 
   footer: {

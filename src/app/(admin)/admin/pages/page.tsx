@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -22,6 +22,85 @@ import {
 import { isApiMode } from "@/lib/api-client";
 import { getCmsDefault } from "@/data/cms-defaults";
 
+/** Map page id → public preview URL (for iframe). Footer has no public page. */
+const PAGE_PREVIEW_URL: Record<string, string | null> = {
+  homepage: "/",
+  "notre-groupement": "/notre-groupement",
+  contact: "/contact",
+  agenda: "/agenda",
+  documents: "/documents",
+  formations: "/formations",
+  "nos-adherents": "/nos-adherents",
+  "nos-compagnies-recrutent": "/nos-compagnies-recrutent",
+  positions: "/positions",
+  ssgm: "/ssgm",
+  "transition-ecologique": "/transition-ecologique",
+  "boite-a-outils": "/boite-a-outils",
+  "decouvrir-espace-adherent": "/decouvrir-espace-adherent",
+  "mentions-legales": "/mentions-legales",
+  confidentialite: "/confidentialite",
+  cgu: "/cgu",
+  presse: "/presse",
+  footer: null,
+};
+
+/** Group sections by prefix (text before first "-"). E.g. "hero-title" → "hero". */
+function groupSections(sections: (PageSection & { modified?: boolean })[]) {
+  const groups = new Map<string, (PageSection & { modified?: boolean })[]>();
+  for (const section of sections) {
+    const match = section.id.match(/^([^-]+)-/);
+    const key = match ? match[1] : "general";
+    const list = groups.get(key) || [];
+    list.push(section);
+    groups.set(key, list);
+  }
+  return Array.from(groups.entries());
+}
+
+/** Human-readable group labels. */
+const GROUP_LABELS: Record<string, string> = {
+  page: "Header de page",
+  hero: "Hero / En-tête",
+  stats: "Statistiques",
+  news: "Actualités & Positions",
+  cta: "Appel à l'action (CTA)",
+  adherents: "Adhérents",
+  timeline: "Timeline",
+  mission: "Mission",
+  engagements: "Engagements",
+  bureau: "Bureau",
+  address: "Adresse",
+  email: "Email",
+  sidebar: "Encart latéral",
+  form: "Formulaire",
+  success: "Confirmation",
+  error: "Erreur",
+  intro: "Introduction",
+  key: "Chiffres clés",
+  simulator: "Simulateur",
+  technologies: "Technologies",
+  search: "Recherche",
+  empty: "État vide",
+  filters: "Filtres",
+  quick: "Mini-stats",
+  newsletter: "Newsletter",
+  social: "Réseaux sociaux",
+  contact: "Contact",
+  toolkit: "Boîte à outils",
+  restricted: "Accès restreint",
+  banner: "Bannière",
+  adhesion: "Adhésion",
+  redirect: "Redirection",
+  disclaimer: "Avertissement",
+  geoloc: "Géolocalisation",
+  titulaires: "Titulaires",
+  associes: "Associés",
+  positions: "Positions",
+  presse: "Presse",
+  deadline: "Deadline",
+  general: "Autre",
+};
+
 export default function AdminPagesPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -31,6 +110,10 @@ export default function AdminPagesPage() {
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeEditorInsert, setActiveEditorInsert] = useState<((item: MediaItem) => void) | null>(null);
+  const [search, setSearch] = useState("");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [modifiedIds, setModifiedIds] = useState<Set<string>>(new Set());
+  const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
@@ -38,13 +121,10 @@ export default function AdminPagesPage() {
     }
   }, [user, router]);
 
-  // Load content when page selection changes
   useEffect(() => {
     const pageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
     if (!pageDef) return;
 
-    // Prefill empty sections with defaults from cms-defaults.ts so admins see
-    // the current live content instead of empty fields.
     const emptySections = pageDef.sections.map((def) => ({
       id: def.id, label: def.label, type: def.type,
       itemFields: def.itemFields,
@@ -55,7 +135,6 @@ export default function AdminPagesPage() {
       if (stored) {
         const merged = pageDef!.sections.map((def) => {
           const existing = stored.sections.find((s) => s.id === def.id);
-          // If stored content is empty, fall back to the default
           const content = existing?.content?.trim()
             ? existing.content
             : getCmsDefault(selectedPageId, def.id);
@@ -66,6 +145,8 @@ export default function AdminPagesPage() {
         setSections(emptySections);
       }
       setSaved(false);
+      setModifiedIds(new Set());
+      setSearch("");
     }
 
     if (isApiMode()) {
@@ -80,6 +161,7 @@ export default function AdminPagesPage() {
       prev.map((s) => (s.id === id ? { ...s, content } : s))
     );
     setSaved(false);
+    setModifiedIds((prev) => new Set(prev).add(id));
   }
 
   async function handleSave() {
@@ -94,13 +176,19 @@ export default function AdminPagesPage() {
       savePageContent(pageContent);
     }
     setSaved(true);
+    setModifiedIds(new Set());
+    setPreviewKey((k) => k + 1); // refresh iframe
     setTimeout(() => setSaved(false), 3000);
+  }
+
+  function resetSection(id: string) {
+    const defaultValue = getCmsDefault(selectedPageId, id);
+    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, content: defaultValue } : s)));
+    setModifiedIds((prev) => new Set(prev).add(id));
   }
 
   function handleMediaSelect(item: MediaItem | ApiMediaItem) {
     if (activeEditorInsert) {
-      // Insert image URL into the active editor via a callback
-      // For simplicity, copy URL to clipboard and notify user
       if (item.type.startsWith("image/") && "data" in item) {
         navigator.clipboard?.writeText(item.data);
       }
@@ -108,6 +196,29 @@ export default function AdminPagesPage() {
     }
     setShowMediaLibrary(false);
   }
+
+  function toggleGroup(key: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const filteredSections = useMemo(() => {
+    if (!search.trim()) return sections;
+    const q = search.toLowerCase();
+    return sections.filter((s) =>
+      s.id.toLowerCase().includes(q) ||
+      s.label.toLowerCase().includes(q) ||
+      s.content.toLowerCase().includes(q)
+    );
+  }, [sections, search]);
+
+  const grouped = useMemo(() => groupSections(filteredSections.map((s) => ({ ...s, modified: modifiedIds.has(s.id) }))), [filteredSections, modifiedIds]);
+  const previewUrl = PAGE_PREVIEW_URL[selectedPageId] ?? null;
+  const modifiedCount = modifiedIds.size;
 
   if (!user || user.role !== "admin") return null;
 
@@ -119,23 +230,31 @@ export default function AdminPagesPage() {
           <h1 className="font-heading text-2xl font-bold text-foreground">Éditeur de pages</h1>
           <p className="mt-1 text-sm text-foreground-muted">
             Modifiez le contenu de chaque section des pages publiques du site.
+            {modifiedCount > 0 && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[var(--gaspe-warm-50)] px-2 py-0.5 text-xs font-semibold text-[var(--gaspe-warm-600)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--gaspe-warm-500)]" />
+                {modifiedCount} modification{modifiedCount > 1 ? "s" : ""} non enregistrée{modifiedCount > 1 ? "s" : ""}
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
-              showPreview
-                ? "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]"
-                : "border border-[var(--gaspe-neutral-200)] text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)]"
-            }`}
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            </svg>
-            {showPreview ? "Masquer l'aperçu" : "Aperçu"}
-          </button>
+          {previewUrl && (
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                showPreview
+                  ? "bg-[var(--gaspe-teal-50)] text-[var(--gaspe-teal-600)] border border-[var(--gaspe-teal-200)]"
+                  : "border border-[var(--gaspe-neutral-200)] text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)]"
+              }`}
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              {showPreview ? "Masquer l'aperçu" : "Aperçu page"}
+            </button>
+          )}
           <button
             onClick={() => setShowMediaLibrary(true)}
             className="inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] px-4 py-2 text-sm font-semibold text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)]"
@@ -185,83 +304,166 @@ export default function AdminPagesPage() {
         ))}
       </div>
 
-      {/* Sections */}
-      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-6" : ""}>
-        <div className="space-y-6">
-          {sections.map((section) => (
-            <div key={section.id} className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] overflow-hidden">
-              <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] px-5 py-3">
-                <h3 className="font-heading text-sm font-semibold text-foreground">{section.label}</h3>
-                <span className="rounded-full bg-[var(--gaspe-neutral-200)] px-2.5 py-0.5 text-[10px] font-medium text-foreground-muted uppercase">
-                  {section.type}
-                </span>
-              </div>
-              <div className="p-4">
-                {section.type === "richtext" ? (
-                  <ErrorBoundary name="RichTextEditor">
-                    <RichTextEditor
-                      value={section.content}
-                      onChange={(html) => updateSection(section.id, html)}
-                      minHeight={200}
-                      onMediaLibraryOpen={() => setShowMediaLibrary(true)}
-                    />
-                  </ErrorBoundary>
-                ) : section.type === "list" ? (
-                  <ListEditor
-                    value={section.content}
-                    onChange={(json) => updateSection(section.id, json)}
-                    fields={section.itemFields ?? []}
-                  />
-                ) : section.type === "image" ? (
-                  <div className="space-y-3">
-                    <input
-                      type="url"
-                      value={section.content}
-                      onChange={(e) => updateSection(section.id, e.target.value)}
-                      placeholder="URL de l'image..."
-                      className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
-                    />
-                    {section.content && (
-                      <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setShowMediaLibrary(true)}
-                      className="text-sm text-primary hover:text-primary-hover font-medium"
-                    >
-                      Choisir depuis la bibliothèque
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    value={section.content}
-                    onChange={(e) => updateSection(section.id, e.target.value)}
-                    placeholder={`${section.label}...`}
-                    className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
-                  />
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Search box */}
+      {sections.length > 8 && (
+        <div className="relative">
+          <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher une section…"
+            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white pl-10 pr-4 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+          />
         </div>
+      )}
 
-        {/* Preview panel */}
-        {showPreview && (
-          <div className="space-y-4">
-            <div className="sticky top-20">
+      {/* Sections + Preview */}
+      <div className={showPreview && previewUrl ? "grid grid-cols-1 xl:grid-cols-2 gap-6" : ""}>
+        <div className="space-y-6">
+          {grouped.map(([groupKey, groupSections]) => {
+            const collapsed = collapsedGroups.has(groupKey);
+            const groupLabel = GROUP_LABELS[groupKey] ?? groupKey;
+            const modifiedInGroup = groupSections.filter((s) => s.modified).length;
+            return (
+              <div key={groupKey} className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(groupKey)}
+                  className="flex items-center gap-2 text-sm font-heading font-semibold text-foreground uppercase tracking-wider w-full"
+                >
+                  <svg className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                  <span>{groupLabel}</span>
+                  <span className="text-xs text-foreground-muted normal-case tracking-normal">
+                    ({groupSections.length} section{groupSections.length > 1 ? "s" : ""})
+                  </span>
+                  {modifiedInGroup > 0 && (
+                    <span className="ml-auto rounded-full bg-[var(--gaspe-warm-50)] px-2 py-0.5 text-[10px] font-semibold text-[var(--gaspe-warm-600)] normal-case tracking-normal">
+                      {modifiedInGroup} modifié{modifiedInGroup > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </button>
+
+                {!collapsed && groupSections.map((section) => (
+                  <div key={section.id} className={`rounded-2xl bg-white border overflow-hidden transition-colors ${section.modified ? "border-[var(--gaspe-warm-400)]" : "border-[var(--gaspe-neutral-200)]"}`}>
+                    <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] px-5 py-3">
+                      <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
+                        {section.modified && (
+                          <span className="h-2 w-2 rounded-full bg-[var(--gaspe-warm-500)]" title="Modifié non enregistré" />
+                        )}
+                        {section.label}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => resetSection(section.id)}
+                          title="Réinitialiser au défaut"
+                          className="text-xs text-foreground-muted hover:text-[var(--gaspe-teal-600)] underline"
+                        >
+                          Réinitialiser
+                        </button>
+                        <span className="rounded-full bg-[var(--gaspe-neutral-200)] px-2.5 py-0.5 text-[10px] font-medium text-foreground-muted uppercase">
+                          {section.type}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      {section.type === "richtext" ? (
+                        <ErrorBoundary name="RichTextEditor">
+                          <RichTextEditor
+                            value={section.content}
+                            onChange={(html) => updateSection(section.id, html)}
+                            minHeight={200}
+                            onMediaLibraryOpen={() => setShowMediaLibrary(true)}
+                          />
+                        </ErrorBoundary>
+                      ) : section.type === "list" ? (
+                        <ListEditor
+                          value={section.content}
+                          onChange={(json) => updateSection(section.id, json)}
+                          fields={section.itemFields ?? []}
+                        />
+                      ) : section.type === "image" ? (
+                        <div className="space-y-3">
+                          <input
+                            type="url"
+                            value={section.content}
+                            onChange={(e) => updateSection(section.id, e.target.value)}
+                            placeholder="URL de l'image..."
+                            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+                          />
+                          {section.content && (
+                            <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setShowMediaLibrary(true)}
+                            className="text-sm text-primary hover:text-primary-hover font-medium"
+                          >
+                            Choisir depuis la bibliothèque
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={section.content}
+                          onChange={(e) => updateSection(section.id, e.target.value)}
+                          placeholder={`${section.label}...`}
+                          className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          {/* Rich text preview fallback when no iframe */}
+          {!previewUrl && showPreview && (
+            <div className="space-y-4">
               {sections
                 .filter((s) => s.type === "richtext" && s.content)
                 .map((section) => (
-                  <div key={section.id} className="mb-4">
+                  <div key={section.id}>
                     <ContentPreview html={section.content} title={section.label} />
                   </div>
                 ))}
-              {sections.filter((s) => s.type === "richtext" && s.content).length === 0 && (
-                <div className="rounded-2xl border border-dashed border-[var(--gaspe-neutral-300)] p-12 text-center text-sm text-foreground-muted">
-                  Commencez à écrire du contenu rich text pour voir l&apos;aperçu ici.
-                </div>
-              )}
+            </div>
+          )}
+        </div>
+
+        {/* Iframe preview */}
+        {showPreview && previewUrl && (
+          <div className="space-y-3">
+            <div className="sticky top-20 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-foreground-muted">
+                  Aperçu de <code className="rounded bg-[var(--gaspe-neutral-100)] px-1.5 py-0.5 text-[11px]">{previewUrl}</code>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPreviewKey((k) => k + 1)}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Rafraîchir
+                </button>
+              </div>
+              <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] overflow-hidden bg-white">
+                <iframe
+                  key={previewKey}
+                  src={previewUrl}
+                  className="w-full h-[80vh]"
+                  title={`Aperçu ${selectedPageId}`}
+                />
+              </div>
+              <p className="text-[11px] text-foreground-muted italic">
+                Enregistrez pour voir vos modifications dans l&apos;aperçu.
+              </p>
             </div>
           </div>
         )}

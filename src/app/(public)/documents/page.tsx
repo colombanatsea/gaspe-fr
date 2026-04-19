@@ -4,9 +4,13 @@ import { Suspense, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+
+const D = (s: string) => getCmsDefault("documents", s);
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -144,6 +148,9 @@ function DocumentsContent() {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [toast, setToast] = useState("");
 
+  const searchPlaceholder = useCmsContent("documents", "search-placeholder", D("search-placeholder"));
+  const emptyState = useCmsContent("documents", "empty-state", D("empty-state"));
+
   function handleDownload(doc: DocumentItem) {
     if (doc.href === "#") {
       setToast(`"${doc.title}" sera disponible au téléchargement prochainement.`);
@@ -205,7 +212,7 @@ function DocumentsContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un document..."
+            placeholder={searchPlaceholder}
             aria-label="Rechercher un document"
             className="w-full rounded-xl border border-border-light bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
@@ -242,7 +249,7 @@ function DocumentsContent() {
       {/* Results */}
       {grouped.length === 0 ? (
         <p className="text-foreground-muted text-sm py-8 text-center">
-          Aucun document ne correspond à votre recherche.
+          {emptyState}
         </p>
       ) : (
         <div className="space-y-12">
@@ -344,37 +351,46 @@ function DocumentsContent() {
 /*  Page (wraps content in Suspense for useSearchParams)               */
 /* ------------------------------------------------------------------ */
 
+function DocumentsHeader() {
+  const toolkitTitle = useCmsContent("documents", "toolkit-cta-title", D("toolkit-cta-title"));
+  const toolkitDescription = useCmsContent("documents", "toolkit-cta-description", D("toolkit-cta-description"));
+  return (
+    <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+      <Link
+        href="/boite-a-outils"
+        className="group flex items-center gap-4 rounded-2xl border border-border-light bg-surface-teal p-5 hover:shadow-md transition-shadow"
+      >
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+            {toolkitTitle}
+          </p>
+          <p className="text-sm text-foreground-muted">
+            {toolkitDescription}
+          </p>
+        </div>
+        <svg className="h-5 w-5 text-foreground-muted group-hover:text-primary transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+        </svg>
+      </Link>
+    </div>
+  );
+}
+
 export default function DocumentsPage() {
   return (
     <>
-      <PageHeader
-        title="Documents"
-        description="Documents officiels, convention collective, accords de branche et outils pratiques du GASPE."
+      <CmsPageHeader
+        pageId="documents"
+        defaultTitle="Documents"
+        defaultDescription="Documents officiels, convention collective, accords de branche et outils pratiques du GASPE."
         breadcrumbs={[{ label: "Documents" }]}
       />
-      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-        <Link
-          href="/boite-a-outils"
-          className="group flex items-center gap-4 rounded-2xl border border-border-light bg-surface-teal p-5 hover:shadow-md transition-shadow"
-        >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-              Boite a outils CCN 3228
-            </p>
-            <p className="text-sm text-foreground-muted">
-              Grilles salariales, classifications, conges, regime ENIM, simulateur et guides employeur.
-            </p>
-          </div>
-          <svg className="h-5 w-5 text-foreground-muted group-hover:text-primary transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-          </svg>
-        </Link>
-      </div>
+      <DocumentsHeader />
       <Suspense fallback={null}>
         <DocumentsContent />
       </Suspense>

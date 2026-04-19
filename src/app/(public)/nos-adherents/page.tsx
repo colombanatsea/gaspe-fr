@@ -9,7 +9,11 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
 import { getUserPosition, haversineDistance, formatDistance, type GeoPosition } from "@/lib/geolocation";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
 import type { Member } from "@/types";
+
+const D = (s: string) => getCmsDefault("nos-adherents", s);
 
 function MemberRow({
   member,
@@ -75,6 +79,10 @@ export default function NosAdherentsPage() {
     );
   }, [userPos]);
 
+  const geolocLabel = useCmsContent("nos-adherents", "geoloc-button-label", D("geoloc-button-label"));
+  const titulairesHeading = useCmsContent("nos-adherents", "titulaires-heading", D("titulaires-heading"));
+  const associesHeading = useCmsContent("nos-adherents", "associes-heading", D("associes-heading"));
+
   const sortedAssocies = useMemo(() => {
     if (!userPos) return associes;
     return [...associes].sort(
@@ -137,7 +145,7 @@ export default function NosAdherentsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
               </svg>
             )}
-            {userPos ? "Autour de moi (actif)" : "Autour de moi"}
+            {userPos ? `${geolocLabel} (actif)` : geolocLabel}
           </button>
           {geoError && <p className="mt-2 text-xs text-red-500">{geoError}</p>}
           {userPos && !geoError && (
@@ -148,7 +156,7 @@ export default function NosAdherentsPage() {
         {/* Titulaires */}
         <div className="p-4 border-b border-border-light">
           <h1 className="font-heading text-xl font-bold text-foreground">
-            Membres Titulaires
+            {titulairesHeading}
           </h1>
           <p className="mt-1 text-sm text-foreground-muted">
             {titulaires.length} armateurs &middot; {regions.length} régions
@@ -169,7 +177,7 @@ export default function NosAdherentsPage() {
         {/* Associés & Experts */}
         <div className="p-4 border-b border-t border-border-light bg-surface">
           <h2 className="font-heading text-lg font-bold text-foreground">
-            Associés &amp; Experts
+            {associesHeading}
           </h2>
           <p className="mt-1 text-sm text-foreground-muted">
             {associes.length} membres
