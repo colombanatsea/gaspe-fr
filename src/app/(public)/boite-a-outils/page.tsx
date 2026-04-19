@@ -22,8 +22,10 @@ import {
   CATEGORY_LABELS,
   EMPLOYER_GUIDES,
   EMPLOYER_GUIDE_CATEGORIES,
+  CCN3228_FAQ,
   type ServiceCategory,
 } from "@/data/ccn3228";
+import { FAQJsonLd } from "@/components/shared/SEOJsonLd";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -692,6 +694,7 @@ export default function BoiteAOutilsPage() {
 
   return (
     <>
+      <FAQJsonLd items={[...CCN3228_FAQ]} />
       <CmsPageHeader
         pageId="boite-a-outils"
         defaultTitle="Boîte à outils CCN 3228"

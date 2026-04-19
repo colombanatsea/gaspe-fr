@@ -510,3 +510,51 @@ export const SSGM_REGIONS = [
   "La Réunion",
   "Mayotte",
 ] as const;
+
+/**
+ * FAQ éditoriale SSGM — utilisée pour injecter FAQPage JSON-LD sur /ssgm
+ * et enrichir la SERP (rich FAQ Google). Sources : décret 2015-1575, STCW,
+ * MLC 2006, Direction des Affaires Maritimes.
+ */
+export const SSGM_FAQ = [
+  {
+    question: "Qu'est-ce que le SSGM ?",
+    answer:
+      "Le Service de Santé des Gens de Mer (SSGM) est l'organe de la Direction des Affaires Maritimes chargé du suivi médical des marins français. Les centres SSGM délivrent les certificats d'aptitude médicale obligatoires pour embarquer sous pavillon français.",
+  },
+  {
+    question: "La visite médicale maritime est-elle obligatoire ?",
+    answer:
+      "Oui. Tout marin embarqué sous pavillon français doit détenir un certificat d'aptitude médicale en cours de validité, conformément au décret n° 2015-1575 du 3 décembre 2015, à la Convention STCW (OMI, Section A-I/9) et à la Convention MLC 2006 (OIT, Règle 1.2).",
+  },
+  {
+    question: "Quelle est la validité d'un certificat d'aptitude ?",
+    answer:
+      "Le certificat d'aptitude médicale maritime est valide 2 ans pour les marins de plus de 18 ans (1 an pour les moins de 18 ans). Un certificat de vision est valide 6 ans. La visite doit être renouvelée avant expiration pour pouvoir continuer à embarquer.",
+  },
+  {
+    question: "Où passer sa visite médicale ?",
+    answer:
+      "Deux options : dans un centre SSGM (25 centres en France métropolitaine et outre-mer) ou chez un médecin agréé par la Direction des Affaires Maritimes (plus de 100 médecins en ville). Le site /ssgm du GASPE liste l'ensemble des centres et médecins avec coordonnées.",
+  },
+  {
+    question: "Quels examens sont pratiqués ?",
+    answer:
+      "Examen clinique général, vision (avec et sans correction, vision des couleurs pour le pont), audition (audiogramme), bilan cardiovasculaire, bilan pulmonaire et, selon le poste : tests de force physique, équilibre et coordination. Examens complémentaires si antécédents médicaux.",
+  },
+  {
+    question: "Quelles sont les contre-indications à la navigation ?",
+    answer:
+      "Principales contre-indications : pathologies cardiovasculaires non stabilisées, épilepsie non contrôlée, diabète insulino-dépendant mal équilibré, troubles visuels majeurs non corrigés, troubles psychiatriques actifs. Les contre-indications peuvent être temporaires ou permanentes selon la fonction.",
+  },
+  {
+    question: "Peut-on faire recours d'une inaptitude ?",
+    answer:
+      "Oui. En cas d'inaptitude prononcée, un recours peut être formé dans un délai de 2 mois devant la Commission Médicale d'Aptitude (CMA) régionale. Cette commission pluridisciplinaire réexamine le dossier et peut confirmer, modifier ou lever l'inaptitude.",
+  },
+  {
+    question: "Qui paie la visite médicale ?",
+    answer:
+      "Les visites sont généralement prises en charge par l'employeur pour les marins salariés (obligation légale de suivi médical). Les candidats à l'embauche peuvent avoir à avancer les frais, remboursés après signature du contrat. Les visites ENIM sont gratuites pour les marins affiliés.",
+  },
+] as const;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, startTransition } from "react";
 import {
   getMedia, addMedia, deleteMedia, type MediaItem,
   apiGetMedia, apiUploadMedia, apiDeleteMedia, type ApiMediaItem,
@@ -65,7 +65,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
   }
 
   useEffect(() => {
-    if (open && isApiMode()) refreshItems();
+    if (open && isApiMode()) startTransition(() => { void refreshItems(); });
   }, [open, refreshItems]);
 
   async function handleFiles(files: FileList | null) {

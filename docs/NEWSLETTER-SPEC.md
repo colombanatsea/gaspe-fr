@@ -450,11 +450,13 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [ ] Page `/admin/newsletter/:sendId/stats` (dashboard)
 - [ ] Export CSV
 
-### Phase 5 : Sync contacts Brevo (2h)
-- [ ] Création 10 listes Brevo + mapping IDs
-- [ ] Sync inscription publique → Brevo
-- [ ] Sync préférences → Brevo attributes
-- [ ] Sync désinscription → Brevo + D1
+### Phase 5 : Sync contacts Brevo (2h) — partiellement done session 29
+- [ ] Création 10 listes Brevo dans le dashboard + configuration des env vars (`BREVO_LIST_INFO_GENERALES`, `BREVO_LIST_AG`, `BREVO_LIST_EMPLOI`, `BREVO_LIST_FORMATION_OPCO`, `BREVO_LIST_VEILLE_JURIDIQUE`, `BREVO_LIST_VEILLE_SOCIALE`, `BREVO_LIST_VEILLE_SURETE`, `BREVO_LIST_VEILLE_DATA`, `BREVO_LIST_VEILLE_ENVIRONNEMENT`, `BREVO_LIST_ACTUALITES_GASPE`) via `wrangler secret put`
+- [ ] Sync inscription publique (`POST /api/newsletter`) → Brevo
+- [x] **Sync préférences** → Brevo contact + attributs PRENOM/NOM (session 29, `syncBrevoContact` dans `workers/api.ts`). Silencieux si list IDs non configurés. Met à jour `users.brevo_synced_at`.
+- [x] Colonnes canonicalisées DB ↔ frontend ↔ Brevo (session 29) : `info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`
+- [x] Dashboard `/admin/newsletter/abonnes` affiche statut sync par user (synced / out-of-sync / pending) avec export CSV (session 29)
+- [ ] Sync désinscription publique (`/newsletter/unsubscribe`) → Brevo + D1 (reste à implémenter côté worker)
 
 ### Phase 6 : Désinscription publique (1h)
 - [ ] Page `/newsletter/unsubscribe?token=`
@@ -489,20 +491,50 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 ## 10. Variables d'environnement requises
 
 ```toml
-# workers/wrangler.toml
+# workers/wrangler.toml (ou via `wrangler secret put` pour les secrets)
 [vars]
 BREVO_SENDER_NAME = "GASPE"
 BREVO_SENDER_EMAIL = "contact@gaspe.fr"
 BREVO_REPLY_TO = "contact@gaspe.fr"
-BREVO_LIST_PUBLIC = "1"
+
+# 10 list IDs Brevo (alignés sur les colonnes newsletter_preferences migration 0003)
 BREVO_LIST_INFO_GENERALES = "2"
-# ... mapping des 10 catégories
+BREVO_LIST_AG = "3"
+BREVO_LIST_EMPLOI = "4"
+BREVO_LIST_FORMATION_OPCO = "5"
+BREVO_LIST_VEILLE_JURIDIQUE = "6"
+BREVO_LIST_VEILLE_SOCIALE = "7"
+BREVO_LIST_VEILLE_SURETE = "8"
+BREVO_LIST_VEILLE_DATA = "9"
+BREVO_LIST_VEILLE_ENVIRONNEMENT = "10"
+BREVO_LIST_ACTUALITES_GASPE = "11"
 
 # Secrets (wrangler secret put)
 BREVO_API_KEY = "xkeysib-..."       # déjà configuré
-BREVO_WEBHOOK_SECRET = "..."        # NOUVEAU, à générer
+BREVO_WEBHOOK_SECRET = "..."        # NOUVEAU, à générer (HMAC-SHA256 Brevo webhook)
 NEWSLETTER_UNSUB_SECRET = "..."     # NOUVEAU, pour signer les tokens désinscription
 ```
+
+**Commandes pour provisionner en production** :
+```bash
+# Secrets (non visibles ensuite)
+wrangler secret put BREVO_WEBHOOK_SECRET --name gaspe-api
+wrangler secret put NEWSLETTER_UNSUB_SECRET --name gaspe-api
+
+# Variables (visibles — les list IDs ne sont pas sensibles)
+wrangler secret put BREVO_LIST_INFO_GENERALES --name gaspe-api
+wrangler secret put BREVO_LIST_AG --name gaspe-api
+# … répéter pour les 10 listes
+wrangler secret put BREVO_SENDER_EMAIL --name gaspe-api
+wrangler secret put BREVO_SENDER_NAME --name gaspe-api
+wrangler secret put BREVO_REPLY_TO --name gaspe-api
+```
+
+**Configuration du webhook Brevo** (dashboard Brevo → Transactional → Webhooks) :
+- URL : `https://gaspe-api.hello-0d0.workers.dev/api/newsletter/brevo/webhook`
+- Méthode : `POST`
+- Events : `delivered`, `opened`, `clicked`, `hard_bounce`, `soft_bounce`, `unsubscribed`, `spam`
+- Signature : HMAC-SHA256 du body avec `BREVO_WEBHOOK_SECRET`
 
 ---
 

@@ -6,6 +6,7 @@ import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
+import { EventJsonLd } from "@/components/shared/SEOJsonLd";
 import { formatDate } from "@/lib/utils";
 import type { AgendaEvent } from "@/app/(admin)/admin/agenda/page";
 
@@ -39,6 +40,18 @@ export default function AgendaPage() {
         defaultDescription="Les événements du GASPE et du secteur maritime."
         breadcrumbs={[{ label: "Agenda" }]}
       />
+
+      {events.map((ev) => (
+        <EventJsonLd
+          key={`jsonld-${ev.id}`}
+          name={ev.title}
+          description={ev.description ?? ev.title}
+          startDate={ev.startDate}
+          endDate={ev.endDate && ev.endDate !== ev.startDate ? ev.endDate : undefined}
+          location={ev.location || ev.address || undefined}
+          url={ev.eventUrl || undefined}
+        />
+      ))}
 
       <ScrollRevealWrapper className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {events.length === 0 ? (

@@ -11,9 +11,10 @@ const D = (s: string) => getCmsDefault("ssgm", s);
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { ssgmCenters, approvedDoctors, SSGM_REGIONS } from "@/data/ssgm";
+import { ssgmCenters, approvedDoctors, SSGM_REGIONS, SSGM_FAQ } from "@/data/ssgm";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
+import { FAQJsonLd } from "@/components/shared/SEOJsonLd";
 
 type ViewTab = "centres" | "medecins";
 
@@ -54,6 +55,7 @@ export default function SSGMPage() {
 
   return (
     <>
+      <FAQJsonLd items={[...SSGM_FAQ]} />
       <CmsPageHeader
         pageId="ssgm"
         defaultTitle="SSGM & Médecins Agréés"

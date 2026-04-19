@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { getActiveMembers, type StoredMember } from "@/lib/members-store";
@@ -44,7 +45,7 @@ export function MembersMarquee() {
               >
                 {member.logoUrl ? (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-white/30 overflow-hidden p-0.5">
-                    <img src={member.logoUrl} alt={member.name} className="w-full h-full object-contain" loading="lazy" />
+                    <Image src={member.logoUrl} alt={member.name} width={32} height={32} className="w-full h-full object-contain" loading="lazy" unoptimized />
                   </div>
                 ) : (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">

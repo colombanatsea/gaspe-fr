@@ -533,3 +533,61 @@ export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   machine: "Machine",
   services: "Services",
 };
+
+/**
+ * FAQ éditoriale CCN 3228 — utilisée pour injecter FAQPage JSON-LD sur
+ * /boite-a-outils et enrichir la SERP (rich FAQ Google).
+ * 10 Q/R max (au-delà Google peut dégrader). Texte brut uniquement.
+ */
+export const CCN3228_FAQ = [
+  {
+    question: "Qu'est-ce que la CCN 3228 ?",
+    answer:
+      "La Convention Collective Nationale n° 3228 (IDCC 3228) régit le personnel navigant des entreprises de passages d'eau. Elle définit classifications, grilles salariales, congés, régime social ENIM et règles propres au maritime côtier.",
+  },
+  {
+    question: "Quelles sont les classifications de la CCN 3228 ?",
+    answer:
+      "Trois catégories : Pont (navigation et manœuvre), Machine (propulsion et maintenance technique) et Services (hôtellerie, billetterie, passagers). Chaque catégorie est déclinée en niveaux et échelons selon l'ancienneté et les brevets détenus.",
+  },
+  {
+    question: "Quels brevets STCW sont requis pour naviguer sous CCN 3228 ?",
+    answer:
+      "Les brevets STCW (Standards of Training, Certification and Watchkeeping) sont délivrés par la Direction des Affaires Maritimes. Pour le personnel pont : certificat de matelot, capacitaire à la navigation 200 UMS, capitaine 500. Pour la machine : officier mécanicien. Détails dans l'arrêté du 26 juillet 2013.",
+  },
+  {
+    question: "Quels sont les droits à congés des marins CCN 3228 ?",
+    answer:
+      "Les marins bénéficient de congés payés majorés (environ 1/6 du temps embarqué, soit ~30 jours pour 180 jours en mer) conformément au Code des transports (Livre V, titre V) et à la CCN 3228. S'y ajoutent des congés de fractionnement et des jours fériés spécifiques.",
+  },
+  {
+    question: "Comment fonctionne le régime ENIM ?",
+    answer:
+      "L'ENIM (Établissement National des Invalides de la Marine) est le régime social des marins français : assurance maladie, retraite, accidents du travail. Les cotisations sont partagées employeur/salarié selon des taux publiés annuellement par la Caisse des Gens de Mer.",
+  },
+  {
+    question: "Quelles aides à l'apprentissage pour les armateurs ?",
+    answer:
+      "Les armateurs peuvent bénéficier de l'aide unique à l'apprentissage (jusqu'à 6 000 € la 1re année), des exonérations ENIM sur les contrats d'apprentissage maritime, et des financements OPCO Mobilités pour les formations tutorales et pédagogiques.",
+  },
+  {
+    question: "Qu'est-ce que la NAO 2026 dans la branche maritime côtière ?",
+    answer:
+      "La Négociation Annuelle Obligatoire 2026 a actualisé les grilles salariales CCN 3228 avec une revalorisation générale, des indemnités de panier, des primes de fin d'année et des majorations heures supplémentaires. Consultez les grilles détaillées dans la section Grilles salariales.",
+  },
+  {
+    question: "Comment calculer le salaire minimum conventionnel d'un marin ?",
+    answer:
+      "Le simulateur de salaire GASPE intègre la grille NAO 2026 par fonction et échelon. Il inclut : salaire mensuel brut, heures supplémentaires, prime de fin d'année, indemnités. Les montants sont indicatifs — les salaires effectifs peuvent être supérieurs selon accords d'entreprise.",
+  },
+  {
+    question: "Quelles sont les obligations de formation continue d'un marin ?",
+    answer:
+      "Les marins doivent renouveler leurs brevets STCW tous les 5 ans (formations de recyclage sécurité : survie en mer, lutte contre incendie, premiers secours). Les frais sont généralement à la charge de l'employeur, avec possibilité de financement OPCO Mobilités.",
+  },
+  {
+    question: "Où trouver le texte officiel de la CCN 3228 ?",
+    answer:
+      "Le texte intégral et les avenants sont publiés sur Legifrance (recherche IDCC 3228) et au Journal officiel. La Direction des Affaires Maritimes et les partenaires sociaux de la branche diffusent également les accords étendus sur leurs sites respectifs.",
+  },
+] as const;
