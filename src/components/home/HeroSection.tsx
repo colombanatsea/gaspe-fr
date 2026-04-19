@@ -24,13 +24,16 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
-      {/* Video background */}
+      {/* Video background — poster évite le flash noir et réduit le LCP sur mobile */}
       <div className="pointer-events-none absolute inset-0">
         <video
           autoPlay
           muted
           loop
           playsInline
+          preload="metadata"
+          poster="/og-image.png"
+          aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
         >
           <source src="/assets/acf_video.MP4" type="video/mp4" />

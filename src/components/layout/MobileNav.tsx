@@ -50,7 +50,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
           <span className="font-heading text-lg font-bold">{SITE_NAME}</span>
           <button
             onClick={onClose}
-            className="p-2 rounded-md text-foreground-muted hover:bg-surface"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-foreground-muted hover:bg-surface"
             aria-label="Fermer le menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -282,6 +282,25 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "redirect-cta": "Voir les Positions",
   },
 
+  // Charte newsletter — éditée via /admin/newsletter/charte, injectée dans le
+  // renderer HTML (src/lib/newsletter/render.ts) pour personnaliser l'identité
+  // graphique des emails envoyés via Brevo.
+  "newsletter-charte": {
+    "sender-name": "GASPE",
+    "sender-email": "contact@gaspe.fr",
+    "reply-to": "contact@gaspe.fr",
+    "logo-url": "https://www.gaspe.fr/logo-gaspe.jpg",
+    "primary-color": "#1B7E8A",
+    "accent-color": "#6DAAAC",
+    "text-color": "#222221",
+    "background-color": "#F5F3F0",
+    "tagline": "D'un littoral à l'autre. Localement ancrés. Socialement engagés.",
+    "footer-html": "<p>GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p><p>Maison de la Mer – Daniel Gilard, Quai de la Fosse, 44000 Nantes</p>",
+    "unsubscribe-label": "Se désinscrire",
+    "webversion-label": "Voir la version web",
+    "preheader-default": "Actualités du maritime côtier français",
+  },
+
   footer: {
     "newsletter-title": "Restez informé des actualités maritimes",
     // Tiret semi-quadratique (–) et non tiret quadratique (—) : règle typo GASPE.

@@ -1,10 +1,30 @@
-export const SITE_VERSION = "2.6.0";
+export const SITE_VERSION = "2.14.0";
 export const SITE_NAME = "GASPE";
 export const SITE_FULL_NAME =
   "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau";
-export const SITE_TAGLINE = "Localement ancrés. Socialement engagés.";
+export const SITE_TAGLINE = "D'un littoral à l'autre. Localement ancrés. Socialement engagés.";
+/**
+ * Description SEO — optimisée pour "maritime côtier", "maritime de proximité",
+ * "armateurs côtiers", "transport maritime côtier France", "passages d'eau".
+ * Longueur : ~155-160 caractères (optimum meta description Google).
+ */
 export const SITE_DESCRIPTION =
-  "Le GASPE est une association de loi 1901 regroupant les armateurs assurant des missions de service public de transport de passagers ou de fret sur des lignes côtières nationales.";
+  "Le GASPE, organisation patronale représentative du maritime côtier français, fédère 27 compagnies armateurs assurant la continuité territoriale (passages d'eau, îles, liaisons côtières).";
+/** Mots-clés cibles stratégiques (ordre décroissant de priorité). */
+export const SITE_KEYWORDS = [
+  "maritime côtier",
+  "maritime de proximité",
+  "armateurs côtiers",
+  "transport maritime côtier",
+  "service public maritime",
+  "passages d'eau",
+  "liaisons maritimes îles",
+  "continuité territoriale maritime",
+  "compagnies maritimes France",
+  "bacs passagers",
+  "CCN 3228",
+  "GASPE",
+];
 export const SITE_URL = "https://www.gaspe.fr";
 
 export const MAPBOX_STYLE = "mapbox://styles/mapbox/light-v11";

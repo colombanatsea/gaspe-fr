@@ -453,4 +453,23 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
       { id: "contact-email", label: "Email de contact affiché", type: "text" },
     ],
   },
+  {
+    id: "newsletter-charte",
+    label: "Charte newsletter",
+    sections: [
+      { id: "sender-name", label: "Expéditeur — Nom affiché", type: "text" },
+      { id: "sender-email", label: "Expéditeur — Email", type: "text" },
+      { id: "reply-to", label: "Email de réponse", type: "text" },
+      { id: "logo-url", label: "Logo (URL ou upload)", type: "image" },
+      { id: "primary-color", label: "Couleur primaire (hex)", type: "text" },
+      { id: "accent-color", label: "Couleur accent (hex)", type: "text" },
+      { id: "text-color", label: "Couleur texte (hex)", type: "text" },
+      { id: "background-color", label: "Couleur fond (hex)", type: "text" },
+      { id: "tagline", label: "Baseline en header", type: "text" },
+      { id: "footer-html", label: "Footer (HTML : mentions, adresse…)", type: "richtext" },
+      { id: "unsubscribe-label", label: "Libellé lien désinscription", type: "text" },
+      { id: "webversion-label", label: "Libellé lien version web", type: "text" },
+      { id: "preheader-default", label: "Preheader par défaut", type: "text" },
+    ],
+  },
 ];

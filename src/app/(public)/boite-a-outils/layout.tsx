@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { metaFromPageId } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Boîte à outils CCN 3228",
-  description: "Outils pratiques de la Convention Collective Nationale 3228 : grilles salariales, congés, régime ENIM, simulateur.",
-};
+// Metadata optimisée SEO (title/description/keywords/OG/canonical) via le helper central.
+// Contenu éditable depuis /admin/pages → "SEO" (override DEFAULT_PAGE_META de src/lib/seo.ts).
+export const metadata: Metadata = metaFromPageId("boite-a-outils");
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;

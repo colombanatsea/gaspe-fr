@@ -69,6 +69,24 @@ interface Env {
   BREVO_API_KEY: string;
   CONTACT_EMAIL: string;
   JWT_SECRET: string;
+  // Newsletter v2 — ces vars sont optionnelles tant que Brevo n'est pas configuré.
+  // Quand elles sont définies, les endpoints send/webhook/unsub deviennent actifs.
+  BREVO_SENDER_EMAIL?: string;
+  BREVO_SENDER_NAME?: string;
+  BREVO_REPLY_TO?: string;
+  BREVO_WEBHOOK_SECRET?: string;
+  NEWSLETTER_UNSUB_SECRET?: string;
+  // 10 list IDs Brevo (une par catégorie) — à configurer via `wrangler vars`.
+  BREVO_LIST_INFOS_GENERALES?: string;
+  BREVO_LIST_AG?: string;
+  BREVO_LIST_EMPLOI?: string;
+  BREVO_LIST_FORMATION?: string;
+  BREVO_LIST_VEILLE_JURIDIQUE?: string;
+  BREVO_LIST_VEILLE_SOCIALE?: string;
+  BREVO_LIST_VEILLE_SURETE_SECURITE?: string;
+  BREVO_LIST_VEILLE_DATA?: string;
+  BREVO_LIST_VEILLE_ENVIRONNEMENT?: string;
+  BREVO_LIST_ACTUALITES?: string;
 }
 
 // ── User type matching frontend User interface ──
@@ -451,6 +469,26 @@ export default {
       // ── Newsletter subscribers (admin) ──
       if (path === "/api/newsletter/subscribers" && request.method === "GET") {
         return handleNewsletterSubscribers(request, env, corsHeaders);
+      }
+
+      // ── Newsletter v2 — envois (test-send / bulk-send) ──
+      if (path.match(/^\/api\/newsletter\/drafts\/[^/]+\/test-send$/) && request.method === "POST") {
+        const draftId = path.split("/")[4];
+        return handleNewsletterTestSend(request, env, corsHeaders, draftId);
+      }
+      if (path.match(/^\/api\/newsletter\/drafts\/[^/]+\/send$/) && request.method === "POST") {
+        const draftId = path.split("/")[4];
+        return handleNewsletterBulkSend(request, env, corsHeaders, draftId);
+      }
+
+      // ── Newsletter — webhook Brevo (tracking open/click/bounce/unsubscribe) ──
+      if (path === "/api/newsletter/brevo/webhook" && request.method === "POST") {
+        return handleBrevoWebhook(request, env, corsHeaders);
+      }
+
+      // ── Newsletter — désinscription publique tokenisée ──
+      if (path === "/api/newsletter/unsubscribe" && request.method === "POST") {
+        return handleNewsletterUnsubscribe(request, env, corsHeaders);
       }
 
       // ── Media Files ──
@@ -2557,4 +2595,269 @@ async function handleNlDraftsDelete(request: Request, env: Env, corsHeaders: Rec
   await ensureNlDraftsTable(env);
   await env.DB.prepare("DELETE FROM nl_drafts WHERE id = ?").bind(id).run();
   return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Newsletter v2 — Phase 3/4/6 : test-send, bulk-send, webhook, unsub
+// Bloqué par config Brevo (list IDs + webhook secret). Les endpoints
+// existent pour permettre l'intégration complète dès que les secrets
+// sont provisionnés via `wrangler secret put …`.
+// ═══════════════════════════════════════════════════════════════════
+
+interface NlBlock {
+  id: string;
+  type: string;
+  [key: string]: unknown;
+}
+
+const CATEGORY_TO_LIST_ENV: Record<string, keyof Env> = {
+  informations_generales: "BREVO_LIST_INFOS_GENERALES",
+  ag: "BREVO_LIST_AG",
+  emploi: "BREVO_LIST_EMPLOI",
+  formation: "BREVO_LIST_FORMATION",
+  veille_juridique: "BREVO_LIST_VEILLE_JURIDIQUE",
+  veille_sociale: "BREVO_LIST_VEILLE_SOCIALE",
+  veille_surete_securite: "BREVO_LIST_VEILLE_SURETE_SECURITE",
+  veille_data: "BREVO_LIST_VEILLE_DATA",
+  veille_environnement: "BREVO_LIST_VEILLE_ENVIRONNEMENT",
+  actualites: "BREVO_LIST_ACTUALITES",
+};
+
+/**
+ * Rendu HTML minimal côté Worker — la charte complète reste dans le renderer
+ * frontend. Pour le POC, on envoie le HTML pré-rendu par le client (champ
+ * `htmlContent` dans le body de l'envoi). Plus tard : récupérer les blocs
+ * JSON et rerender côté Worker pour garantir intégrité charte.
+ */
+function simpleHtmlFromBlocks(blocks: NlBlock[]): string {
+  const parts = blocks.map((b) => {
+    const type = b.type;
+    if (type === "heading") return `<h2 style="font-family:Exo 2,sans-serif;color:#1B7E8A">${String(b.text ?? "")}</h2>`;
+    if (type === "paragraph") return `<p style="font-family:DM Sans,sans-serif;color:#222">${String(b.text ?? "")}</p>`;
+    if (type === "button") return `<p><a href="${String(b.url ?? "#")}" style="background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:12px;text-decoration:none">${String(b.label ?? "En savoir plus")}</a></p>`;
+    return "";
+  });
+  return `<!DOCTYPE html><html><body style="background:#F5F3F0;padding:24px">${parts.join("")}</body></html>`;
+}
+
+async function loadDraftOrError(env: Env, id: string) {
+  const row = await env.DB.prepare("SELECT * FROM nl_drafts WHERE id = ?").bind(id).first<NlDraftRow>();
+  return row;
+}
+
+async function handleNewsletterTestSend(request: Request, env: Env, corsHeaders: Record<string, string>, draftId: string) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  if (!env.BREVO_API_KEY) {
+    return json({ error: "BREVO_API_KEY non configurée sur le Worker" }, corsHeaders, 503);
+  }
+
+  const body = await request.json().catch(() => ({})) as { recipients?: string[] };
+  const recipients = (body.recipients ?? []).filter((e) => typeof e === "string" && /@/.test(e));
+  if (recipients.length === 0 || recipients.length > 5) {
+    return json({ error: "Fournir 1 à 5 emails de test" }, corsHeaders, 400);
+  }
+
+  await ensureNlDraftsTable(env);
+  const draft = await loadDraftOrError(env, draftId);
+  if (!draft) return json({ error: "Brouillon introuvable" }, corsHeaders, 404);
+
+  let blocks: NlBlock[] = [];
+  try { blocks = JSON.parse(draft.blocks_json) as NlBlock[]; } catch { /* empty */ }
+  const html = simpleHtmlFromBlocks(blocks);
+
+  const senderEmail = env.BREVO_SENDER_EMAIL ?? env.CONTACT_EMAIL ?? "contact@gaspe.fr";
+  const senderName = env.BREVO_SENDER_NAME ?? "GASPE";
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { email: senderEmail, name: senderName },
+      to: recipients.map((email) => ({ email })),
+      replyTo: env.BREVO_REPLY_TO ? { email: env.BREVO_REPLY_TO } : undefined,
+      subject: `[TEST] ${draft.subject}`,
+      htmlContent: html,
+      headers: { "X-GASPE-Test": "true" },
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    return json({ error: `Brevo a refusé l'envoi (${res.status})`, details: text.slice(0, 200) }, corsHeaders, 502);
+  }
+  return json({ success: true, sent: recipients.length }, corsHeaders);
+}
+
+async function handleNewsletterBulkSend(request: Request, env: Env, corsHeaders: Record<string, string>, draftId: string) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({})) as { category?: string };
+  const category = body.category ?? "";
+  const listEnvKey = CATEGORY_TO_LIST_ENV[category];
+  if (!listEnvKey) return json({ error: "Catégorie invalide" }, corsHeaders, 400);
+
+  const listId = env[listEnvKey] as string | undefined;
+  if (!env.BREVO_API_KEY || !listId) {
+    return json({
+      error: "Envoi production non configuré",
+      missing: !env.BREVO_API_KEY ? ["BREVO_API_KEY"] : [listEnvKey],
+      hint: "Configurer via `wrangler secret put` puis redéployer.",
+    }, corsHeaders, 503);
+  }
+
+  await ensureNlDraftsTable(env);
+  const draft = await loadDraftOrError(env, draftId);
+  if (!draft) return json({ error: "Brouillon introuvable" }, corsHeaders, 404);
+
+  let blocks: NlBlock[] = [];
+  try { blocks = JSON.parse(draft.blocks_json) as NlBlock[]; } catch { /* empty */ }
+  const html = simpleHtmlFromBlocks(blocks);
+
+  const senderEmail = env.BREVO_SENDER_EMAIL ?? env.CONTACT_EMAIL ?? "contact@gaspe.fr";
+  const senderName = env.BREVO_SENDER_NAME ?? "GASPE";
+
+  // Campagne Brevo classique via "email campaigns" — plus scalable que SMTP direct.
+  const res = await fetch("https://api.brevo.com/v3/emailCampaigns", {
+    method: "POST",
+    headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
+    body: JSON.stringify({
+      name: `GASPE – ${draft.title} [${category}]`,
+      subject: draft.subject,
+      sender: { email: senderEmail, name: senderName },
+      replyTo: env.BREVO_REPLY_TO ?? senderEmail,
+      htmlContent: html,
+      recipients: { listIds: [Number(listId)] },
+    }),
+  });
+
+  const campaignResp = await res.json().catch(() => ({})) as { id?: number; message?: string };
+  if (!res.ok) {
+    return json({ error: `Brevo erreur ${res.status}`, details: campaignResp }, corsHeaders, 502);
+  }
+
+  // Déclenchement immédiat de la campagne
+  if (campaignResp.id) {
+    await fetch(`https://api.brevo.com/v3/emailCampaigns/${campaignResp.id}/sendNow`, {
+      method: "POST",
+      headers: { "api-key": env.BREVO_API_KEY },
+    });
+  }
+
+  // Trace l'envoi dans nl_sends pour suivi admin
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS nl_sends (
+      id TEXT PRIMARY KEY, draft_id TEXT NOT NULL, category TEXT, brevo_campaign_id TEXT,
+      sent_at TEXT NOT NULL, recipients_count INTEGER DEFAULT 0
+    )`).run();
+    const sendId = `send-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    await env.DB.prepare(
+      "INSERT INTO nl_sends (id, draft_id, category, brevo_campaign_id, sent_at) VALUES (?, ?, ?, ?, ?)"
+    ).bind(sendId, draftId, category, String(campaignResp.id ?? ""), new Date().toISOString()).run();
+    // Marque le draft comme "sent"
+    await env.DB.prepare("UPDATE nl_drafts SET status = 'sent', updated_at = ? WHERE id = ?")
+      .bind(new Date().toISOString(), draftId).run();
+  } catch { /* non bloquant */ }
+
+  return json({ success: true, campaignId: campaignResp.id }, corsHeaders);
+}
+
+/**
+ * Webhook Brevo — reçoit les événements (open, click, bounce, unsubscribe).
+ * Signature HMAC-SHA256 vérifiée avec BREVO_WEBHOOK_SECRET si configuré.
+ * Les events sont persistés dans nl_events pour analyse admin.
+ */
+async function handleBrevoWebhook(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  if (env.BREVO_WEBHOOK_SECRET) {
+    // Brevo envoie un header `x-brevo-signature` (HMAC-SHA256 sur le body).
+    const signature = request.headers.get("x-brevo-signature") ?? "";
+    const raw = await request.clone().text();
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw", encoder.encode(env.BREVO_WEBHOOK_SECRET),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    );
+    const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(raw));
+    const expected = Array.from(new Uint8Array(mac)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (signature !== expected) return json({ error: "Signature invalide" }, corsHeaders, 401);
+  }
+
+  const body = await request.json().catch(() => null) as null | {
+    event?: string;
+    email?: string;
+    "message-id"?: string;
+    date?: string;
+    subject?: string;
+  };
+  if (!body || !body.event || !body.email) return json({ error: "Payload invalide" }, corsHeaders, 400);
+
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS nl_events (
+      id TEXT PRIMARY KEY, event TEXT, email TEXT, message_id TEXT, subject TEXT, occurred_at TEXT
+    )`).run();
+    const id = `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    await env.DB.prepare(
+      "INSERT INTO nl_events (id, event, email, message_id, subject, occurred_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(id, body.event, body.email, body["message-id"] ?? null, body.subject ?? null, body.date ?? new Date().toISOString()).run();
+
+    // Si désinscription ou bounce hard → désabonner de toutes les catégories.
+    if (body.event === "unsubscribed" || body.event === "hard_bounce") {
+      await env.DB.prepare(`
+        UPDATE newsletter_preferences SET
+          informations_generales = 0, ag = 0, emploi = 0, formation = 0,
+          veille_juridique = 0, veille_sociale = 0, veille_surete_securite = 0,
+          veille_data = 0, veille_environnement = 0, actualites = 0
+        WHERE user_id IN (SELECT id FROM users WHERE email = ?)
+      `).bind(body.email).run();
+    }
+  } catch { /* swallow */ }
+
+  return json({ success: true }, corsHeaders);
+}
+
+/**
+ * Désinscription publique — la page `/newsletter/unsubscribe?token=…` appelle
+ * ce endpoint avec un token HMAC signé par NEWSLETTER_UNSUB_SECRET.
+ * Le token est de la forme `<email-base64>.<hmac-hex>`.
+ */
+async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const body = await request.json().catch(() => ({})) as { token?: string; categories?: string[] };
+  const token = body.token ?? "";
+  if (!token || !env.NEWSLETTER_UNSUB_SECRET) {
+    return json({ error: "Token manquant ou secret non configuré" }, corsHeaders, 400);
+  }
+
+  const [emailB64, sig] = token.split(".");
+  if (!emailB64 || !sig) return json({ error: "Token malformé" }, corsHeaders, 400);
+
+  const email = atob(emailB64);
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(env.NEWSLETTER_UNSUB_SECRET),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(email));
+  const expected = Array.from(new Uint8Array(mac)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (sig !== expected) return json({ error: "Signature invalide" }, corsHeaders, 401);
+
+  // Désinscrit des catégories demandées (ou toutes si vide).
+  const allCategories = [
+    "informations_generales", "ag", "emploi", "formation",
+    "veille_juridique", "veille_sociale", "veille_surete_securite",
+    "veille_data", "veille_environnement", "actualites",
+  ];
+  const cats = (body.categories && body.categories.length > 0) ? body.categories.filter((c) => allCategories.includes(c)) : allCategories;
+  const setClause = cats.map((c) => `${c} = 0`).join(", ");
+
+  await env.DB.prepare(`
+    UPDATE newsletter_preferences SET ${setClause}
+    WHERE user_id IN (SELECT id FROM users WHERE email = ?)
+  `).bind(email).run();
+
+  // Pour les inscrits legacy (table newsletter)
+  await env.DB.prepare("DELETE FROM newsletter WHERE email = ?").bind(email).run();
+
+  return json({ success: true, email, categoriesDisabled: cats }, corsHeaders);
 }

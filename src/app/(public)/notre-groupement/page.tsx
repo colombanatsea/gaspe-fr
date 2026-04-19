@@ -1,33 +1,7 @@
-import type { Metadata } from "next";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { GroupementContent } from "./GroupementContent";
 
-export const metadata: Metadata = {
-  title: "Notre Groupement",
-  description:
-    "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
-  openGraph: {
-    title: "Notre Groupement | GASPE",
-    description:
-      "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
-    images: [
-      {
-        url: "/og-groupement.png",
-        width: 1200,
-        height: 630,
-        alt: "GASPE — Notre Groupement",
-        type: "image/png",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Notre Groupement | GASPE",
-    description:
-      "Présentation du GASPE : histoire, mission de service public, valeurs, engagements et composition du bureau.",
-    images: ["/og-groupement.png"],
-  },
-};
+// La metadata est définie dans layout.tsx via metaFromPageId("notre-groupement").
 
 export default function NotreGroupementPage() {
   return (

@@ -9,8 +9,7 @@ import { memberStats } from "@/data/members";
 
 const D = (s: string) => getCmsDefault("nos-compagnies-recrutent", s);
 
-// Free maritime images from Unsplash
-const HERO_IMAGE = "https://images.unsplash.com/photo-1534224039826-c7a0eda0e6b3?w=1200&q=80&auto=format";
+// Background 100% CSS (gradient + motif) : zéro requête externe, zéro CLS, zéro LCP penalty.
 
 interface RecruitHeroProps {
   totalJobs: number;
@@ -29,16 +28,17 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
-      {/* Background image with overlay */}
-      <div className="pointer-events-none absolute inset-0">
-        <img
-          src={HERO_IMAGE}
-          alt="Navire maritime en service"
-          className="h-full w-full object-cover"
-          fetchPriority="high"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-900)] via-[var(--gaspe-neutral-900)]/85 to-[var(--gaspe-neutral-900)]/50" />
-      </div>
+      {/* Background : gradient diagonal + orb décoratif, pas d'image externe */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(1200px 600px at 85% 20%, rgba(27,126,138,0.35), transparent 70%), " +
+            "radial-gradient(800px 500px at 15% 85%, rgba(109,170,172,0.2), transparent 65%), " +
+            "linear-gradient(135deg, var(--gaspe-neutral-900) 0%, #0f2b30 100%)",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--gaspe-neutral-900)]/60 via-[var(--gaspe-neutral-900)]/20 to-transparent" />
 
       {/* Grid pattern overlay */}
       <div

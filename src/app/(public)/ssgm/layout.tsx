@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { metaFromPageId } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "SSGM & Médecins Agréés — Annuaire Santé Maritime",
-  description: "Trouvez les Services de Santé des Gens de Mer (SSGM) et les médecins agréés pour les visites médicales d'aptitude maritime en France métropolitaine et outre-mer.",
-};
+// Metadata optimisée SEO (title/description/keywords/OG/canonical) via le helper central.
+// Contenu éditable depuis /admin/pages → "SEO" (override DEFAULT_PAGE_META de src/lib/seo.ts).
+export const metadata: Metadata = metaFromPageId("ssgm");
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;
