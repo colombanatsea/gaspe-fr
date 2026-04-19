@@ -2,7 +2,12 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+
+const D = (s: string) => getCmsDefault("ssgm", s);
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
@@ -17,6 +22,10 @@ export default function SSGMPage() {
   const [tab, setTab] = useState<ViewTab>("centres");
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState<string>("all");
+
+  const introTitle = useCmsContent("ssgm", "intro-title", D("intro-title"));
+  const introP1 = useCmsContent("ssgm", "intro-paragraph1", D("intro-paragraph1"));
+  const introP2 = useCmsContent("ssgm", "intro-paragraph2", D("intro-paragraph2"));
 
   const filteredCenters = useMemo(() => {
     return ssgmCenters.filter((c) => {
@@ -45,8 +54,10 @@ export default function SSGMPage() {
 
   return (
     <>
-      <PageHeader
-        title="SSGM & Médecins Agréés"
+      <CmsPageHeader
+        pageId="ssgm"
+        defaultTitle="SSGM & Médecins Agréés"
+        defaultDescription="Services de Santé des Gens de Mer — visites d'aptitude, suivi médical et certificats STCW."
         breadcrumbs={[
           { label: "Accueil", href: "/" },
           { label: "SSGM & Médecins Agréés" },
@@ -57,17 +68,12 @@ export default function SSGMPage() {
         {/* Intro */}
         <div className="reveal mb-8 rounded-2xl bg-surface-teal p-6">
           <h2 className="font-heading text-lg font-bold text-foreground">
-            Services de Santé des Gens de Mer
+            {introTitle}
           </h2>
-          <p className="mt-2 text-sm text-foreground-muted leading-relaxed">
-            Les SSGM sont les services de santé dédiés aux gens de mer. Ils assurent les visites médicales
-            d&apos;aptitude à la navigation, le suivi médical des marins et la délivrance des certificats
-            médicaux requis par la réglementation maritime (STCW, Code du travail maritime).
-          </p>
-          <p className="mt-2 text-sm text-foreground-muted leading-relaxed">
-            Tout marin professionnel doit passer une visite médicale d&apos;aptitude avant son embarquement,
-            puis un renouvellement tous les 2 ans (annuel pour certaines catégories).
-          </p>
+          <div
+            className="mt-2 text-sm text-foreground-muted leading-relaxed space-y-2"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(`${introP1}${introP2}`) }}
+          />
         </div>
 
         {/* Stats */}

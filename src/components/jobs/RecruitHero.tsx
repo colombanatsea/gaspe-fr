@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+
+const D = (s: string) => getCmsDefault("nos-compagnies-recrutent", s);
 
 // Free maritime images from Unsplash
 const HERO_IMAGE = "https://images.unsplash.com/photo-1534224039826-c7a0eda0e6b3?w=1200&q=80&auto=format";
@@ -13,6 +17,7 @@ interface RecruitHeroProps {
 
 export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
   const ref = useScrollReveal();
+  const heroSubtitle = useCmsContent("nos-compagnies-recrutent", "hero-subtitle", D("hero-subtitle"));
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-[var(--gaspe-neutral-900)]">
@@ -67,8 +72,7 @@ export function RecruitHero({ totalJobs, totalCompanies }: RecruitHeroProps) {
           </h1>
 
           <p className="reveal stagger-3 mt-5 text-lg text-white/60 leading-relaxed max-w-xl">
-            Nos compagnies recrutent des profils variés : officiers, matelots,
-            mécaniciens, personnels à terre. Trouvez votre prochaine mission.
+            {heroSubtitle}
           </p>
 
           {/* Stats pills */}

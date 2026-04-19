@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 
 export default function CGUPage() {
   return (
     <>
-      <PageHeader
-        title="Conditions générales d'utilisation"
-        description="Règles d'utilisation du site gaspe.fr et de ses services"
+      <CmsPageHeader
+        pageId="cgu"
+        defaultTitle="Conditions générales d'utilisation"
+        defaultDescription="Règles d'utilisation du site gaspe.fr et de ses services"
         breadcrumbs={[{ label: "Conditions générales d'utilisation" }]}
       />
 

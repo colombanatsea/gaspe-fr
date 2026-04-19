@@ -1,9 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useCmsContent } from "@/lib/use-cms";
+import { getCmsDefault } from "@/data/cms-defaults";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+
+const PAGE_ID = "positions";
+const D = (s: string) => getCmsDefault(PAGE_ID, s);
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -112,11 +118,17 @@ export default function PositionsPage() {
 
   const visible = showAll ? filtered : filtered.slice(0, INITIAL_VISIBLE);
 
+  const searchPlaceholder = useCmsContent(PAGE_ID, "search-placeholder", D("search-placeholder"));
+  const positionsSectionTitle = useCmsContent(PAGE_ID, "positions-section-title", D("positions-section-title"));
+  const presseSectionTitle = useCmsContent(PAGE_ID, "presse-section-title", D("presse-section-title"));
+  const presseDescription = useCmsContent(PAGE_ID, "presse-description", D("presse-description"));
+
   return (
     <>
-      <PageHeader
-        title="Positions"
-        description="Les positions du GASPE sur les grands enjeux du transport maritime de service public."
+      <CmsPageHeader
+        pageId="positions"
+        defaultTitle="Positions"
+        defaultDescription="Les positions du GASPE sur les grands enjeux du transport maritime de service public."
         breadcrumbs={[{ label: "Positions" }]}
       />
 
@@ -126,7 +138,7 @@ export default function PositionsPage() {
         {/* -------------------------------------------------------- */}
         <section className="reveal">
           <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-            Positions du GASPE
+            {positionsSectionTitle}
           </h2>
 
           {/* Search + filters */}
@@ -135,7 +147,7 @@ export default function PositionsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher une position..."
+              placeholder={searchPlaceholder}
               className="flex-1 rounded-xl border border-border-light bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
             <div className="flex gap-2 flex-wrap">
@@ -218,8 +230,15 @@ export default function PositionsPage() {
         {/* -------------------------------------------------------- */}
         <section className="mt-16 reveal">
           <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-            Espace Presse
+            {presseSectionTitle}
           </h2>
+
+          {presseDescription && presseDescription !== D("presse-description") && (
+            <div
+              className="mb-6 text-sm text-foreground-muted prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(presseDescription) }}
+            />
+          )}
 
           <div className="rounded-2xl bg-background border border-border-light p-8 shadow-sm">
             <div className="flex flex-col md:flex-row gap-8">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { Badge } from "@/components/ui/Badge";
 import { formations } from "@/data/formations";
@@ -29,9 +29,10 @@ function statusLabel(status: string) {
 export default function FormationsPage() {
   return (
     <>
-      <PageHeader
-        title="Formations"
-        description="Les formations maritimes proposées par le GASPE et ses partenaires pour accompagner les professionnels du secteur."
+      <CmsPageHeader
+        pageId="formations"
+        defaultTitle="Formations"
+        defaultDescription="Les formations maritimes proposées par le GASPE et ses partenaires pour accompagner les professionnels du secteur."
         breadcrumbs={[{ label: "Formations" }]}
       />
 

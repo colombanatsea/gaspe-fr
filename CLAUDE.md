@@ -3,19 +3,19 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**105 pages** — deployed on Cloudflare Pages (static export)
+**109 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.12.0
+- **Version**: v2.13.0 (CMS complet + newsletter v2 foundation)
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 191 tests, 18 files)
+npm run test         # unit tests (Vitest, 203 tests, 19 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 4 warnings — async set-state-in-effect only)
+npm run lint         # ESLint (0 errors, 5 warnings — async set-state-in-effect only)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -30,8 +30,8 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ Secrets Worker configurés (JWT_SECRET, BREVO_API_KEY, CONTACT_EMAIL, HYDROS_*)
 - ✅ NEXT_PUBLIC_API_URL set sur CF Pages → mode API actif
 - ✅ CF_CONFIGURED=true (GitHub repo var) → workflow deploy-worker actif
-- ✅ Migrations D1 appliquées : 0001-0006 (vérifié via /api/organizations renvoyant 31 orgs)
-- ⏳ Migration 0007 (org_archived) à appliquer au merge de v2.12.0 sur main
+- ✅ Migrations D1 appliquées : 0001-0007 (dont 0007 org_archived appliquée via deploy-worker `--remote`)
+- ⏳ Migration 0008 (newsletter v2 : nl_drafts, nl_sends, nl_events, nl_templates) appliquée automatiquement au merge session 26 sur main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -184,11 +184,12 @@ src/
 │   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
-│   └── __tests__/         # Unit tests (191 tests, 18 files)
+│   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
+│   └── __tests__/         # Unit tests (203 tests, 19 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 38 endpoints
+├── api.ts                 # CF Worker: 44 endpoints
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
 └── migrations/
@@ -196,12 +197,13 @@ workers/
     ├── 0002_password_reset.sql  # Password reset tokens
     ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
     ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
-    └── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
-    └── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
-    └── 0007_org_archived.sql             # Organization archived flag + index
+    ├── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
+    ├── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
+    ├── 0007_org_archived.sql             # Organization archived flag + index
+    └── 0008_newsletter.sql               # Newsletter v2 — drafts, sends, events, templates
 ```
 
-## Worker API — 39 endpoints
+## Worker API — 44 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -245,12 +247,12 @@ workers/
 | /api/media/:id | DELETE | JWT+admin |
 | /api/enm/import | POST | JWT |
 
-## Database (D1 — 13 tables)
+## Database (D1 — 17 tables, migrations 0001-0008 applied)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary |
 | `auth` | PBKDF2 password hashes |
-| `organizations` | 31 GASPE member companies (seeded from members.ts) |
+| `organizations` | 31 GASPE member companies (seeded from members.ts) + archived flag |
 | `newsletter_preferences` | 10 boolean columns per user |
 | `invitations` | Team member invitations (token, 7-day expiry) |
 | `password_reset_tokens` | Reset tokens (1h expiry, single-use) |
@@ -261,9 +263,13 @@ workers/
 | `jobs` | Job offers (admin + adherent created) |
 | `medical_visits` | Sailor medical visit tracking (per-user) |
 | `media_files` | Media file metadata (actual files in R2) |
+| `nl_drafts` | Newsletter v2 drafts (blocks JSON + subject + status) |
+| `nl_sends` | Newsletter v2 send history (draft_id, recipients count, stats) |
+| `nl_events` | Newsletter v2 tracking events (open/click/bounce/unsub from Brevo webhook) |
+| `nl_templates` | Newsletter v2 pre-configured block templates |
 
 ## Testing
-- **Unit tests**: Vitest — 191 tests, 18 spec files
+- **Unit tests**: Vitest — 203 tests, 19 spec files
 - **E2E tests**: Playwright — 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -289,20 +295,33 @@ workers/
 - CORS restricted to gaspe-fr.pages.dev, gaspe.fr, localhost
 - robots.txt blocks indexing of admin/auth pages
 
-## CMS (session 25c — partial coverage)
+## CMS (session 26 — couverture complète, 18 pages)
 Architecture dual-mode : `src/lib/cms-store.ts` + hook `useCmsContent(pageId, sectionId, fallback)` dans `src/lib/use-cms.tsx`.
 
 **Default content** : `src/data/cms-defaults.ts` — contenu affiché si CMS vide, pré-remplit aussi l'éditeur admin.
 
-**Admin** : `/admin/pages` — sélecteur de pages + éditeur par section (text/richtext/image/list).
+**Admin** : `/admin/pages` — sélecteur de pages + éditeur par section (text/richtext/image/list). Sections groupées par préfixe (Hero, Stats, CTA, etc.) avec collapse, search box au-dessus de 8 sections, indicateur modifié non-sauvegardé, preview iframe live, bouton "Réinitialiser" par section.
 
-**Pages câblées (v2.12.2)** :
-- ✅ Homepage : hero (eyebrow/title/subtitle/baseline), CTA (title/description)
-- ✅ Notre Groupement : 18 champs + 3 listes (timeline, engagements, bureau)
-- ✅ Contact : adresse, email, encart
-- ✅ Footer : newsletter (title/description), linkedin, contact email
+**Pages câblées (v2.13.0)** — 18 pages :
+- ✅ Homepage : hero (+ CTAs, quick stats), stats 5 cartes, news 3 cartes, CTA
+- ✅ Notre Groupement : 18 champs + timeline + engagements + bureau
+- ✅ Contact : address, email, sidebar, form subjects, messages
+- ✅ Agenda, Documents, Formations : headers + CTAs + empty states
+- ✅ Positions : headers + section titles + search placeholder + presse description
+- ✅ Nos Adhérents : geoloc label, titulaires/associes headings
+- ✅ Nos Compagnies Recrutent : hero subtitle (via RecruitHero)
+- ✅ SSGM : intro title + 2 paragraphes richtext
+- ✅ Transition Écologique : intro + 4 key figures + 6 technologies (lists)
+- ✅ Boîte à outils : header
+- ✅ Découvrir Espace Adhérent : bannière démo + CTA adhésion
+- ✅ Mentions légales, Confidentialité, CGU, Presse : headers
+- ✅ Footer (global) : newsletter, LinkedIn, email
 
-**Pages à câbler (session 26)** : agenda, boîte-à-outils (intros + guides list), decouvrir-espace-adherent, documents, formations, nos-adherents, nos-compagnies-recrutent, positions, presse, ssgm, transition-ecologique, visites-medicales. Voir `docs/CMS-SPEC.md` pour l'inventaire complet.
+**Pattern canonical** : `src/app/(public)/notre-groupement/GroupementContent.tsx`. Le wrapper `CmsPageHeader` expose `page-header-title` + `page-header-description` en CMS pour toutes les pages utilisant `<PageHeader>`.
+
+**Seed** : `npx tsx scripts/seed-cms-defaults.ts > workers/migrations/0009_cms_defaults_seed.sql` — safe via INSERT OR IGNORE.
+
+**Guide éditorial** : `docs/CMS-GUIDE-UTILISATEUR.md`.
 
 **Types de sections CMS** :
 | Type | Storage | Editor UI |
@@ -313,20 +332,37 @@ Architecture dual-mode : `src/lib/cms-store.ts` + hook `useCmsContent(pageId, se
 | `config` | string | input |
 | `list` | `JSON.stringify(array)` | ListEditor (add/remove/reorder) |
 
-## Newsletter (v1 Brevo proxy, v2 éditeur à construire session 26)
-**v1 actuelle** : `/admin/newsletter` envoie texte brut via `/api/newsletter/send` → Brevo API. HTML sans charte, pas d'aperçu.
+## Newsletter (v1 Brevo proxy + v2 foundation, session 26)
 
-**v2 prévue** (spec : `docs/NEWSLETTER-SPEC.md`) :
-- Éditeur blocs drag-drop (header/paragraph/image/button/columns/footer)
-- Charte GASPE configurable (logo, couleurs)
-- Aperçu live desktop/mobile
-- Test send + envoi production batch
-- Webhook Brevo pour tracking (ouvertures, clics, bounces, désabonnements)
-- Sync contacts Brevo (inscriptions publiques + préférences)
-- Désinscription tokenisée RGPD
-- Dashboard stats par envoi
+**v1 actuelle** (rapid send) : `/admin/newsletter` envoie texte brut via `/api/newsletter/send` → Brevo API. HTML sans charte, pas d'aperçu.
 
-**Tables D1 à créer (migration 0008)** : `nl_drafts`, `nl_sends`, `nl_events`, `nl_templates`.
+**v2 foundation (session 26, beta)** : `/admin/newsletter/drafts` + `/admin/newsletter/edit?id=…`
+- ✅ Migration `0008_newsletter.sql` : tables `nl_drafts`, `nl_sends`, `nl_events`, `nl_templates`
+- ✅ Renderer HTML charté GASPE : `src/lib/newsletter/render.ts` (table-based, inline CSS, Outlook-safe)
+- ✅ 9 types de blocs : header, heading, paragraph, image, button, divider, columns, spacer, footer
+- ✅ Variables : `{{firstname}}`, `{{unsubscribe_url}}`, `{{webversion_url}}`
+- ✅ HTML sanitization (strip script/style/iframe, on* handlers, javascript: URLs)
+- ✅ Drafts CRUD : `POST/GET/PUT/DELETE /api/newsletter/drafts[/:id]` (JWT admin)
+- ✅ Store dual-mode : `src/lib/newsletter/drafts-store.ts` (localStorage ↔ D1)
+- ✅ Éditeur admin blocs : add/reorder/remove/edit, live preview iframe (desktop/mobile)
+- ✅ Tests renderer : 12 tests dans `src/lib/__tests__/newsletter-render.test.ts`
+
+**À faire (Brevo config requise)** :
+- ⏸ Phase 3 (Send) : test-send + production batch → nécessite 10 Brevo list IDs
+- ⏸ Phase 4 (Tracking) : webhook Brevo → nécessite `BREVO_WEBHOOK_SECRET`
+- ⏸ Phase 5 (Sync contacts) : sync D1 ↔ Brevo lists/attributes
+- ⏸ Phase 6 (Unsub public) : `/newsletter/unsubscribe?token=…` → nécessite `NEWSLETTER_UNSUB_SECRET`
+- ⏸ Phase 7 (Charte configurable) : `/admin/newsletter/charte`
+- ⏸ Phase 8 (Polish) : templates pré-configurés, versioning, scoring antispam
+
+**Worker endpoints newsletter drafts** :
+| Endpoint | Method | Auth |
+|----------|--------|------|
+| /api/newsletter/drafts | GET | JWT+admin |
+| /api/newsletter/drafts | POST | JWT+admin |
+| /api/newsletter/drafts/:id | GET | JWT+admin |
+| /api/newsletter/drafts/:id | PUT | JWT+admin |
+| /api/newsletter/drafts/:id | DELETE | JWT+admin |
 
 ## Dual-mode stores (session 23)
 All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` is set:
@@ -368,3 +404,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 25 | 2.12.0 | ESLint 29→4 warnings, 6 logos downloaded, member archiving API (migration 0007), ENM parser refined + 20 tests, E2E tests (ENM, medical), map invalidateSize fix |
 | 25b | 2.12.1 | Hotfixes post-merge : deploy-worker `--remote` flag, defensive D1 queries, login redirect fix, CMS endpoints resilient to missing tables |
 | 25c | 2.12.2 | CMS wired — homepage (hero, CTA), notre-groupement (18 fields + 3 lists), contact, footer. Introduced `list` type with ListEditor component. Specs written : docs/CMS-SPEC.md + docs/NEWSLETTER-SPEC.md |
+| 26 | 2.13.0 | CMS complet — 18 pages éditables (100+ sections), CmsPageHeader wrapper, admin UX (collapsible groups, search, modified indicator, iframe preview, reset), seed script + guide utilisateur. Newsletter v2 foundation — migration 0008, renderer HTML charté GASPE (9 block types), drafts CRUD (5 Worker endpoints), admin éditeur blocs + aperçu live, 12 tests renderer. Envoi production Brevo en attente de la config (list IDs) |

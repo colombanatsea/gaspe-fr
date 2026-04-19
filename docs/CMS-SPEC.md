@@ -377,27 +377,32 @@ Le script `scripts/seed-cms-to-d1.ts` doit être étendu pour :
 
 ---
 
-## 8. Roadmap d'implémentation
+## 8. Roadmap d'implémentation — ✅ **DONE (session 26, v2.13.0)**
 
-### Sprint 1 : Page headers universels (1h)
-Ajouter `page-header-title` + `page-header-description` en CMS pour **toutes** les pages. Gain immédiat, faible effort.
+### Sprint 1 — Page headers universels ✅
+`CmsPageHeader` wrapper expose `page-header-title` + `page-header-description` CMS pour **toutes** les pages utilisant `<PageHeader>`.
 
-### Sprint 2 : Homepage complète (2h)
-Câbler Stats + LatestNews + hero quick stats + CTAs. Plus gros gain visuel.
+### Sprint 2 — Homepage complète ✅
+Stats (5 cartes), LatestNews (3 cartes), hero quick stats, CTAs cablés.
 
-### Sprint 3 : Pages secondaires (3h)
-Contact (compléments), Documents, Formations, Agenda, Presse, Positions, Nos Adhérents, Nos Compagnies Recrutent, Visites Médicales.
+### Sprint 3 — Pages secondaires ✅
+Contact étendu (form subjects, messages), Documents, Formations, Agenda, Presse, Positions, Nos Adhérents, Nos Compagnies Recrutent câblés.
 
-### Sprint 4 : Pages complexes (3h)
-SSGM, Transition Écologique, Boîte à Outils (parties éditables).
+### Sprint 4 — Pages complexes ✅
+SSGM (intro + 2 richtext), Transition Écologique (4 chiffres clés + 6 technos en listes), Boîte à Outils (header) câblés.
 
-### Sprint 5 : Démo Espace Adhérent (1h)
-Textes marketing uniquement.
+### Sprint 5 — Démo Espace Adhérent ✅
+Bannière démo + CTA adhésion éditables.
 
-### Sprint 6 : UX admin (2h)
-Sections repliables, preview iframe, versioning simple.
+### Sprint 6 — UX admin ✅
+- Groupes pliables par préfixe (Hero, Stats, CTA…)
+- Search box au-dessus de 8 sections
+- Indicateur modifié non-sauvegardé
+- Preview iframe live
+- Bouton "Réinitialiser" par section
 
-### Sprint 7 : Seed + documentation utilisateur (1h)
-Script seed + guide d'édition pour l'équipe.
+### Sprint 7 — Seed + documentation ✅
+- `scripts/seed-cms-defaults.ts` génère `workers/migrations/0009_cms_defaults_seed.sql`
+- Guide éditorial : `docs/CMS-GUIDE-UTILISATEUR.md`
 
-**Total estimé : ~13h**
+**Total livré : 18 pages câblées, 100+ sections CMS, 4 types (text/richtext/image/list).**

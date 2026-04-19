@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { submitContact } from "@/lib/api";
 import { sendContactConfirmation } from "@/lib/email";
 import { useScrollReveal } from "@/lib/useScrollReveal";
@@ -59,6 +59,18 @@ export default function ContactPage() {
   const addressHtml = useCmsContent("contact", "address", D("address"));
   const emailStr = useCmsContent("contact", "email", D("email"));
   const sidebarInfo = useCmsContent("contact", "sidebar-info", D("sidebar-info"));
+  const subjectsJson = useCmsContent("contact", "form-subjects", D("form-subjects"));
+  const successMessage = useCmsContent("contact", "success-message", D("success-message"));
+  const errorMessage = useCmsContent("contact", "error-message", D("error-message"));
+
+  const subjects: { value: string; label: string }[] = (() => {
+    try {
+      const parsed = JSON.parse(subjectsJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -89,9 +101,10 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageHeader
-        title="Contact"
-        description="Une question ? N'hésitez pas à nous contacter."
+      <CmsPageHeader
+        pageId="contact"
+        defaultTitle="Contact"
+        defaultDescription="Une question ? N'hésitez pas à nous contacter."
         breadcrumbs={[{ label: "Contact" }]}
       />
 
@@ -110,7 +123,7 @@ export default function ContactPage() {
                   <div>
                     <p className="font-heading text-sm font-semibold text-[var(--gaspe-green-600)]">Message envoyé !</p>
                     <p className="mt-1 text-sm text-[var(--gaspe-green-600)]/80">
-                      Merci pour votre message. Nous vous répondrons dans les meilleurs délais.
+                      {successMessage}
                     </p>
                   </div>
                 </div>
@@ -125,7 +138,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="font-heading text-sm font-semibold text-red-700">Erreur</p>
-                    <p className="mt-1 text-sm text-red-600">Une erreur est survenue. Veuillez réessayer.</p>
+                    <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
                   </div>
                 </div>
               )}
@@ -161,12 +174,9 @@ export default function ContactPage() {
                     </label>
                     <select id="sujet" name="sujet" value={form.sujet} onChange={handleChange} className={errors.sujet ? inputErr : inputOk}>
                       <option value="">Sélectionnez un sujet...</option>
-                      <option value="Question générale">Question générale</option>
-                      <option value="Adhésion au GASPE">Adhésion au GASPE</option>
-                      <option value="Recrutement">Recrutement</option>
-                      <option value="Formations">Formations</option>
-                      <option value="Presse / Média">Presse / Média</option>
-                      <option value="Autre">Autre</option>
+                      {subjects.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
                     </select>
                     {errors.sujet && <p className="mt-1.5 text-xs text-red-500">{errors.sujet}</p>}
                   </div>

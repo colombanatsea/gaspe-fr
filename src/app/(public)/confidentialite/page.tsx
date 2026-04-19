@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 
 export default function ConfidentialitePage() {
   return (
     <>
-      <PageHeader
-        title="Politique de confidentialité"
-        description="Comment nous protégeons vos données personnelles"
+      <CmsPageHeader
+        pageId="confidentialite"
+        defaultTitle="Politique de confidentialité"
+        defaultDescription="Comment nous protégeons vos données personnelles"
         breadcrumbs={[{ label: "Politique de confidentialité" }]}
       />
 
