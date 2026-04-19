@@ -16,37 +16,94 @@ function JsonLd({ data }: JsonLdProps) {
   );
 }
 
-/** Organization schema — for home page and layout */
+/**
+ * Organization schema enrichie — sert à la fois :
+ *   - de "knowledge graph" Google pour la marque GASPE
+ *   - de base aux rich snippets (logo, adresse, AG…)
+ * Utilise TradeAssociation pour signaler le statut d'organisation patronale.
+ */
 export function OrganizationJsonLd() {
   return (
     <JsonLd
       data={{
         "@context": "https://schema.org",
-        "@type": "Organization",
+        "@type": ["Organization", "TradeAssociation"],
+        "@id": "https://www.gaspe.fr/#organization",
         name: "GASPE",
+        alternateName: [
+          "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
+          "Groupement des Armateurs de Services Publics",
+        ],
         legalName: "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
         url: "https://www.gaspe.fr",
+        logo: "https://www.gaspe.fr/logo-gaspe.jpg",
+        image: "https://www.gaspe.fr/og-image.png",
         foundingDate: "1951",
         description:
-          "Association de loi 1901 regroupant les armateurs assurant des missions de service public de transport de passagers ou de fret sur des lignes côtières nationales.",
+          "Organisation patronale représentative du maritime côtier français — fédère 27 compagnies armateurs assurant service public, continuité territoriale, passages d'eau et liaisons îles.",
+        slogan: "D'un littoral à l'autre. Localement ancrés. Socialement engagés.",
+        knowsAbout: [
+          "Transport maritime côtier",
+          "Service public maritime",
+          "Passages d'eau",
+          "Continuité territoriale maritime",
+          "CCN 3228",
+          "STCW",
+          "ENIM",
+          "Armateurs côtiers français",
+        ],
         address: {
           "@type": "PostalAddress",
-          streetAddress: "Quai de la Fosse, Maison de la Mer - Daniel Gilard",
+          streetAddress: "Maison de la Mer – Daniel Gilard, Quai de la Fosse",
           addressLocality: "Nantes",
           postalCode: "44000",
           addressCountry: "FR",
         },
-        contactPoint: {
-          "@type": "ContactPoint",
-          email: "contact@gaspe.fr",
-          contactType: "customer service",
-          availableLanguage: "French",
-        },
-        sameAs: [],
-        numberOfEmployees: {
+        contactPoint: [
+          {
+            "@type": "ContactPoint",
+            email: "contact@gaspe.fr",
+            contactType: "information",
+            availableLanguage: "French",
+          },
+          {
+            "@type": "ContactPoint",
+            email: "contact@gaspe.fr",
+            contactType: "press",
+            availableLanguage: "French",
+          },
+        ],
+        sameAs: [
+          "https://www.linkedin.com/company/gaspe-groupement-des-armateurs-de-services-publics-maritimes/",
+        ],
+        member: {
           "@type": "QuantitativeValue",
-          value: 1364,
+          name: "Adhérents",
+          value: 31,
         },
+      }}
+    />
+  );
+}
+
+/**
+ * FAQ schema — chaque {question, answer} devient une rich FAQ dans la SERP.
+ * Ne pas dépasser 10 items par page (Google peut dégrader si trop long).
+ */
+export function FAQJsonLd({ items }: { items: { question: string; answer: string }[] }) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: items.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        })),
       }}
     />
   );

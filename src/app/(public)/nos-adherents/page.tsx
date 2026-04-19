@@ -1,11 +1,23 @@
 "use client";
 
 import { useRef, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { members, titulaires, associes } from "@/data/members";
-import { MemberMap } from "@/components/map/MemberMap";
 import type { MemberMapHandle } from "@/components/map/MemberMap";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+// Leaflet ne tourne pas en SSR (utilise window/document) → lazy-load avec
+// fallback pour garder la mise en page stable (CLS ~ 0).
+const MemberMap = dynamic(
+  () => import("@/components/map/MemberMap").then((m) => m.MemberMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[50vh] lg:h-full w-full rounded-2xl bg-[var(--gaspe-neutral-50)] animate-pulse" aria-label="Chargement de la carte" />
+    ),
+  },
+);
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
 import { getUserPosition, haversineDistance, formatDistance, type GeoPosition } from "@/lib/geolocation";

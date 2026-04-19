@@ -12,7 +12,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="rounded-xl p-2 text-foreground-muted hover:bg-surface hover:text-foreground transition-colors"
+      className="flex h-11 w-11 items-center justify-center rounded-xl text-foreground-muted hover:bg-surface hover:text-foreground transition-colors"
       aria-label={resolved === "light" ? "Activer le mode sombre" : "Activer le mode clair"}
     >
       {resolved === "light" ? (

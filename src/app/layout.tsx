@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { SITE_NAME, SITE_FULL_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
+import { SITE_NAME, SITE_FULL_NAME, SITE_DESCRIPTION, SITE_URL, SITE_KEYWORDS } from "@/lib/constants";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/shared/SEOJsonLd";
 import { Providers } from "@/components/shared/Providers";
 import "./globals.css";
@@ -7,6 +7,7 @@ import "./globals.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5, // Permet le zoom mobile pour accessibilité
   themeColor: "#1B7E8A",
 };
 
@@ -17,12 +18,19 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  applicationName: SITE_NAME,
+  category: "transport maritime",
   openGraph: {
     type: "website",
     locale: "fr_FR",
     siteName: SITE_NAME,
     title: `${SITE_NAME} – ${SITE_FULL_NAME}`,
     description: SITE_DESCRIPTION,
+    url: SITE_URL,
     images: [
       {
         url: `${SITE_URL}/og-image.png`,
@@ -39,8 +47,17 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [`${SITE_URL}/og-image.png`],
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
+  },
   alternates: { canonical: SITE_URL },
+  verification: {
+    // TODO: remplir avec les codes Search Console + Bing Webmaster Tools quand configurés
+    // google: "xxx",
+    // other: { "msvalidate.01": "xxx" },
+  },
 };
 
 export default function RootLayout({
@@ -58,8 +75,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Google Fonts optimisées : 7 poids au lieu de 11 précédemment (≈-30% payload) */}
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Exo+2:wght@500;600;700;800&display=swap"
           rel="stylesheet"
         />
       </head>
