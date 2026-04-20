@@ -88,6 +88,8 @@ interface Env {
   BREVO_LIST_VEILLE_DATA?: string;
   BREVO_LIST_VEILLE_ENVIRONNEMENT?: string;
   BREVO_LIST_ACTUALITES_GASPE?: string;
+  /** Liste "inscription publique" — tous les emails soumis via `POST /api/newsletter`. */
+  BREVO_LIST_PUBLIC?: string;
 }
 
 // ── User type matching frontend User interface ──
@@ -1453,12 +1455,39 @@ async function handleNewsletterSubscribers(request: Request, env: Env, corsHeade
 async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const body = await request.json() as Record<string, string>;
   const { email } = body;
+  const source = (body.source ?? "public-form").toString().slice(0, 64);
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: "Email invalide" }, corsHeaders, 400);
   }
 
+  // 1. Persistance D1 : inscription email-only (table `newsletter`).
+  // INSERT OR IGNORE : pas d'erreur si l'email est déjà inscrit.
   await env.DB.prepare("INSERT OR IGNORE INTO newsletter (email) VALUES (?)").bind(email).run();
+
+  // 2. Sync Brevo : ajoute le contact à la liste "inscription publique" si
+  // `BREVO_LIST_PUBLIC` est configuré. Silencieux si les secrets manquent
+  // (ex: environnement de dev) ou si Brevo renvoie une erreur — on ne veut
+  // pas casser l'UX d'inscription pour un problème externe.
+  const publicListId = env.BREVO_LIST_PUBLIC ? Number(env.BREVO_LIST_PUBLIC) : null;
+  if (env.BREVO_API_KEY && publicListId && Number.isFinite(publicListId)) {
+    try {
+      await fetch("https://api.brevo.com/v3/contacts", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          email,
+          listIds: [publicListId],
+          attributes: { SOURCE: source, INSCRIT_LE: new Date().toISOString().slice(0, 10) },
+          updateEnabled: true,
+        }),
+      });
+    } catch { /* silencieux : log côté Brevo suffit */ }
+  }
 
   return json({ success: true }, corsHeaders);
 }
@@ -2936,6 +2965,36 @@ async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeade
 
   // Pour les inscrits legacy (table newsletter)
   await env.DB.prepare("DELETE FROM newsletter WHERE email = ?").bind(email).run();
+
+  // Sync Brevo : retire le contact des listes désinscrites (silencieux si non
+  // configuré). Si toutes les catégories sont désabonnées, on retire aussi
+  // de la liste publique pour que Brevo ne le sollicite plus du tout.
+  if (env.BREVO_API_KEY) {
+    const unlinkListIds: number[] = [];
+    for (const cat of cats) {
+      const envKey = CATEGORY_TO_LIST_ENV[cat];
+      if (!envKey) continue;
+      const listId = Number(env[envKey]);
+      if (Number.isFinite(listId)) unlinkListIds.push(listId);
+    }
+    if (cats.length === ALL_NEWSLETTER_CATEGORIES.length && env.BREVO_LIST_PUBLIC) {
+      const pub = Number(env.BREVO_LIST_PUBLIC);
+      if (Number.isFinite(pub)) unlinkListIds.push(pub);
+    }
+    if (unlinkListIds.length > 0) {
+      try {
+        await fetch("https://api.brevo.com/v3/contacts", {
+          method: "POST",
+          headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": env.BREVO_API_KEY,
+          },
+          body: JSON.stringify({ email, unlinkListIds, updateEnabled: true }),
+        });
+      } catch { /* silencieux */ }
+    }
+  }
 
   return json({ success: true, email, categoriesDisabled: cats }, corsHeaders);
 }

@@ -1,70 +1,23 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { getSortedPositions, type PositionTag } from "@/data/positions";
 
 const PAGE_ID = "positions";
 const D = (s: string) => getCmsDefault(PAGE_ID, s);
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Data (sourced from src/data/positions.ts)                          */
 /* ------------------------------------------------------------------ */
 
-type Tag = "Position" | "Actualité" | "Presse";
-
-interface PositionItem {
-  title: string;
-  date: string;
-  /** ISO-ish for sorting (YYYY-MM) */
-  sortKey: string;
-  excerpt: string;
-  tag: Tag;
-  slug: string;
-}
-
-const positions: PositionItem[] = [
-  {
-    title: "Transition énergétique des flottes",
-    date: "Février 2026",
-    sortKey: "2026-02",
-    excerpt:
-      "Les armateurs du GASPE s'engagent pour la décarbonation des liaisons maritimes de service public.",
-    tag: "Position",
-    slug: "transition-energetique-flottes",
-  },
-  {
-    title: "Accessibilité PMR sur les liaisons maritimes",
-    date: "Janvier 2026",
-    sortKey: "2026-01",
-    excerpt:
-      "Le GASPE publie ses recommandations pour améliorer l'accès aux personnes à mobilité réduite.",
-    tag: "Position",
-    slug: "accessibilite-pmr-liaisons-maritimes",
-  },
-  {
-    title: "Continuité territoriale et service public",
-    date: "Décembre 2025",
-    sortKey: "2025-12",
-    excerpt:
-      "Position du GASPE sur le maintien des liaisons essentielles vers les îles françaises.",
-    tag: "Position",
-    slug: "continuite-territoriale-service-public",
-  },
-  {
-    title: "Formation et attractivité des métiers maritimes",
-    date: "Novembre 2025",
-    sortKey: "2025-11",
-    excerpt:
-      "Le GASPE s'engage pour le renouvellement des équipages et l'attractivité de la profession.",
-    tag: "Position",
-    slug: "formation-attractivite-metiers-maritimes",
-  },
-];
+type Tag = PositionTag;
 
 const allTags: Tag[] = ["Position", "Actualité", "Presse"];
 
@@ -96,9 +49,7 @@ export default function PositionsPage() {
   const [showAll, setShowAll] = useState(false);
 
   const filtered = useMemo(() => {
-    let items = [...positions].sort((a, b) =>
-      b.sortKey.localeCompare(a.sortKey),
-    );
+    let items = getSortedPositions();
 
     if (activeTag) {
       items = items.filter((p) => p.tag === activeTag);
@@ -187,27 +138,36 @@ export default function PositionsPage() {
           ) : (
             <div className="space-y-4">
               {visible.map((position) => (
-                <article
+                <Link
                   key={position.slug}
-                  className="rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md"
+                  href={`/positions/${position.slug}`}
+                  className="block rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={tagVariant(position.tag)}>
-                        {position.tag}
-                      </Badge>
-                      <h3 className="font-heading text-lg font-semibold text-foreground">
-                        {position.title}
-                      </h3>
+                  <article>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={tagVariant(position.tag)}>
+                          {position.tag}
+                        </Badge>
+                        <h3 className="font-heading text-lg font-semibold text-foreground">
+                          {position.title}
+                        </h3>
+                      </div>
+                      <time
+                        dateTime={position.datePublished}
+                        className="shrink-0 text-xs text-foreground-muted"
+                      >
+                        {position.date}
+                      </time>
                     </div>
-                    <time className="shrink-0 text-xs text-foreground-muted">
-                      {position.date}
-                    </time>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground-muted line-clamp-2">
-                    {position.excerpt}
-                  </p>
-                </article>
+                    <p className="mt-2 text-sm text-foreground-muted line-clamp-2">
+                      {position.excerpt}
+                    </p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                      Lire la suite &rarr;
+                    </span>
+                  </article>
+                </Link>
               ))}
             </div>
           )}

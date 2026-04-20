@@ -167,9 +167,9 @@ export default function NosAdherentsPage() {
 
         {/* Titulaires */}
         <div className="p-4 border-b border-border-light">
-          <h1 className="font-heading text-xl font-bold text-foreground">
+          <h2 className="font-heading text-xl font-bold text-foreground">
             {titulairesHeading}
-          </h1>
+          </h2>
           <p className="mt-1 text-sm text-foreground-muted">
             {titulaires.length} armateurs &middot; {regions.length} régions
           </p>

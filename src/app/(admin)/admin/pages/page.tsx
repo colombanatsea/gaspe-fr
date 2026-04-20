@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -397,7 +398,15 @@ export default function AdminPagesPage() {
                             className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
                           />
                           {section.content && (
-                            <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
+                            <Image
+                              src={section.content}
+                              alt="Aperçu image"
+                              width={320}
+                              height={128}
+                              unoptimized
+                              loading="lazy"
+                              className="max-h-32 w-auto rounded-xl object-contain"
+                            />
                           )}
                           <button
                             type="button"
