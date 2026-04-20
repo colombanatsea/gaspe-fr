@@ -52,11 +52,21 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
   },
-  alternates: { canonical: SITE_URL },
+  alternates: {
+    canonical: SITE_URL,
+    types: {
+      "application/rss+xml": [{ title: `${SITE_NAME} – Positions & actualités`, url: `${SITE_URL}/feed.xml` }],
+    },
+  },
   verification: {
-    // TODO: remplir avec les codes Search Console + Bing Webmaster Tools quand configurés
-    // google: "xxx",
-    // other: { "msvalidate.01": "xxx" },
+    // Codes optionnels fournis par Google Search Console / Bing Webmaster Tools.
+    // Déclarés via variables d'environnement pour éviter de les committer en dur.
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    }),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION && {
+      other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION },
+    }),
   },
 };
 
@@ -75,6 +85,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* RSS auto-discovery — global pour toutes les pages publiques */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={`${SITE_NAME} – Positions & actualités`}
+          href={`${SITE_URL}/feed.xml`}
+        />
         {/* Google Fonts optimisées : 7 poids au lieu de 11 précédemment (≈-30% payload) */}
         <link
           href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Exo+2:wght@500;600;700;800&display=swap"

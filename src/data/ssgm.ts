@@ -557,4 +557,14 @@ export const SSGM_FAQ = [
     answer:
       "Les visites sont généralement prises en charge par l'employeur pour les marins salariés (obligation légale de suivi médical). Les candidats à l'embauche peuvent avoir à avancer les frais, remboursés après signature du contrat. Les visites ENIM sont gratuites pour les marins affiliés.",
   },
+  {
+    question: "Comment préparer sa première visite SSGM ?",
+    answer:
+      "Présentez-vous avec : pièce d'identité, carte d'identification de marin si déjà embarqué, ordonnances en cours, carnet de vaccinations, derniers examens sanguins ou bilans médicaux spécialisés. Si vous portez des lunettes ou lentilles, apportez-les. Évitez caféine, tabac et alcool dans les 12 heures précédant la visite.",
+  },
+  {
+    question: "Une inaptitude temporaire bloque-t-elle le salaire ?",
+    answer:
+      "Non. En cas d'inaptitude temporaire, le marin conserve ses droits au maintien de salaire dans les conditions prévues par la CCN 3228 (et le Code des transports). L'armateur peut affecter temporairement le marin à des tâches compatibles ou le placer en arrêt selon la gravité.",
+  },
 ] as const;

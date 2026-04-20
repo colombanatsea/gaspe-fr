@@ -591,3 +591,27 @@ export const CCN3228_FAQ = [
       "Le texte intégral et les avenants sont publiés sur Legifrance (recherche IDCC 3228) et au Journal officiel. La Direction des Affaires Maritimes et les partenaires sociaux de la branche diffusent également les accords étendus sur leurs sites respectifs.",
   },
 ] as const;
+
+/**
+ * Données additionnelles FAQ compagnons (hors FAQPage principale) —
+ * utilisables dans le corps de la page /boite-a-outils en contenu secondaire
+ * ou à intégrer à la FAQPage si Google accepte plus de 10 items (limite
+ * actuelle : ~10 Q/R par FAQPage JSON-LD). Conservées ici pour édito.
+ */
+export const CCN3228_FAQ_EXTRA = [
+  {
+    question: "Comment se calculent les indemnités repas embarquées ?",
+    answer:
+      "L'indemnité repas embarquée est revalorisée chaque année par la NAO. Elle s'ajoute au salaire mensuel pour les repas non fournis à bord et varie selon la durée d'embarquement. Les montants 2026 sont publiés dans la grille NAO intégrée au simulateur de salaire GASPE.",
+  },
+  {
+    question: "Quelles différences entre CDI marin et CDI de droit commun ?",
+    answer:
+      "Le CDI marin suit le droit maritime (Code des transports, Livre V) qui prévoit des règles spécifiques sur la durée du travail (rythmes d'embarquement / débarquement), les congés (majorés), le régime social (ENIM) et la résiliation. Il intègre les spécificités de la vie à bord (repos compensateur, nourriture, logement embarqué).",
+  },
+  {
+    question: "Comment déclarer un accident du travail maritime ?",
+    answer:
+      "Tout accident du travail maritime doit être déclaré à l'ENIM dans les 48 heures via le formulaire CERFA dédié. L'armateur complète la déclaration avec les circonstances (lieu, nature, témoins), joint le certificat médical initial et transmet copie à l'Inspection du Travail Maritime.",
+  },
+] as const;
