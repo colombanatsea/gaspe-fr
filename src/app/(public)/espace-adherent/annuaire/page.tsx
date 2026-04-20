@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth, COMPANY_ROLES, type User } from "@/lib/auth/AuthContext";
 import { getActiveMembers, type StoredMember } from "@/lib/members-store";
@@ -376,7 +377,7 @@ export default function AdherentAnnuairePage() {
                   <Card key={peer.id} className="flex flex-col">
                     <div className="flex items-start gap-3">
                       {peer.companyLogo ? (
-                        <img src={peer.companyLogo} alt={`Logo ${peer.company ?? peer.name}`} loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                        <Image src={peer.companyLogo} alt={`Logo ${peer.company ?? peer.name}`} width={40} height={40} unoptimized loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
                       ) : (
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
                           <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">

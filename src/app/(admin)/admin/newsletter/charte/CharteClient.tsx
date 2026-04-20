@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useRouter } from "next/navigation";
 import {
@@ -93,7 +94,7 @@ export function CharteClient() {
             <RichTextEditor value={s.content} onChange={(html) => update(s.id, html)} minHeight={120} />
           ) : s.type === "image" ? (
             <div className="flex items-start gap-3">
-              {s.content && <img src={s.content} alt="Logo" className="h-14 w-14 rounded-lg object-contain border border-border-light" loading="lazy" />}
+              {s.content && <Image src={s.content} alt="Logo" width={56} height={56} unoptimized className="h-14 w-14 rounded-lg object-contain border border-border-light" loading="lazy" />}
               <input
                 type="url"
                 value={s.content}

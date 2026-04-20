@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -105,9 +106,12 @@ export function MemberDetail({ slug }: { slug: string }) {
           <div className="shrink-0">
             {logoUrl ? (
               <div className="h-20 w-20 rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden p-2">
-                <img
+                <Image
                   src={logoUrl}
                   alt={member.name}
+                  width={80}
+                  height={80}
+                  unoptimized
                   className="max-w-full max-h-full object-contain"
                 />
               </div>

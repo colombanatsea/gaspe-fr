@@ -88,6 +88,9 @@ interface Env {
   BREVO_LIST_VEILLE_DATA?: string;
   BREVO_LIST_VEILLE_ENVIRONNEMENT?: string;
   BREVO_LIST_ACTUALITES_GASPE?: string;
+  // Liste générique pour l'inscription publique (footer / page contact) — optionnelle.
+  // Si définie, chaque email recueilli via POST /api/newsletter est poussé vers Brevo.
+  BREVO_LIST_PUBLIC?: string;
 }
 
 // ── User type matching frontend User interface ──
@@ -1460,7 +1463,43 @@ async function handleNewsletter(request: Request, env: Env, corsHeaders: Record<
 
   await env.DB.prepare("INSERT OR IGNORE INTO newsletter (email) VALUES (?)").bind(email).run();
 
+  // Sync Brevo — si BREVO_API_KEY + BREVO_LIST_PUBLIC configurés, on pousse le contact
+  // dans la liste "Newsletter publique" avec attribut SOURCE. Silencieux sinon.
+  await syncBrevoPublicContact(env, email);
+
   return json({ success: true }, corsHeaders);
+}
+
+/**
+ * Synchronise un contact Brevo pour l'inscription newsletter publique (footer / form contact).
+ * Ajoute le contact à la liste `BREVO_LIST_PUBLIC` avec l'attribut SOURCE="public-form".
+ * Ne bloque jamais la requête utilisateur : les erreurs sont avalées silencieusement.
+ * Renvoie true si la sync a fonctionné, false si skip ou échec.
+ */
+async function syncBrevoPublicContact(env: Env, email: string): Promise<boolean> {
+  if (!env.BREVO_API_KEY || !env.BREVO_LIST_PUBLIC) return false;
+  const listId = Number(env.BREVO_LIST_PUBLIC);
+  if (!Number.isFinite(listId)) return false;
+
+  try {
+    const res = await fetch("https://api.brevo.com/v3/contacts", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        email,
+        listIds: [listId],
+        attributes: { SOURCE: "public-form" },
+        updateEnabled: true,
+      }),
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

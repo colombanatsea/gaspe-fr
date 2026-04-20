@@ -58,7 +58,7 @@ Chaque page a ses propres mots-clés complémentaires dans `DEFAULT_PAGE_META` (
 | **FAQPage** | `/boite-a-outils` (10 Q/R), `/ssgm` (8 Q/R) ✅ session 29 | Rich FAQ SERP |
 | **Event** | `/agenda` — un JSON-LD par événement publié ✅ session 29 | Rich snippet événement |
 | **MaritimeService (custom Organization+LocalBusiness)** | `/nos-adherents/[slug]` — `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29 | Knowledge card compagnie |
-| **Article** | (disponible mais à câbler sur positions/[slug] — reporté session 30) | Rich snippet actu |
+| **Article** | `/positions/[slug]` (4 articles — `src/data/positions.ts`) ✅ session 30 | Rich snippet actu |
 
 ---
 
@@ -94,14 +94,24 @@ Quand tu ajoutes une nouvelle page ou modifies le contenu :
 | 8 | JSON-LD enrichi sur `/nos-adherents/[slug]` | `nos-adherents/[slug]/page.tsx` → `buildMemberJsonLd()` | ✅ |
 | 5 (partiel) | `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug] | composants | ✅ |
 
-### ⏳ Reste à faire (priorité session 30+)
+### ✅ Fait en session 30
+
+| # | Action | Fichier | Statut |
+|---|--------|---------|--------|
+| 3 | ArticleJsonLd + route dynamique `/positions/[slug]` + source `src/data/positions.ts` | 4 articles extraits, sitemap enrichi | ✅ |
+| 5 (fin) | Migration `<img>` → `next/image` (espace-adherent, espace-candidat, admin) | 14 fichiers user-facing + admin | ✅ |
+| 6 | `verification.google` + `verification.other.msvalidate.01` conditionnels via env `NEXT_PUBLIC_*` | `src/app/layout.tsx` | ✅ |
+| 7 | `/actualites` refondue (feed HTML + lien RSS visible) + `/feed.xml` (route RSS statique) | `src/app/(public)/actualites/page.tsx` + `src/app/feed.xml/route.ts` | ✅ |
+| — | Auto-discovery RSS dans `<head>` | `layout.tsx` → `<link rel="alternate" type="application/rss+xml">` | ✅ |
+
+### ⏳ Reste à faire (priorité session 31+)
 
 | # | Action | Fichier | Impact | Effort |
 |---|--------|---------|--------|--------|
-| 3 | Câbler ArticleJsonLd sur `/positions/[slug]` | à créer | +4-6% actualités | 1 h |
-| 5 (fin) | Finir migration `<img>` → `next/image` (espace-adherent, espace-candidat, admin) | ~30 fichiers restants | CWV -10% | 2 h |
-| 6 | Ajouter `verification.google` + `verification.other.msvalidate.01` dans layout metadata | layout.tsx | Search Console ownership | 5 min |
-| 7 | Créer `/actualites` avec feed RSS + ArticleJsonLd | nouveau | Re-crawl quotidien | 2 h |
+| 8 | Compression `public/assets/acf_video.MP4` (ffmpeg, 13 MB → <3 MB) | public/assets/ | LCP mobile -300 à -600 ms | 30 min |
+| 9 | Migration 4 derniers `<img>` AdemeSimulator (data-URI + mixBlendMode) | simulator | Low (admin-only) | 1 h |
+| 10 | Alimenter positions avec contenu éditorial mensuel | `src/data/positions.ts` | +8-12% trafic organique | continu |
+| 11 | Lighthouse réel + axe-core audit (dépend Chrome local) | tous | ≥ 95 mobile perf | 1 h |
 
 ---
 

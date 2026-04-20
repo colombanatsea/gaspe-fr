@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -332,9 +333,12 @@ export function GroupementContent() {
                 <div className="flex items-start gap-4">
                   {/* Avatar : photo si fournie via CMS, sinon initiales */}
                   {member.photoUrl && member.photoUrl.trim() ? (
-                    <img
+                    <Image
                       src={member.photoUrl}
                       alt={`Photo de ${member.name}`}
+                      width={48}
+                      height={48}
+                      unoptimized
                       loading="lazy"
                       className="h-12 w-12 shrink-0 rounded-full object-cover border border-[var(--gaspe-neutral-200)]"
                     />

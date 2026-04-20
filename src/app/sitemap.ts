@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { formations } from "@/data/formations";
 import { publishedJobs } from "@/data/jobs";
 import { members } from "@/data/members";
+import { POSITIONS } from "@/data/positions";
 
 export const dynamic = "force-static";
 
@@ -55,5 +56,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...jobPages, ...memberPages, ...formationPages];
+  // Position detail pages (articles éditoriaux)
+  const positionPages: MetadataRoute.Sitemap = POSITIONS.map((p) => ({
+    url: `${BASE_URL}/positions/${p.slug}`,
+    lastModified: p.updatedAt ?? p.publishedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...jobPages, ...memberPages, ...formationPages, ...positionPages];
 }

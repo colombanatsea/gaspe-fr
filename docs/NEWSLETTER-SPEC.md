@@ -450,9 +450,9 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [ ] Page `/admin/newsletter/:sendId/stats` (dashboard)
 - [ ] Export CSV
 
-### Phase 5 : Sync contacts Brevo (2h) — partiellement done session 29
-- [ ] Création 10 listes Brevo dans le dashboard + configuration des env vars (`BREVO_LIST_INFO_GENERALES`, `BREVO_LIST_AG`, `BREVO_LIST_EMPLOI`, `BREVO_LIST_FORMATION_OPCO`, `BREVO_LIST_VEILLE_JURIDIQUE`, `BREVO_LIST_VEILLE_SOCIALE`, `BREVO_LIST_VEILLE_SURETE`, `BREVO_LIST_VEILLE_DATA`, `BREVO_LIST_VEILLE_ENVIRONNEMENT`, `BREVO_LIST_ACTUALITES_GASPE`) via `wrangler secret put`
-- [ ] Sync inscription publique (`POST /api/newsletter`) → Brevo
+### Phase 5 : Sync contacts Brevo (2h) — partiellement done session 29-30
+- [ ] Création 11 listes Brevo dans le dashboard + configuration des env vars (`BREVO_LIST_INFO_GENERALES`, `BREVO_LIST_AG`, `BREVO_LIST_EMPLOI`, `BREVO_LIST_FORMATION_OPCO`, `BREVO_LIST_VEILLE_JURIDIQUE`, `BREVO_LIST_VEILLE_SOCIALE`, `BREVO_LIST_VEILLE_SURETE`, `BREVO_LIST_VEILLE_DATA`, `BREVO_LIST_VEILLE_ENVIRONNEMENT`, `BREVO_LIST_ACTUALITES_GASPE`, `BREVO_LIST_PUBLIC`) via `wrangler secret put`
+- [x] **Sync inscription publique** (`POST /api/newsletter`) → Brevo liste `BREVO_LIST_PUBLIC` avec attribut `SOURCE=public-form` (session 30, `syncBrevoPublicContact`). Silencieux si `BREVO_API_KEY` ou `BREVO_LIST_PUBLIC` absent.
 - [x] **Sync préférences** → Brevo contact + attributs PRENOM/NOM (session 29, `syncBrevoContact` dans `workers/api.ts`). Silencieux si list IDs non configurés. Met à jour `users.brevo_synced_at`.
 - [x] Colonnes canonicalisées DB ↔ frontend ↔ Brevo (session 29) : `info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`
 - [x] Dashboard `/admin/newsletter/abonnes` affiche statut sync par user (synced / out-of-sync / pending) avec export CSV (session 29)
@@ -508,6 +508,7 @@ BREVO_LIST_VEILLE_SURETE = "8"
 BREVO_LIST_VEILLE_DATA = "9"
 BREVO_LIST_VEILLE_ENVIRONNEMENT = "10"
 BREVO_LIST_ACTUALITES_GASPE = "11"
+BREVO_LIST_PUBLIC = "12"           # liste "Newsletter publique" (footer / form contact)
 
 # Secrets (wrangler secret put)
 BREVO_API_KEY = "xkeysib-..."       # déjà configuré
@@ -524,7 +525,15 @@ wrangler secret put NEWSLETTER_UNSUB_SECRET --name gaspe-api
 # Variables (visibles — les list IDs ne sont pas sensibles)
 wrangler secret put BREVO_LIST_INFO_GENERALES --name gaspe-api
 wrangler secret put BREVO_LIST_AG --name gaspe-api
-# … répéter pour les 10 listes
+wrangler secret put BREVO_LIST_EMPLOI --name gaspe-api
+wrangler secret put BREVO_LIST_FORMATION_OPCO --name gaspe-api
+wrangler secret put BREVO_LIST_VEILLE_JURIDIQUE --name gaspe-api
+wrangler secret put BREVO_LIST_VEILLE_SOCIALE --name gaspe-api
+wrangler secret put BREVO_LIST_VEILLE_SURETE --name gaspe-api
+wrangler secret put BREVO_LIST_VEILLE_DATA --name gaspe-api
+wrangler secret put BREVO_LIST_VEILLE_ENVIRONNEMENT --name gaspe-api
+wrangler secret put BREVO_LIST_ACTUALITES_GASPE --name gaspe-api
+wrangler secret put BREVO_LIST_PUBLIC --name gaspe-api          # NOUVEAU session 30
 wrangler secret put BREVO_SENDER_EMAIL --name gaspe-api
 wrangler secret put BREVO_SENDER_NAME --name gaspe-api
 wrangler secret put BREVO_REPLY_TO --name gaspe-api

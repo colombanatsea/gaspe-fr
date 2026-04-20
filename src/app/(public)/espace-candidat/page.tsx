@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { STCW_CERTIFICATIONS, STCW_CATEGORY_LABELS, type STCWCategory } from "@/data/stcw";
 import { useAuth, type User, type ApplicationStatus, APPLICATION_STATUS_CONFIG } from "@/lib/auth/AuthContext";
@@ -275,7 +276,7 @@ export default function EspaceCandidatPage() {
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 shrink-0 rounded-full bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden">
                         {form.profilePhoto ? (
-                          <img src={form.profilePhoto} alt="Photo" className="h-full w-full object-cover" />
+                          <Image src={form.profilePhoto} alt="Photo" width={64} height={64} unoptimized className="h-full w-full object-cover" />
                         ) : (
                           <span className="text-xl font-bold text-[var(--gaspe-teal-600)]">
                             {user.name.charAt(0).toUpperCase()}
@@ -448,7 +449,7 @@ export default function EspaceCandidatPage() {
                   <div className="flex items-center gap-4 mb-2">
                     <div className="h-14 w-14 shrink-0 rounded-full bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)] flex items-center justify-center overflow-hidden">
                       {user.profilePhoto ? (
-                        <img src={user.profilePhoto} alt={user.name} className="h-full w-full object-cover" />
+                        <Image src={user.profilePhoto} alt={user.name} width={56} height={56} unoptimized className="h-full w-full object-cover" />
                       ) : (
                         <span className="text-lg font-bold text-[var(--gaspe-teal-600)]">
                           {user.name.charAt(0).toUpperCase()}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { RichTextEditor } from "./RichTextEditor";
 import { MediaLibrary } from "./MediaLibrary";
 import { isApiMode } from "@/lib/api-client";
@@ -156,9 +157,12 @@ export function ListEditor({ value, onChange, fields }: ListEditorProps) {
                   <div className="space-y-2">
                     <div className="flex items-start gap-3">
                       {item[field.id] && (
-                        <img
+                        <Image
                           src={item[field.id]}
                           alt="Aperçu"
+                          width={64}
+                          height={64}
+                          unoptimized
                           loading="lazy"
                           className="h-16 w-16 shrink-0 rounded-lg object-cover border border-[var(--gaspe-neutral-200)]"
                         />

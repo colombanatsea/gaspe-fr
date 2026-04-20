@@ -53,10 +53,19 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
   },
   alternates: { canonical: SITE_URL },
+  // Les codes de vérification Search Console sont publics (rendus dans le HTML)
+  // → injection via variables d'env NEXT_PUBLIC_* au build time.
+  // Pour activer :
+  //   echo 'NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=xxx' >> .env.local
+  //   echo 'NEXT_PUBLIC_BING_SITE_VERIFICATION=xxx' >> .env.local
+  // ou configurer sur Cloudflare Pages (Settings > Environment variables).
   verification: {
-    // TODO: remplir avec les codes Search Console + Bing Webmaster Tools quand configurés
-    // google: "xxx",
-    // other: { "msvalidate.01": "xxx" },
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    }),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION && {
+      other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION },
+    }),
   },
 };
 
@@ -71,6 +80,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/logo-gaspe.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/logo-gaspe.jpg" />
+        <link rel="alternate" type="application/rss+xml" title="GASPE – Actualités" href="/feed.xml" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

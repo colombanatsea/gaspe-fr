@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
+import Image from "next/image";
 
 /* ------------------------------------------------------------------ */
 /*  Toolbar button definitions                                         */
@@ -259,7 +260,7 @@ export function RichTextEditor({
               )}
               {imageUrl && (
                 <div className="rounded-xl border border-[var(--gaspe-neutral-200)] p-2">
-                  <img src={imageUrl} alt={imageAlt} className="max-h-32 rounded-lg object-contain mx-auto" />
+                  <Image src={imageUrl} alt={imageAlt} width={200} height={128} unoptimized className="max-h-32 w-auto rounded-lg object-contain mx-auto" />
                 </div>
               )}
               <div className="flex justify-end gap-2 pt-2">
