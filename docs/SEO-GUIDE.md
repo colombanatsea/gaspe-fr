@@ -55,9 +55,10 @@ Chaque page a ses propres mots-clés complémentaires dans `DEFAULT_PAGE_META` (
 | **WebSite** | layout root | Site name dans SERP |
 | **BreadcrumbList** | Toutes pages avec `<CmsPageHeader>` | Fil d'Ariane SERP |
 | **JobPosting** | `/nos-compagnies-recrutent/[slug]` | Rich snippet emploi |
-| **Article** | (disponible mais à câbler sur positions/[slug]) | Rich snippet actu |
-| **Event** | (disponible, à câbler sur agenda) | Rich snippet événement |
-| **FAQPage** | (disponible, à câbler sur /boite-a-outils et /ssgm) | Rich FAQ SERP |
+| **FAQPage** | `/boite-a-outils` (10 Q/R), `/ssgm` (8 Q/R) ✅ session 29 | Rich FAQ SERP |
+| **Event** | `/agenda` — un JSON-LD par événement publié ✅ session 29 | Rich snippet événement |
+| **MaritimeService (custom Organization+LocalBusiness)** | `/nos-adherents/[slug]` — `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29 | Knowledge card compagnie |
+| **Article** | (disponible mais à câbler sur positions/[slug] — reporté session 30) | Rich snippet actu |
 
 ---
 
@@ -81,18 +82,26 @@ Quand tu ajoutes une nouvelle page ou modifies le contenu :
 
 ---
 
-## 4. Quick wins complémentaires (à faire ensuite)
+## 4. Quick wins complémentaires
+
+### ✅ Fait en session 29
+
+| # | Action | Fichier | Statut |
+|---|--------|---------|--------|
+| 1 | FAQJsonLd sur `/boite-a-outils` (10 Q/R) | `boite-a-outils/page.tsx` + `src/data/ccn3228.ts` → `CCN3228_FAQ` | ✅ |
+| 2 | FAQJsonLd sur `/ssgm` (8 Q/R) | `ssgm/page.tsx` + `src/data/ssgm.ts` → `SSGM_FAQ` | ✅ |
+| 4 | EventJsonLd sur `/agenda` | `agenda/page.tsx` | ✅ |
+| 8 | JSON-LD enrichi sur `/nos-adherents/[slug]` | `nos-adherents/[slug]/page.tsx` → `buildMemberJsonLd()` | ✅ |
+| 5 (partiel) | `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug] | composants | ✅ |
+
+### ⏳ Reste à faire (priorité session 30+)
 
 | # | Action | Fichier | Impact | Effort |
 |---|--------|---------|--------|--------|
-| 1 | Câbler FAQJsonLd sur `/boite-a-outils` avec 10 questions CCN 3228 | `boite-a-outils/page.tsx` | +2-3% SERP long-tail | 30 min |
-| 2 | Câbler FAQJsonLd sur `/ssgm` avec 8 questions visites médicales | `ssgm/page.tsx` | +1-2% | 25 min |
 | 3 | Câbler ArticleJsonLd sur `/positions/[slug]` | à créer | +4-6% actualités | 1 h |
-| 4 | Câbler EventJsonLd sur `/agenda` | `agenda/page.tsx` | +1-2% | 30 min |
-| 5 | Remplacer les 36 `<img>` par `next/image` (static export : `unoptimized: true`) | 18 fichiers | CWV -10% | 2-3 h |
+| 5 (fin) | Finir migration `<img>` → `next/image` (espace-adherent, espace-candidat, admin) | ~30 fichiers restants | CWV -10% | 2 h |
 | 6 | Ajouter `verification.google` + `verification.other.msvalidate.01` dans layout metadata | layout.tsx | Search Console ownership | 5 min |
 | 7 | Créer `/actualites` avec feed RSS + ArticleJsonLd | nouveau | Re-crawl quotidien | 2 h |
-| 8 | Ajouter JSON-LD `MaritimeCompany` sur chaque `/nos-adherents/[slug]` | MemberDetail.tsx | Knowledge cards | 45 min |
 
 ---
 

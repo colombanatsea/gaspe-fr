@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiAuthStore } from "@/lib/auth/api-auth-store";
@@ -40,7 +40,7 @@ export default function EquipePage() {
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
     if (!isApiMode()) return;
-    refresh();
+    startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
   const [initialized, setInitialized] = useState(false);

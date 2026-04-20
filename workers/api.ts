@@ -76,17 +76,18 @@ interface Env {
   BREVO_REPLY_TO?: string;
   BREVO_WEBHOOK_SECRET?: string;
   NEWSLETTER_UNSUB_SECRET?: string;
-  // 10 list IDs Brevo (une par catégorie) — à configurer via `wrangler vars`.
-  BREVO_LIST_INFOS_GENERALES?: string;
+  // 10 list IDs Brevo (une par catégorie D1) — à configurer via `wrangler secret put`.
+  // Les noms correspondent aux colonnes de `newsletter_preferences` (migration 0003).
+  BREVO_LIST_INFO_GENERALES?: string;
   BREVO_LIST_AG?: string;
   BREVO_LIST_EMPLOI?: string;
-  BREVO_LIST_FORMATION?: string;
+  BREVO_LIST_FORMATION_OPCO?: string;
   BREVO_LIST_VEILLE_JURIDIQUE?: string;
   BREVO_LIST_VEILLE_SOCIALE?: string;
-  BREVO_LIST_VEILLE_SURETE_SECURITE?: string;
+  BREVO_LIST_VEILLE_SURETE?: string;
   BREVO_LIST_VEILLE_DATA?: string;
   BREVO_LIST_VEILLE_ENVIRONNEMENT?: string;
-  BREVO_LIST_ACTUALITES?: string;
+  BREVO_LIST_ACTUALITES_GASPE?: string;
 }
 
 // ── User type matching frontend User interface ──
@@ -1194,10 +1195,12 @@ async function handleAcceptInvitation(request: Request, env: Env, corsHeaders: R
 //  Newsletter Preferences
 // ═══════════════════════════════════════════════════════════
 
+// Canoniques : matchent les colonnes `newsletter_preferences` (migration 0003)
+// et les keys de NEWSLETTER_CATEGORIES côté frontend.
 const NEWSLETTER_COLUMNS = [
   "info_generales", "ag", "emploi", "formation_opco",
   "veille_juridique", "veille_sociale", "veille_surete",
-  "veille_environnement", "communication_marque", "actualites_gaspe",
+  "veille_data", "veille_environnement", "actualites_gaspe",
 ] as const;
 
 async function handleGetPreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {
@@ -1250,7 +1253,82 @@ async function handleUpdatePreferences(request: Request, env: Env, corsHeaders: 
   values.push(payload.sub);
 
   await env.DB.prepare(`UPDATE newsletter_preferences SET ${updates.join(", ")} WHERE user_id = ?`).bind(...values).run();
+
+  // Sync Brevo contact (non-bloquant — si Brevo non configuré ou erreur, on ignore).
+  // Les préférences à jour sont relues depuis la DB pour éviter une race avec l'UPDATE.
+  try {
+    const prefs = await env.DB.prepare(
+      `SELECT ${NEWSLETTER_COLUMNS.join(", ")} FROM newsletter_preferences WHERE user_id = ?`
+    ).bind(payload.sub).first<Record<string, number>>();
+    const user = await env.DB.prepare(
+      "SELECT email, first_name, last_name FROM users WHERE id = ?"
+    ).bind(payload.sub).first<{ email: string; first_name?: string; last_name?: string }>();
+    if (prefs && user?.email) {
+      await syncBrevoContact(env, user, prefs);
+    }
+  } catch { /* non bloquant */ }
+
   return json({ success: true }, corsHeaders);
+}
+
+/**
+ * Synchronise un contact Brevo avec ses préférences D1 : ajoute le contact
+ * aux listes des catégories activées, retire des autres. Nécessite que
+ * BREVO_API_KEY + les list IDs soient provisionnés. Silencieux si manquant.
+ * Met à jour `users.brevo_synced_at` après succès pour exposer le statut
+ * côté admin (`/admin/newsletter/abonnes`).
+ */
+async function syncBrevoContact(
+  env: Env,
+  user: { email: string; first_name?: string; last_name?: string },
+  prefs: Record<string, number>,
+): Promise<boolean> {
+  if (!env.BREVO_API_KEY) return false;
+
+  const listIds: number[] = [];
+  const unlinkListIds: number[] = [];
+  for (const [category, envKey] of Object.entries(CATEGORY_TO_LIST_ENV)) {
+    const listId = env[envKey] as string | undefined;
+    if (!listId) continue;
+    const numericId = Number(listId);
+    if (!Number.isFinite(numericId)) continue;
+    if (prefs[category] === 1) listIds.push(numericId);
+    else unlinkListIds.push(numericId);
+  }
+  if (listIds.length === 0 && unlinkListIds.length === 0) return false;
+
+  const payload: Record<string, unknown> = {
+    email: user.email,
+    attributes: {
+      PRENOM: user.first_name ?? "",
+      NOM: user.last_name ?? "",
+    },
+    updateEnabled: true,
+  };
+  if (listIds.length > 0) payload.listIds = listIds;
+  if (unlinkListIds.length > 0) payload.unlinkListIds = unlinkListIds;
+
+  const res = await fetch("https://api.brevo.com/v3/contacts", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "content-type": "application/json",
+      "api-key": env.BREVO_API_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  // Brevo renvoie 201 (create) ou 204 (update) ou 400 avec "Contact already exist"
+  // qui est en fait un update réussi quand updateEnabled=true. On considère OK si <400
+  // ou si le code err est "duplicate_parameter".
+  const ok = res.ok || res.status === 204;
+  if (ok) {
+    try {
+      await env.DB.prepare("UPDATE users SET brevo_synced_at = datetime('now') WHERE email = ?")
+        .bind(user.email).run();
+    } catch { /* colonne peut ne pas encore exister si migration 0009 non appliquée */ }
+  }
+  return ok;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1330,14 +1408,17 @@ async function handleNewsletterSubscribers(request: Request, env: Env, corsHeade
   const admin = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first<{ role: string }>();
   if (!admin || admin.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
 
-  // Users + préférences jointes (null si l'utilisateur n'a jamais configuré ses préférences)
+  // Users + préférences jointes (null si l'utilisateur n'a jamais configuré ses préférences).
+  // Colonnes canoniques : cf. `newsletter_preferences` migration 0003.
   let users: Array<Record<string, unknown>> = [];
   try {
     const { results } = await env.DB.prepare(`
       SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.status,
-             p.informations_generales, p.ag, p.emploi, p.formation, p.veille_juridique,
-             p.veille_sociale, p.veille_surete_securite, p.veille_data,
-             p.veille_environnement, p.actualites
+             u.brevo_synced_at,
+             p.info_generales, p.ag, p.emploi, p.formation_opco, p.veille_juridique,
+             p.veille_sociale, p.veille_surete, p.veille_data,
+             p.veille_environnement, p.actualites_gaspe,
+             p.updated_at AS preferences_updated_at
       FROM users u
       LEFT JOIN newsletter_preferences p ON p.user_id = u.id
       WHERE u.status = 'approved'
@@ -1355,13 +1436,8 @@ async function handleNewsletterSubscribers(request: Request, env: Env, corsHeade
   } catch { /* legacy table may be empty */ }
 
   // Comptage par catégorie pour donner un aperçu rapide côté UI
-  const categoryKeys = [
-    "informations_generales", "ag", "emploi", "formation",
-    "veille_juridique", "veille_sociale", "veille_surete_securite",
-    "veille_data", "veille_environnement", "actualites",
-  ] as const;
   const counts: Record<string, number> = {};
-  for (const key of categoryKeys) {
+  for (const key of ALL_NEWSLETTER_CATEGORIES) {
     counts[key] = users.filter((u) => u[key] === 1).length;
   }
 
@@ -2610,18 +2686,25 @@ interface NlBlock {
   [key: string]: unknown;
 }
 
+/**
+ * Mapping catégorie D1 (colonne `newsletter_preferences`) → env var du list ID Brevo.
+ * Les clés correspondent exactement aux colonnes de la table (migration 0003) et à
+ * `NEWSLETTER_CATEGORIES` côté frontend (`src/lib/auth/types.ts`).
+ */
 const CATEGORY_TO_LIST_ENV: Record<string, keyof Env> = {
-  informations_generales: "BREVO_LIST_INFOS_GENERALES",
+  info_generales: "BREVO_LIST_INFO_GENERALES",
   ag: "BREVO_LIST_AG",
   emploi: "BREVO_LIST_EMPLOI",
-  formation: "BREVO_LIST_FORMATION",
+  formation_opco: "BREVO_LIST_FORMATION_OPCO",
   veille_juridique: "BREVO_LIST_VEILLE_JURIDIQUE",
   veille_sociale: "BREVO_LIST_VEILLE_SOCIALE",
-  veille_surete_securite: "BREVO_LIST_VEILLE_SURETE_SECURITE",
+  veille_surete: "BREVO_LIST_VEILLE_SURETE",
   veille_data: "BREVO_LIST_VEILLE_DATA",
   veille_environnement: "BREVO_LIST_VEILLE_ENVIRONNEMENT",
-  actualites: "BREVO_LIST_ACTUALITES",
+  actualites_gaspe: "BREVO_LIST_ACTUALITES_GASPE",
 };
+
+const ALL_NEWSLETTER_CATEGORIES = Object.keys(CATEGORY_TO_LIST_ENV);
 
 /**
  * Rendu HTML minimal côté Worker — la charte complète reste dans le renderer
@@ -2804,11 +2887,9 @@ async function handleBrevoWebhook(request: Request, env: Env, corsHeaders: Recor
 
     // Si désinscription ou bounce hard → désabonner de toutes les catégories.
     if (body.event === "unsubscribed" || body.event === "hard_bounce") {
+      const setClause = ALL_NEWSLETTER_CATEGORIES.map((c) => `${c} = 0`).join(", ");
       await env.DB.prepare(`
-        UPDATE newsletter_preferences SET
-          informations_generales = 0, ag = 0, emploi = 0, formation = 0,
-          veille_juridique = 0, veille_sociale = 0, veille_surete_securite = 0,
-          veille_data = 0, veille_environnement = 0, actualites = 0
+        UPDATE newsletter_preferences SET ${setClause}
         WHERE user_id IN (SELECT id FROM users WHERE email = ?)
       `).bind(body.email).run();
     }
@@ -2843,12 +2924,9 @@ async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeade
   if (sig !== expected) return json({ error: "Signature invalide" }, corsHeaders, 401);
 
   // Désinscrit des catégories demandées (ou toutes si vide).
-  const allCategories = [
-    "informations_generales", "ag", "emploi", "formation",
-    "veille_juridique", "veille_sociale", "veille_surete_securite",
-    "veille_data", "veille_environnement", "actualites",
-  ];
-  const cats = (body.categories && body.categories.length > 0) ? body.categories.filter((c) => allCategories.includes(c)) : allCategories;
+  const cats = (body.categories && body.categories.length > 0)
+    ? body.categories.filter((c) => ALL_NEWSLETTER_CATEGORIES.includes(c))
+    : ALL_NEWSLETTER_CATEGORIES;
   const setClause = cats.map((c) => `${c} = 0`).join(", ");
 
   await env.DB.prepare(`

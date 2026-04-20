@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -17,17 +17,19 @@ interface SubscriberRow {
   last_name?: string;
   role: "admin" | "adherent" | "candidat";
   status: "pending" | "approved" | "rejected";
-  // 10 catégories (0 | 1 | null si préférences non configurées)
-  informations_generales?: number | null;
+  brevo_synced_at?: string | null;
+  preferences_updated_at?: string | null;
+  // 10 catégories canoniques (colonnes D1 — matchent NEWSLETTER_CATEGORIES)
+  info_generales?: number | null;
   ag?: number | null;
   emploi?: number | null;
-  formation?: number | null;
+  formation_opco?: number | null;
   veille_juridique?: number | null;
   veille_sociale?: number | null;
-  veille_surete_securite?: number | null;
+  veille_surete?: number | null;
   veille_data?: number | null;
   veille_environnement?: number | null;
-  actualites?: number | null;
+  actualites_gaspe?: number | null;
 }
 
 interface LegacyRow {
@@ -45,32 +47,46 @@ interface ApiResponse {
 }
 
 const CATEGORY_COL_KEYS = [
-  "informations_generales",
+  "info_generales",
   "ag",
   "emploi",
-  "formation",
+  "formation_opco",
   "veille_juridique",
   "veille_sociale",
-  "veille_surete_securite",
+  "veille_surete",
   "veille_data",
   "veille_environnement",
-  "actualites",
+  "actualites_gaspe",
 ] as const;
 
 type CategoryKey = (typeof CATEGORY_COL_KEYS)[number];
 
-// Map catégorie CMS key → label court (mêmes libellés que NEWSLETTER_CATEGORIES)
+// Map catégorie D1 key → label court (aligné sur NEWSLETTER_CATEGORIES)
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
-  informations_generales: "Infos Générales",
+  info_generales: "Infos Générales",
   ag: "AG",
   emploi: "Emploi",
-  formation: "Formation",
+  formation_opco: "Formation",
   veille_juridique: "Juridique",
   veille_sociale: "Sociale",
-  veille_surete_securite: "Sûreté",
+  veille_surete: "Sûreté",
   veille_data: "Data",
   veille_environnement: "Environnement",
-  actualites: "Actualités",
+  actualites_gaspe: "Actualités",
+};
+
+type SyncStatus = "synced" | "out-of-sync" | "pending";
+
+function getSyncStatus(u: SubscriberRow): SyncStatus {
+  if (!u.brevo_synced_at) return "pending";
+  if (u.preferences_updated_at && u.preferences_updated_at > u.brevo_synced_at) return "out-of-sync";
+  return "synced";
+}
+
+const SYNC_BADGE: Record<SyncStatus, { label: string; tone: string; symbol: string }> = {
+  synced:       { label: "Synced",       tone: "text-[var(--gaspe-green-600)]", symbol: "●" },
+  "out-of-sync":{ label: "Désynchronisé",tone: "text-[var(--gaspe-warm)]",       symbol: "●" },
+  pending:      { label: "Non synchronisé", tone: "text-[var(--gaspe-neutral-400)]", symbol: "○" },
 };
 
 function csvEscape(v: string | number | null | undefined): string {
@@ -97,8 +113,10 @@ export default function AdminNewsletterSubscribersPage() {
   useEffect(() => {
     if (!user || user.role !== "admin") return;
     if (!isApiMode() || !API_URL) {
-      setLoading(false);
-      setError("Mode démo : pas d'abonnés à afficher. Activez NEXT_PUBLIC_API_URL pour voir la prod.");
+      startTransition(() => {
+        setLoading(false);
+        setError("Mode démo : pas d'abonnés à afficher. Activez NEXT_PUBLIC_API_URL pour voir la prod.");
+      });
       return;
     }
     const token = localStorage.getItem("gaspe_api_token");
@@ -127,11 +145,12 @@ export default function AdminNewsletterSubscribersPage() {
 
   function exportCsv() {
     if (!data) return;
-    const headers = ["email", "prenom", "nom", "role", "statut", ...CATEGORY_COL_KEYS];
+    const headers = ["email", "prenom", "nom", "role", "statut", "brevo_sync", "brevo_synced_at", ...CATEGORY_COL_KEYS];
     const lines = [headers.map(csvEscape).join(",")];
     for (const u of filteredUsers) {
       const row = [
         u.email, u.first_name ?? "", u.last_name ?? "", u.role, u.status,
+        getSyncStatus(u), u.brevo_synced_at ?? "",
         ...CATEGORY_COL_KEYS.map((k) => (u[k] === 1 ? "oui" : "non")),
       ];
       lines.push(row.map(csvEscape).join(","));
@@ -246,6 +265,7 @@ export default function AdminNewsletterSubscribersPage() {
                     <th className="px-3 py-2 text-left font-semibold">Email</th>
                     <th className="px-3 py-2 text-left font-semibold">Nom</th>
                     <th className="px-3 py-2 text-left font-semibold">Rôle</th>
+                    <th className="px-2 py-2 text-center font-semibold" title="Statut de synchronisation Brevo">Brevo</th>
                     {CATEGORY_COL_KEYS.map((k) => (
                       <th key={k} className="px-2 py-2 text-center font-semibold text-[11px]" title={CATEGORY_LABELS[k]}>
                         {CATEGORY_LABELS[k]}
@@ -256,12 +276,15 @@ export default function AdminNewsletterSubscribersPage() {
                 <tbody>
                   {filteredUsers.length === 0 && (
                     <tr>
-                      <td colSpan={3 + CATEGORY_COL_KEYS.length} className="px-3 py-6 text-center text-foreground-muted">
+                      <td colSpan={4 + CATEGORY_COL_KEYS.length} className="px-3 py-6 text-center text-foreground-muted">
                         Aucun abonné ne correspond au filtre.
                       </td>
                     </tr>
                   )}
-                  {filteredUsers.map((u) => (
+                  {filteredUsers.map((u) => {
+                    const sync = getSyncStatus(u);
+                    const badge = SYNC_BADGE[sync];
+                    return (
                     <tr key={u.id} className="border-b border-border-light/60 hover:bg-surface/50">
                       <td className="px-3 py-2 font-mono text-xs">{u.email}</td>
                       <td className="px-3 py-2">{[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}</td>
@@ -269,6 +292,9 @@ export default function AdminNewsletterSubscribersPage() {
                         <Badge variant={u.role === "admin" ? "teal" : u.role === "adherent" ? "blue" : "warm"}>
                           {u.role}
                         </Badge>
+                      </td>
+                      <td className="px-2 py-2 text-center" title={badge.label}>
+                        <span className={`text-base ${badge.tone}`} aria-label={badge.label}>{badge.symbol}</span>
                       </td>
                       {CATEGORY_COL_KEYS.map((k) => (
                         <td key={k} className="px-2 py-2 text-center">
@@ -280,7 +306,8 @@ export default function AdminNewsletterSubscribersPage() {
                         </td>
                       ))}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

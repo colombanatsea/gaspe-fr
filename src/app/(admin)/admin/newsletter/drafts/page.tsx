@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -28,7 +28,7 @@ export default function AdminNewsletterDraftsPage() {
       router.push("/connexion");
       return;
     }
-    refresh();
+    startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
   if (!user || user.role !== "admin") return null;

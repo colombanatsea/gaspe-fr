@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, type User, type UserRole, type MembershipStatus, COMPANY_ROLES } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
@@ -52,7 +52,7 @@ export default function AdminComptesPage() {
 
   useEffect(() => {
     if (!user || user.role !== "admin") { router.push("/connexion"); return; }
-    refresh();
+    startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
   const handleApprove = async (id: string) => { approveUser(id); await refresh(); };

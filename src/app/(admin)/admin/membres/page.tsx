@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
@@ -67,7 +67,7 @@ export default function AdminMembresPage() {
 
   useEffect(() => {
     if (!user || user.role !== "admin") router.push("/connexion");
-    else refresh();
+    else startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
   // ------- Filters -------
