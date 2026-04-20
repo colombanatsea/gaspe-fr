@@ -112,6 +112,7 @@ Quand tu ajoutes une nouvelle page ou modifies le contenu :
 | 9 | Migration 4 derniers `<img>` AdemeSimulator (data-URI + mixBlendMode) | simulator | Low (admin-only) | 1 h |
 | 10 | Alimenter positions avec contenu éditorial mensuel | `src/data/positions.ts` | +8-12% trafic organique | continu |
 | 11 | Lighthouse réel + axe-core audit (dépend Chrome local) | tous | ≥ 95 mobile perf | 1 h |
+| 12 | Activer `.env` / Cloudflare Pages `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` + `NEXT_PUBLIC_BING_SITE_VERIFICATION` | env | Ownership Search Console | 5 min (après récupération code) |
 
 ---
 

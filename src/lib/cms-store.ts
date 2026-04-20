@@ -79,16 +79,94 @@ export async function apiDeleteMedia(id: string): Promise<boolean> {
 export interface PageSection {
   id: string;
   label: string;
-  type: "richtext" | "text" | "image" | "config" | "list";
+  type: "richtext" | "text" | "image" | "config" | "list" | "video";
+  /**
+   * Content encoding par type :
+   *   - text / richtext / config : string brute
+   *   - image : URL ou data-URL
+   *   - list : JSON.stringify(Array<Record<string, string>>)
+   *   - video : JSON.stringify({ url: string; poster?: string; autoplay?: boolean; loop?: boolean; muted?: boolean })
+   */
   content: string;
   /** For "list" type: schema of item fields (stored as JSON array of objects) */
   itemFields?: { id: string; label: string; type: "text" | "richtext" | "url" | "image" }[];
+}
+
+/** Payload d'un bloc video stocké dans `PageSection.content` (JSON.stringify). */
+export interface VideoSectionPayload {
+  url: string;
+  poster?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+}
+
+/** Parse un champ video, renvoie null si invalide. Tolère string vide ou JSON malformé. */
+export function parseVideoPayload(content: string): VideoSectionPayload | null {
+  if (!content || !content.trim()) return null;
+  try {
+    const data = JSON.parse(content) as VideoSectionPayload;
+    if (typeof data?.url !== "string" || !data.url) return null;
+    return {
+      url: data.url,
+      poster: typeof data.poster === "string" ? data.poster : undefined,
+      autoplay: Boolean(data.autoplay),
+      loop: Boolean(data.loop),
+      muted: Boolean(data.muted),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export interface PageContent {
   pageId: string;
   sections: PageSection[];
   updatedAt: string;
+}
+
+/**
+ * Schéma `itemFields` standard pour un bloc `button-group` — une liste de CTA
+ * éditables depuis l'admin (libellé + URL + variante graphique). Utilisé dans
+ * `PAGE_DEFINITIONS` comme : `{ type: "list", itemFields: BUTTON_GROUP_FIELDS }`.
+ *
+ * Parsing côté rendu :
+ *   const buttons: ButtonGroupItem[] = JSON.parse(section.content ?? "[]");
+ */
+export const BUTTON_GROUP_FIELDS = [
+  { id: "label", label: "Libellé du bouton", type: "text" },
+  { id: "url", label: "URL de destination", type: "url" },
+  { id: "variant", label: "Variante (primary | secondary | ghost)", type: "text" },
+] as const satisfies ReadonlyArray<{ id: string; label: string; type: "text" | "richtext" | "url" | "image" }>;
+
+export interface ButtonGroupItem {
+  label: string;
+  url: string;
+  /** `primary` = teal solid, `secondary` = outline teal, `ghost` = plain text. Défaut : primary. */
+  variant?: "primary" | "secondary" | "ghost";
+}
+
+/** Parse le content d'une section `list` + `itemFields: BUTTON_GROUP_FIELDS`. */
+export function parseButtonGroup(content: string): ButtonGroupItem[] {
+  if (!content || !content.trim()) return [];
+  try {
+    const data = JSON.parse(content) as unknown;
+    if (!Array.isArray(data)) return [];
+    return data
+      .filter((it): it is { label?: unknown; url?: unknown; variant?: unknown } => typeof it === "object" && it !== null)
+      .map((it): ButtonGroupItem => {
+        const variant: ButtonGroupItem["variant"] =
+          it.variant === "secondary" || it.variant === "ghost" ? it.variant : "primary";
+        return {
+          label: typeof it.label === "string" ? it.label : "",
+          url: typeof it.url === "string" ? it.url : "",
+          variant,
+        };
+      })
+      .filter((it) => it.label && it.url);
+  } catch {
+    return [];
+  }
 }
 
 // ── localStorage implementation ──

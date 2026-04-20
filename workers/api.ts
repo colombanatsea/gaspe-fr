@@ -2976,5 +2976,50 @@ async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeade
   // Pour les inscrits legacy (table newsletter)
   await env.DB.prepare("DELETE FROM newsletter WHERE email = ?").bind(email).run();
 
+  // Sync Brevo : on re-sync le contact avec ses prefs à jour (listes conservées +
+  // listes désactivées retirées). Silencieux si BREVO non configuré. On couvre les
+  // deux cas : user authentifié (syncBrevoContact complet) et legacy public (unlink
+  // simple de BREVO_LIST_PUBLIC).
+  try {
+    const user = await env.DB.prepare(
+      "SELECT email, first_name, last_name FROM users WHERE email = ?"
+    ).bind(email).first<{ email: string; first_name?: string; last_name?: string }>();
+    if (user) {
+      const prefs = await env.DB.prepare(
+        `SELECT ${NEWSLETTER_COLUMNS.join(", ")} FROM newsletter_preferences WHERE user_id IN (SELECT id FROM users WHERE email = ?)`
+      ).bind(email).first<Record<string, number>>();
+      if (prefs) await syncBrevoContact(env, user, prefs);
+    } else {
+      // Legacy public : unlink de la liste BREVO_LIST_PUBLIC si configurée
+      await unlinkBrevoPublicContact(env, email);
+    }
+  } catch { /* non bloquant */ }
+
   return json({ success: true, email, categoriesDisabled: cats }, corsHeaders);
+}
+
+/**
+ * Retire un contact de la liste Brevo `BREVO_LIST_PUBLIC`. Utilisé lors de la
+ * désinscription publique d'un email legacy (table `newsletter` sans compte user).
+ * Silencieux si Brevo non configuré.
+ */
+async function unlinkBrevoPublicContact(env: Env, email: string): Promise<boolean> {
+  if (!env.BREVO_API_KEY || !env.BREVO_LIST_PUBLIC) return false;
+  const listId = Number(env.BREVO_LIST_PUBLIC);
+  if (!Number.isFinite(listId)) return false;
+
+  try {
+    const res = await fetch(`https://api.brevo.com/v3/contacts/lists/${listId}/contacts/remove`, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({ emails: [email] }),
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
 }

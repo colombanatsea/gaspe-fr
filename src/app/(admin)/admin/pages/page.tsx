@@ -8,6 +8,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
 import { ListEditor } from "@/components/admin/ListEditor";
+import { VideoSectionEditor } from "@/components/admin/VideoSectionEditor";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import {
   PAGE_DEFINITIONS,
@@ -408,6 +409,11 @@ export default function AdminPagesPage() {
                             Choisir depuis la bibliothèque
                           </button>
                         </div>
+                      ) : section.type === "video" ? (
+                        <VideoSectionEditor
+                          content={section.content}
+                          onChange={(json) => updateSection(section.id, json)}
+                        />
                       ) : (
                         <input
                           type="text"

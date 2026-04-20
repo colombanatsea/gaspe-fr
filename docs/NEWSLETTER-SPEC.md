@@ -456,17 +456,18 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [x] **Sync préférences** → Brevo contact + attributs PRENOM/NOM (session 29, `syncBrevoContact` dans `workers/api.ts`). Silencieux si list IDs non configurés. Met à jour `users.brevo_synced_at`.
 - [x] Colonnes canonicalisées DB ↔ frontend ↔ Brevo (session 29) : `info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`
 - [x] Dashboard `/admin/newsletter/abonnes` affiche statut sync par user (synced / out-of-sync / pending) avec export CSV (session 29)
-- [ ] Sync désinscription publique (`/newsletter/unsubscribe`) → Brevo + D1 (reste à implémenter côté worker)
+- [x] **Sync désinscription publique** (`POST /api/newsletter/unsubscribe`) → Brevo + D1 (session 30) : `handleNewsletterUnsubscribe` appelle `syncBrevoContact` pour les users authentifiés (re-sync complet avec prefs mis à jour) et `unlinkBrevoPublicContact` pour les emails legacy (retire de `BREVO_LIST_PUBLIC`).
 
-### Phase 6 : Désinscription publique (1h)
-- [ ] Page `/newsletter/unsubscribe?token=`
-- [ ] Endpoint `POST /api/newsletter/unsubscribe`
-- [ ] Email template mise à jour (footer avec lien unsub tokenisé)
+### Phase 6 : Désinscription publique (1h) — ✅ done session 28 + 30
+- [x] Page `/newsletter/unsubscribe?token=` (session 28)
+- [x] Endpoint `POST /api/newsletter/unsubscribe` (session 28)
+- [x] Sync Brevo côté worker (session 30) : `syncBrevoContact` si user, `unlinkBrevoPublicContact` si legacy
+- [ ] Email template mise à jour (footer avec lien unsub tokenisé) — lien déjà envoyé, template charte configurable déjà géré phase 7
 
-### Phase 7 : Charte configurable (1h)
-- [ ] Page `/admin/newsletter/charte` (CMS dédié)
-- [ ] Storage D1 via `cms_pages` (page_id = "newsletter-charte")
-- [ ] Injection des variables dans le renderer HTML
+### Phase 7 : Charte configurable (1h) — ✅ done session 28
+- [x] Page `/admin/newsletter/charte` (CMS dédié)
+- [x] Storage D1 via `cms_pages` (page_id = "newsletter-charte")
+- [x] Injection des variables dans le renderer HTML
 
 ### Phase 8 : UX polish (2h)
 - [ ] Templates pré-configurés ("Newsletter mensuelle", "Bulletin d'information", etc.)

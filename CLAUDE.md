@@ -13,7 +13,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 203 tests, 19 files)
+npm run test         # unit tests (Vitest, 233 tests, 22 files)
 npm run test:watch   # unit tests in watch mode
 npm run lint         # ESLint (0 errors, 0 warnings — v2.16.0)
 git push origin main # auto-deploy to CF Pages (~1 min)
@@ -212,7 +212,7 @@ workers/
     └── 0008_newsletter.sql               # Newsletter v2 — drafts, sends, events, templates
 ```
 
-## Worker API — 50 endpoints
+## Worker API — 50 endpoints (+2 helpers Brevo session 30)
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -284,7 +284,7 @@ workers/
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 
 ## Testing
-- **Unit tests**: Vitest — 203 tests, 19 spec files
+- **Unit tests**: Vitest — 233 tests, 22 spec files (+3 en session 30 : positions, feed-rss, cms-video/button-group)
 - **E2E tests**: Playwright — 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -390,6 +390,12 @@ Architecture dual-mode : `src/lib/cms-store.ts` + hook `useCmsContent(pageId, se
 | `image` | URL | URL input + Media Library |
 | `config` | string | input |
 | `list` | `JSON.stringify(array)` | ListEditor (add/remove/reorder) |
+| `video` | `JSON.stringify({url, poster?, autoplay?, loop?, muted?})` | VideoSectionEditor (preview natif + 3 toggles) |
+
+**Presets list disponibles** :
+| Preset | Champs | Parser helper |
+|--------|--------|---------------|
+| `BUTTON_GROUP_FIELDS` | label, url, variant (primary/secondary/ghost) | `parseButtonGroup(content)` → `ButtonGroupItem[]` |
 
 ## Newsletter (v1 Brevo proxy + v2 foundation, session 26)
 
@@ -467,4 +473,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 27 | 2.13.1 | Audit éditorial homepage + notre-groupement + recrutent : hero eyebrow "Organisation Patronale Représentative", hero title "compagnies maritimes côtières françaises", baseline "D'un littoral à l'autre…", CTA "Rejoignez les armateurs côtiers", em-dashes → en-dashes dans marketing. Dérivation dynamique des compteurs via `memberStats` (27 compagnies, 23 hexagone + 4 outre-mer, 31 adhérents) + placeholders `{adherents}`, `{navires}`… dans CMS. Type `memberType: "compagnie"\|"expert"` sur Member (4 experts : Capstan, Filhet Allard, Howden, SPLMNA). Alignement tuiles stats via flex-wrap centré. Upload photo bureau via CMS (ListEditor type `image` + endpoint public `/api/media/raw/:key`). Admin `/admin/newsletter/abonnes` (table + filtres + export CSV). |
 | 28 | 2.14.0 | **SEO industrialisé** : helper `src/lib/seo.ts` (buildMetadata, metaFromPageId, DEFAULT_PAGE_META 17 pages), 12 mots-clés cibles `SITE_KEYWORDS`, OrganizationJsonLd enrichie (TradeAssociation, knowsAbout, 2 contactPoints, sameAs), BreadcrumbJsonLd auto via CmsPageHeader, FAQJsonLd composant dispo. `layout.tsx` par page pour toutes les routes publiques. Guide `docs/SEO-GUIDE.md`. **Perf** : hero video poster + preload metadata, Leaflet lazy-dynamic, GaspeGlobe supprimé (-15 KB), Unsplash hero → gradient CSS, fonts 11→7 poids, tap targets 44x44 (MobileNav, ThemeToggle, MediaLibrary), viewport maximumScale=5. **Newsletter iso-Brevo** : endpoints `/api/newsletter/drafts/:id/test-send` + `/send` (campaigns), webhook `/api/newsletter/brevo/webhook` (signature HMAC), désinscription publique `/newsletter/unsubscribe?token=…` (HMAC NEWSLETTER_UNSUB_SECRET). **Charte configurable** `/admin/newsletter/charte` (sender, logo, couleurs, footer HTML, baseline, preheader, libellés unsub/webversion). 10 list IDs Brevo attendus en env. Table `nl_sends` pour suivi campagnes. |
 | 29 | 2.15.0 | **SEO câblages** : FAQJsonLd câblé sur `/boite-a-outils` (10 Q/R CCN 3228) et `/ssgm` (8 Q/R visites médicales), EventJsonLd sur `/agenda` (par événement), MaritimeService JSON-LD enrichi sur `/nos-adherents/[slug]` (Organization + LocalBusiness avec `areaServed`, `serviceType`, `geo`, `memberOf`). **Newsletter — colonnes canonicalisées** : `NEWSLETTER_COLUMNS` worker + `NEWSLETTER_CATEGORIES` frontend alignés sur la table D1 (`info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`) — `communication_marque` (absent DB) remplacé par `veille_data` (ADF). Webhook, unsubscribe, subscribers endpoint corrigés (ex-bug latent session 28). **Sync Brevo** : `handleUpdatePreferences` synchronise automatiquement le contact Brevo (listes ajoutées/retirées + attributs PRENOM/NOM) ; silencieux si list IDs non configurés. Migration `0009_brevo_sync.sql` ajoute `users.brevo_synced_at`. **`/admin/newsletter/abonnes`** : colonne Brevo sync status (● synced / ● out-of-sync / ○ pending) + export CSV enrichi. **Perf** : `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug]. **ESLint** : 6 warnings `set-state-in-effect` fixés via `startTransition()` → 0 warning. |
-| 30 | 2.16.0 | **SEO éditorial complet** : extraction des 4 positions vers `src/data/positions.ts` (interface `PositionItem` avec `body` HTML complet), nouvelle route dynamique `/positions/[slug]` avec `ArticleJsonLd` + `BreadcrumbJsonLd` + generateStaticParams + metadata Article OG (`publishedTime`, `modifiedTime`, ogType="article"). Refonte `/actualites` (ex-redirect) en feed HTML alimenté par `POSITIONS_SORTED`, bouton "Flux RSS" visible. Nouvelle route `/feed.xml` (RSS 2.0 statique, `force-static`). Auto-discovery RSS via `<link rel="alternate" type="application/rss+xml">` dans root layout. Sitemap enrichi des 4 slugs positions. **Search Console** : `verification.google` + `verification.other.msvalidate.01` conditionnels via env `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION`. **Migration `<img>` → `next/image` complétée** sur 14 fichiers user-facing + admin (GaspeLogo 2 variants, NewsCard, MemberDetail, GroupementContent bureau photos, espace-adherent 3 pages, espace-candidat page, MediaLibrary, ListEditor, RichTextEditor modal, /admin/pages, /admin/newsletter/charte). **Brevo** : `syncBrevoPublicContact` (worker) appelé par `POST /api/newsletter` — sync l'inscription publique vers la liste `BREVO_LIST_PUBLIC` avec attribut `SOURCE=public-form` (silencieux si config absente). Env var `BREVO_LIST_PUBLIC` ajoutée. **Bloqueurs env** : ffmpeg + Chrome absents → compression `acf_video.MP4` et Lighthouse/axe-core réels reportés session 31 (commandes documentées). Build vert, 203 tests OK, 0 warning ESLint. |
+| 30 | 2.16.0 | **SEO éditorial complet** : extraction des 4 positions vers `src/data/positions.ts` (interface `PositionItem` avec `body` HTML complet), nouvelle route dynamique `/positions/[slug]` avec `ArticleJsonLd` + `BreadcrumbJsonLd` + generateStaticParams + metadata Article OG (`publishedTime`, `modifiedTime`, ogType="article"). Refonte `/actualites` (ex-redirect) en feed HTML alimenté par `POSITIONS_SORTED`, bouton "Flux RSS" visible. Nouvelle route `/feed.xml` (RSS 2.0 statique, `force-static`). Auto-discovery RSS via `<link rel="alternate" type="application/rss+xml">` dans root layout. Sitemap enrichi des 4 slugs positions. **Search Console** : `verification.google` + `verification.other.msvalidate.01` conditionnels via env `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION`. **Migration `<img>` → `next/image` complétée** sur 14 fichiers user-facing + admin (GaspeLogo 2 variants, NewsCard, MemberDetail, GroupementContent bureau photos, espace-adherent 3 pages, espace-candidat page, MediaLibrary, ListEditor, RichTextEditor modal, /admin/pages, /admin/newsletter/charte). **Brevo** : `syncBrevoPublicContact` (worker) appelé par `POST /api/newsletter` — sync l'inscription publique vers la liste `BREVO_LIST_PUBLIC` avec attribut `SOURCE=public-form` (silencieux si config absente). Env var `BREVO_LIST_PUBLIC` ajoutée. **Brevo désinscription publique** : `handleNewsletterUnsubscribe` appelle désormais `syncBrevoContact` pour les users authentifiés (re-sync complet listes + attrs) et `unlinkBrevoPublicContact` pour les legacy (retire de `BREVO_LIST_PUBLIC`). Phase 5 complétée. **CMS `video`** : nouveau type de section (`PageSection.type === "video"`), stocké en JSON `{url, poster?, autoplay?, loop?, muted?}`, composant `VideoSectionEditor` (admin), helper `parseVideoPayload()`. **CMS `button-group`** : preset de type `list` via `BUTTON_GROUP_FIELDS` (3 champs : label, url, variant), helper `parseButtonGroup()`. Zod schema `pageSectionSchema` étendu pour accepter `video`. **Tests** : 30 nouveaux tests (12 positions + 6 RSS + 12 cms-video + button-group) → 233 tests totaux. **Bloqueurs env** : ffmpeg + Chrome absents → compression `acf_video.MP4` et Lighthouse/axe-core réels reportés session 31 (commandes documentées). Build vert, 0 warning ESLint. |
