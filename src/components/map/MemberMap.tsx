@@ -89,7 +89,13 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
 
         members.forEach((member) => {
           const icon = createIcon(member.territory === "dom-tom", member.category === "associe");
-          const marker = L.marker([member.latitude, member.longitude], { icon });
+          // `alt` sert d'`aria-label` pour le marker Leaflet (divIcon `role=button`)
+          // → corrige violation WCAG `aria-command-name`.
+          const marker = L.marker([member.latitude, member.longitude], {
+            icon,
+            alt: `${member.name} – ${member.city}`,
+            title: member.name,
+          });
 
           const logoHtml = member.logoUrl
             ? `<img src="${member.logoUrl}" alt="${member.name}" style="max-height:36px;max-width:130px;object-fit:contain;margin-bottom:8px;" />`

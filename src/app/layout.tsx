@@ -52,11 +52,21 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
   },
-  alternates: { canonical: SITE_URL },
+  alternates: {
+    canonical: SITE_URL,
+    types: {
+      "application/rss+xml": [{ url: `${SITE_URL}/positions/feed.xml`, title: "Positions & Actualités" }],
+    },
+  },
   verification: {
-    // TODO: remplir avec les codes Search Console + Bing Webmaster Tools quand configurés
-    // google: "xxx",
-    // other: { "msvalidate.01": "xxx" },
+    // Codes fournis par l'admin via env vars à build-time. Sans env, pas de meta
+    // tag injectée (Next.js ignore les clés falsy). Documenter les noms de var dans README.
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    }),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION && {
+      other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION },
+    }),
   },
 };
 
@@ -71,6 +81,12 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/logo-gaspe.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/logo-gaspe.jpg" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="GASPE – Positions & Actualités"
+          href="/positions/feed.xml"
+        />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

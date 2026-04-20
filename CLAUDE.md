@@ -3,11 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**109 pages** — deployed on Cloudflare Pages (static export)
+**113 pages** (109 + 4 positions détail) — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.15.0 (SEO câblé : FAQ/Event/MaritimeService JSON-LD + sync Brevo préférences + colonnes DB canonicalisées)
+- **Version**: v2.16.0 (positions dynamiques `/positions/[slug]` + ArticleJsonLd + RSS 2.0 `/positions/feed.xml` + a11y fixes + hero video -80% + Brevo sync inscription publique & désinscription)
 
 ## Commands
 ```bash
@@ -15,7 +15,7 @@ npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
 npm run test         # unit tests (Vitest, 203 tests, 19 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 0 warnings — v2.15.0)
+npm run lint         # ESLint (0 errors, 0 warnings — v2.16.0)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -32,7 +32,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ CF_CONFIGURED=true (GitHub repo var) → workflow deploy-worker actif
 - ✅ Migrations D1 appliquées : 0001-0007 (dont 0007 org_archived appliquée via deploy-worker `--remote`)
 - ⏳ Migration 0008 (newsletter v2 : nl_drafts, nl_sends, nl_events, nl_templates) appliquée automatiquement au merge session 26 sur main
-- ⏳ Migration 0009 (session 29 : ajoute `users.brevo_synced_at` pour tracker la synchronisation contact Brevo) — à appliquer au prochain merge main
+- ⏳ Migration 0009 (session 29 : ajoute `users.brevo_synced_at` pour tracker la synchronisation contact Brevo) — doit être appliquée automatiquement au merge session 29. Sanity check : `curl https://gaspe-api.hello-0d0.workers.dev/api/health` puis consulter `/admin/newsletter/abonnes` (si la colonne `brevo_synced_at` manque, l'endpoint renverra les users sans erreur mais la colonne "Brevo" affichera "pending" pour tous)
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -159,13 +159,13 @@ Admin consulte les abonnés via `/admin/newsletter/abonnes` (table + filtre par 
 ```
 src/
 ├── app/
-│   ├── (public)/          # 33 routes publiques (+ ssgm, decouvrir, visites-medicales)
+│   ├── (public)/          # 33 routes publiques + `positions/[slug]` + `positions/feed.xml`
 │   ├── (admin)/           # 12 sections admin + dashboard (16 pages avec /new)
 │   ├── (auth)/            # 6 routes auth (+ invitation, reset password)
-│   ├── layout.tsx         # Layout racine (fonts, providers, SW)
+│   ├── layout.tsx         # Layout racine (fonts, providers, SW, rel=alternate RSS)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
-│   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations)
+│   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations, positions)
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
 │   ├── jobs/              # JobCard, JobList, JobFilters, JobDetailActions, JobMatchScore
@@ -177,7 +177,7 @@ src/
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
 │   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications, positions)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
 │   ├── theme/             # ThemeContext (dark mode)
@@ -463,3 +463,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 27 | 2.13.1 | Audit éditorial homepage + notre-groupement + recrutent : hero eyebrow "Organisation Patronale Représentative", hero title "compagnies maritimes côtières françaises", baseline "D'un littoral à l'autre…", CTA "Rejoignez les armateurs côtiers", em-dashes → en-dashes dans marketing. Dérivation dynamique des compteurs via `memberStats` (27 compagnies, 23 hexagone + 4 outre-mer, 31 adhérents) + placeholders `{adherents}`, `{navires}`… dans CMS. Type `memberType: "compagnie"\|"expert"` sur Member (4 experts : Capstan, Filhet Allard, Howden, SPLMNA). Alignement tuiles stats via flex-wrap centré. Upload photo bureau via CMS (ListEditor type `image` + endpoint public `/api/media/raw/:key`). Admin `/admin/newsletter/abonnes` (table + filtres + export CSV). |
 | 28 | 2.14.0 | **SEO industrialisé** : helper `src/lib/seo.ts` (buildMetadata, metaFromPageId, DEFAULT_PAGE_META 17 pages), 12 mots-clés cibles `SITE_KEYWORDS`, OrganizationJsonLd enrichie (TradeAssociation, knowsAbout, 2 contactPoints, sameAs), BreadcrumbJsonLd auto via CmsPageHeader, FAQJsonLd composant dispo. `layout.tsx` par page pour toutes les routes publiques. Guide `docs/SEO-GUIDE.md`. **Perf** : hero video poster + preload metadata, Leaflet lazy-dynamic, GaspeGlobe supprimé (-15 KB), Unsplash hero → gradient CSS, fonts 11→7 poids, tap targets 44x44 (MobileNav, ThemeToggle, MediaLibrary), viewport maximumScale=5. **Newsletter iso-Brevo** : endpoints `/api/newsletter/drafts/:id/test-send` + `/send` (campaigns), webhook `/api/newsletter/brevo/webhook` (signature HMAC), désinscription publique `/newsletter/unsubscribe?token=…` (HMAC NEWSLETTER_UNSUB_SECRET). **Charte configurable** `/admin/newsletter/charte` (sender, logo, couleurs, footer HTML, baseline, preheader, libellés unsub/webversion). 10 list IDs Brevo attendus en env. Table `nl_sends` pour suivi campagnes. |
 | 29 | 2.15.0 | **SEO câblages** : FAQJsonLd câblé sur `/boite-a-outils` (10 Q/R CCN 3228) et `/ssgm` (8 Q/R visites médicales), EventJsonLd sur `/agenda` (par événement), MaritimeService JSON-LD enrichi sur `/nos-adherents/[slug]` (Organization + LocalBusiness avec `areaServed`, `serviceType`, `geo`, `memberOf`). **Newsletter — colonnes canonicalisées** : `NEWSLETTER_COLUMNS` worker + `NEWSLETTER_CATEGORIES` frontend alignés sur la table D1 (`info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`) — `communication_marque` (absent DB) remplacé par `veille_data` (ADF). Webhook, unsubscribe, subscribers endpoint corrigés (ex-bug latent session 28). **Sync Brevo** : `handleUpdatePreferences` synchronise automatiquement le contact Brevo (listes ajoutées/retirées + attributs PRENOM/NOM) ; silencieux si list IDs non configurés. Migration `0009_brevo_sync.sql` ajoute `users.brevo_synced_at`. **`/admin/newsletter/abonnes`** : colonne Brevo sync status (● synced / ● out-of-sync / ○ pending) + export CSV enrichi. **Perf** : `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug]. **ESLint** : 6 warnings `set-state-in-effect` fixés via `startTransition()` → 0 warning. |
+| 30 | 2.16.0 | **SEO câblages restants** : `/positions/[slug]` créé (route dynamique + ArticleJsonLd + generateStaticParams) + `src/data/positions.ts` (4 articles rédigés avec body HTML complet). `/positions/feed.xml` flux RSS 2.0 via route handler `force-static` + `<link rel="alternate">` dans `app/layout.tsx`. Sitemap inclut les 4 positions. **Search Console** : `verification.google` + `msvalidate.01` injectés via env vars `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (à définir sur CF Pages). **Migration `<img>` → `next/image` fin** : 9 instances dans espace-adherent (3 fichiers), espace-candidat, admin/pages, admin/newsletter/charte, MediaLibrary, RichTextEditor. **Perf hero video** : `public/assets/acf_video.MP4` compressé **13 MB → 2,6 MB** (h264 CRF30 1280x720 no-audio) → Lighthouse homepage Perf **39 → 67** (+28 pts). **A11y fixes** : `aria-command-name` sur markers Leaflet (alt + title sur `L.marker()`), `select-name` sur 4 `<select>` JobFilters (`aria-label`), `heading-order` sur `/nos-adherents` (h1 dupliqué → h2). Scores a11y nos-adherents **85 → 90**, nos-compagnies-recrutent **88 → 93**. **Brevo phase 5 finalisée (code)** : `handleNewsletter` (`POST /api/newsletter`) sync vers `BREVO_LIST_PUBLIC`, `handleNewsletterUnsubscribe` retire des listes Brevo correspondantes + liste publique si unsub total. Silencieux si env vars absentes (dev/staging). **Docs** : `docs/LIGHTHOUSE-SESSION-30.md` avant/après, `docs/SEO-GUIDE.md` + `docs/NEWSLETTER-SPEC.md` mis à jour avec checklist de provisioning. |

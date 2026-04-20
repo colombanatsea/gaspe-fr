@@ -1,6 +1,6 @@
 {
   "name": "gaspe-fr",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -34,7 +34,9 @@
     "@types/three": "^0.183.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "http-server": "^14.1.1",
     "jsdom": "^29.0.1",
+    "lighthouse": "^13.1.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.2"

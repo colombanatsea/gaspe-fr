@@ -1,6 +1,6 @@
 # GASPE — Guide SEO & Positionnement stratégique
 
-**Version** : 1.0 · session 28 · avril 2026
+**Version** : 1.1 · session 30 · avril 2026
 **Objectif** : positionner gaspe.fr en **top 1 Google** sur les termes stratégiques du
 maritime côtier et de proximité, en miroir d'[armateursdefrance.fr](https://www.armateursdefrance.fr).
 
@@ -58,7 +58,8 @@ Chaque page a ses propres mots-clés complémentaires dans `DEFAULT_PAGE_META` (
 | **FAQPage** | `/boite-a-outils` (10 Q/R), `/ssgm` (8 Q/R) ✅ session 29 | Rich FAQ SERP |
 | **Event** | `/agenda` — un JSON-LD par événement publié ✅ session 29 | Rich snippet événement |
 | **MaritimeService (custom Organization+LocalBusiness)** | `/nos-adherents/[slug]` — `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29 | Knowledge card compagnie |
-| **Article** | (disponible mais à câbler sur positions/[slug] — reporté session 30) | Rich snippet actu |
+| **Article** | `/positions/[slug]` — 4 positions câblées + `ogType=article` + `publishedTime/modifiedTime` ✅ session 30 | Rich snippet actu |
+| **RSS 2.0** | `/positions/feed.xml` — flux complet des positions + `<link rel="alternate">` dans layout root ✅ session 30 | Crawl rapide + agrégateurs |
 
 ---
 
@@ -94,24 +95,40 @@ Quand tu ajoutes une nouvelle page ou modifies le contenu :
 | 8 | JSON-LD enrichi sur `/nos-adherents/[slug]` | `nos-adherents/[slug]/page.tsx` → `buildMemberJsonLd()` | ✅ |
 | 5 (partiel) | `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug] | composants | ✅ |
 
-### ⏳ Reste à faire (priorité session 30+)
+### ✅ Fait en session 30
+
+| # | Action | Fichier | Statut |
+|---|--------|---------|--------|
+| 3 | ArticleJsonLd sur `/positions/[slug]` + data `positions.ts` + 4 articles rédigés | `src/data/positions.ts`, `src/app/(public)/positions/[slug]/page.tsx` | ✅ |
+| 5 (fin) | `<img>` → `next/image` sur espace-adherent (3 fichiers), espace-candidat, admin (4 fichiers) — 9 instances | 7 fichiers | ✅ |
+| 6 | `verification.google` + `msvalidate.01` via env vars (`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION`) | `src/app/layout.tsx` | ✅ |
+| 7 | `/positions/feed.xml` (RSS 2.0 static via route handler) + `<link rel="alternate">` global | `src/app/(public)/positions/feed.xml/route.ts`, `src/app/layout.tsx` | ✅ |
+| 8 | Sitemap inclut les 4 positions | `src/app/sitemap.ts` | ✅ |
+
+### ⏳ Reste à faire (session 31+)
 
 | # | Action | Fichier | Impact | Effort |
 |---|--------|---------|--------|--------|
-| 3 | Câbler ArticleJsonLd sur `/positions/[slug]` | à créer | +4-6% actualités | 1 h |
-| 5 (fin) | Finir migration `<img>` → `next/image` (espace-adherent, espace-candidat, admin) | ~30 fichiers restants | CWV -10% | 2 h |
-| 6 | Ajouter `verification.google` + `verification.other.msvalidate.01` dans layout metadata | layout.tsx | Search Console ownership | 5 min |
-| 7 | Créer `/actualites` avec feed RSS + ArticleJsonLd | nouveau | Re-crawl quotidien | 2 h |
+| 9 | Soumettre `verification.google` + `msvalidate.01` dans Search Console + Bing Webmaster Tools (l'admin fournit les codes, on les définit en env vars Cloudflare Pages) | env vars CF Pages | Search Console actif | 10 min (admin) |
+| 10 | `/actualites` devient une section du CMS + route avec filtres & pagination (vs. page redirection actuelle) | nouveau | Re-crawl + recherche actu | 3 h |
+| 11 | Passer `teal-400` → `teal-600` partout où il sert à du texte → résout `color-contrast` WCAG | `grep -rn text-.*teal-400` | A11y AA complet | 1 h |
+| 12 | Ajouter `text-decoration: underline` sur `<a>` dans `.prose` et richtext CMS | `globals.css` | Résout `link-in-text-block` | 15 min |
+| 13 | Agrandir markers Leaflet à 32 px + clustering `leaflet.markercluster` zones denses | `MemberMap.tsx` | Résout `target-size`, carte plus lisible | 2 h |
 
 ---
 
 ## 5. Monitoring recommandé
 
-1. **Google Search Console** : renseigner `verification.google` dans `src/app/layout.tsx`
-2. **Bing Webmaster Tools** : `verification.other.msvalidate.01`
+1. **Google Search Console** : définir `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` dans les env vars Cloudflare Pages (le code HTML fourni par GSC). La balise sera injectée automatiquement au build.
+2. **Bing Webmaster Tools** : `NEXT_PUBLIC_BING_SITE_VERIFICATION` idem.
 3. **Trafic** : Plausible/Umami (plus RGPD-friendly que GA4)
-4. **Rich results tests** : https://search.google.com/test/rich-results sur `/nos-compagnies-recrutent/[slug]` après merge
+4. **Rich results tests** :
+   - https://search.google.com/test/rich-results sur `/nos-compagnies-recrutent/[slug]` (JobPosting)
+   - Idem sur `/positions/<slug>` (Article) ✅ session 30
+   - Idem sur `/nos-adherents/<slug>` (MaritimeService)
+   - Idem sur `/boite-a-outils` (FAQPage) et `/ssgm` (FAQPage)
 5. **Mots-clés tracking** : SEMrush / Ahrefs / SERanking sur les 12 mots-clés cibles
+6. **RSS agrégateurs** : soumettre `/positions/feed.xml` à Feedly, Inoreader, NewsBlur pour faciliter le partage aux veilles sectorielles
 
 ---
 

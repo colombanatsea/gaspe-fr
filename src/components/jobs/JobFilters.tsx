@@ -85,6 +85,7 @@ export function JobFilters() {
           Zone géographique
         </h3>
         <select
+          aria-label="Zone géographique"
           value={selectedZone}
           onChange={(e) => updateParams("zone", e.target.value)}
           className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
@@ -105,6 +106,7 @@ export function JobFilters() {
           Brevet requis
         </h3>
         <select
+          aria-label="Brevet requis"
           value={selectedBrevet}
           onChange={(e) => updateParams("brevet", e.target.value)}
           className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
@@ -176,6 +178,7 @@ export function JobFilters() {
           Salaire
         </h3>
         <select
+          aria-label="Fourchette de salaire"
           value={selectedSalary}
           onChange={(e) => updateParams("salaire", e.target.value)}
           className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
@@ -192,6 +195,7 @@ export function JobFilters() {
           Entreprise
         </h3>
         <select
+          aria-label="Entreprise"
           value={selectedCompany}
           onChange={(e) => updateParams("entreprise", e.target.value)}
           className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
