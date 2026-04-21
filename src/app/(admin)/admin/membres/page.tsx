@@ -479,7 +479,7 @@ export default function AdminMembresPage() {
                     value={form.territory}
                     onChange={(e) => updateField("territory", e.target.value as "metropole" | "dom-tom")}
                   >
-                    <option value="metropole">Métropole</option>
+                    <option value="metropole">Hexagone</option>
                     <option value="dom-tom">Outre-mer</option>
                   </select>
                 </div>

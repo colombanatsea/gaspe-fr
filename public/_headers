@@ -4,7 +4,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=()
   X-XSS-Protection: 1; mode=block
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://images.unsplash.com https://www.gaspe.fr https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; connect-src 'self' https://*.basemaps.cartocdn.com https://cloudflareinsights.com https://api.gaspe.fr https://gaspe-api.hello-0d0.workers.dev; frame-ancestors 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://images.unsplash.com https://www.gaspe.fr https://server.arcgisonline.com https://*.arcgisonline.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; connect-src 'self' https://server.arcgisonline.com https://*.arcgisonline.com https://cloudflareinsights.com https://api.gaspe.fr https://gaspe-api.hello-0d0.workers.dev; frame-ancestors 'none';
 
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable

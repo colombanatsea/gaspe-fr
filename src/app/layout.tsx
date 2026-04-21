@@ -82,7 +82,7 @@ export default function RootLayout({
         <link rel="icon" href="/logo-gaspe.jpg" type="image/jpeg" />
         <link rel="apple-touch-icon" href="/logo-gaspe.jpg" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
+        <link rel="dns-prefetch" href="https://server.arcgisonline.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* RSS auto-discovery — global pour toutes les pages publiques */}

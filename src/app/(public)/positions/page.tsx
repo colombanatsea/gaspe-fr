@@ -213,7 +213,7 @@ export default function PositionsPage() {
                   Le GASPE – Groupement des Armateurs de Services Publics
                   Maritimes de Passages d&apos;Eau – fédère 27 compagnies
                   maritimes côtières françaises assurant les liaisons de service
-                  public en France métropolitaine et outre-mer. 1&nbsp;494
+                  public sur l&apos;hexagone et en outre-mer. 1&nbsp;494
                   marins français, 165 navires, 25 M+ de passagers par an.
                 </p>
 

@@ -4,9 +4,13 @@ import { useEffect, useImperativeHandle, forwardRef, useState, useRef } from "re
 import type { Member } from "@/types";
 import { cn } from "@/lib/utils";
 
-// DOM-TOM quick-fly destinations
+// DOM-TOM quick-fly destinations — zoom 6 pour la vue France donne le meilleur
+// rapport contexte mer / identification des sites littoraux.
+const DEFAULT_CENTER: [number, number] = [46.8, -1.8];
+const DEFAULT_ZOOM = 6;
+
 const VIEWS = [
-  { label: "France", lat: 47.218, lng: -1.554, zoom: 6 },
+  { label: "France", lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1], zoom: DEFAULT_ZOOM },
   { label: "Guadeloupe", lat: 16.0, lng: -61.6, zoom: 10 },
   { label: "Martinique", lat: 14.6, lng: -61.0, zoom: 11 },
   { label: "Mayotte", lat: -12.8, lng: 45.2, zoom: 11 },
@@ -54,18 +58,26 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
         if (!container || (container as HTMLElement & { _leaflet_id?: number })._leaflet_id) return;
 
         const map = L.map(container, {
-          center: [47.218, -1.554],
-          zoom: 6,
+          center: DEFAULT_CENTER,
+          zoom: DEFAULT_ZOOM,
+          minZoom: 3,
+          maxZoom: 13, // limite d'Esri Ocean Base
           zoomControl: false,
           scrollWheelZoom: true,
+          worldCopyJump: true,
         });
 
-        // Minimal tile layer — CartoDB Positron no labels (coastlines + water only)
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
-        }).addTo(map);
+        // Fond Esri World Ocean Base — mise en valeur de la mer (bathymétrie
+        // visible : plateau continental, fosses) et terre en gris très clair
+        // sans aucune route. Idéal pour un site maritime.
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution:
+              "Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org",
+            maxZoom: 13,
+          },
+        ).addTo(map);
 
         L.control.zoom({ position: "topright" }).addTo(map);
 

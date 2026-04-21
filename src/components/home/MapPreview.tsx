@@ -40,7 +40,7 @@ export function MapPreview() {
           className="reveal-scale group block"
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Metropole card */}
+            {/* Hexagone card */}
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)] p-8 gaspe-card-hover">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gaspe-teal-50)]">
@@ -50,7 +50,7 @@ export function MapPreview() {
                   </svg>
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                  Métropole
+                  Hexagone
                 </span>
               </div>
               <p className="font-heading text-5xl font-bold text-[var(--gaspe-teal-600)]">

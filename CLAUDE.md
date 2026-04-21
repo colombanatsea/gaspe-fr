@@ -325,7 +325,7 @@ Top 1 sur les 12 mots-clés cibles déclarés dans `src/lib/constants.ts` → `S
 - Canonical URL par page (via `buildMetadata`)
 - Open Graph + Twitter Card par page avec image 1200x630
 - `font-display: swap` sur Google Fonts (2 familles, 7 poids optimisés)
-- 3 scripts `dns-prefetch` / `preconnect` (fonts.googleapis.com, fonts.gstatic.com, carto CDN)
+- `dns-prefetch` / `preconnect` (fonts.googleapis.com, fonts.gstatic.com, server.arcgisonline.com pour les tuiles Esri Ocean Base, images.unsplash.com)
 - **RSS 2.0** servi sur `/feed.xml` (force-static, 8 articles positions) + auto-discovery `<link rel="alternate" type="application/rss+xml">` global via root layout (session 30)
 - **Search Console / Bing verification** conditionnelle via `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (session 30)
 
