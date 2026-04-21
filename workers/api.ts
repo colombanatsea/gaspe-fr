@@ -402,6 +402,16 @@ export default {
       if (path === "/api/cms/pages" && request.method === "GET") {
         return handleCmsListPages(env, corsHeaders);
       }
+      if (path.match(/^\/api\/cms\/pages\/[^/]+\/revisions$/) && request.method === "GET") {
+        const pageId = decodeURIComponent(path.replace("/api/cms/pages/", "").replace("/revisions", ""));
+        return handleCmsListRevisions(request, env, corsHeaders, pageId);
+      }
+      if (path.match(/^\/api\/cms\/pages\/[^/]+\/revisions\/\d+\/restore$/) && request.method === "POST") {
+        const parts = path.split("/");
+        const pageId = decodeURIComponent(parts[4]);
+        const revisionId = Number(parts[6]);
+        return handleCmsRestoreRevision(request, env, corsHeaders, pageId, revisionId);
+      }
       if (path.match(/^\/api\/cms\/pages\/[^/]+$/) && request.method === "GET") {
         const pageId = path.split("/api/cms/pages/")[1];
         return handleCmsGetPage(env, corsHeaders, pageId);
@@ -2061,6 +2071,7 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
 
   const body = await request.json() as {
     sections: { id: string; label: string; type: string; content: string }[];
+    label?: string;
   };
 
   if (!body.sections?.length) {
@@ -2069,7 +2080,7 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
 
   const now = new Date().toISOString();
 
-  // Auto-create table if migration 0005 not yet applied
+  // Auto-create tables if migrations not yet applied
   try {
     await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cms_pages (
       page_id TEXT NOT NULL, section_id TEXT NOT NULL, label TEXT NOT NULL DEFAULT '',
@@ -2077,6 +2088,37 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
       updated_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (page_id, section_id)
     )`).run();
   } catch { /* already exists */ }
+
+  // Snapshot de l'état ACTUEL avant écrasement (migration 0011).
+  // Silencieux si la table cms_revisions n'existe pas encore.
+  try {
+    const { results: existing } = await env.DB.prepare(
+      "SELECT section_id, label, type, content FROM cms_pages WHERE page_id = ?",
+    ).bind(pageId).all<{ section_id: string; label: string; type: string; content: string }>();
+
+    if (existing && existing.length > 0) {
+      const snapshot = JSON.stringify(existing);
+      await env.DB.prepare(`
+        INSERT INTO cms_revisions (page_id, snapshot_json, created_by, label)
+        VALUES (?, ?, ?, ?)
+      `).bind(pageId, snapshot, payload.sub, body.label ?? null).run();
+
+      // Rétention : on garde les 30 révisions les plus récentes par page.
+      // Les plus anciennes au-delà sont purgées pour éviter une explosion du volume.
+      await env.DB.prepare(`
+        DELETE FROM cms_revisions
+        WHERE page_id = ?
+          AND id NOT IN (
+            SELECT id FROM cms_revisions
+            WHERE page_id = ?
+            ORDER BY created_at DESC
+            LIMIT 30
+          )
+      `).bind(pageId, pageId).run();
+    }
+  } catch {
+    /* migration 0011 pas encore appliquée — versioning silencieusement désactivé */
+  }
 
   for (const section of body.sections) {
     await env.DB.prepare(`
@@ -2091,6 +2133,120 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
   }
 
   return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CMS revisions — migration 0011
+//  Rétention 30 snapshots par page. Restore écrase l'état courant
+//  mais crée AUSSI un nouveau snapshot au préalable (versionning complet).
+// ═══════════════════════════════════════════════════════════
+
+interface DbCmsRevision {
+  id: number;
+  page_id: string;
+  snapshot_json: string;
+  created_by: string | null;
+  label: string | null;
+  created_at: string;
+}
+
+async function handleCmsListRevisions(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  pageId: string,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT id, page_id, snapshot_json, created_by, label, created_at FROM cms_revisions WHERE page_id = ? ORDER BY created_at DESC LIMIT 30",
+    ).bind(pageId).all<DbCmsRevision>();
+
+    return json(
+      {
+        revisions: (results ?? []).map((r) => ({
+          id: r.id,
+          pageId: r.page_id,
+          createdBy: r.created_by,
+          label: r.label,
+          createdAt: r.created_at,
+          sectionsCount: (() => {
+            try {
+              return (JSON.parse(r.snapshot_json) as unknown[]).length;
+            } catch {
+              return 0;
+            }
+          })(),
+        })),
+      },
+      corsHeaders,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no such table/i.test(msg)) {
+      return json({ revisions: [] }, corsHeaders);
+    }
+    throw err;
+  }
+}
+
+async function handleCmsRestoreRevision(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  pageId: string,
+  revisionId: number,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  const row = await env.DB.prepare(
+    "SELECT snapshot_json FROM cms_revisions WHERE id = ? AND page_id = ?",
+  ).bind(revisionId, pageId).first<{ snapshot_json: string }>();
+  if (!row) return json({ error: "Révision introuvable" }, corsHeaders, 404);
+
+  let sections: { section_id: string; label: string; type: string; content: string }[];
+  try {
+    sections = JSON.parse(row.snapshot_json);
+    if (!Array.isArray(sections)) throw new Error("snapshot invalide");
+  } catch {
+    return json({ error: "Snapshot corrompu" }, corsHeaders, 500);
+  }
+
+  // Avant d'écraser, on snapshot l'état courant (pour pouvoir rollback du rollback).
+  try {
+    const { results: existing } = await env.DB.prepare(
+      "SELECT section_id, label, type, content FROM cms_pages WHERE page_id = ?",
+    ).bind(pageId).all<{ section_id: string; label: string; type: string; content: string }>();
+
+    if (existing && existing.length > 0) {
+      await env.DB.prepare(`
+        INSERT INTO cms_revisions (page_id, snapshot_json, created_by, label)
+        VALUES (?, ?, ?, ?)
+      `).bind(
+        pageId,
+        JSON.stringify(existing),
+        auth.userId,
+        `Avant restauration de la révision #${revisionId}`,
+      ).run();
+    }
+  } catch {
+    /* best-effort */
+  }
+
+  // On remplace toutes les sections de la page par celles du snapshot.
+  const now = new Date().toISOString();
+  await env.DB.prepare("DELETE FROM cms_pages WHERE page_id = ?").bind(pageId).run();
+  for (const s of sections) {
+    await env.DB.prepare(`
+      INSERT INTO cms_pages (page_id, section_id, label, type, content, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(pageId, s.section_id, s.label, s.type, s.content, now).run();
+  }
+
+  return json({ success: true, restoredRevisionId: revisionId }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2998,17 +3154,6 @@ function toFrontendDocument(row: DbDocument) {
   };
 }
 
-async function requireAdmin(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return { error: json({ error: "Token invalide" }, corsHeaders, 401) };
-  if (payload.role !== "admin") {
-    return { error: json({ error: "Accès refusé" }, corsHeaders, 403) };
-  }
-  return { payload };
-}
-
 async function handleDocumentsList(
   request: Request,
   env: Env,
@@ -3122,7 +3267,7 @@ async function handleDocumentCreate(
       sortOrder,
       isPublic,
       published,
-      auth.payload.sub,
+      auth.userId,
     )
     .run();
 

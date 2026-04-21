@@ -7,6 +7,12 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
 import { ListEditor } from "@/components/admin/ListEditor";
+import { CmsRevisionsModal } from "@/components/admin/CmsRevisionsModal";
+import {
+  DevicePreviewSwitcher,
+  DEVICE_DIMENSIONS,
+  type PreviewDevice,
+} from "@/components/admin/DevicePreviewSwitcher";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import {
   PAGE_DEFINITIONS,
@@ -114,6 +120,9 @@ export default function AdminPagesPage() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [modifiedIds, setModifiedIds] = useState<Set<string>>(new Set());
   const [previewKey, setPreviewKey] = useState(0);
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
+  const [showRevisions, setShowRevisions] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
@@ -154,7 +163,7 @@ export default function AdminPagesPage() {
     } else {
       applyStored(getPageContent(selectedPageId));
     }
-  }, [selectedPageId]);
+  }, [selectedPageId, reloadKey]);
 
   function updateSection(id: string, content: string) {
     setSections((prev) =>
@@ -239,6 +248,16 @@ export default function AdminPagesPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowRevisions(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] px-4 py-2 text-sm font-semibold text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)]"
+            title="Voir et restaurer les versions précédentes"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            Historique
+          </button>
           {previewUrl && (
             <button
               onClick={() => setShowPreview(!showPreview)}
@@ -441,29 +460,52 @@ export default function AdminPagesPage() {
         {showPreview && previewUrl && (
           <div className="space-y-3">
             <div className="sticky top-20 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-foreground-muted">
-                  Aperçu de <code className="rounded bg-[var(--gaspe-neutral-100)] px-1.5 py-0.5 text-[11px]">{previewUrl}</code>
+                  Aperçu de{" "}
+                  <code className="rounded bg-[var(--gaspe-neutral-100)] px-1.5 py-0.5 text-[11px]">
+                    {previewUrl}
+                  </code>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setPreviewKey((k) => k + 1)}
-                  className="text-xs text-primary hover:underline font-medium"
+                <div className="flex items-center gap-3">
+                  <DevicePreviewSwitcher
+                    value={previewDevice}
+                    onChange={setPreviewDevice}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewKey((k) => k + 1)}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    Rafraîchir
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-center overflow-auto rounded-2xl border border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-100)] p-4">
+                <div
+                  className="overflow-hidden rounded-xl border border-[var(--gaspe-neutral-200)] bg-white shadow-sm transition-[width,height] duration-200"
+                  style={{
+                    width: `${DEVICE_DIMENSIONS[previewDevice].width}px`,
+                    maxWidth: "100%",
+                    height: `${DEVICE_DIMENSIONS[previewDevice].height}px`,
+                    maxHeight: "80vh",
+                  }}
                 >
-                  Rafraîchir
-                </button>
+                  <iframe
+                    key={`${previewKey}-${previewDevice}`}
+                    src={previewUrl}
+                    className="h-full w-full"
+                    title={`Aperçu ${selectedPageId} (${previewDevice})`}
+                  />
+                </div>
               </div>
-              <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] overflow-hidden bg-white">
-                <iframe
-                  key={previewKey}
-                  src={previewUrl}
-                  className="w-full h-[80vh]"
-                  title={`Aperçu ${selectedPageId}`}
-                />
+              <div className="flex items-center justify-between text-[11px] text-foreground-muted italic">
+                <span>Enregistrez pour voir vos modifications dans l&apos;aperçu.</span>
+                <span className="not-italic font-mono">
+                  {DEVICE_DIMENSIONS[previewDevice].width}×
+                  {DEVICE_DIMENSIONS[previewDevice].height}
+                </span>
               </div>
-              <p className="text-[11px] text-foreground-muted italic">
-                Enregistrez pour voir vos modifications dans l&apos;aperçu.
-              </p>
             </div>
           </div>
         )}
@@ -474,6 +516,18 @@ export default function AdminPagesPage() {
         open={showMediaLibrary}
         onClose={() => setShowMediaLibrary(false)}
         onSelect={handleMediaSelect}
+      />
+
+      {/* Revisions history */}
+      <CmsRevisionsModal
+        pageId={selectedPageId}
+        open={showRevisions}
+        onClose={() => setShowRevisions(false)}
+        onRestored={() => {
+          // Force le rechargement du contenu + refresh de l'iframe d'aperçu
+          setReloadKey((k) => k + 1);
+          setPreviewKey((k) => k + 1);
+        }}
       />
     </div>
   );
