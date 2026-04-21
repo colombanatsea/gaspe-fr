@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -238,7 +239,7 @@ export default function EspaceAdherentPage() {
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3">
                 {user.companyLogo ? (
-                  <img src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" />
+                  <Image src={user.companyLogo} alt={`Logo ${user.company ?? ""}`} width={40} height={40} loading="lazy" className="h-10 w-10 rounded-lg object-contain border border-[var(--gaspe-neutral-200)]" unoptimized />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-neutral-200)]">
                     <span className="font-heading text-sm font-bold text-[var(--gaspe-teal-600)]">{(user.company ?? "?").charAt(0)}</span>
