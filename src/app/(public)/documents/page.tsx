@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState, startTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -9,107 +9,26 @@ import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
+import { listDocuments } from "@/lib/documents-store";
+import {
+  DOCUMENT_CATEGORIES,
+  DOCUMENT_CATEGORY_LABELS,
+  type DocumentCategory,
+  type GaspeDocument,
+} from "@/data/documents-seed";
 
 const D = (s: string) => getCmsDefault("documents", s);
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-type Category =
-  | "Convention Collective et Accords de Branche"
-  | "Documents Institutionnels";
-
-interface DocumentItem {
-  title: string;
-  category: Category;
-  date?: string;
-  sortKey?: string;
-  href: string;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Data                                                               */
-/* ------------------------------------------------------------------ */
-
-const documents: DocumentItem[] = [
-  // Convention Collective et Accords de Branche
-  {
-    title:
-      "Convention Collective Nationale du personnel navigant des passages d'eau (CCN 3228 / IDCC 3228)",
-    category: "Convention Collective et Accords de Branche",
-    date: "Mars 2026",
-    sortKey: "2026-03",
-    href: "#",
-  },
-  {
-    title: "Accord de branche sur les salaires",
-    category: "Convention Collective et Accords de Branche",
-    date: "Janvier 2026",
-    sortKey: "2026-01",
-    href: "#",
-  },
-  {
-    title: "Accord de branche sur la prévoyance complémentaire",
-    category: "Convention Collective et Accords de Branche",
-    date: "Novembre 2025",
-    sortKey: "2025-11",
-    href: "#",
-  },
-  {
-    title: "Accord de branche sur la formation professionnelle",
-    category: "Convention Collective et Accords de Branche",
-    date: "Octobre 2025",
-    sortKey: "2025-10",
-    href: "#",
-  },
-  {
-    title: "Avenant classification et grilles de salaires",
-    category: "Convention Collective et Accords de Branche",
-    date: "Septembre 2025",
-    sortKey: "2025-09",
-    href: "#",
-  },
-
-  // Documents Institutionnels
-  {
-    title: "Statuts du GASPE",
-    category: "Documents Institutionnels",
-    href: "#",
-  },
-  {
-    title: "Règlement intérieur",
-    category: "Documents Institutionnels",
-    href: "#",
-  },
-  {
-    title: "Rapport d'activité 2025",
-    category: "Documents Institutionnels",
-    date: "Mars 2026",
-    sortKey: "2026-03",
-    href: "#",
-  },
-  {
-    title: "Liste des membres",
-    category: "Documents Institutionnels",
-    date: "Janvier 2026",
-    sortKey: "2026-01",
-    href: "#",
-  },
-
-];
-
-const allCategories: Category[] = [
-  "Convention Collective et Accords de Branche",
-  "Documents Institutionnels",
-];
-
-function categoryVariant(category: Category) {
+function categoryVariant(category: DocumentCategory) {
   switch (category) {
-    case "Convention Collective et Accords de Branche":
+    case "ccn-accords":
       return "teal" as const;
-    case "Documents Institutionnels":
+    case "institutionnels":
       return "blue" as const;
+    case "reglementaire":
+      return "warm" as const;
+    case "rapports":
+      return "green" as const;
   }
 }
 
@@ -145,15 +64,39 @@ function DocumentsContent() {
   const revealRef = useScrollReveal();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const [activeCategory, setActiveCategory] = useState<DocumentCategory | null>(
+    null,
+  );
   const [toast, setToast] = useState("");
+  const [documents, setDocuments] = useState<GaspeDocument[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const searchPlaceholder = useCmsContent("documents", "search-placeholder", D("search-placeholder"));
-  const emptyState = useCmsContent("documents", "empty-state", D("empty-state"));
+  const searchPlaceholder = useCmsContent(
+    "documents",
+    "search-placeholder",
+    D("search-placeholder"),
+  );
+  const emptyState = useCmsContent(
+    "documents",
+    "empty-state",
+    D("empty-state"),
+  );
 
-  function handleDownload(doc: DocumentItem) {
-    if (doc.href === "#") {
-      setToast(`"${doc.title}" sera disponible au téléchargement prochainement.`);
+  useEffect(() => {
+    startTransition(() => {
+      setLoading(true);
+      listDocuments(false).then((docs) => {
+        setDocuments(docs);
+        setLoading(false);
+      });
+    });
+  }, []);
+
+  function handleDownload(doc: GaspeDocument) {
+    if (doc.fileUrl === "#" || !doc.fileUrl) {
+      setToast(
+        `« ${doc.title} » sera disponible au téléchargement prochainement.`,
+      );
       setTimeout(() => setToast(""), 4000);
     }
   }
@@ -170,28 +113,32 @@ function DocumentsContent() {
       items = items.filter(
         (d) =>
           d.title.toLowerCase().includes(q) ||
-          d.category.toLowerCase().includes(q),
+          d.description.toLowerCase().includes(q),
       );
     }
 
     return items;
-  }, [search, activeCategory]);
+  }, [documents, search, activeCategory]);
 
   // Group filtered results by category for display
   const grouped = useMemo(() => {
-    const map = new Map<Category, DocumentItem[]>();
+    const map = new Map<DocumentCategory, GaspeDocument[]>();
     for (const doc of filtered) {
       const list = map.get(doc.category) || [];
       list.push(doc);
       map.set(doc.category, list);
     }
-    return allCategories
-      .filter((cat) => map.has(cat))
-      .map((cat) => ({ category: cat, docs: map.get(cat)! }));
+    return DOCUMENT_CATEGORIES.filter((cat) => map.has(cat)).map((cat) => ({
+      category: cat,
+      docs: map.get(cat)!,
+    }));
   }, [filtered]);
 
   return (
-    <div ref={revealRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div
+      ref={revealRef}
+      className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"
+    >
       {/* Search + category filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-10 reveal">
         <div className="relative flex-1">
@@ -228,7 +175,7 @@ function DocumentsContent() {
           >
             Tous
           </button>
-          {allCategories.map((cat) => (
+          {DOCUMENT_CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() =>
@@ -240,14 +187,18 @@ function DocumentsContent() {
                   : "bg-surface text-foreground-muted hover:bg-surface-teal"
               }`}
             >
-              {cat}
+              {DOCUMENT_CATEGORY_LABELS[cat]}
             </button>
           ))}
         </div>
       </div>
 
       {/* Results */}
-      {grouped.length === 0 ? (
+      {loading ? (
+        <p className="text-foreground-muted text-sm py-8 text-center">
+          Chargement des documents…
+        </p>
+      ) : grouped.length === 0 ? (
         <p className="text-foreground-muted text-sm py-8 text-center">
           {emptyState}
         </p>
@@ -256,17 +207,16 @@ function DocumentsContent() {
           {grouped.map(({ category, docs }, groupIdx) => (
             <section key={category} className={`reveal stagger-${groupIdx + 1}`}>
               <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-                {category}
+                {DOCUMENT_CATEGORY_LABELS[category]}
               </h2>
               <div className="space-y-4">
                 {docs.map((doc) => (
                   <article
-                    key={doc.title}
+                    key={doc.id}
                     className="rounded-xl bg-background border-l-[3px] border-l-primary p-6 shadow-sm transition-shadow hover:shadow-md"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-4">
-                        {/* PDF icon */}
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/10 text-[var(--gaspe-teal-600)]">
                           <PdfIcon className="h-5 w-5" />
                         </div>
@@ -274,29 +224,55 @@ function DocumentsContent() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <Badge variant={categoryVariant(doc.category)}>
-                              {doc.category}
+                              {DOCUMENT_CATEGORY_LABELS[doc.category]}
                             </Badge>
-                            {doc.date && (
-                              <time className="text-xs text-foreground-muted">
-                                {doc.date}
+                            {doc.publishedAt && (
+                              <time
+                                className="text-xs text-foreground-muted"
+                                dateTime={doc.publishedAt}
+                              >
+                                {new Date(doc.publishedAt).toLocaleDateString(
+                                  "fr-FR",
+                                  { year: "numeric", month: "long" },
+                                )}
                               </time>
+                            )}
+                            {!doc.isPublic && (
+                              <Badge variant="neutral">Adhérents</Badge>
                             )}
                           </div>
                           <h3 className="font-heading text-lg font-semibold text-foreground">
                             {doc.title}
                           </h3>
+                          {doc.description && (
+                            <p className="mt-1 text-sm text-foreground-muted">
+                              {doc.description}
+                            </p>
+                          )}
                         </div>
                       </div>
 
                       {/* Download button */}
-                      {doc.href !== "#" ? (
+                      {doc.fileUrl && doc.fileUrl !== "#" ? (
                         <a
-                          href={doc.href}
+                          href={doc.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-primary px-4 py-2.5 text-sm font-medium text-primary hover:bg-surface-teal transition-colors"
                           download
                         >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                            />
                           </svg>
                           Télécharger
                         </a>
@@ -305,8 +281,18 @@ function DocumentsContent() {
                           onClick={() => handleDownload(doc)}
                           className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-300)] px-4 py-2.5 text-sm font-medium text-foreground-muted hover:border-primary hover:text-primary transition-colors cursor-pointer"
                         >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                            />
                           </svg>
                           Bientôt disponible
                         </button>
@@ -324,23 +310,48 @@ function DocumentsContent() {
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-lg rounded-xl bg-[var(--gaspe-neutral-900)] px-5 py-3 text-sm text-white shadow-xl animate-[fadeInUp_0.3s_ease-out]">
           <div className="flex items-center gap-3">
-            <svg className="h-5 w-5 shrink-0 text-[var(--gaspe-teal-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+            <svg
+              className="h-5 w-5 shrink-0 text-[var(--gaspe-teal-400)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+              />
             </svg>
             <p>{toast}</p>
-            <button onClick={() => setToast("")} className="shrink-0 text-white/50 hover:text-white cursor-pointer">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            <button
+              onClick={() => setToast("")}
+              className="shrink-0 text-white/50 hover:text-white cursor-pointer"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18 18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
         </div>
       )}
+
       {/* Sources */}
       <CollapsibleSources className="mt-12">
         <p className="text-xs text-foreground-muted leading-relaxed">
-          Documents issus des travaux du GASPE et des partenaires sociaux de la branche.
-          CCN 3228 (IDCC 3228) et accords de branche disponibles sur Legifrance.
+          Documents issus des travaux du GASPE et des partenaires sociaux de la
+          branche. CCN 3228 (IDCC 3228) et accords de branche également
+          disponibles sur Legifrance.
         </p>
       </CollapsibleSources>
     </div>
@@ -352,8 +363,16 @@ function DocumentsContent() {
 /* ------------------------------------------------------------------ */
 
 function DocumentsHeader() {
-  const toolkitTitle = useCmsContent("documents", "toolkit-cta-title", D("toolkit-cta-title"));
-  const toolkitDescription = useCmsContent("documents", "toolkit-cta-description", D("toolkit-cta-description"));
+  const toolkitTitle = useCmsContent(
+    "documents",
+    "toolkit-cta-title",
+    D("toolkit-cta-title"),
+  );
+  const toolkitDescription = useCmsContent(
+    "documents",
+    "toolkit-cta-description",
+    D("toolkit-cta-description"),
+  );
   return (
     <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
       <Link
@@ -361,20 +380,38 @@ function DocumentsHeader() {
         className="group flex items-center gap-4 rounded-2xl border border-border-light bg-surface-teal p-5 hover:shadow-md transition-shadow"
       >
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085" />
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085"
+            />
           </svg>
         </div>
         <div className="flex-1">
           <p className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
             {toolkitTitle}
           </p>
-          <p className="text-sm text-foreground-muted">
-            {toolkitDescription}
-          </p>
+          <p className="text-sm text-foreground-muted">{toolkitDescription}</p>
         </div>
-        <svg className="h-5 w-5 text-foreground-muted group-hover:text-primary transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+        <svg
+          className="h-5 w-5 text-foreground-muted group-hover:text-primary transition-colors shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+          />
         </svg>
       </Link>
     </div>
