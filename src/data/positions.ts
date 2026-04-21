@@ -249,6 +249,126 @@ export const positions: PositionItem[] = [
       <p>Le Groupement coordonne la veille technologique pour ses adhérents, fournit le <a href="/transition-ecologique">simulateur ADEME</a> en accès libre, partage les cahiers des charges mutualisés et pilote le dialogue avec l'État sur les mécanismes de financement.</p>
     `,
   },
+  {
+    title: "Cybersécurité maritime : les systèmes embarqués face aux nouvelles menaces",
+    date: "Avril 2026",
+    sortKey: "2026-04-02",
+    publishedAt: "2026-04-02T09:00:00+02:00",
+    excerpt:
+      "Passerelles connectées, billetterie en ligne, AIS, ECDIS : les armateurs côtiers français s'engagent dans une démarche de cybersécurité maritime adaptée à leurs flottes.",
+    tag: "Position",
+    slug: "cybersecurite-maritime-systemes-embarques",
+    body: `
+      <h2>Une exposition croissante des navires connectés</h2>
+      <p>Les navires modernes des adhérents du GASPE intègrent de plus en plus d'équipements numériques : passerelle intégrée, ECDIS, AIS, systèmes de billetterie embarqués, maintenance prédictive, communications satellite. Cette connectivité est un atout opérationnel mais expose les compagnies à de nouvelles menaces : rançongiciels, intrusions dans les systèmes de navigation, fuite de données passagers.</p>
+      <h2>Cadre réglementaire : OMI, IACS, ENISA</h2>
+      <ul>
+        <li><strong>Résolution OMI MSC.428(98)</strong> – prise en compte des cyber-risques dans les systèmes de gestion de la sécurité (SGS / ISM Code) depuis 2021.</li>
+        <li><strong>IACS UR E26 et UR E27</strong> – exigences unifiées pour la résilience cyber des navires neufs et de leurs équipements (en vigueur depuis le 1ᵉʳ juillet 2024).</li>
+        <li><strong>Directive NIS 2 (UE 2022/2555)</strong> – renforcement des obligations pour les opérateurs de services essentiels, dont certaines compagnies maritimes.</li>
+      </ul>
+      <h2>Recommandations GASPE</h2>
+      <ul>
+        <li>Inventaire exhaustif des actifs numériques embarqués et à terre.</li>
+        <li>Segmentation réseau entre systèmes critiques (navigation, propulsion) et systèmes de confort (Wi-Fi passagers, billetterie).</li>
+        <li>Mises à jour régulières des firmwares (ECDIS, radar) et plan de gestion des correctifs.</li>
+        <li>Sensibilisation et formation des équipages aux bonnes pratiques (phishing, USB inconnus, mots de passe).</li>
+        <li>Plan de continuité d'activité + plan de reprise en cas d'incident cyber, avec exercices annuels.</li>
+      </ul>
+      <h2>Accompagnement sectoriel</h2>
+      <p>Le GASPE travaille avec l'<strong>ANSSI</strong>, la <strong>Direction des Affaires Maritimes</strong> et les clubs cyber partenaires pour mutualiser la veille, partager les retours d'expérience d'incidents et proposer des ateliers pratiques à destination des RSSI et des commandants.</p>
+    `,
+  },
+  {
+    title: "Prix de l'électricité à quai : un enjeu clé pour l'exploitation et la décarbonation",
+    date: "Mars 2026",
+    sortKey: "2026-03-12",
+    publishedAt: "2026-03-12T09:00:00+01:00",
+    excerpt:
+      "Branchement à quai, recharge des batteries, transition électrique : la compétitivité de l'électricité portuaire est devenue un paramètre structurant pour les armateurs côtiers.",
+    tag: "Position",
+    slug: "electricite-quai-branchement-cold-ironing",
+    body: `
+      <h2>Le branchement à quai, brique centrale de la décarbonation</h2>
+      <p>Le <em>cold ironing</em> (alimentation électrique à quai, AEQ) permet aux navires d'éteindre leurs moteurs pendant l'escale et de tirer leur énergie du réseau terrestre. Pour les liaisons courtes et les passages d'eau des adhérents du GASPE, c'est aussi la brique qui rend possible la recharge rapide des navires 100 % électriques.</p>
+      <h2>Un poste de coût qui pèse sur l'équation économique</h2>
+      <p>Le prix du MWh électrique livré au quai – bien supérieur au tarif industriel moyen en raison des coûts d'acheminement, des taxes TICFE / TURPE et de la puissance crête demandée pour la recharge rapide – peut représenter plusieurs centaines de milliers d'euros par an pour une compagnie opérant plusieurs navires hybrides ou électriques.</p>
+      <h2>Les demandes portées par le GASPE</h2>
+      <ul>
+        <li>Maintien et pérennisation du <strong>taux réduit de TICFE</strong> pour l'électricité destinée à la propulsion navale.</li>
+        <li>Mécanisme de <strong>lissage du tarif d'acheminement (TURPE)</strong> tenant compte du profil de charge spécifique des navires (forte puissance sur durée courte).</li>
+        <li>Prise en compte du coût de l'électricité portuaire dans les <strong>contrats de délégation de service public</strong> (DSP), avec clauses d'indexation transparente.</li>
+        <li>Financement du <strong>raccordement haute puissance</strong> des quais via l'AAP ADEME et les fonds européens CEF-T.</li>
+      </ul>
+      <h2>Coordination territoriale</h2>
+      <p>Le GASPE dialogue avec <strong>RTE</strong>, <strong>Enedis</strong>, les syndicats d'énergie et les collectivités portuaires pour anticiper les besoins de puissance sur les quais stratégiques, en particulier les têtes de ligne des îles. Un groupe de travail dédié élabore un retour d'expérience technique et financier mutualisé.</p>
+    `,
+  },
+  {
+    title: "Bilan social de branche 2026 : effectifs, formation et séniorité",
+    date: "Février 2026",
+    sortKey: "2026-02-25",
+    publishedAt: "2026-02-25T09:00:00+01:00",
+    excerpt:
+      "Le bilan social 2026 de la branche CCN 3228 dresse le panorama des 1 494 marins français des compagnies adhérentes : démographie, formation continue, conditions de travail.",
+    tag: "Position",
+    slug: "bilan-social-branche-2026",
+    body: `
+      <h2>Panorama des effectifs</h2>
+      <p>La branche des passages d'eau compte <strong>1 494 marins français</strong> embarqués sur <strong>165 navires</strong> répartis chez les 27 compagnies adhérentes du GASPE. Le ratio hommes / femmes progresse lentement : la féminisation de la profession reste un axe d'effort prioritaire, en particulier sur les fonctions pont et machine.</p>
+      <h2>Démographie et séniorité</h2>
+      <ul>
+        <li>Âge moyen des marins : <strong>42 ans</strong>.</li>
+        <li>Ancienneté moyenne dans la compagnie : <strong>11 ans</strong>.</li>
+        <li>Marins âgés de plus de 55 ans : environ <strong>18 %</strong> – enjeu de renouvellement des équipages d'ici 2030.</li>
+      </ul>
+      <h2>Formation continue</h2>
+      <ul>
+        <li>Recyclages STCW (CFBS, incendie, survie) réalisés dans les délais : <strong>&gt; 95 %</strong>.</li>
+        <li>Apprentis et alternants en formation sur l'année : plus de <strong>50 jeunes</strong>, via les lycées maritimes et l'<strong>OPCO Mobilités</strong>.</li>
+        <li>Passerelles ascendantes pont et machine : accompagnement financier mutualisé dans plusieurs compagnies.</li>
+      </ul>
+      <h2>Conditions de travail et dialogue social</h2>
+      <p>Le bilan social pointe la qualité du dialogue social dans la branche, avec des <strong>Commissions Paritaires Permanentes de Négociation et d'Interprétation (CPPNI)</strong> régulières, un taux de représentativité syndicale supérieur à la moyenne nationale maritime, et un recours limité au contentieux prud'homal.</p>
+      <h2>Chantiers 2026</h2>
+      <ul>
+        <li>Attractivité des métiers et féminisation (voir <a href="/positions/formation-attractivite-metiers-maritimes">notre position dédiée</a>).</li>
+        <li>Prévention des risques psycho-sociaux (RPS) et ergonomie des postes passerelle / machine.</li>
+        <li>Ouverture d'un chantier paritaire sur l'<strong>évolution des classifications</strong> CCN 3228 à l'horizon 2027.</li>
+      </ul>
+    `,
+  },
+  {
+    title: "Économie circulaire : réduire, réutiliser, recycler sur les navires côtiers",
+    date: "Janvier 2026",
+    sortKey: "2026-01-28",
+    publishedAt: "2026-01-28T09:00:00+01:00",
+    excerpt:
+      "De la gestion des déchets embarqués au recyclage des batteries, les armateurs côtiers français s'engagent pour une économie circulaire adaptée aux spécificités du maritime de proximité.",
+    tag: "Position",
+    slug: "economie-circulaire-navires-cotiers",
+    body: `
+      <h2>Un enjeu spécifique au maritime côtier</h2>
+      <p>Les navires des adhérents du GASPE effectuent des rotations courtes, souvent plusieurs dizaines par jour, avec un très grand nombre de passagers. Cette intensité opérationnelle génère des flux spécifiques : emballages de restauration, piles et batteries de petits équipements, consommables de maintenance, huiles usagées, filtres, et à l'horizon 2030 les <strong>batteries lithium-ion</strong> des premiers navires électriques arrivant en fin de vie.</p>
+      <h2>Cadre réglementaire applicable</h2>
+      <ul>
+        <li><strong>MARPOL Annexe V</strong> (OMI) – gestion des déchets à bord.</li>
+        <li><strong>Convention de Hong Kong 2009</strong> (entrée en vigueur juin 2025) – recyclage sûr et respectueux des navires.</li>
+        <li><strong>Loi AGEC</strong> (2020) et filières REP élargies – responsabilité élargie des producteurs, y compris pour les batteries industrielles.</li>
+        <li><strong>Règlement batteries UE 2023/1542</strong> – exigences de traçabilité et de recyclabilité.</li>
+      </ul>
+      <h2>Recommandations opérationnelles</h2>
+      <ul>
+        <li>Tri sélectif à bord avec collecte à quai et filières dédiées.</li>
+        <li>Réduction du plastique à usage unique dans la restauration embarquée.</li>
+        <li>Contrats-cadres mutualisés pour la collecte et le traitement des huiles / filtres / chiffons souillés.</li>
+        <li>Éco-conception des aménagements intérieurs (matériaux durables, démontables).</li>
+        <li>Anticipation de la <strong>seconde vie des batteries</strong> des navires électriques : stockage stationnaire en port, réutilisation sur quai, recyclage des métaux critiques.</li>
+      </ul>
+      <h2>Rôle du GASPE</h2>
+      <p>Le Groupement anime un retour d'expérience mutualisé entre adhérents, publie des fiches techniques, dialogue avec les éco-organismes (Corepile, Screlec, Cyclevia) et porte auprès des pouvoirs publics la prise en compte des spécificités du maritime côtier dans les filières REP.</p>
+    `,
+  },
 ];
 
 /** Tri naturel par sortKey décroissant (plus récent en tête) */

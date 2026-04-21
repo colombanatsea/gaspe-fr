@@ -406,3 +406,29 @@ Bannière démo + CTA adhésion éditables.
 - Guide éditorial : `docs/CMS-GUIDE-UTILISATEUR.md`
 
 **Total livré : 18 pages câblées, 100+ sections CMS, 4 types (text/richtext/image/list).**
+
+---
+
+## 9. Extensions session 31-32
+
+### CMS documents D1 (session 31)
+- Migration `0010_cms_documents.sql` : table `cms_documents` (title, description, category `ccn-accords`|`institutionnels`|`reglementaire`|`rapports`, file_url, file_name, published_at, sort_order, is_public, published, créneaux audit)
+- 5 endpoints Worker (`/api/cms/documents` GET/POST, `/:id` GET/PUT/DELETE) — GET public par défaut, `?all=1` nécessite JWT adherent/admin
+- Dual-mode store `src/lib/documents-store.ts` (localStorage ↔ D1) + types partagés `src/data/documents-seed.ts`
+- Admin `/admin/documents` : formulaire complet + bouton "Depuis la Media Library" qui remplit `fileUrl` + `fileName` avec `/api/media/raw/:r2Key`
+- Public `/documents` : fetch store, badges catégorie, téléchargement réel dès que `fileUrl` renseigné
+- 10 tests `documents-store.test.ts`
+
+### CMS versioning (session 32)
+- Migration `0011_cms_revisions.sql` : table `cms_revisions` (id autoincrement, page_id, snapshot_json, created_by, label, created_at) + index page+date / author
+- `handleCmsUpsertPage` snapshotte automatiquement l'état courant AVANT chaque PUT. Best-effort — silencieux si table absente.
+- Rétention 30 snapshots/page (auto-purge des plus anciens)
+- `GET /api/cms/pages/:pageId/revisions` (JWT+admin) — liste les 30 derniers snapshots avec metadata (sectionsCount, createdBy, label)
+- `POST /api/cms/pages/:pageId/revisions/:id/restore` (JWT+admin) — crée un pré-snapshot "Avant restauration de la révision #N" puis remplace les sections de la page
+- UI : `src/components/admin/CmsRevisionsModal.tsx` + bouton **Historique** dans `/admin/pages`
+- Test plan : manuel — éditer une page, sauvegarder 2 fois, ouvrir Historique, restaurer la 1ʳᵉ révision, vérifier le contenu + qu'un nouveau snapshot a bien été créé pour l'état "pré-restauration"
+
+### Device preview switcher (session 32)
+- `src/components/admin/DevicePreviewSwitcher.tsx` : bascule mobile / tablet / desktop dans l'iframe d'aperçu de `/admin/pages`
+- Dimensions alignées sur des devices populaires (iPhone 14, iPad Air, HD)
+- Iframe sizeée en CSS direct ; bordure / background pour simuler un écran physique ; `max-width: 100%` pour ne pas déborder sur les petits écrans admin

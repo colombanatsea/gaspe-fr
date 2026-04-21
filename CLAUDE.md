@@ -3,11 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**117 pages** — deployed on Cloudflare Pages (static export)
+**121 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.16.0 (SEO éditorial : /positions/[slug] + ArticleJsonLd, /actualites feed, /feed.xml RSS, Search Console verification conditionnelle)
+- **Version**: v2.17.0 (CMS versioning `cms_revisions` + device preview switcher + 4 nouvelles positions + docs à jour)
 
 ## Commands
 ```bash
@@ -165,7 +165,7 @@ src/
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
-│   ├── feed.xml/          # RSS 2.0 static (session 30) — 8 positions
+│   ├── feed.xml/          # RSS 2.0 static (session 30) — 12 positions (session 32)
 │   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations, positions)
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
@@ -212,10 +212,11 @@ workers/
     ├── 0007_org_archived.sql             # Organization archived flag + index
     ├── 0008_newsletter.sql               # Newsletter v2 — drafts, sends, events, templates
     ├── 0009_brevo_sync.sql               # users.brevo_synced_at (session 29)
-    └── 0010_cms_documents.sql            # Documents officiels D1 (session 31)
+    ├── 0010_cms_documents.sql            # Documents officiels D1 (session 31)
+    └── 0011_cms_revisions.sql            # CMS versioning — snapshots auto + restore (session 32)
 ```
 
-## Worker API — 55 endpoints
+## Worker API — 57 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -251,6 +252,8 @@ workers/
 | /api/cms/pages | GET | — |
 | /api/cms/pages/:pageId | GET | — |
 | /api/cms/pages/:pageId | PUT | JWT+admin |
+| /api/cms/pages/:pageId/revisions | GET | JWT+admin |
+| /api/cms/pages/:pageId/revisions/:id/restore | POST | JWT+admin |
 | /api/jobs | GET | — |
 | /api/jobs | POST | JWT |
 | /api/jobs/:id | GET | — |
@@ -270,7 +273,7 @@ workers/
 | /api/cms/documents/:id | PUT | JWT+admin |
 | /api/cms/documents/:id | DELETE | JWT+admin |
 
-## Database (D1 — 18 tables, migrations 0001-0010 applied)
+## Database (D1 — 19 tables, migrations 0001-0011 applied)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary, brevo_synced_at (0009) |
@@ -291,6 +294,7 @@ workers/
 | `nl_events` | Newsletter v2 tracking events (open/click/bounce/unsub from Brevo webhook) |
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 | `cms_documents` | **Documents officiels GASPE** (CCN, accords, statuts, rapports) — title, description, category, file_url (R2 key ou externe), file_name, published_at, sort_order, is_public, published. Géré via `/admin/documents`, affiché sur `/documents`. (session 31) |
+| `cms_revisions` | **Versioning des pages CMS** — snapshot JSON automatique de `cms_pages` à chaque PUT. Permet rollback via `/api/cms/pages/:pageId/revisions/:id/restore`. Rétention : 30 snapshots par page. Le restore crée lui-même un snapshot préalable (rollback du rollback). (session 32) |
 
 ## Testing
 - **Unit tests**: Vitest — 221 tests, 21 spec files
@@ -481,3 +485,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 29 | 2.15.0 | **SEO câblages** : FAQJsonLd câblé sur `/boite-a-outils` (10 Q/R CCN 3228) et `/ssgm` (8 Q/R visites médicales), EventJsonLd sur `/agenda` (par événement), MaritimeService JSON-LD enrichi sur `/nos-adherents/[slug]` (Organization + LocalBusiness avec `areaServed`, `serviceType`, `geo`, `memberOf`). **Newsletter — colonnes canonicalisées** : `NEWSLETTER_COLUMNS` worker + `NEWSLETTER_CATEGORIES` frontend alignés sur la table D1 (`info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`) — `communication_marque` (absent DB) remplacé par `veille_data` (ADF). Webhook, unsubscribe, subscribers endpoint corrigés (ex-bug latent session 28). **Sync Brevo** : `handleUpdatePreferences` synchronise automatiquement le contact Brevo (listes ajoutées/retirées + attributs PRENOM/NOM) ; silencieux si list IDs non configurés. Migration `0009_brevo_sync.sql` ajoute `users.brevo_synced_at`. **`/admin/newsletter/abonnes`** : colonne Brevo sync status (● synced / ● out-of-sync / ○ pending) + export CSV enrichi. **Perf** : `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug]. **ESLint** : 6 warnings `set-state-in-effect` fixés via `startTransition()` → 0 warning. |
 | 30 | 2.16.0 | **SEO éditorial** : extraction des positions dans `src/data/positions.ts` (`PositionItem` + body HTML complet, 8 articles dont 4 nouveaux : AG 2026, bilan CCN 3228 NAO, AAP ADEME 2026, outre-mer, feuille de route énergétique). Route dynamique `/positions/[slug]` avec `ArticleJsonLd`, `generateStaticParams`, `generateMetadata` (Article OG, canonical, keywords). Refonte `/actualites` (ex-redirect) en feed HTML avec bouton RSS visible. Nouvelle route `/feed.xml` (RSS 2.0, `force-static`, namespaces content:encoded + dc + atom:link self). Auto-discovery RSS via `<link rel="alternate" type="application/rss+xml">` injecté globalement dans root layout. `verification.google` + `verification.other.msvalidate.01` conditionnels via `NEXT_PUBLIC_*` env. **FAQ enrichi** : +3 Q/R `CCN3228_FAQ_EXTRA` (indemnités repas, CDI marin vs droit commun, AT maritime), +2 Q/R dans `SSGM_FAQ` (préparation visite, inaptitude temporaire). **Sitemap** : +8 pages `/positions/[slug]`. **Tests** : +18 (positions.test.ts, feed-rss.test.ts) → 221 tests verts, 0 erreur tsc, 0 warning ESLint, build OK. **Bloqueurs** : `ffmpeg` et Chrome absents de l'env session → compression `acf_video.MP4` + Lighthouse réel reportés (runbook dans `docs/LIGHTHOUSE-SESSION-30.md`). Brevo prod → runbook inchangé (actions admin externes). |
 | 31 | 2.16.0 | **Hexagone (display)** : remplacement `Métropole` → `Hexagone` sur tous les labels visibles (MapPreview tuile homepage, /ssgm section, admin sélecteur, /nos-adherents slug, /positions presse, SSGM_FAQ). Identifiants techniques (`territory === "metropole"` DB/Zod/types, slug `keolis-bordeaux-metropole`, région ADEME `metropole_standard`) conservés. **Fond de carte MemberMap** : CartoDB → **Esri World Ocean Base** (bathymétrie visible, terre en gris très clair sans aucune route). Default view ajustée `[46.8,-1.8]` zoom 6 pour cadrer l'hexagone + marge littorale. `minZoom=3`, `maxZoom=13`, `worldCopyJump`. CSP `public/_headers` autorise `server.arcgisonline.com` + `*.arcgisonline.com`. `dns-prefetch` root layout mis à jour. **Footer signature** : `Conçu avec 💙 par Colomban · Propulsé et protégé par VAIATA Cyber` (liens colombanatsea.com + vaiata-dynamics.com/fr/cyber/). **CMS documents D1** (voie propre) : migration `0010_cms_documents.sql` + 9 docs seed, 5 endpoints Worker (`/api/cms/documents` GET/POST/PUT/DELETE + `/:id`), dual-mode store `src/lib/documents-store.ts` (localStorage ↔ D1) + types partagés `src/data/documents-seed.ts`, refonte `/admin/documents` (branchée D1, bouton "Depuis la Media Library" qui remplit `fileUrl` + `fileName` avec `/api/media/raw/:key`, champs `publishedAt` / `sortOrder` / `isPublic` / `published`), refonte `/documents` publique (fetch store, empty state, categories Badge + date ISO). **Tests** : +10 (documents-store.test.ts) → 231 tests verts, 0 warning. |
+| 32 | 2.17.0 | **CMS versioning** : migration `0011_cms_revisions.sql` (table `cms_revisions` avec snapshot JSON + page_id + created_by + label + created_at). `handleCmsUpsertPage` snapshotte automatiquement l'état courant avant chaque PUT ; rétention 30 snapshots par page (auto-purge). Nouveaux endpoints Worker : `GET /api/cms/pages/:pageId/revisions` (JWT+admin) et `POST /api/cms/pages/:pageId/revisions/:id/restore` (JWT+admin, crée un pré-snapshot avant restauration). UI : `src/components/admin/CmsRevisionsModal.tsx` + bouton "Historique" dans `/admin/pages`. **Device preview** : `src/components/admin/DevicePreviewSwitcher.tsx` (mobile 390×844 / tablet 820×1180 / desktop 1280×720) branché sur l'iframe d'aperçu `/admin/pages`. **+4 positions éditoriales** : cybersécurité maritime (IACS UR E26/E27, NIS 2), prix de l'électricité à quai (cold ironing, TICFE), bilan social branche 2026, économie circulaire navires (MARPOL V, Hong Kong 2009, AGEC, règlement batteries 2023/1542) → 12 articles dans le flux RSS + sitemap. **Qualité** : 231 tests verts, 0 warning ESLint, 0 erreur tsc, build OK. **Bloqueurs env** (inchangés) : compression vidéo (ffmpeg absent) + Lighthouse mobile (Chrome absent) + Brevo prod (secrets wrangler admin). |
