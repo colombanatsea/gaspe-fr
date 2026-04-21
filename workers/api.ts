@@ -510,6 +510,26 @@ export default {
         return handleMediaDelete(request, env, corsHeaders, mediaId);
       }
 
+      // ── CMS Documents ──
+      if (path === "/api/cms/documents" && request.method === "GET") {
+        return handleDocumentsList(request, env, corsHeaders, url.searchParams);
+      }
+      if (path === "/api/cms/documents" && request.method === "POST") {
+        return handleDocumentCreate(request, env, corsHeaders);
+      }
+      if (path.match(/^\/api\/cms\/documents\/[^/]+$/) && request.method === "GET") {
+        const docId = decodeURIComponent(path.split("/api/cms/documents/")[1]);
+        return handleDocumentGet(request, env, corsHeaders, docId);
+      }
+      if (path.match(/^\/api\/cms\/documents\/[^/]+$/) && request.method === "PUT") {
+        const docId = decodeURIComponent(path.split("/api/cms/documents/")[1]);
+        return handleDocumentUpdate(request, env, corsHeaders, docId);
+      }
+      if (path.match(/^\/api\/cms\/documents\/[^/]+$/) && request.method === "DELETE") {
+        const docId = decodeURIComponent(path.split("/api/cms/documents/")[1]);
+        return handleDocumentDelete(request, env, corsHeaders, docId);
+      }
+
       return json({ error: "Not found" }, corsHeaders, 404);
     } catch (err) {
       console.error("Worker error:", err);
@@ -2938,4 +2958,259 @@ async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeade
   await env.DB.prepare("DELETE FROM newsletter WHERE email = ?").bind(email).run();
 
   return json({ success: true, email, categoriesDisabled: cats }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CMS Documents — migration 0010_cms_documents.sql
+//  Gère la page publique /documents + l'admin /admin/documents.
+// ═══════════════════════════════════════════════════════════
+
+interface DbDocument {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  file_url: string;
+  file_name: string;
+  published_at: string | null;
+  sort_order: number;
+  is_public: number;
+  published: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+}
+
+function toFrontendDocument(row: DbDocument) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? "",
+    category: row.category,
+    fileUrl: row.file_url,
+    fileName: row.file_name ?? "",
+    publishedAt: row.published_at,
+    sortOrder: row.sort_order ?? 0,
+    isPublic: row.is_public === 1,
+    published: row.published === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+async function requireAdmin(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return { error: json({ error: "Token invalide" }, corsHeaders, 401) };
+  if (payload.role !== "admin") {
+    return { error: json({ error: "Accès refusé" }, corsHeaders, 403) };
+  }
+  return { payload };
+}
+
+async function handleDocumentsList(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  params: URLSearchParams,
+) {
+  // `?all=1` : adherent/admin authentifié voit privés + brouillons
+  const wantAll = params.get("all") === "1";
+  const token = extractToken(request);
+  let canSeeAll = false;
+  if (wantAll && token) {
+    const payload = await verifyJwt(token, env.JWT_SECRET);
+    if (payload) {
+      canSeeAll = payload.role === "admin" || payload.role === "adherent";
+    }
+  }
+
+  const query = canSeeAll
+    ? "SELECT * FROM cms_documents ORDER BY category ASC, sort_order ASC, published_at DESC"
+    : "SELECT * FROM cms_documents WHERE published = 1 AND is_public = 1 ORDER BY category ASC, sort_order ASC, published_at DESC";
+
+  try {
+    const { results } = await env.DB.prepare(query).all<DbDocument>();
+    return json(
+      { documents: (results ?? []).map(toFrontendDocument) },
+      corsHeaders,
+    );
+  } catch (err) {
+    // Table inexistante (migration pas encore appliquée) → réponse vide plutôt qu'une 500
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no such table/i.test(msg)) {
+      return json({ documents: [] }, corsHeaders);
+    }
+    throw err;
+  }
+}
+
+async function handleDocumentGet(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  docId: string,
+) {
+  try {
+    const row = await env.DB.prepare("SELECT * FROM cms_documents WHERE id = ?")
+      .bind(docId)
+      .first<DbDocument>();
+    if (!row) return json({ error: "Document introuvable" }, corsHeaders, 404);
+
+    // Si privé ou brouillon : exige JWT adherent/admin
+    if (row.is_public !== 1 || row.published !== 1) {
+      const token = extractToken(request);
+      const payload = token ? await verifyJwt(token, env.JWT_SECRET) : null;
+      if (!payload || (payload.role !== "admin" && payload.role !== "adherent")) {
+        return json({ error: "Accès refusé" }, corsHeaders, 403);
+      }
+    }
+
+    return json({ document: toFrontendDocument(row) }, corsHeaders);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no such table/i.test(msg)) {
+      return json({ error: "Document introuvable" }, corsHeaders, 404);
+    }
+    throw err;
+  }
+}
+
+async function handleDocumentCreate(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  const body = (await request.json()) as Record<string, unknown>;
+  const title = (body.title as string)?.trim();
+  const category = (body.category as string) || "institutionnels";
+
+  if (!title) return json({ error: "Titre requis" }, corsHeaders, 400);
+
+  const id =
+    (body.id as string) ||
+    `doc-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40)}-${Date.now().toString(36)}`;
+
+  const description = sanitize(((body.description as string) ?? "").trim());
+  const fileUrl = ((body.fileUrl as string) ?? "#").trim() || "#";
+  const fileName = sanitize(((body.fileName as string) ?? "").trim());
+  const publishedAt = (body.publishedAt as string) ?? null;
+  const sortOrder = Number.isFinite(body.sortOrder as number)
+    ? (body.sortOrder as number)
+    : 0;
+  const isPublic = body.isPublic === false ? 0 : 1;
+  const published = body.published === false ? 0 : 1;
+
+  await env.DB.prepare(
+    `INSERT INTO cms_documents
+       (id, title, description, category, file_url, file_name, published_at,
+        sort_order, is_public, published, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(
+      id,
+      sanitize(title),
+      description,
+      category,
+      fileUrl,
+      fileName,
+      publishedAt,
+      sortOrder,
+      isPublic,
+      published,
+      auth.payload.sub,
+    )
+    .run();
+
+  const row = await env.DB.prepare("SELECT * FROM cms_documents WHERE id = ?")
+    .bind(id)
+    .first<DbDocument>();
+  return json(
+    { success: true, document: row ? toFrontendDocument(row) : null },
+    corsHeaders,
+    201,
+  );
+}
+
+async function handleDocumentUpdate(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  docId: string,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  const existing = await env.DB.prepare("SELECT id FROM cms_documents WHERE id = ?")
+    .bind(docId)
+    .first<{ id: string }>();
+  if (!existing) return json({ error: "Document introuvable" }, corsHeaders, 404);
+
+  const body = (await request.json()) as Record<string, unknown>;
+  const fieldMap: Record<string, string> = {
+    title: "title",
+    description: "description",
+    category: "category",
+    fileUrl: "file_url",
+    fileName: "file_name",
+    publishedAt: "published_at",
+    sortOrder: "sort_order",
+    isPublic: "is_public",
+    published: "published",
+  };
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  for (const [fKey, dbCol] of Object.entries(fieldMap)) {
+    if (fKey in body) {
+      updates.push(`${dbCol} = ?`);
+      const val = body[fKey];
+      if (typeof val === "boolean") values.push(val ? 1 : 0);
+      else if (typeof val === "string") values.push(sanitize(val));
+      else values.push(val);
+    }
+  }
+
+  if (updates.length === 0) {
+    return json({ error: "Aucun champ à mettre à jour" }, corsHeaders, 400);
+  }
+
+  updates.push("updated_at = datetime('now')");
+  values.push(docId);
+
+  await env.DB.prepare(
+    `UPDATE cms_documents SET ${updates.join(", ")} WHERE id = ?`,
+  )
+    .bind(...values)
+    .run();
+
+  const row = await env.DB.prepare("SELECT * FROM cms_documents WHERE id = ?")
+    .bind(docId)
+    .first<DbDocument>();
+  return json(
+    { success: true, document: row ? toFrontendDocument(row) : null },
+    corsHeaders,
+  );
+}
+
+async function handleDocumentDelete(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  docId: string,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  const existing = await env.DB.prepare("SELECT id FROM cms_documents WHERE id = ?")
+    .bind(docId)
+    .first<{ id: string }>();
+  if (!existing) return json({ error: "Document introuvable" }, corsHeaders, 404);
+
+  await env.DB.prepare("DELETE FROM cms_documents WHERE id = ?").bind(docId).run();
+  return json({ success: true }, corsHeaders);
 }
