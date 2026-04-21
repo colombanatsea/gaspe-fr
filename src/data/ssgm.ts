@@ -535,7 +535,7 @@ export const SSGM_FAQ = [
   {
     question: "Où passer sa visite médicale ?",
     answer:
-      "Deux options : dans un centre SSGM (25 centres en France métropolitaine et outre-mer) ou chez un médecin agréé par la Direction des Affaires Maritimes (plus de 100 médecins en ville). Le site /ssgm du GASPE liste l'ensemble des centres et médecins avec coordonnées.",
+      "Deux options : dans un centre SSGM (25 centres sur l'hexagone et en outre-mer) ou chez un médecin agréé par la Direction des Affaires Maritimes (plus de 100 médecins en ville). Le site /ssgm du GASPE liste l'ensemble des centres et médecins avec coordonnées.",
   },
   {
     question: "Quels examens sont pratiqués ?",

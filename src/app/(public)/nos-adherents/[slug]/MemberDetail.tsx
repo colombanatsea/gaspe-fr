@@ -86,7 +86,7 @@ export function MemberDetail({ slug }: { slug: string }) {
   const vessels = profile?.vessels ?? [];
   const logoUrl = profile?.companyLogo || member.logoUrl;
   const territoryLabel =
-    member.territory === "dom-tom" ? "Outre-mer" : "Metropole";
+    member.territory === "dom-tom" ? "Outre-mer" : "Hexagone";
 
   return (
     <>

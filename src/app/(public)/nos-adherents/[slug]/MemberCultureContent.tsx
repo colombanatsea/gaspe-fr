@@ -246,7 +246,7 @@ export function MemberCultureContent({ slug }: { slug: string }) {
                 <div>
                   <dt className="text-xs text-foreground-muted">Territoire</dt>
                   <dd className="font-medium text-foreground">
-                    {member.territory === "metropole" ? "Métropole" : "Outre-mer"}
+                    {member.territory === "metropole" ? "Hexagone" : "Outre-mer"}
                   </dd>
                 </div>
                 <div>
