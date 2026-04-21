@@ -1,80 +1,26 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import {
+  publishedPositions,
+  type PositionItem,
+  type PositionTag,
+} from "@/data/positions";
 
 const PAGE_ID = "positions";
 const D = (s: string) => getCmsDefault(PAGE_ID, s);
 
-/* ------------------------------------------------------------------ */
-/*  Data                                                               */
-/* ------------------------------------------------------------------ */
-
-type Tag = "Position" | "Actualité" | "Presse";
-
-interface PositionItem {
-  title: string;
-  date: string;
-  /** ISO-ish for sorting (YYYY-MM) */
-  sortKey: string;
-  excerpt: string;
-  tag: Tag;
-  slug: string;
-}
-
-const positions: PositionItem[] = [
-  {
-    title: "Transition énergétique des flottes",
-    date: "Février 2026",
-    sortKey: "2026-02",
-    excerpt:
-      "Les armateurs du GASPE s'engagent pour la décarbonation des liaisons maritimes de service public.",
-    tag: "Position",
-    slug: "transition-energetique-flottes",
-  },
-  {
-    title: "Accessibilité PMR sur les liaisons maritimes",
-    date: "Janvier 2026",
-    sortKey: "2026-01",
-    excerpt:
-      "Le GASPE publie ses recommandations pour améliorer l'accès aux personnes à mobilité réduite.",
-    tag: "Position",
-    slug: "accessibilite-pmr-liaisons-maritimes",
-  },
-  {
-    title: "Continuité territoriale et service public",
-    date: "Décembre 2025",
-    sortKey: "2025-12",
-    excerpt:
-      "Position du GASPE sur le maintien des liaisons essentielles vers les îles françaises.",
-    tag: "Position",
-    slug: "continuite-territoriale-service-public",
-  },
-  {
-    title: "Formation et attractivité des métiers maritimes",
-    date: "Novembre 2025",
-    sortKey: "2025-11",
-    excerpt:
-      "Le GASPE s'engage pour le renouvellement des équipages et l'attractivité de la profession.",
-    tag: "Position",
-    slug: "formation-attractivite-metiers-maritimes",
-  },
-];
-
-const allTags: Tag[] = ["Position", "Actualité", "Presse"];
-
+const allTags: PositionTag[] = ["Position", "Actualité", "Presse"];
 const INITIAL_VISIBLE = 6;
 
-/* ------------------------------------------------------------------ */
-/*  Badge variant helper                                               */
-/* ------------------------------------------------------------------ */
-
-function tagVariant(tag: Tag) {
+function tagVariant(tag: PositionTag) {
   switch (tag) {
     case "Position":
       return "teal" as const;
@@ -85,20 +31,14 @@ function tagVariant(tag: Tag) {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Page component                                                     */
-/* ------------------------------------------------------------------ */
-
 export default function PositionsPage() {
   const revealRef = useScrollReveal();
   const [search, setSearch] = useState("");
-  const [activeTag, setActiveTag] = useState<Tag | null>(null);
+  const [activeTag, setActiveTag] = useState<PositionTag | null>(null);
   const [showAll, setShowAll] = useState(false);
 
-  const filtered = useMemo(() => {
-    let items = [...positions].sort((a, b) =>
-      b.sortKey.localeCompare(a.sortKey),
-    );
+  const filtered = useMemo<PositionItem[]>(() => {
+    let items = [...publishedPositions];
 
     if (activeTag) {
       items = items.filter((p) => p.tag === activeTag);
@@ -133,15 +73,28 @@ export default function PositionsPage() {
       />
 
       <div ref={revealRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* -------------------------------------------------------- */}
-        {/*  Section 1 — Positions du GASPE                          */}
-        {/* -------------------------------------------------------- */}
         <section className="reveal">
-          <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-            {positionsSectionTitle}
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              {positionsSectionTitle}
+            </h2>
+            <Link
+              href="/feed.xml"
+              className="inline-flex items-center gap-2 rounded-xl border border-primary text-primary px-4 py-2 text-xs font-semibold hover:bg-surface-teal transition-colors"
+              aria-label="Flux RSS des positions GASPE"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18A2.18 2.18 0 0 1 6.18 20a2.18 2.18 0 0 1-2.18-2.18 2.18 2.18 0 0 1 2.18-2.18zM4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44zm0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" />
+              </svg>
+              Flux RSS
+            </Link>
+          </div>
 
-          {/* Search + filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <input
               type="text"
@@ -149,6 +102,7 @@ export default function PositionsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
               className="flex-1 rounded-xl border border-border-light bg-background px-4 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+              aria-label="Rechercher une position"
             />
             <div className="flex gap-2 flex-wrap">
               <button
@@ -179,7 +133,6 @@ export default function PositionsPage() {
             </div>
           </div>
 
-          {/* Cards */}
           {visible.length === 0 ? (
             <p className="text-foreground-muted text-sm py-8 text-center">
               Aucun résultat pour votre recherche.
@@ -187,32 +140,37 @@ export default function PositionsPage() {
           ) : (
             <div className="space-y-4">
               {visible.map((position) => (
-                <article
+                <Link
                   key={position.slug}
-                  className="rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md"
+                  href={`/positions/${position.slug}`}
+                  className="block rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={tagVariant(position.tag)}>
-                        {position.tag}
-                      </Badge>
-                      <h3 className="font-heading text-lg font-semibold text-foreground">
-                        {position.title}
-                      </h3>
+                  <article>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={tagVariant(position.tag)}>
+                          {position.tag}
+                        </Badge>
+                        <h3 className="font-heading text-lg font-semibold text-foreground">
+                          {position.title}
+                        </h3>
+                      </div>
+                      <time
+                        className="shrink-0 text-xs text-foreground-muted"
+                        dateTime={position.publishedAt}
+                      >
+                        {position.date}
+                      </time>
                     </div>
-                    <time className="shrink-0 text-xs text-foreground-muted">
-                      {position.date}
-                    </time>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground-muted line-clamp-2">
-                    {position.excerpt}
-                  </p>
-                </article>
+                    <p className="mt-2 text-sm text-foreground-muted line-clamp-2">
+                      {position.excerpt}
+                    </p>
+                  </article>
+                </Link>
               ))}
             </div>
           )}
 
-          {/* "Voir plus" button */}
           {!showAll && filtered.length > INITIAL_VISIBLE && (
             <div className="mt-8 text-center">
               <button
@@ -225,9 +183,6 @@ export default function PositionsPage() {
           )}
         </section>
 
-        {/* -------------------------------------------------------- */}
-        {/*  Section 2 — Espace Presse                               */}
-        {/* -------------------------------------------------------- */}
         <section className="mt-16 reveal">
           <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
             {presseSectionTitle}
@@ -242,7 +197,6 @@ export default function PositionsPage() {
 
           <div className="rounded-2xl bg-background border border-border-light p-8 shadow-sm">
             <div className="flex flex-col md:flex-row gap-8">
-              {/* Logo / identity block */}
               <div className="shrink-0 flex items-start justify-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-xl gaspe-gradient">
                   <span className="font-heading text-3xl font-bold text-white">
@@ -251,17 +205,16 @@ export default function PositionsPage() {
                 </div>
               </div>
 
-              {/* Text content */}
               <div className="flex-1">
                 <h3 className="font-heading text-xl font-semibold text-foreground mb-3">
                   GASPE
                 </h3>
                 <p className="text-sm text-foreground-muted leading-relaxed mb-4">
-                  Le GASPE — Groupement des Armateurs de Services Publics
-                  Maritimes de Passages d&apos;Eau — regroupe 21 armateurs
-                  titulaires et 10 membres associés assurant les liaisons
-                  maritimes de service public en France métropolitaine et
-                  outre-mer. 1&nbsp;364 collaborateurs, 111 navires.
+                  Le GASPE – Groupement des Armateurs de Services Publics
+                  Maritimes de Passages d&apos;Eau – fédère 27 compagnies
+                  maritimes côtières françaises assurant les liaisons de service
+                  public en France métropolitaine et outre-mer. 1&nbsp;494
+                  marins français, 165 navires, 25 M+ de passagers par an.
                 </p>
 
                 <p className="text-sm text-foreground-muted mb-6">

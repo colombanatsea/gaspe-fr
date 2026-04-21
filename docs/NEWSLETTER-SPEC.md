@@ -438,11 +438,12 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [x] Sélecteur variables (`{{firstname}}`, etc.)
 
 ### Phase 3 : Envoi production (3h) — ⏸ bloqué par config Brevo
-- [ ] Endpoint `POST /api/newsletter/:id/test-send`
-- [ ] Endpoint `POST /api/newsletter/:id/send`
-- [ ] Personnalisation par destinataire
-- [ ] Batch 50 avec rate limiting
-- [ ] Page `/admin/newsletter/:id/confirm-send` (modal récap)
+- [x] Endpoint `POST /api/newsletter/drafts/:id/test-send` (worker, session 28)
+- [x] Endpoint `POST /api/newsletter/drafts/:id/send` (worker, session 28)
+- [x] Personnalisation par destinataire (renderer `render.ts`, variables {{firstname}}…)
+- [x] Batch 50 avec rate limiting (worker)
+- [x] Page `/admin/newsletter/drafts` + `/admin/newsletter/edit?id=…` (session 26)
+- [ ] **Activation prod** : provisionner secrets `BREVO_LIST_*` + envoi réel (session 31)
 
 ### Phase 4 : Tracking & reporting (2h)
 - [ ] Endpoint `POST /api/newsletter/brevo/webhook`

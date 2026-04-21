@@ -3,19 +3,19 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**109 pages** — deployed on Cloudflare Pages (static export)
+**117 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.15.0 (SEO câblé : FAQ/Event/MaritimeService JSON-LD + sync Brevo préférences + colonnes DB canonicalisées)
+- **Version**: v2.16.0 (SEO éditorial : /positions/[slug] + ArticleJsonLd, /actualites feed, /feed.xml RSS, Search Console verification conditionnelle)
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 203 tests, 19 files)
+npm run test         # unit tests (Vitest, 221 tests, 21 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 0 warnings — v2.15.0)
+npm run lint         # ESLint (0 errors, 0 warnings — v2.16.0)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -159,13 +159,14 @@ Admin consulte les abonnés via `/admin/newsletter/abonnes` (table + filtre par 
 ```
 src/
 ├── app/
-│   ├── (public)/          # 33 routes publiques (+ ssgm, decouvrir, visites-medicales)
+│   ├── (public)/          # 34 routes publiques (+ positions/[slug], /actualites refont, /feed.xml)
 │   ├── (admin)/           # 12 sections admin + dashboard (16 pages avec /new)
 │   ├── (auth)/            # 6 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
-│   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations)
+│   ├── feed.xml/          # RSS 2.0 static (session 30) — 8 positions
+│   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations, positions)
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
 │   ├── jobs/              # JobCard, JobList, JobFilters, JobDetailActions, JobMatchScore
@@ -177,7 +178,7 @@ src/
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
 │   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications, positions)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
 │   ├── theme/             # ThemeContext (dark mode)
@@ -194,7 +195,7 @@ src/
 │   ├── members-store.ts   # Members localStorage store
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
 │   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
-│   └── __tests__/         # Unit tests (203 tests, 19 files)
+│   └── __tests__/         # Unit tests (221 tests, 21 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
@@ -284,9 +285,13 @@ workers/
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 
 ## Testing
-- **Unit tests**: Vitest — 203 tests, 19 spec files
+- **Unit tests**: Vitest — 221 tests, 21 spec files
 - **E2E tests**: Playwright — 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
+
+### Nouveaux tests v2.16.0 (session 30)
+- `src/lib/__tests__/positions.test.ts` (12 tests) — slugs uniques, sortKey cohérent, body non vide, em-dash interdit, helpers
+- `src/lib/__tests__/feed-rss.test.ts` (6 tests) — enveloppe RSS 2.0, namespaces, atom:link self, 1 item par position, XML bien formé
 
 ## SEO (session 28 — industrialisé)
 
@@ -311,16 +316,18 @@ Top 1 sur les 12 mots-clés cibles déclarés dans `src/lib/constants.ts` → `S
 - **FAQJsonLd** câblé sur `/ssgm` (8 Q/R visites médicales — `SSGM_FAQ` dans `src/data/ssgm.ts`) ✅ session 29
 - **EventJsonLd** câblé sur `/agenda` (un JSON-LD par événement publié) ✅ session 29
 - **MaritimeService JSON-LD** (Organization + LocalBusiness) câblé sur `/nos-adherents/[slug]` avec `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29
-- **ArticleJsonLd** dispo (à câbler sur /positions/[slug] — reporté session 30)
+- **ArticleJsonLd** câblé sur `/positions/[slug]` ✅ session 30 (8 articles, contenus dans `src/data/positions.ts` avec body HTML + `publishedAt` ISO)
 
 ### Infrastructure SEO
-- Sitemap dynamique : pages statiques + jobs + membres + formations
+- Sitemap dynamique : pages statiques + jobs + membres + formations + **positions (session 30)**
 - robots.txt : allow public, disallow admin/auth/espaces privés
 - robots metadata fine-grained : `googleBot.max-snippet=-1`, `max-image-preview=large`, `max-video-preview=-1`
 - Canonical URL par page (via `buildMetadata`)
 - Open Graph + Twitter Card par page avec image 1200x630
 - `font-display: swap` sur Google Fonts (2 familles, 7 poids optimisés)
 - 3 scripts `dns-prefetch` / `preconnect` (fonts.googleapis.com, fonts.gstatic.com, carto CDN)
+- **RSS 2.0** servi sur `/feed.xml` (force-static, 8 articles positions) + auto-discovery `<link rel="alternate" type="application/rss+xml">` global via root layout (session 30)
+- **Search Console / Bing verification** conditionnelle via `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (session 30)
 
 ### Guide éditorial SEO
 Voir `docs/SEO-GUIDE.md` — checklist par page, quick wins, monitoring recommandé.
@@ -463,3 +470,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 27 | 2.13.1 | Audit éditorial homepage + notre-groupement + recrutent : hero eyebrow "Organisation Patronale Représentative", hero title "compagnies maritimes côtières françaises", baseline "D'un littoral à l'autre…", CTA "Rejoignez les armateurs côtiers", em-dashes → en-dashes dans marketing. Dérivation dynamique des compteurs via `memberStats` (27 compagnies, 23 hexagone + 4 outre-mer, 31 adhérents) + placeholders `{adherents}`, `{navires}`… dans CMS. Type `memberType: "compagnie"\|"expert"` sur Member (4 experts : Capstan, Filhet Allard, Howden, SPLMNA). Alignement tuiles stats via flex-wrap centré. Upload photo bureau via CMS (ListEditor type `image` + endpoint public `/api/media/raw/:key`). Admin `/admin/newsletter/abonnes` (table + filtres + export CSV). |
 | 28 | 2.14.0 | **SEO industrialisé** : helper `src/lib/seo.ts` (buildMetadata, metaFromPageId, DEFAULT_PAGE_META 17 pages), 12 mots-clés cibles `SITE_KEYWORDS`, OrganizationJsonLd enrichie (TradeAssociation, knowsAbout, 2 contactPoints, sameAs), BreadcrumbJsonLd auto via CmsPageHeader, FAQJsonLd composant dispo. `layout.tsx` par page pour toutes les routes publiques. Guide `docs/SEO-GUIDE.md`. **Perf** : hero video poster + preload metadata, Leaflet lazy-dynamic, GaspeGlobe supprimé (-15 KB), Unsplash hero → gradient CSS, fonts 11→7 poids, tap targets 44x44 (MobileNav, ThemeToggle, MediaLibrary), viewport maximumScale=5. **Newsletter iso-Brevo** : endpoints `/api/newsletter/drafts/:id/test-send` + `/send` (campaigns), webhook `/api/newsletter/brevo/webhook` (signature HMAC), désinscription publique `/newsletter/unsubscribe?token=…` (HMAC NEWSLETTER_UNSUB_SECRET). **Charte configurable** `/admin/newsletter/charte` (sender, logo, couleurs, footer HTML, baseline, preheader, libellés unsub/webversion). 10 list IDs Brevo attendus en env. Table `nl_sends` pour suivi campagnes. |
 | 29 | 2.15.0 | **SEO câblages** : FAQJsonLd câblé sur `/boite-a-outils` (10 Q/R CCN 3228) et `/ssgm` (8 Q/R visites médicales), EventJsonLd sur `/agenda` (par événement), MaritimeService JSON-LD enrichi sur `/nos-adherents/[slug]` (Organization + LocalBusiness avec `areaServed`, `serviceType`, `geo`, `memberOf`). **Newsletter — colonnes canonicalisées** : `NEWSLETTER_COLUMNS` worker + `NEWSLETTER_CATEGORIES` frontend alignés sur la table D1 (`info_generales, ag, emploi, formation_opco, veille_juridique, veille_sociale, veille_surete, veille_data, veille_environnement, actualites_gaspe`) — `communication_marque` (absent DB) remplacé par `veille_data` (ADF). Webhook, unsubscribe, subscribers endpoint corrigés (ex-bug latent session 28). **Sync Brevo** : `handleUpdatePreferences` synchronise automatiquement le contact Brevo (listes ajoutées/retirées + attributs PRENOM/NOM) ; silencieux si list IDs non configurés. Migration `0009_brevo_sync.sql` ajoute `users.brevo_synced_at`. **`/admin/newsletter/abonnes`** : colonne Brevo sync status (● synced / ● out-of-sync / ○ pending) + export CSV enrichi. **Perf** : `<img>` → `next/image` sur MemberLogo, MembersMarquee, nos-compagnies-recrutent/[slug]. **ESLint** : 6 warnings `set-state-in-effect` fixés via `startTransition()` → 0 warning. |
+| 30 | 2.16.0 | **SEO éditorial** : extraction des positions dans `src/data/positions.ts` (`PositionItem` + body HTML complet, 8 articles dont 4 nouveaux : AG 2026, bilan CCN 3228 NAO, AAP ADEME 2026, outre-mer, feuille de route énergétique). Route dynamique `/positions/[slug]` avec `ArticleJsonLd`, `generateStaticParams`, `generateMetadata` (Article OG, canonical, keywords). Refonte `/actualites` (ex-redirect) en feed HTML avec bouton RSS visible. Nouvelle route `/feed.xml` (RSS 2.0, `force-static`, namespaces content:encoded + dc + atom:link self). Auto-discovery RSS via `<link rel="alternate" type="application/rss+xml">` injecté globalement dans root layout. `verification.google` + `verification.other.msvalidate.01` conditionnels via `NEXT_PUBLIC_*` env. **FAQ enrichi** : +3 Q/R `CCN3228_FAQ_EXTRA` (indemnités repas, CDI marin vs droit commun, AT maritime), +2 Q/R dans `SSGM_FAQ` (préparation visite, inaptitude temporaire). **Sitemap** : +8 pages `/positions/[slug]`. **Tests** : +18 (positions.test.ts, feed-rss.test.ts) → 221 tests verts, 0 erreur tsc, 0 warning ESLint, build OK. **Bloqueurs** : `ffmpeg` et Chrome absents de l'env session → compression `acf_video.MP4` + Lighthouse réel reportés (runbook dans `docs/LIGHTHOUSE-SESSION-30.md`). Brevo prod → runbook inchangé (actions admin externes). |
