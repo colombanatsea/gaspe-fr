@@ -188,13 +188,26 @@ export function Footer() {
               <ThemeToggle />
             </div>
           </div>
-          <div className="mt-4 text-center text-[10px] text-[var(--gaspe-neutral-600)]">
-            Concu par{" "}
-            <a href="https://colombanatsea.com" target="_blank" rel="noopener noreferrer" className="text-[var(--gaspe-neutral-400)] hover:text-white transition-colors">
+          <div className="pb-6 text-center text-[11px] text-[var(--gaspe-neutral-500)]">
+            Conçu avec{" "}
+            <span aria-hidden="true">💙</span>
+            <span className="sr-only">amour</span>{" "}
+            par{" "}
+            <a
+              href="https://colombanatsea.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--gaspe-neutral-300)] hover:text-white underline-offset-2 hover:underline transition-colors"
+            >
               Colomban
             </a>
-            {" "}·{" "}Protege par{" "}
-            <a href="https://vaiata-dynamics.com/fr/cyber/" target="_blank" rel="noopener noreferrer" className="text-[var(--gaspe-neutral-400)] hover:text-white transition-colors">
+            {" "}·{" "}Propulsé et protégé par{" "}
+            <a
+              href="https://vaiata-dynamics.com/fr/cyber/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--gaspe-neutral-300)] hover:text-white underline-offset-2 hover:underline transition-colors"
+            >
               VAIATA Cyber
             </a>
           </div>
