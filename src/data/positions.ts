@@ -339,6 +339,135 @@ export const positions: PositionItem[] = [
     `,
   },
   {
+    title: "Cybersécurité : sécuriser la chaîne tierce et les systèmes portuaires",
+    date: "Avril 2026",
+    sortKey: "2026-04-08",
+    publishedAt: "2026-04-08T09:00:00+02:00",
+    excerpt:
+      "Au-delà du bord, la cybersécurité maritime se joue côté port et sous-traitants. Le GASPE accompagne les compagnies dans la sécurisation de leur écosystème numérique étendu (NIS 2, ENISA).",
+    tag: "Position",
+    slug: "cybersecurite-chaine-tierce-systemes-portuaires",
+    body: `
+      <h2>Pourquoi regarder au-delà du bord</h2>
+      <p>Les systèmes embarqués ne sont qu'une partie de la surface d'attaque des compagnies maritimes côtières. Les <strong>terminaux portuaires</strong>, les <strong>systèmes de billetterie</strong>, les <strong>automates d'embarquement</strong>, les <strong>télétransmissions de suivi flotte</strong> et les nombreux <strong>sous-traitants</strong> (maintenance technique, catering, nettoyage, sécurité privée) constituent autant de vecteurs d'entrée potentiels. La directive européenne <strong>NIS 2</strong> (transposée en France fin 2024) impose aux entités essentielles et importantes du secteur des transports, y compris les passages d'eau de grande taille, de sécuriser leur chaîne d'approvisionnement numérique.</p>
+      <h2>Cartographie des risques de la chaîne tierce</h2>
+      <ul>
+        <li><strong>Prestataires IT</strong> – accès distants aux SI de la compagnie, mises à jour logicielles, maintenance à distance des automates billetterie.</li>
+        <li><strong>Équipementiers navire</strong> – interventions OEM sur ECDIS, radars, AIS, GMDSS avec clés USB ou portables dédiés.</li>
+        <li><strong>Exploitants portuaires</strong> – systèmes de gestion des escales, pilotage du quai, vidéosurveillance, contrôle d'accès.</li>
+        <li><strong>Éditeurs SaaS</strong> – billetterie en ligne, CRM, paie, gestion flotte – chaque accès API est un actif à protéger.</li>
+        <li><strong>Sous-traitants physiques</strong> – agents de sécurité, personnel de restauration, techniciens de maintenance – dont les badges et accès réseau invité doivent être gérés.</li>
+      </ul>
+      <h2>Exigences NIS 2 applicables</h2>
+      <p>NIS 2 impose notamment : analyse de risque de la chaîne d'approvisionnement, clauses contractuelles de cybersécurité avec les fournisseurs critiques, notification d'incident significatif sous 24 h puis 72 h à l'ANSSI, sanctions pouvant atteindre <strong>10 M€ ou 2% du chiffre d'affaires mondial</strong>. Les dirigeants sont personnellement responsables de la validation des mesures.</p>
+      <h2>Recommandations du GASPE</h2>
+      <ul>
+        <li>Établir un <strong>registre des tiers critiques</strong> avec niveau de risque et contrat cyber associé.</li>
+        <li>Exiger des fournisseurs une conformité minimale (attestation SecNumCloud pour les hébergeurs, ISO 27001 pour les prestataires critiques, authentification multi-facteur sur tous les accès distants).</li>
+        <li>Mettre en place un <strong>contrôle d'accès fort</strong> sur les connexions partenaires (VPN dédiés, zero trust, passerelles d'accès privilégié).</li>
+        <li>Tester régulièrement la <strong>continuité d'activité</strong> en cas de compromission d'un tiers (billetterie hors service, perte liaison flotte).</li>
+        <li>Former le personnel et les sous-traitants via le <strong>kit cyber maritime</strong> ENISA / guide ANSSI.</li>
+      </ul>
+      <h2>Rôle du GASPE</h2>
+      <p>Le Groupement pilote un groupe de travail dédié, mutualise les clauses contractuelles cyber, organise des exercices de gestion de crise avec les ports d'accueil et relaie les alertes de l'ANSSI et de l'ENISA vers les compagnies adhérentes.</p>
+    `,
+  },
+  {
+    title: "Énergies marines renouvelables : quelle place pour les armateurs côtiers ?",
+    date: "Septembre 2025",
+    sortKey: "2025-09-12",
+    publishedAt: "2025-09-12T10:00:00+02:00",
+    excerpt:
+      "Éolien offshore, houlomoteur, hydrolien : les liaisons côtières sont aux premières loges du déploiement des EMR. Quel rôle pour les compagnies de passages d'eau ?",
+    tag: "Position",
+    slug: "energies-marines-renouvelables-armateurs-cotiers",
+    body: `
+      <h2>Un littoral français au cœur des EMR</h2>
+      <p>La France dispose du 2ᵉ espace maritime mondial et de l'un des plus riches potentiels d'énergies marines renouvelables d'Europe. La <strong>programmation pluriannuelle de l'énergie (PPE)</strong> vise <strong>18 GW d'éolien en mer à horizon 2035</strong>, avec des parcs commerciaux au large de Saint-Nazaire, Saint-Brieuc, Fécamp, Courseulles, Dieppe-Le Tréport, Dunkerque, îles d'Yeu et Noirmoutier, Sud-Bretagne, Oléron, Méditerranée flottant. Les armateurs côtiers, ancrés localement, sont aux premières loges.</p>
+      <h2>Rôle logistique et opérationnel possible</h2>
+      <ul>
+        <li><strong>Transport de personnels</strong> vers les sites offshore (crew transfer vessels – CTV).</li>
+        <li><strong>Liaisons de service</strong> entre port et bases de maintenance des parcs.</li>
+        <li><strong>Continuité territoriale</strong> vers les îles proches des parcs (Yeu, Noirmoutier, Bréhat, Sein, Houat-Hoëdic).</li>
+        <li><strong>Navires ateliers</strong> et plateformes logistiques multi-usages pour la maintenance lourde.</li>
+      </ul>
+      <h2>Enjeux d'acceptabilité et de cohabitation</h2>
+      <p>Les armateurs côtiers sont des <strong>acteurs reconnus localement</strong>, écoutés des pêcheurs, des collectivités et des usagers de la mer. À ce titre, ils ont un rôle à jouer dans la concertation, la planification spatiale maritime (<strong>Document Stratégique de Façade</strong>) et la cohabitation des usages (pêche, plaisance, routes maritimes, zones Natura 2000).</p>
+      <h2>Opportunités de diversification</h2>
+      <p>Plusieurs compagnies adhérentes étudient déjà des diversifications : construction de CTV dédiés, partenariats avec développeurs éoliens, offres combinées tourisme + visite pédagogique des parcs. Le GASPE recense ces initiatives et accompagne les montages contractuels (DSP, partenariats privés, sous-traitance O&amp;M).</p>
+      <h2>Position du GASPE</h2>
+      <p>Le Groupement soutient le déploiement des EMR dans le respect d'un dialogue équitable avec les compagnies côtières historiques. Il demande que les <strong>procédures d'appels d'offres offshore</strong> prévoient un volet « logistique locale » favorisant les armateurs présents sur le territoire et respectant la convention collective CCN 3228.</p>
+    `,
+  },
+  {
+    title: "Retour d'expérience : premier navire hybride sur liaison côtière française",
+    date: "Août 2025",
+    sortKey: "2025-08-20",
+    publishedAt: "2025-08-20T09:00:00+02:00",
+    excerpt:
+      "Après 18 mois d'exploitation, le premier navire hybride diesel-électrique d'une compagnie adhérente livre ses enseignements : -35% de consommation, -40% d'émissions sonores, défis d'infrastructure.",
+    tag: "Actualité",
+    slug: "retour-experience-navire-hybride-liaison-cotiere",
+    body: `
+      <h2>Contexte du projet</h2>
+      <p>Mis en service début 2024 après un appel à projets ADEME, ce navire hybride à propulsion diesel-électrique assure une liaison côtière insulaire de moins de 30 minutes. Il transporte jusqu'à 300 passagers et 40 véhicules. L'investissement total a dépassé <strong>12 M€</strong>, avec un surcoût « hybride » d'environ <strong>25%</strong> par rapport à un navire conventionnel équivalent, partiellement compensé par les aides ADEME et régionales.</p>
+      <h2>Enseignements chiffrés après 18 mois</h2>
+      <ul>
+        <li><strong>-35% de consommation de carburant</strong> sur le cycle opérationnel, grâce à la récupération d'énergie au freinage et à l'optimisation du régime des moteurs thermiques.</li>
+        <li><strong>-40% de niveau sonore à quai</strong>, une amélioration sensible pour les riverains et les passagers.</li>
+        <li><strong>-28% d'émissions de CO₂</strong> en cycle annuel, et surtout des émissions de NOx et particules fines réduites de 50 à 70% en zone portuaire.</li>
+        <li>Fiabilité : <strong>98,2% de disponibilité</strong>, supérieure à l'objectif contractuel de 97%.</li>
+      </ul>
+      <h2>Points de vigilance</h2>
+      <ul>
+        <li><strong>Formation du personnel</strong> – les mécaniciens et officiers ont suivi un parcours complémentaire (220 heures) sur la gestion de l'énergie et la sécurité batteries.</li>
+        <li><strong>Infrastructure portuaire</strong> – la <strong>recharge à quai</strong> nécessite une puissance raccordée non disponible sur tous les ports. Le GASPE appuie les projets de mise à niveau.</li>
+        <li><strong>Cycle de vie des batteries</strong> – anticiper la seconde vie (stockage stationnaire) et le recyclage à horizon 10-12 ans.</li>
+        <li><strong>Maintenance</strong> – coûts plus élevés en première année (rodage, révisions anticipées), stabilisation ensuite.</li>
+      </ul>
+      <h2>Perspectives pour la flotte GASPE</h2>
+      <p>Sur les <strong>165 navires</strong> exploités par les compagnies adhérentes, une vingtaine sont en renouvellement d'ici 2030. Le retour d'expérience de ce premier navire hybride nourrit les cahiers des charges en préparation. Le GASPE anime un groupe de travail « Propulsion bas-carbone » qui capitalise ces enseignements et les diffuse auprès de toutes les compagnies.</p>
+    `,
+  },
+  {
+    title: "Multimodalité : articuler fret maritime côtier et fret ferroviaire",
+    date: "Juillet 2025",
+    sortKey: "2025-07-08",
+    publishedAt: "2025-07-08T09:00:00+02:00",
+    excerpt:
+      "Le fret maritime côtier et le fret ferroviaire partagent une mission commune : décarboner la logistique longue distance. Plaidoyer pour une véritable intermodalité mer-rail en façade atlantique.",
+    tag: "Position",
+    slug: "multimodalite-fret-maritime-fret-ferroviaire",
+    body: `
+      <h2>Deux modes complémentaires, pas concurrents</h2>
+      <p>Le <strong>fret maritime côtier</strong> (short sea shipping) et le <strong>fret ferroviaire</strong> ne s'opposent pas : ils partagent la même mission de décarbonation du transport longue distance face au tout-camion. Aujourd'hui le camion représente <strong>89% du fret intérieur</strong> en France (2024). L'objectif de la Stratégie Nationale Bas-Carbone (SNBC) est de doubler la part modale du ferroviaire et du fluvial-maritime d'ici 2030.</p>
+      <h2>Potentiel du short sea français</h2>
+      <ul>
+        <li>Façade atlantique : Dunkerque – Le Havre – Rouen – Brest – Saint-Nazaire – La Rochelle – Bordeaux – Bayonne.</li>
+        <li>Façade méditerranéenne : Marseille-Fos – Sète – Port-la-Nouvelle – Toulon.</li>
+        <li><strong>1 barge fluvio-maritime = 200 camions</strong> évités en termes d'émissions équivalentes.</li>
+        <li>Économie d'environ <strong>80% d'émissions de CO₂</strong> par tonne-kilomètre transportée versus la route.</li>
+      </ul>
+      <h2>Obstacles identifiés</h2>
+      <ul>
+        <li><strong>Rupture de charge</strong> – chaque transbordement ajoute du coût et du temps, pénalisant la compétitivité face au camion.</li>
+        <li><strong>Fiabilité horaire</strong> – les opérateurs logistiques industriels exigent des fenêtres de livraison serrées.</li>
+        <li><strong>Infrastructure portuaire</strong> – tous les ports côtiers ne disposent pas d'un embranchement fer performant.</li>
+        <li><strong>Coordination des acteurs</strong> – armateurs, opérateurs ferroviaires, manutentionnaires portuaires, logisticiens.</li>
+      </ul>
+      <h2>Recommandations pour une vraie intermodalité mer-rail</h2>
+      <ul>
+        <li>Développer des <strong>terminaux multimodaux</strong> avec embranchements fer au pied des quais.</li>
+        <li>Financer la <strong>massification des flux</strong> (aides au lancement de nouvelles lignes short sea de marchandises).</li>
+        <li>Aligner les <strong>horaires portuaires et ferroviaires</strong> pour minimiser les temps d'attente.</li>
+        <li>Garantir des <strong>sillons prioritaires</strong> pour le fret ferroviaire en correspondance avec les escales maritimes.</li>
+        <li>Soutenir le <strong>wagon isolé</strong> qui permet de desservir les terminaux portuaires moyens.</li>
+      </ul>
+      <h2>Position du GASPE</h2>
+      <p>Le GASPE soutient toutes les politiques publiques favorisant le report modal vers le mer-rail, dans le cadre de la <strong>SNBC</strong> et du plan France 2030. Le Groupement coopère avec Armateurs de France, 4F (4 familles ferroviaires) et l'Afilog pour porter un plaidoyer commun.</p>
+    `,
+  },
+  {
     title: "Économie circulaire : réduire, réutiliser, recycler sur les navires côtiers",
     date: "Janvier 2026",
     sortKey: "2026-01-28",

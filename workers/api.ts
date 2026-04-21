@@ -406,6 +406,12 @@ export default {
         const pageId = decodeURIComponent(path.replace("/api/cms/pages/", "").replace("/revisions", ""));
         return handleCmsListRevisions(request, env, corsHeaders, pageId);
       }
+      if (path.match(/^\/api\/cms\/pages\/[^/]+\/revisions\/\d+$/) && request.method === "GET") {
+        const parts = path.split("/");
+        const pageId = decodeURIComponent(parts[4]);
+        const revisionId = Number(parts[6]);
+        return handleCmsGetRevision(request, env, corsHeaders, pageId, revisionId);
+      }
       if (path.match(/^\/api\/cms\/pages\/[^/]+\/revisions\/\d+\/restore$/) && request.method === "POST") {
         const parts = path.split("/");
         const pageId = decodeURIComponent(parts[4]);
@@ -2160,9 +2166,17 @@ async function handleCmsListRevisions(
   if ("error" in auth) return auth.error;
 
   try {
+    // LEFT JOIN pour ramener l'email de l'auteur — un utilisateur peut avoir
+    // été supprimé, donc on tolère le NULL.
     const { results } = await env.DB.prepare(
-      "SELECT id, page_id, snapshot_json, created_by, label, created_at FROM cms_revisions WHERE page_id = ? ORDER BY created_at DESC LIMIT 30",
-    ).bind(pageId).all<DbCmsRevision>();
+      `SELECT r.id, r.page_id, r.snapshot_json, r.created_by, r.label, r.created_at,
+              u.email AS created_by_email
+         FROM cms_revisions r
+         LEFT JOIN users u ON u.id = r.created_by
+        WHERE r.page_id = ?
+        ORDER BY r.created_at DESC
+        LIMIT 30`,
+    ).bind(pageId).all<DbCmsRevision & { created_by_email: string | null }>();
 
     return json(
       {
@@ -2170,6 +2184,7 @@ async function handleCmsListRevisions(
           id: r.id,
           pageId: r.page_id,
           createdBy: r.created_by,
+          createdByEmail: r.created_by_email,
           label: r.label,
           createdAt: r.created_at,
           sectionsCount: (() => {
@@ -2187,6 +2202,68 @@ async function handleCmsListRevisions(
     const msg = err instanceof Error ? err.message : String(err);
     if (/no such table/i.test(msg)) {
       return json({ revisions: [] }, corsHeaders);
+    }
+    throw err;
+  }
+}
+
+/**
+ * GET /api/cms/pages/:pageId/revisions/:id
+ * Retourne le snapshot complet (sections désérialisées) pour affichage dans
+ * la vue diff. JWT+admin. Utilise un LEFT JOIN pour ramener l'email de l'auteur.
+ */
+async function handleCmsGetRevision(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  pageId: string,
+  revisionId: number,
+) {
+  const auth = await requireAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  try {
+    const row = await env.DB.prepare(
+      `SELECT r.id, r.page_id, r.snapshot_json, r.created_by, r.label, r.created_at,
+              u.email AS created_by_email
+         FROM cms_revisions r
+         LEFT JOIN users u ON u.id = r.created_by
+        WHERE r.id = ? AND r.page_id = ?`,
+    ).bind(revisionId, pageId).first<DbCmsRevision & { created_by_email: string | null }>();
+
+    if (!row) return json({ error: "Révision introuvable" }, corsHeaders, 404);
+
+    let sections: Array<{ section_id: string; label: string; type: string; content: string }> = [];
+    try {
+      const parsed = JSON.parse(row.snapshot_json);
+      if (Array.isArray(parsed)) sections = parsed;
+    } catch {
+      return json({ error: "Snapshot corrompu" }, corsHeaders, 500);
+    }
+
+    return json(
+      {
+        revision: {
+          id: row.id,
+          pageId: row.page_id,
+          createdBy: row.created_by,
+          createdByEmail: row.created_by_email,
+          label: row.label,
+          createdAt: row.created_at,
+          sections: sections.map((s) => ({
+            id: s.section_id,
+            label: s.label,
+            type: s.type,
+            content: s.content,
+          })),
+        },
+      },
+      corsHeaders,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no such table/i.test(msg)) {
+      return json({ error: "Révision introuvable" }, corsHeaders, 404);
     }
     throw err;
   }

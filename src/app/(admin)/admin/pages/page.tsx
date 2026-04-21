@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -123,6 +124,7 @@ export default function AdminPagesPage() {
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
   const [showRevisions, setShowRevisions] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [saveLabel, setSaveLabel] = useState("");
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
@@ -156,6 +158,7 @@ export default function AdminPagesPage() {
       setSaved(false);
       setModifiedIds(new Set());
       setSearch("");
+      setSaveLabel("");
     }
 
     if (isApiMode()) {
@@ -180,12 +183,13 @@ export default function AdminPagesPage() {
       updatedAt: new Date().toISOString(),
     };
     if (isApiMode()) {
-      await apiSavePageContent(pageContent);
+      await apiSavePageContent(pageContent, { label: saveLabel });
     } else {
       savePageContent(pageContent);
     }
     setSaved(true);
     setModifiedIds(new Set());
+    setSaveLabel("");
     setPreviewKey((k) => k + 1); // refresh iframe
     setTimeout(() => setSaved(false), 3000);
   }
@@ -283,26 +287,37 @@ export default function AdminPagesPage() {
             </svg>
             Médias
           </button>
-          <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover shadow-sm"
-          >
-            {saved ? (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                Enregistré
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                </svg>
-                Enregistrer
-              </>
-            )}
-          </button>
+          <div className="flex items-stretch gap-0 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white shadow-sm overflow-hidden focus-within:border-[var(--gaspe-teal-400)] focus-within:ring-1 focus-within:ring-[var(--gaspe-teal-400)]">
+            <input
+              type="text"
+              value={saveLabel}
+              onChange={(e) => setSaveLabel(e.target.value)}
+              placeholder="Motif (optionnel, ex. Correction hero)"
+              maxLength={120}
+              className="w-60 bg-transparent px-3 py-2 text-sm placeholder:text-foreground-muted focus:outline-none"
+              aria-label="Motif de la modification (libellé de révision)"
+            />
+            <button
+              onClick={handleSave}
+              className="inline-flex items-center gap-2 bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
+            >
+              {saved ? (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Enregistré
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                  </svg>
+                  Enregistrer
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -416,7 +431,7 @@ export default function AdminPagesPage() {
                             className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
                           />
                           {section.content && (
-                            <img src={section.content} alt="Aperçu image" loading="lazy" className="max-h-32 rounded-xl object-contain" />
+                            <Image src={section.content} alt="Aperçu image" width={320} height={128} loading="lazy" className="max-h-32 rounded-xl object-contain" unoptimized />
                           )}
                           <button
                             type="button"

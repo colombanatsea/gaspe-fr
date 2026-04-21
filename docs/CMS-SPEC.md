@@ -432,3 +432,40 @@ Bannière démo + CTA adhésion éditables.
 - `src/components/admin/DevicePreviewSwitcher.tsx` : bascule mobile / tablet / desktop dans l'iframe d'aperçu de `/admin/pages`
 - Dimensions alignées sur des devices populaires (iPhone 14, iPad Air, HD)
 - Iframe sizeée en CSS direct ; bordure / background pour simuler un écran physique ; `max-width: 100%` pour ne pas déborder sur les petits écrans admin
+
+### Versioning enrichi (session 33)
+
+Construit par-dessus la migration 0011 (pas de nouvelle migration nécessaire — la colonne `label` existait déjà).
+
+**Motif de révision (champ libre)**
+- Input "Motif" intégré au groupe de bouton "Enregistrer" dans `/admin/pages` (max 120 caractères, optionnel).
+- Propagé dans `apiSavePageContent(page, { label })` → body du PUT `/api/cms/pages/:pageId`.
+- Stocké en colonne `label` sur le pré-snapshot automatique. Affiché en italique dans `CmsRevisionsModal` (« Motif »).
+- Le champ est nettoyé après chaque sauvegarde réussie et au changement de page.
+
+**Filtres dans le modal**
+- **Auteur** : select construit dynamiquement à partir des `createdBy` uniques trouvés dans la liste (affichage email si disponible via LEFT JOIN `users`, fallback user id).
+- **Du / Au** : deux inputs `type="date"` qui cadrent la plage via `boundDate` (début de jour / fin de jour).
+- Bouton "Réinitialiser" pour effacer tous les filtres.
+- Filtrage côté client (les 30 révisions sont déjà en mémoire).
+
+**Diff visuel 3 colonnes (`CmsRevisionDiff.tsx`)**
+- Accessible via le bouton "Comparer 2 révisions" dans le modal Historique : active le mode sélection, ajoute des checkboxes, limite à 2 sélections (FIFO si 3ᵉ clic).
+- Bouton "Voir le diff" qui fetch les 2 snapshots complets via le nouvel endpoint `GET /api/cms/pages/:pageId/revisions/:id` (retourne `revision.sections` désérialisées).
+- Les révisions sont toujours ordonnées par date (plus ancienne à gauche, plus récente à droite) pour la lisibilité.
+- Détection des changements par appariement sur `section.id` → status `added` / `removed` / `modified` / `unchanged`.
+- Affichage : méta 3 colonnes (avant / après / compteur différences), puis liste des sections changées (groupées par type, unchanged filtrées). Chaque ligne affiche le contenu `previewContent` (HTML strippé, ~240 car) côte-à-côte.
+- Palette : rouge `red-50` pour "avant modifié", teal pour "après", neutral en dashed pour "absent".
+
+**Backend (workers/api.ts)**
+- `handleCmsListRevisions` : LEFT JOIN `users` pour ramener `createdByEmail`.
+- `handleCmsGetRevision` (nouveau) : `GET /api/cms/pages/:pageId/revisions/:id` (JWT+admin) retourne `revision.sections[]` désérialisées + méta auteur. Tolère la table manquante (404).
+- Routing : nouvelle regex `^\/api\/cms\/pages\/[^/]+\/revisions\/\d+$` avant le pattern `/restore`.
+
+**Test plan manuel**
+1. Sauvegarder une page avec motif "Correction hero"
+2. Sauvegarder une nouvelle fois avec motif "Ajout paragraphe mission"
+3. Ouvrir Historique → vérifier les 2 motifs + email dans la liste
+4. Filtrer par auteur → liste ne contient que ses révisions
+5. Activer "Comparer 2 révisions", cocher les 2, cliquer "Voir le diff"
+6. Vérifier que les sections modifiées apparaissent en rouge/teal avec le bon texte côté avant/après

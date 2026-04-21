@@ -130,11 +130,16 @@ export async function apiGetAllPageContent(): Promise<Record<string, PageContent
   } catch { return {}; }
 }
 
-export async function apiSavePageContent(page: PageContent): Promise<boolean> {
+export async function apiSavePageContent(
+  page: PageContent,
+  options?: { label?: string },
+): Promise<boolean> {
   try {
+    const body: { sections: PageSection[]; label?: string } = { sections: page.sections };
+    if (options?.label?.trim()) body.label = options.label.trim();
     const res = await apiFetch<{ success?: boolean }>(`/api/cms/pages/${page.pageId}`, {
       method: "PUT",
-      body: JSON.stringify({ sections: page.sections }),
+      body: JSON.stringify(body),
     });
     return !!res.success;
   } catch { return false; }
