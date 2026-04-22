@@ -27,6 +27,14 @@ export interface ClassificationLevel {
   description: string;
   requiredCertificates: string[];
   echelons: Echelon[];
+  /**
+   * Ligne exacte de la grille NAO 2026 à laquelle cette classification
+   * est rattachée pour la rémunération (doit correspondre au champ
+   * `fonction` d'une entrée de SALARY_GRID_NAO_2026). Permet de rappeler
+   * que c'est la fonction + la jauge UMS du navire qui fixent le minimum
+   * conventionnel, pas le brevet détenu.
+   */
+  salaryGridRef?: string;
 }
 
 export interface SalaryEntry {
@@ -256,104 +264,195 @@ const ECHELONS: Echelon[] = [
 
 // --- Classifications ------------------------------------------------
 
+/**
+ * Classifications CCN 3228 alignées sur la grille NAO 2026.
+ *
+ * Principe : le MINIMUM CONVENTIONNEL de rémunération combine la FONCTION
+ * exercée à bord et la TRANCHE DE JAUGE UMS du navire — pas le brevet
+ * détenu. Un officier titulaire d'un brevet de capitaine illimité exerçant
+ * comme lieutenant sur un navire de 500 UMS est rémunéré à la ligne "moins
+ * de 200 UMS" ou équivalente, pas à la ligne "> 3000 UMS".
+ *
+ * Les `requiredCertificates` listent le brevet STCW / titre MINIMUM requis
+ * pour accéder à la fonction, pas le titre qui détermine le salaire.
+ * Les libellés de `salaryGridRef` correspondent mot pour mot au champ
+ * `fonction` de SALARY_GRID_NAO_2026.
+ */
 export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
-  // Pont
+  // ── PONT ────────────────────────────────────────────────────────
   {
     level: 1,
-    label: "Matelot",
+    label: "Matelot / Matelot léger",
     category: "pont",
-    description: "Matelot de pont, manœuvres et entretien du navire",
-    requiredCertificates: ["Certificat de matelot pont"],
+    description: "Manœuvres, veille, entretien courant du navire.",
+    requiredCertificates: ["Certificat de matelot pont", "CFBS"],
     echelons: ECHELONS,
+    salaryGridRef: "Matelots, Matelots Legers",
   },
   {
     level: 2,
     label: "Matelot qualifié",
     category: "pont",
     description:
-      "Matelot expérimenté, participation à la veille et à la sécurité",
-    requiredCertificates: ["Certificat de matelot pont", "CFBS"],
+      "Matelot expérimenté (veille passerelle, sécurité, tâches techniques).",
+    requiredCertificates: ["Certificat de matelot pont qualifié", "CFBS"],
     echelons: ECHELONS,
+    salaryGridRef: "Matelots Qualifies, Graisseurs",
   },
   {
     level: 3,
     label: "Maître d'équipage",
     category: "pont",
-    description: "Encadrement de l'équipage pont, responsable des manœuvres",
-    requiredCertificates: ["Brevet de capitaine 200"],
+    description:
+      "Encadrement de l'équipage pont, responsable des manœuvres à bord.",
+    requiredCertificates: ["Brevet de capitaine 200 ou équivalent"],
     echelons: ECHELONS,
+    salaryGridRef: "Maitres pont et machine",
   },
   {
     level: 4,
-    label: "Lieutenant",
+    label: "Patron de vedette (< 50 UMS)",
     category: "pont",
-    description: "Officier de quart, second du capitaine",
-    requiredCertificates: ["Brevet de capitaine 200", "CRO"],
+    description:
+      "Commandant de vedette à passagers de jauge brute < 50 UMS.",
+    requiredCertificates: ["Brevet de capitaine 200", "CFBS"],
     echelons: ECHELONS,
+    salaryGridRef: "Patrons de vedettes < 50 UMS",
   },
   {
     level: 5,
-    label: "Capitaine 200",
+    label: "Capitaine < 200 UMS",
     category: "pont",
     description:
-      "Commandant de navire de jauge brute ≤ 200 UMS, navigation côtière",
-    requiredCertificates: ["Brevet de capitaine 200", "CGO", "Certificat médical maritime"],
+      "Commandant de navire de jauge brute < 200 UMS, navigation côtière.",
+    requiredCertificates: [
+      "Brevet de capitaine 200",
+      "CGO",
+      "Certificat médical maritime",
+    ],
     echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens < 200 UMS",
   },
   {
     level: 6,
-    label: "Capitaine 500",
+    label: "Capitaine 200 – 500 UMS",
     category: "pont",
     description:
-      "Commandant de navire de jauge brute ≤ 500 UMS, toutes navigations",
-    requiredCertificates: ["Brevet de capitaine 500", "CGO", "Certificat médical maritime"],
+      "Commandant de navire entre 200 et 500 UMS (cabotage national, navigation côtière).",
+    requiredCertificates: ["Brevet de capitaine 500", "CGO"],
     echelons: ECHELONS,
+    salaryGridRef: "Capitaines / Chefs Mecaniciens > 200 UMS",
   },
-
-  // Machine
   {
     level: 7,
-    label: "Ouvrier mécanicien",
-    category: "machine",
-    description: "Entretien courant des machines et auxiliaires",
-    requiredCertificates: ["Certificat de mécanicien 250 kW"],
+    label: "Capitaine 500 – 3 000 UMS",
+    category: "pont",
+    description:
+      "Commandant de navire entre 500 et 3 000 UMS — brevet de capitaine 3 000 requis.",
+    requiredCertificates: ["Brevet de capitaine 3 000", "CGO"],
     echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS",
   },
   {
     level: 8,
-    label: "Mécanicien",
-    category: "machine",
-    description: "Conduite et maintenance des installations machine",
-    requiredCertificates: ["Brevet de mécanicien 750 kW"],
-    echelons: ECHELONS,
-  },
-  {
-    level: 9,
-    label: "Chef mécanicien",
-    category: "machine",
+    label: "Capitaine > 3 000 UMS",
+    category: "pont",
     description:
-      "Responsable de l'ensemble des installations machine du navire",
-    requiredCertificates: ["Brevet de chef mécanicien 3 000 kW"],
+      "Commandant de navire de plus de 3 000 UMS — brevet de capitaine illimité requis.",
+    requiredCertificates: ["Brevet de capitaine (illimité)", "CGO"],
     echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens > 3000 UMS",
   },
 
-  // Services
+  // ── MACHINE ────────────────────────────────────────────────────
+  {
+    level: 9,
+    label: "Ouvrier mécanicien / Graisseur",
+    category: "machine",
+    description: "Entretien courant des machines et auxiliaires, graissage.",
+    requiredCertificates: ["Certificat de mécanicien 250 kW ou équivalent"],
+    echelons: ECHELONS,
+    salaryGridRef: "Mecaniciens, Ouvriers mecaniciens, Timoniers",
+  },
   {
     level: 10,
-    label: "Agent de service",
-    category: "services",
-    description: "Accueil des passagers, sécurité, services à bord",
-    requiredCertificates: ["CFBS"],
+    label: "Mécanicien",
+    category: "machine",
+    description: "Conduite et maintenance des installations machine.",
+    requiredCertificates: ["Brevet de mécanicien 750 kW"],
     echelons: ECHELONS,
+    salaryGridRef: "Mecaniciens, Ouvriers mecaniciens, Timoniers",
   },
   {
     level: 11,
+    label: "Maître machine",
+    category: "machine",
+    description:
+      "Encadrement du service machine sous l'autorité du chef mécanicien.",
+    requiredCertificates: ["Brevet de mécanicien 750 kW"],
+    echelons: ECHELONS,
+    salaryGridRef: "Maitres pont et machine",
+  },
+  {
+    level: 12,
+    label: "Chef mécanicien < 200 UMS (750 kW)",
+    category: "machine",
+    description:
+      "Chef mécanicien sur navire < 200 UMS équipé d'une puissance ≤ 750 kW.",
+    requiredCertificates: ["Brevet de chef mécanicien 750 kW"],
+    echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens < 200 UMS",
+  },
+  {
+    level: 13,
+    label: "Chef mécanicien 200 – 500 UMS (3 000 kW)",
+    category: "machine",
+    description:
+      "Chef mécanicien sur navire 200 – 500 UMS, puissance jusqu'à 3 000 kW.",
+    requiredCertificates: ["Brevet de chef mécanicien 3 000 kW"],
+    echelons: ECHELONS,
+    salaryGridRef: "Capitaines / Chefs Mecaniciens > 200 UMS",
+  },
+  {
+    level: 14,
+    label: "Chef mécanicien 500 – 3 000 UMS (8 000 kW)",
+    category: "machine",
+    description:
+      "Chef mécanicien sur navire 500 – 3 000 UMS, puissance jusqu'à 8 000 kW.",
+    requiredCertificates: ["Brevet de chef mécanicien 8 000 kW"],
+    echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS",
+  },
+  {
+    level: 15,
+    label: "Chef mécanicien > 3 000 UMS",
+    category: "machine",
+    description:
+      "Chef mécanicien sur navire de plus de 3 000 UMS — brevet de chef mécanicien illimité requis.",
+    requiredCertificates: ["Brevet de chef mécanicien (illimité)"],
+    echelons: ECHELONS,
+    salaryGridRef: "Capitaines et Chefs Mecaniciens > 3000 UMS",
+  },
+
+  // ── SERVICES ───────────────────────────────────────────────────
+  {
+    level: 16,
+    label: "Agent de service / Matelot polyvalent passagers",
+    category: "services",
+    description: "Accueil des passagers, sécurité à bord, services généraux.",
+    requiredCertificates: ["CFBS"],
+    echelons: ECHELONS,
+    salaryGridRef: "Matelots, Matelots Legers",
+  },
+  {
+    level: 17,
     label: "Commissaire de bord",
     category: "services",
     description:
-      "Responsable des services hôteliers et de l'accueil passagers",
-    requiredCertificates: ["CFBS", "Formation sûreté"],
+      "Responsable des services hôteliers, de l'accueil passagers et de la sûreté.",
+    requiredCertificates: ["CFBS", "Formation sûreté (SSO / ISPS)"],
     echelons: ECHELONS,
+    salaryGridRef: "Maitres pont et machine",
   },
 ];
 
@@ -523,8 +622,28 @@ export const BRANCH_AGREEMENTS: BranchAgreement[] = [
 
 // --- Constantes ------------------------------------------------------
 
+/**
+ * Nature juridique des montants : ce sont des MINIMA CONVENTIONNELS
+ * (article L2253-1 C. trav. — tout salaire effectif inférieur est illégal).
+ * Le salaire réellement versé peut être supérieur (accord d'entreprise,
+ * prime individuelle, ancienneté au-dessus du barème). Les catégories
+ * ENIM indiquées sont des correspondances pour le calcul des cotisations
+ * sur salaire forfaitaire — elles ne fixent pas la rémunération.
+ */
 export const SALARY_DISCLAIMER =
-  "À titre indicatif — Les montants affichés sont les salaires minima conventionnels bruts. Les salaires effectifs peuvent être supérieurs selon les accords d'entreprise. Dernière mise à jour : janvier 2026.";
+  "Minima conventionnels — ces montants bruts constituent le plancher légal de rémunération fixé par l'avenant salarial à la CCN 3228 (IDCC 3228). Le salaire effectivement versé peut être supérieur. Dernière mise à jour : janvier 2026.";
+
+/**
+ * Références pour la crédibilité et la traçabilité juridique des grilles.
+ * Citées dans la section Sources au bas des pages.
+ */
+export const SALARY_SOURCES = [
+  "Avenant salarial NAO 2026 à la CCN 3228 — Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
+  "Texte de la CCN 3228 sur Legifrance — Journal officiel (après arrêté d'extension du ministère du Travail)",
+  "Article L2253-1 du Code du travail : articulation entre accords de branche étendus et accords d'entreprise (principe de faveur pour les salaires minima hiérarchiques)",
+  "Code des transports, Livre V, titre V — Gens de mer (durée du travail maritime, heures supplémentaires)",
+  "Barèmes ENIM 2025/2026 — Caisse des gens de mer (salaires forfaitaires d'assiette des cotisations, distincts des salaires réels)",
+];
 
 export const LAST_UPDATED = "Janvier 2026";
 
