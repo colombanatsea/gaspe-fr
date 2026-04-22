@@ -1,5 +1,5 @@
 /**
- * ENM Text Parsers — Parse copy-pasted content from the ENM portal
+ * ENM Text Parsers – Parse copy-pasted content from the ENM portal
  *
  * The user logs into enm.mes-services.mer.gouv.fr via FranceConnect,
  * navigates to their data pages, and copies the content (Ctrl+A, Ctrl+C).

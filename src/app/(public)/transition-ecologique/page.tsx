@@ -39,7 +39,7 @@ const AdemeSimulator = dynamic(() => import("@/components/simulator/AdemeSimulat
 const ADEME_GUIDES = [
   {
     title: "Cahier des charges AAP 2026",
-    description: "Appel a projets ADEME — Decarbonation du transport et des services maritimes. Regles, eligibilite, criteres de notation.",
+    description: "Appel a projets ADEME – Decarbonation du transport et des services maritimes. Regles, eligibilite, criteres de notation.",
     href: "/assets/ademe/cahier-des-charges-2026.pdf",
     badge: "Reference",
     variant: "teal" as const,
@@ -218,7 +218,7 @@ export default function TransitionEcologiquePage() {
         {/* Sources */}
         <CollapsibleSources className="reveal">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>AAP ADEME « Decarbonation du transport et des services maritimes » 2026 — Cahier des charges, 70 M EUR</li>
+            <li>AAP ADEME « Decarbonation du transport et des services maritimes » 2026 – Cahier des charges, 70 M EUR</li>
             <li>Regime SA.111726 (LDACEE), SA.111728 (PME), SA.119559 (AFR)</li>
             <li>Donnees technologies : DNV Pt.6 Ch.2, Corvus Orca ESS 2024, ABB Marine 2022</li>
             <li>Facteurs emission : IMO MEPC.1/Circ.684, RED III (biocarburants)</li>

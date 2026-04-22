@@ -65,10 +65,10 @@ describe("data/positions", () => {
 });
 
 /* -------------------------------------------------------------------- */
-/*  Typography rule : em-dash `—` (U+2014) is forbidden in public text   */
+/*  Typography rule : em-dash `–` (U+2014) is forbidden in public text   */
 /* -------------------------------------------------------------------- */
 
-describe("data/positions — typography", () => {
+describe("data/positions – typography", () => {
   it("does not contain any em-dash in title / excerpt / body", () => {
     for (const p of positions) {
       const haystacks: Array<[string, string]> = [
@@ -90,7 +90,7 @@ describe("data/positions — typography", () => {
 /*  Sort / lookup helpers                                                */
 /* -------------------------------------------------------------------- */
 
-describe("data/positions — helpers", () => {
+describe("data/positions – helpers", () => {
   it("publishedPositions is sorted descending by sortKey", () => {
     const keys = publishedPositions.map((p: PositionItem) => p.sortKey);
     const sorted = [...keys].sort((a, b) => b.localeCompare(a));

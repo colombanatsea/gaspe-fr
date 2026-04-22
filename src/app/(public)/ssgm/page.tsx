@@ -59,7 +59,7 @@ export default function SSGMPage() {
       <CmsPageHeader
         pageId="ssgm"
         defaultTitle="SSGM & Médecins Agréés"
-        defaultDescription="Services de Santé des Gens de Mer — visites d'aptitude, suivi médical et certificats STCW."
+        defaultDescription="Services de Santé des Gens de Mer – visites d'aptitude, suivi médical et certificats STCW."
         breadcrumbs={[
           { label: "Accueil", href: "/" },
           { label: "SSGM & Médecins Agréés" },
@@ -256,7 +256,7 @@ export default function SSGMPage() {
                         </td>
                         <td className="px-4 py-3 text-foreground-muted hidden sm:table-cell">{doc.city}</td>
                         <td className="px-4 py-3 hidden md:table-cell"><Badge variant="teal">{doc.region}</Badge></td>
-                        <td className="px-4 py-3 text-foreground-muted hidden lg:table-cell">{doc.availableDays ?? "—"}</td>
+                        <td className="px-4 py-3 text-foreground-muted hidden lg:table-cell">{doc.availableDays ?? "–"}</td>
                         <td className="px-4 py-3 font-medium text-foreground">{doc.phone}</td>
                       </tr>
                     ))}
@@ -270,7 +270,7 @@ export default function SSGMPage() {
         {/* Sources */}
         <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Direction des Affaires Maritimes (DAM) — decret n. 2015-1575 du 3 decembre 2015</li>
+            <li>Direction des Affaires Maritimes (DAM) – decret n. 2015-1575 du 3 decembre 2015</li>
             <li>Code des transports, articles L5521-1 a L5521-4</li>
             <li>Convention STCW (OMI), Section A-I/9</li>
             <li>Convention du Travail Maritime (MLC 2006), Regle 1.2</li>

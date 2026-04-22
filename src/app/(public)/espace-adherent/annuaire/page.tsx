@@ -387,7 +387,7 @@ export default function AdherentAnnuairePage() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="font-heading text-sm font-semibold text-foreground truncate">{peer.name}</p>
-                        <p className="text-xs text-foreground-muted truncate">{peer.company ?? "—"}</p>
+                        <p className="text-xs text-foreground-muted truncate">{peer.company ?? "–"}</p>
                       </div>
                     </div>
                     <div className="mt-3 flex items-center gap-2 flex-wrap">

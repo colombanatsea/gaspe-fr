@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Medical Visits Store — dual-mode                                   */
+/*  Medical Visits Store – dual-mode                                   */
 /*  localStorage (demo) ↔ API/D1 (production)                         */
 /* ------------------------------------------------------------------ */
 

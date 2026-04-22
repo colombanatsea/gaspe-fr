@@ -9,7 +9,7 @@
 
 /**
  * Détail d'un navire de la flotte d'une compagnie adhérente.
- * Champs optionnels — un nom minimal suffit ; les autres se remplissent au fil
+ * Champs optionnels – un nom minimal suffit ; les autres se remplissent au fil
  * des données éditoriales (tableur adhérents v2024) ou via l'admin CMS / l'espace
  * adhérent. Les champs "libres" (crewSize, powerKw, consumption…) sont des
  * strings pour tolérer les formats mixtes du tableur source ("2 x 2300 CV",
@@ -20,7 +20,7 @@ export interface FleetVessel {
   id?: string;
   /** Nom commercial du navire */
   name: string;
-  /** Numéro IMO (7 chiffres) — identifiant unique OMI, sans préfixe "IMO " */
+  /** Numéro IMO (7 chiffres) – identifiant unique OMI, sans préfixe "IMO " */
   imo?: string;
   /** Type / usage : bac, catamaran, ferry, navette fluviale, roulier… */
   type?: string;
@@ -56,7 +56,7 @@ export interface FleetVessel {
   fuelType?: string;
   /** Vitesse moyenne (nœuds) */
   cruiseSpeed?: number;
-  /** Consommation sur un trajet (format libre — litres, L/H, L/jour…) */
+  /** Consommation sur un trajet (format libre – litres, L/H, L/jour…) */
   consumptionPerTrip?: string;
   /** Nombre de rotations commerciales sur l'année 2024 */
   rotationsPerYear?: number;
@@ -66,7 +66,7 @@ export interface FleetVessel {
   powerKw?: string;
   /** Tests de combustibles alternatifs (biocarburants, additifs…) */
   altFuelTests?: string;
-  /** Connexion à quai (cold ironing) — "Effective", "Souhaitée", "Non envisagée" */
+  /** Connexion à quai (cold ironing) – "Effective", "Souhaitée", "Non envisagée" */
   shorePower?: string;
   /** Traitement de coque (peinture antifouling) */
   hullTreatment?: string;
@@ -90,7 +90,7 @@ export interface Member {
   /**
    * Type d'adhérent :
    * - "compagnie" : armateur/opérateur maritime (toutes les titulaires + 6 associés compagnies)
-   * - "expert"    : partenaire métier (avocat, assureur, syndicat…) — uniquement parmi les associés
+   * - "expert"    : partenaire métier (avocat, assureur, syndicat…) – uniquement parmi les associés
    * Défaut : "compagnie" si non précisé, "expert" sinon géré au filtrage.
    */
   memberType?: "compagnie" | "expert";
@@ -100,7 +100,7 @@ export interface Member {
   employeeCount?: number;
   shipCount?: number;
   /**
-   * Flotte détaillée — liste des navires avec nom / IMO / type / capacité.
+   * Flotte détaillée – liste des navires avec nom / IMO / type / capacité.
    * Saisie via le tableur adhérents puis intégrée en code ou via l'admin CMS.
    * Quand renseignée, la page publique `/nos-adherents/[slug]` affiche un
    * bloc "Flotte" avec les détails par navire. `shipCount` reste la source

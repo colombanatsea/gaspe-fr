@@ -116,7 +116,7 @@ export default function AdminComptesPage() {
             {users.filter((u) => !u.archived).length} compte{users.filter((u) => !u.archived).length > 1 ? "s" : ""} actifs
             {pendingCount > 0 && (
               <span className="ml-2 text-[var(--gaspe-warm-500)] font-semibold">
-                — {pendingCount} en attente
+                – {pendingCount} en attente
               </span>
             )}
           </p>
@@ -281,7 +281,7 @@ export default function AdminComptesPage() {
                         <option value="paid">Payée</option>
                       </select>
                     ) : (
-                      <span className="text-xs text-foreground-muted">—</span>
+                      <span className="text-xs text-foreground-muted">–</span>
                     )}
                   </div>
 

@@ -50,7 +50,7 @@ export default function AdminNewsletterDraftsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter — Brouillons</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter – Brouillons</h1>
           <p className="mt-1 text-sm text-foreground-muted">
             Éditeur blocs chartés (v2 beta). Créez, modifiez et prévisualisez vos newsletters.
           </p>
@@ -69,7 +69,7 @@ export default function AdminNewsletterDraftsPage() {
       </div>
 
       <div className="rounded-xl bg-[var(--gaspe-warm-50)] border border-[var(--gaspe-warm-200)] p-4 text-sm text-[var(--gaspe-warm-700)]">
-        <strong>⚠ Phase beta.</strong> L&apos;envoi vers Brevo n&apos;est pas encore activé —
+        <strong>⚠ Phase beta.</strong> L&apos;envoi vers Brevo n&apos;est pas encore activé –
         seule la sauvegarde des brouillons fonctionne. Les IDs de listes Brevo
         doivent être configurés par l&apos;équipe technique avant activation.
       </div>

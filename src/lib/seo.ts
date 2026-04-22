@@ -25,7 +25,7 @@ export interface PageMetaInput {
   title: string;
   /** Description unique (~155 caractères) pour cette page. Fallback : SITE_DESCRIPTION */
   description?: string;
-  /** Chemin absolu sur le site (ex: "/nos-adherents") — sert à construire canonical + OG url */
+  /** Chemin absolu sur le site (ex: "/nos-adherents") – sert à construire canonical + OG url */
   path: string;
   /** Mots-clés supplémentaires (fusionnés avec SITE_KEYWORDS, dédupliqués) */
   keywords?: string[];
@@ -94,7 +94,7 @@ export function crumbsFromItems(items: { label: string; path?: string }[]): { na
 }
 
 /**
- * Descriptions SEO par défaut pour les 18 pages principales — optimisées sur
+ * Descriptions SEO par défaut pour les 18 pages principales – optimisées sur
  * les mots-clés cibles. Utilisées par buildMetadata() via le CMS quand l'admin
  * n'a pas saisi de description custom.
  */
@@ -140,21 +140,21 @@ export const DEFAULT_PAGE_META: Record<
   presse: {
     title: "Espace presse",
     description:
-      "Contact presse, dossiers et communiqués du GASPE — référence pour les médias sur le transport maritime côtier français et les passages d'eau.",
+      "Contact presse, dossiers et communiqués du GASPE – référence pour les médias sur le transport maritime côtier français et les passages d'eau.",
     keywords: ["presse maritime", "contact journaliste GASPE"],
     path: "/presse",
   },
   contact: {
     title: "Contact",
     description:
-      "Contactez le GASPE à Nantes — Maison de la Mer, Quai de la Fosse. Adhésion, presse, partenariats, formations, recrutement.",
+      "Contactez le GASPE à Nantes – Maison de la Mer, Quai de la Fosse. Adhésion, presse, partenariats, formations, recrutement.",
     keywords: ["contact GASPE Nantes", "adhésion armateur"],
     path: "/contact",
   },
   agenda: {
     title: "Agenda maritime côtier",
     description:
-      "Assemblée générale, commissions, événements du GASPE et du secteur maritime côtier français — dates, lieux, inscriptions.",
+      "Assemblée générale, commissions, événements du GASPE et du secteur maritime côtier français – dates, lieux, inscriptions.",
     keywords: ["agenda maritime", "AG GASPE", "événement armateurs"],
     path: "/agenda",
   },
@@ -202,12 +202,12 @@ export const DEFAULT_PAGE_META: Record<
   },
   "mentions-legales": {
     title: "Mentions légales",
-    description: "Mentions légales du site gaspe.fr — éditeur, hébergeur, propriété intellectuelle.",
+    description: "Mentions légales du site gaspe.fr – éditeur, hébergeur, propriété intellectuelle.",
     path: "/mentions-legales",
   },
   confidentialite: {
     title: "Politique de confidentialité",
-    description: "Politique de protection des données personnelles — cookies, droits RGPD et traitements.",
+    description: "Politique de protection des données personnelles – cookies, droits RGPD et traitements.",
     path: "/confidentialite",
   },
   cgu: {

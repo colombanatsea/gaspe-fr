@@ -70,7 +70,7 @@ export function EnmImport() {
     setCopiedPages(new Set());
   }
 
-  // Already imported — show summary
+  // Already imported – show summary
   if (user?.enmMarinId && wizardStep === 1) {
     return (
       <section className="space-y-4">
@@ -299,7 +299,7 @@ export function EnmImport() {
                       {data.seaService.map((s) => (
                         <tr key={s.id} className="border-t border-border-light">
                           <td className="px-3 py-1.5 text-foreground-muted whitespace-nowrap">
-                            {new Date(s.startDate).toLocaleDateString("fr-FR")} — {new Date(s.endDate).toLocaleDateString("fr-FR")}
+                            {new Date(s.startDate).toLocaleDateString("fr-FR")} – {new Date(s.endDate).toLocaleDateString("fr-FR")}
                           </td>
                           <td className="px-3 py-1.5 font-medium text-foreground">{s.vesselName} {s.vesselImo && <span className="text-foreground-muted">({s.vesselImo})</span>}</td>
                           <td className="px-3 py-1.5 text-foreground">{s.rank}</td>

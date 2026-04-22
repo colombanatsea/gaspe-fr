@@ -1,5 +1,5 @@
 /**
- * GASPE Logo — uses the official logo-gaspe.jpg
+ * GASPE Logo – uses the official logo-gaspe.jpg
  */
 export function GaspeLogo({ className, size = 24 }: { className?: string; size?: number }) {
   return (
@@ -14,7 +14,7 @@ export function GaspeLogo({ className, size = 24 }: { className?: string; size?:
 }
 
 /**
- * GASPE Logo — variant with white background for dark surfaces
+ * GASPE Logo – variant with white background for dark surfaces
  */
 export function GaspeLogoWhite({ className, size = 24 }: { className?: string; size?: number }) {
   return (

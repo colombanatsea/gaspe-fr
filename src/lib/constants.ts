@@ -4,7 +4,7 @@ export const SITE_FULL_NAME =
   "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau";
 export const SITE_TAGLINE = "D'un littoral à l'autre. Localement ancrés. Socialement engagés.";
 /**
- * Description SEO — optimisée pour "maritime côtier", "maritime de proximité",
+ * Description SEO – optimisée pour "maritime côtier", "maritime de proximité",
  * "armateurs côtiers", "transport maritime côtier France", "passages d'eau".
  * Longueur : ~155-160 caractères (optimum meta description Google).
  */

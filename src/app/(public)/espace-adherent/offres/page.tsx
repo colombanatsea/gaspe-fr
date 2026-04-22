@@ -251,7 +251,7 @@ export default function AdherentOffresPage() {
         )}
       </div>
 
-      {/* Contextual help — Boîte à outils */}
+      {/* Contextual help – Boîte à outils */}
       {!showForm && (
         <div className="mb-6 rounded-xl border border-[var(--gaspe-teal-400)]/20 bg-[var(--gaspe-teal-600)]/5 p-4">
           <div className="flex items-start gap-3">
@@ -540,8 +540,8 @@ export default function AdherentOffresPage() {
                     <td className="py-4">
                       <p className="font-heading font-semibold text-foreground">{offer.title}</p>
                       <p className="text-xs text-foreground-muted">
-                        {offer.location && <>{offer.location} — </>}{offer.contractType}
-                        {offer.category && <> — {offer.category}</>}
+                        {offer.location && <>{offer.location} – </>}{offer.contractType}
+                        {offer.category && <> – {offer.category}</>}
                       </p>
                     </td>
                     <td className="py-4 space-y-1">
@@ -603,7 +603,7 @@ export default function AdherentOffresPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-foreground-muted">
-                  {offer.location && <>{offer.location} — </>}{offer.contractType}
+                  {offer.location && <>{offer.location} – </>}{offer.contractType}
                   <span className="ml-2 text-xs">
                     Publiée le {new Date(offer.createdAt).toLocaleDateString("fr-FR")}
                   </span>

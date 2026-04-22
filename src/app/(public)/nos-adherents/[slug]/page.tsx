@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!member) return { title: "Adhérent introuvable" };
 
   return {
-    title: `${member.name} — Culture d'entreprise | GASPE`,
+    title: `${member.name} – Culture d'entreprise | GASPE`,
     description: `Découvrez ${member.name}, ${member.category === "titulaire" ? "membre titulaire" : "membre associé"} du GASPE à ${member.city} (${member.region}).`,
   };
 }

@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!formation) return { title: "Formation introuvable" };
 
   return {
-    title: `${formation.title} — Formation`,
+    title: `${formation.title} – Formation`,
     description: formation.description,
   };
 }
@@ -84,7 +84,7 @@ export default async function FormationDetailPage({ params }: PageProps) {
             {formation.title}
           </h1>
           <p className="mt-3 text-lg text-white/60">
-            {formation.organizer} — {formation.location}
+            {formation.organizer} – {formation.location}
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default async function FormationDetailPage({ params }: PageProps) {
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
-                {formation.status === "full" ? "Complet — liste d'attente" : "S'inscrire par email"}
+                {formation.status === "full" ? "Complet – liste d'attente" : "S'inscrire par email"}
               </a>
             </div>
 
@@ -163,7 +163,7 @@ export default async function FormationDetailPage({ params }: PageProps) {
                     <dt className="text-xs text-foreground-muted">Dates</dt>
                     <dd className="text-sm font-medium text-foreground">
                       {formatDate(formation.startDate)}
-                      {formation.startDate !== formation.endDate && ` — ${formatDate(formation.endDate)}`}
+                      {formation.startDate !== formation.endDate && ` – ${formatDate(formation.endDate)}`}
                     </dd>
                   </div>
                 </div>

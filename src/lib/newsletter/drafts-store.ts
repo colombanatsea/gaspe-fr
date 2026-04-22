@@ -1,5 +1,5 @@
 /**
- * Newsletter drafts store — dual-mode (localStorage ↔ D1).
+ * Newsletter drafts store – dual-mode (localStorage ↔ D1).
  *
  * In API mode (NEXT_PUBLIC_API_URL set), uses CF Worker + D1 table `nl_drafts`.
  * Otherwise, persists drafts in localStorage for dev/demo.

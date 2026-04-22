@@ -88,7 +88,7 @@ export default function AdminMessagesPage() {
             {messages.length} message{messages.length !== 1 ? "s" : ""}
             {unreadCount > 0 && (
               <span className="ml-2 text-[var(--gaspe-teal-600)] font-semibold">
-                — {unreadCount} non lu{unreadCount !== 1 ? "s" : ""}
+                – {unreadCount} non lu{unreadCount !== 1 ? "s" : ""}
               </span>
             )}
           </p>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CharteClient } from "./CharteClient";
 
 export const metadata: Metadata = {
-  title: "Charte newsletter — Admin GASPE",
+  title: "Charte newsletter – Admin GASPE",
   robots: { index: false, follow: false },
 };
 

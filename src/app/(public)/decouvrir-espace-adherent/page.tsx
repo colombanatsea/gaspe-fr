@@ -57,7 +57,7 @@ const DEMO_OFFERS = [
   },
   {
     id: "3",
-    title: "Matelot Pont — Saison 2026",
+    title: "Matelot Pont – Saison 2026",
     location: "Dinard",
     contractType: "Saisonnier",
     category: "Pont",
@@ -70,7 +70,7 @@ const DEMO_OFFERS = [
 const DEMO_FORMATIONS = [
   {
     id: "1",
-    title: "STCW — Recyclage sécurité de base",
+    title: "STCW – Recyclage sécurité de base",
     organizer: "CEFCM",
     category: "Sécurité",
     modality: "Présentiel",
@@ -84,7 +84,7 @@ const DEMO_FORMATIONS = [
   },
   {
     id: "2",
-    title: "Formation SST — Sauveteur Secouriste du Travail",
+    title: "Formation SST – Sauveteur Secouriste du Travail",
     organizer: "AFPA Maritime",
     category: "Sécurité",
     modality: "Présentiel",
@@ -115,9 +115,9 @@ const DEMO_FORMATIONS = [
 const DEMO_DOCUMENTS = [
   { title: "Convention Collective CCN 3228", category: "Social", date: "2026-01-15" },
   { title: "Rapport AG 2025", category: "Institutionnel", date: "2025-12-10" },
-  { title: "Guide STCW 2025 — Brevets et équivalences", category: "Réglementaire", date: "2025-11-20" },
+  { title: "Guide STCW 2025 – Brevets et équivalences", category: "Réglementaire", date: "2025-11-20" },
   { title: "Barème cotisations 2026", category: "Institutionnel", date: "2026-01-05" },
-  { title: "Note ENIM — Mise à jour régimes", category: "Social", date: "2026-02-01" },
+  { title: "Note ENIM – Mise à jour régimes", category: "Social", date: "2026-02-01" },
 ];
 
 const DEMO_TEAM = [
@@ -391,7 +391,7 @@ function OffresTab() {
             <div key={i} className="rounded-xl border border-border-light bg-background p-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-foreground">{app.candidate}</p>
-                <p className="text-xs text-foreground-muted">{app.offer} — {app.date}</p>
+                <p className="text-xs text-foreground-muted">{app.offer} – {app.date}</p>
               </div>
               <Badge variant={statusConfig[app.status]?.variant ?? "neutral"}>
                 {statusConfig[app.status]?.label ?? app.status}
@@ -426,8 +426,8 @@ function FormationsTab() {
                   <CardTitle className="text-base">{f.title}</CardTitle>
                   <Badge variant="green">Inscrit</Badge>
                 </div>
-                <p className="text-sm text-foreground-muted mt-1">{f.organizer} — {f.date}</p>
-                <p className="text-xs text-foreground-muted">{f.location} — {f.duration} — {f.price}</p>
+                <p className="text-sm text-foreground-muted mt-1">{f.organizer} – {f.date}</p>
+                <p className="text-xs text-foreground-muted">{f.location} – {f.duration} – {f.price}</p>
               </div>
               <Badge variant="teal">{f.category}</Badge>
             </div>
@@ -450,8 +450,8 @@ function FormationsTab() {
               <CardTitle className="text-base">{f.title}</CardTitle>
               <p className="text-sm text-foreground-muted mt-1">{f.organizer}</p>
               <div className="mt-3 space-y-1 text-xs text-foreground-muted">
-                <p>{f.date} — {f.location}</p>
-                <p>{f.duration} — {f.price}</p>
+                <p>{f.date} – {f.location}</p>
+                <p>{f.duration} – {f.price}</p>
                 <div className="mt-2">
                   <div className="h-1.5 rounded-full bg-border-light">
                     <div
@@ -689,12 +689,12 @@ function VisitesTab() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-semibold text-foreground">{visit.sailor}</p>
-                  <span className="text-xs text-foreground-muted">— {visit.role}</span>
+                  <span className="text-xs text-foreground-muted">– {visit.role}</span>
                   <Badge variant={sConfig.variant}>{sConfig.label}</Badge>
                 </div>
                 <p className="text-xs text-foreground-muted mt-1">
-                  {visit.type} — {visit.date}
-                  {visit.expiry && <> — Expire le {visit.expiry}</>}
+                  {visit.type} – {visit.date}
+                  {visit.expiry && <> – Expire le {visit.expiry}</>}
                 </p>
                 <p className="text-xs text-foreground-muted">{visit.doctor}</p>
               </div>

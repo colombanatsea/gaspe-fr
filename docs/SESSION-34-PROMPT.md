@@ -1,4 +1,4 @@
-# Prompt — Session 34 GASPE
+# Prompt – Session 34 GASPE
 
 Copie-colle ceci dans une nouvelle session Claude Code :
 
@@ -20,7 +20,7 @@ Session 33b (v2.19.0) avait livré en bonus :
 
 Session 33 (v2.18.0) a livré :
 
-- **Versioning CMS enrichi** (pas de nouvelle migration — la colonne `label` existait déjà en 0011) :
+- **Versioning CMS enrichi** (pas de nouvelle migration – la colonne `label` existait déjà en 0011) :
   - Champ "Motif" sur chaque sauvegarde dans `/admin/pages` → stocké sur le pré-snapshot automatique
   - `handleCmsListRevisions` LEFT JOIN `users` pour ramener `createdByEmail`
   - Nouvel endpoint `GET /api/cms/pages/:pageId/revisions/:id` (JWT+admin) → **58 endpoints Worker**
@@ -31,7 +31,7 @@ Session 33 (v2.18.0) a livré :
   - Énergies marines renouvelables (PPE 18 GW, CTV, DSF)
   - Retour d'ex. navire hybride (-35% consommation, -40% sonore)
   - Multimodalité fret mer-rail (SNBC, 4F)
-- **Migration `<img>` → `next/image`** (8 occurrences) : espace-candidat, espace-adherent, admin/pages, admin/newsletter/charte, RichTextEditor modal, MediaLibrary thumbnails — toutes avec `unoptimized` + width/height explicites
+- **Migration `<img>` → `next/image`** (8 occurrences) : espace-candidat, espace-adherent, admin/pages, admin/newsletter/charte, RichTextEditor modal, MediaLibrary thumbnails – toutes avec `unoptimized` + width/height explicites
 - **Qualité** : **231 tests verts**, 0 erreur tsc, 0 warning ESLint, build OK (16 positions pré-rendues)
 
 **Bloqueurs non résolus (env session 33, identiques session 30/32)** :
@@ -42,15 +42,15 @@ Session 33 (v2.18.0) a livré :
 
 Avant toute chose, lis :
 
-1. `CLAUDE.md` — état complet v2.18.0 (session 33)
-2. `docs/CMS-SPEC.md` §9 — versioning enrichi session 33 (motif, filtres, diff)
-3. `docs/SEO-GUIDE.md` — couverture JSON-LD + RSS (16 positions ✅)
-4. `docs/NEWSLETTER-SPEC.md` §10 — runbook `wrangler secret put` complet à exécuter côté admin
-5. `docs/LIGHTHOUSE-SESSION-30.md` — runbook perf + a11y à rejouer
+1. `CLAUDE.md` – état complet v2.18.0 (session 33)
+2. `docs/CMS-SPEC.md` §9 – versioning enrichi session 33 (motif, filtres, diff)
+3. `docs/SEO-GUIDE.md` – couverture JSON-LD + RSS (16 positions ✅)
+4. `docs/NEWSLETTER-SPEC.md` §10 – runbook `wrangler secret put` complet à exécuter côté admin
+5. `docs/LIGHTHOUSE-SESSION-30.md` – runbook perf + a11y à rejouer
 
-## Objectif — 5 axes prioritaires
+## Objectif – 5 axes prioritaires
 
-### Axe 1 — Activer Brevo en production (dépend actions admin)
+### Axe 1 – Activer Brevo en production (dépend actions admin)
 
 Le code est 100% prêt depuis session 30. Reste côté admin GASPE à exécuter manuellement :
 
@@ -64,7 +64,7 @@ Une fois activé :
 - Cocher phases 3-5 dans `docs/NEWSLETTER-SPEC.md`
 - Section "Validation prod session 34" dans `CLAUDE.md`
 
-### Axe 2 — Search Console + Bing
+### Axe 2 – Search Console + Bing
 
 Le code site consomme déjà `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` et `NEXT_PUBLIC_BING_SITE_VERIFICATION` conditionnellement. Action externe :
 
@@ -74,7 +74,7 @@ Le code site consomme déjà `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` et `NEXT_PUB
 4. Idem pour Bing → `NEXT_PUBLIC_BING_SITE_VERIFICATION`
 5. Redeploy + soumettre sitemap `/sitemap.xml` et flux RSS `/feed.xml`
 
-### Axe 3 — Performance mesurée (local)
+### Axe 3 – Performance mesurée (local)
 
 Runbook `docs/LIGHTHOUSE-SESSION-30.md` inchangé. À exécuter sur une machine avec Chrome + ffmpeg :
 
@@ -83,13 +83,13 @@ Runbook `docs/LIGHTHOUSE-SESSION-30.md` inchangé. À exécuter sur une machine 
 - axe-core / pa11y sur les mêmes pages
 - Compléter `docs/LIGHTHOUSE-SESSION-30.md` ou créer `LIGHTHOUSE-SESSION-34.md`
 
-### Axe 4 — Bonus autonomes (non bloqués)
+### Axe 4 – Bonus autonomes (non bloqués)
 
 Ce que je peux faire en pure code, sans dépendance externe :
 
-- **Migration `armateurscotiers.fr`** — quand tu me donnes le feu vert. 4 fichiers à modifier (`SITE_URL`, `public/_headers` CSP, `workers/api.ts` CORS, `workers/wrangler.toml`), relance du build + redeploy.
+- **Migration `armateurscotiers.fr`** – quand tu me donnes le feu vert. 4 fichiers à modifier (`SITE_URL`, `public/_headers` CSP, `workers/api.ts` CORS, `workers/wrangler.toml`), relance du build + redeploy.
 - **Drag & drop blocs newsletter / sections CMS** via `@dnd-kit/core`
-- ~~**Tests unitaires diff CMS**~~ ✅ livré session 33b — 18 tests dans `src/lib/__tests__/cms-revision-diff.test.ts`
+- ~~**Tests unitaires diff CMS**~~ ✅ livré session 33b – 18 tests dans `src/lib/__tests__/cms-revision-diff.test.ts`
 - **OG images dédiées** pour les 24 positions (`public/assets/og/positions/xxx.png` + référencer via `ogImage` dans `src/data/positions.ts`). Alternative simple : fonction génératrice avec satori ou workflow script qui génère des PNG 1200×630 via Playwright.
 - ~~**+4 positions longue traîne**~~ ✅ livré session 33b (20 articles total)
 - ~~**+4 nouvelles positions**~~ ✅ livré session 33c (24 articles total : pavillon RIF, ECDIS, Vendée Globe, parc roulier électrique)
@@ -98,11 +98,11 @@ Ce que je peux faire en pure code, sans dépendance externe :
   - Économie sociale et solidaire : place des coopératives et SCIC dans le maritime côtier
   - Inclusion et mixité : féminisation des équipages, état des lieux 2026
   - Numérique embarqué et IA : assistance à la conduite et maintenance prédictive sur les ferries
-- **Éditeur blocs newsletter : templates pré-configurés** (phase 8 NEWSLETTER-SPEC) — quand la phase 3 Brevo est activée
-- **Scoring antispam** côté admin (heuristiques simples : ratio texte/images, mots interdits, longueur liens) — indicateur visuel dans l'éditeur newsletter
+- **Éditeur blocs newsletter : templates pré-configurés** (phase 8 NEWSLETTER-SPEC) – quand la phase 3 Brevo est activée
+- **Scoring antispam** côté admin (heuristiques simples : ratio texte/images, mots interdits, longueur liens) – indicateur visuel dans l'éditeur newsletter
 - **Dashboard admin : mini-widgets** "Dernière newsletter envoyée", "Dernières inscriptions", "Dernières révisions CMS" (sur la même page `/admin`)
 
-### Axe 5 — Dettes techniques à résorber
+### Axe 5 – Dettes techniques à résorber
 
 1. `AdemeSimulator.tsx` : 4 `<img>` JSX en `mixBlendMode: screen` → basse priorité (admin-only + html2canvas incompatible avec next/image)
 2. Migration `0011_cms_revisions` doit être appliquée au merge via `.github/workflows/deploy-worker.yml --remote`. Le code dégrade gracieusement si elle n'est pas appliquée (versioning silencieusement désactivé).
@@ -116,7 +116,7 @@ Ce que je peux faire en pure code, sans dépendance externe :
 
 ## Contraintes
 
-- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `—` interdit dans les textes éditoriaux publics (tests `positions.test.ts` + `feed-rss.test.ts` enforcent)
+- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `–` interdit dans les textes éditoriaux publics (tests `positions.test.ts` + `feed-rss.test.ts` enforcent)
 - **Design** : charte `--gaspe-*` (teal-600 / teal-400 / neutral-100), jamais de hex dur dans les composants
 - Chaque chiffre d'adhérents/compagnies/navires doit passer par `memberStats` ou placeholder `{xxx}` CMS
 - TypeScript : 0 erreur `tsc --noEmit`, 0 erreur ESLint, tests passent
@@ -135,9 +135,9 @@ Ce que je peux faire en pure code, sans dépendance externe :
 ## Ordre d'exécution conseillé
 
 1. Lire les 5 docs (15 min)
-2. Axe 4 — bonus autonomes (2-4h selon choix)
-3. Axe 1 — Brevo prod si tu as les creds admin (1h)
-4. Axe 2 — Search Console env vars (5 min si tu as les codes)
-5. Axe 3 — perf mesurée si ffmpeg + Chrome dispos (2h)
+2. Axe 4 – bonus autonomes (2-4h selon choix)
+3. Axe 1 – Brevo prod si tu as les creds admin (1h)
+4. Axe 2 – Search Console env vars (5 min si tu as les codes)
+5. Axe 3 – perf mesurée si ffmpeg + Chrome dispos (2h)
 
 Commence par répondre « Je suis prêt. Voici mon plan d'attaque : » puis liste les étapes dans l'ordre avec un estimé horaire, puis développe en autonomie.

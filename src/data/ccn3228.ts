@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  CCN 3228 — Convention Collective Nationale                         */
+/*  CCN 3228 – Convention Collective Nationale                         */
 /*  Personnel navigant des entreprises de passages d'eau (IDCC 3228)  */
 /*                                                                     */
 /*  Sources :                                                          */
@@ -44,7 +44,7 @@ export interface SalaryEntry {
   annualPremium: number;
 }
 
-/** NAO 2026 — Grille salariale réelle par fonction */
+/** NAO 2026 – Grille salariale réelle par fonction */
 export interface SalaryGridEntry {
   fonction: string;
   enim?: string;
@@ -236,7 +236,7 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
       "La CCN 3228 prévoit une couverture de prévoyance obligatoire (incapacité, invalidité, décès) et une complémentaire santé. L'employeur finance au minimum 50 % de la mutuelle collective.",
     category: "social",
     externalUrl: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000035527118",
-    source: "Légifrance — CCN 3228",
+    source: "Légifrance – CCN 3228",
     tags: ["prévoyance", "mutuelle", "CCN 3228"],
   },
   {
@@ -268,7 +268,7 @@ const ECHELONS: Echelon[] = [
  * Classifications CCN 3228 alignées sur la grille NAO 2026.
  *
  * Principe : le MINIMUM CONVENTIONNEL de rémunération combine la FONCTION
- * exercée à bord et la TRANCHE DE JAUGE UMS du navire — pas le brevet
+ * exercée à bord et la TRANCHE DE JAUGE UMS du navire – pas le brevet
  * détenu. Un officier titulaire d'un brevet de capitaine illimité exerçant
  * comme lieutenant sur un navire de 500 UMS est rémunéré à la ligne "moins
  * de 200 UMS" ou équivalente, pas à la ligne "> 3000 UMS".
@@ -321,10 +321,10 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
   },
   {
     level: 5,
-    label: "Capitaine < 200 UMS",
+    label: "Capitaine 50 – 200 UMS",
     category: "pont",
     description:
-      "Commandant de navire de jauge brute < 200 UMS, navigation côtière.",
+      "Commandant de navire de jauge brute comprise entre 50 et 200 UMS (navigation côtière). Distinct du patron de vedette, qui s'applique aux navires < 50 UMS.",
     requiredCertificates: [
       "Brevet de capitaine 200",
       "CGO",
@@ -348,7 +348,7 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
     label: "Capitaine 500 – 3 000 UMS",
     category: "pont",
     description:
-      "Commandant de navire entre 500 et 3 000 UMS — brevet de capitaine 3 000 requis.",
+      "Commandant de navire entre 500 et 3 000 UMS – brevet de capitaine 3 000 requis.",
     requiredCertificates: ["Brevet de capitaine 3 000", "CGO"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS",
@@ -358,7 +358,7 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
     label: "Capitaine > 3 000 UMS",
     category: "pont",
     description:
-      "Commandant de navire de plus de 3 000 UMS — brevet de capitaine illimité requis.",
+      "Commandant de navire de plus de 3 000 UMS – brevet de capitaine illimité requis.",
     requiredCertificates: ["Brevet de capitaine (illimité)", "CGO"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines et Chefs Mecaniciens > 3000 UMS",
@@ -395,30 +395,30 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
   },
   {
     level: 12,
-    label: "Chef mécanicien < 200 UMS (750 kW)",
+    label: "Chef mécanicien < 200 UMS",
     category: "machine",
     description:
-      "Chef mécanicien sur navire < 200 UMS équipé d'une puissance ≤ 750 kW.",
+      "Chef mécanicien sur navire de jauge brute < 200 UMS. Le brevet minimum (750 kW) conditionne l'accès au poste ; le salaire est fixé par la tranche UMS du navire.",
     requiredCertificates: ["Brevet de chef mécanicien 750 kW"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines et Chefs Mecaniciens < 200 UMS",
   },
   {
     level: 13,
-    label: "Chef mécanicien 200 – 500 UMS (3 000 kW)",
+    label: "Chef mécanicien 200 – 500 UMS",
     category: "machine",
     description:
-      "Chef mécanicien sur navire 200 – 500 UMS, puissance jusqu'à 3 000 kW.",
+      "Chef mécanicien sur navire de jauge brute comprise entre 200 et 500 UMS.",
     requiredCertificates: ["Brevet de chef mécanicien 3 000 kW"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines / Chefs Mecaniciens > 200 UMS",
   },
   {
     level: 14,
-    label: "Chef mécanicien 500 – 3 000 UMS (8 000 kW)",
+    label: "Chef mécanicien 500 – 3 000 UMS",
     category: "machine",
     description:
-      "Chef mécanicien sur navire 500 – 3 000 UMS, puissance jusqu'à 8 000 kW.",
+      "Chef mécanicien sur navire de jauge brute comprise entre 500 et 3 000 UMS.",
     requiredCertificates: ["Brevet de chef mécanicien 8 000 kW"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS",
@@ -428,7 +428,7 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
     label: "Chef mécanicien > 3 000 UMS",
     category: "machine",
     description:
-      "Chef mécanicien sur navire de plus de 3 000 UMS — brevet de chef mécanicien illimité requis.",
+      "Chef mécanicien sur navire de jauge brute supérieure à 3 000 UMS. Brevet de chef mécanicien (illimité) requis.",
     requiredCertificates: ["Brevet de chef mécanicien (illimité)"],
     echelons: ECHELONS,
     salaryGridRef: "Capitaines et Chefs Mecaniciens > 3000 UMS",
@@ -490,7 +490,7 @@ export const INDEMNITES_NAO_2026 = {
   fraisDiversParJour: 15.10,
 };
 
-/** Legacy — kept for backward compatibility with simulator */
+/** Legacy – kept for backward compatibility with simulator */
 export const SALARY_GRID: SalaryEntry[] = SALARY_GRID_NAO_2026.map((entry, i) => ({
   level: i + 1,
   echelonCode: "E1",
@@ -624,25 +624,25 @@ export const BRANCH_AGREEMENTS: BranchAgreement[] = [
 
 /**
  * Nature juridique des montants : ce sont des MINIMA CONVENTIONNELS
- * (article L2253-1 C. trav. — tout salaire effectif inférieur est illégal).
+ * (article L2253-1 C. trav. – tout salaire effectif inférieur est illégal).
  * Le salaire réellement versé peut être supérieur (accord d'entreprise,
  * prime individuelle, ancienneté au-dessus du barème). Les catégories
  * ENIM indiquées sont des correspondances pour le calcul des cotisations
- * sur salaire forfaitaire — elles ne fixent pas la rémunération.
+ * sur salaire forfaitaire – elles ne fixent pas la rémunération.
  */
 export const SALARY_DISCLAIMER =
-  "Minima conventionnels — ces montants bruts constituent le plancher légal de rémunération fixé par l'avenant salarial à la CCN 3228 (IDCC 3228). Le salaire effectivement versé peut être supérieur. Dernière mise à jour : janvier 2026.";
+  "Minima conventionnels – ces montants bruts constituent le plancher légal de rémunération fixé par l'avenant salarial à la CCN 3228 (IDCC 3228). Le salaire effectivement versé peut être supérieur. Dernière mise à jour : janvier 2026.";
 
 /**
  * Références pour la crédibilité et la traçabilité juridique des grilles.
  * Citées dans la section Sources au bas des pages.
  */
 export const SALARY_SOURCES = [
-  "Avenant salarial NAO 2026 à la CCN 3228 — Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
-  "Texte de la CCN 3228 sur Legifrance — Journal officiel (après arrêté d'extension du ministère du Travail)",
+  "Avenant salarial NAO 2026 à la CCN 3228 – Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
+  "Texte de la CCN 3228 sur Legifrance – Journal officiel (après arrêté d'extension du ministère du Travail)",
   "Article L2253-1 du Code du travail : articulation entre accords de branche étendus et accords d'entreprise (principe de faveur pour les salaires minima hiérarchiques)",
-  "Code des transports, Livre V, titre V — Gens de mer (durée du travail maritime, heures supplémentaires)",
-  "Barèmes ENIM 2025/2026 — Caisse des gens de mer (salaires forfaitaires d'assiette des cotisations, distincts des salaires réels)",
+  "Code des transports, Livre V, titre V – Gens de mer (durée du travail maritime, heures supplémentaires)",
+  "Barèmes ENIM 2025/2026 – Caisse des gens de mer (salaires forfaitaires d'assiette des cotisations, distincts des salaires réels)",
 ];
 
 export const LAST_UPDATED = "Janvier 2026";
@@ -654,7 +654,7 @@ export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
 };
 
 /**
- * FAQ éditoriale CCN 3228 — utilisée pour injecter FAQPage JSON-LD sur
+ * FAQ éditoriale CCN 3228 – utilisée pour injecter FAQPage JSON-LD sur
  * /boite-a-outils et enrichir la SERP (rich FAQ Google).
  * 10 Q/R max (au-delà Google peut dégrader). Texte brut uniquement.
  */
@@ -697,7 +697,7 @@ export const CCN3228_FAQ = [
   {
     question: "Comment calculer le salaire minimum conventionnel d'un marin ?",
     answer:
-      "Le simulateur de salaire GASPE intègre la grille NAO 2026 par fonction et échelon. Il inclut : salaire mensuel brut, heures supplémentaires, prime de fin d'année, indemnités. Les montants sont indicatifs — les salaires effectifs peuvent être supérieurs selon accords d'entreprise.",
+      "Le simulateur de salaire GASPE intègre la grille NAO 2026 par fonction et échelon. Il inclut : salaire mensuel brut, heures supplémentaires, prime de fin d'année, indemnités. Les montants sont indicatifs – les salaires effectifs peuvent être supérieurs selon accords d'entreprise.",
   },
   {
     question: "Quelles sont les obligations de formation continue d'un marin ?",
@@ -712,7 +712,7 @@ export const CCN3228_FAQ = [
 ] as const;
 
 /**
- * Données additionnelles FAQ compagnons (hors FAQPage principale) —
+ * Données additionnelles FAQ compagnons (hors FAQPage principale) –
  * utilisables dans le corps de la page /boite-a-outils en contenu secondaire
  * ou à intégrer à la FAQPage si Google accepte plus de 10 items (limite
  * actuelle : ~10 Q/R par FAQPage JSON-LD). Conservées ici pour édito.

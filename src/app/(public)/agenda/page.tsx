@@ -91,7 +91,7 @@ export default function AgendaPage() {
                       <span>{ev.location}</span>
                     </div>
 
-                    {/* Restricted content: description, address, attachments — visible only to adherents/admin */}
+                    {/* Restricted content: description, address, attachments – visible only to adherents/admin */}
                     {isAdherent ? (
                       <>
                         {ev.description && (

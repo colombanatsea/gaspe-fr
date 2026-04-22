@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: "/og-recrutement.png",
         width: 1200,
         height: 630,
-        alt: "GASPE — Nos Compagnies Recrutent",
+        alt: "GASPE – Nos Compagnies Recrutent",
         type: "image/png",
       },
     ],

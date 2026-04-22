@@ -46,7 +46,7 @@ const BLOCK_PALETTE: { type: NewsletterBlock["type"]; label: string; icon: strin
   { type: "paragraph", label: "Paragraphe", icon: "¶" },
   { type: "image", label: "Image", icon: "🖼" },
   { type: "button", label: "Bouton", icon: "▶" },
-  { type: "divider", label: "Séparateur", icon: "—" },
+  { type: "divider", label: "Séparateur", icon: "–" },
   { type: "columns", label: "2 colonnes", icon: "▥" },
   { type: "spacer", label: "Espace", icon: "↕" },
   { type: "footer", label: "Pied de page", icon: "⬛" },

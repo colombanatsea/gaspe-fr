@@ -1,4 +1,4 @@
--- GASPE D1 Migration 0003 — Organizations + Newsletter Preferences + Invitations
+-- GASPE D1 Migration 0003 – Organizations + Newsletter Preferences + Invitations
 -- Apply: npx wrangler d1 execute gaspe-db --file workers/migrations/0003_organizations.sql
 
 -- ══════════════════════════════════════════════════════════

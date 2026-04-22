@@ -56,7 +56,7 @@ export function Footer() {
         {/* Main footer grid */}
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
-            {/* Brand — wider column */}
+            {/* Brand – wider column */}
             <div className="md:col-span-4">
               <div className="flex items-center gap-3 mb-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl gaspe-gradient shadow-lg shadow-[var(--gaspe-teal-600)]/20">

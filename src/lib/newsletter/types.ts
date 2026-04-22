@@ -1,5 +1,5 @@
 /**
- * Newsletter block model — shared types for renderer + editor.
+ * Newsletter block model – shared types for renderer + editor.
  *
  * Each block has a discriminated `type` and its specific `data` payload.
  * A newsletter is an ordered array of blocks.
@@ -92,7 +92,7 @@ export interface NewsletterDraft {
   updatedAt: string;
 }
 
-/** GASPE charter — defaults injected into the renderer. */
+/** GASPE charter – defaults injected into the renderer. */
 export interface NewsletterCharter {
   primaryColor: string; // #1B7E8A
   accentColor: string; // #6DAAAC
@@ -116,8 +116,8 @@ export const DEFAULT_CHARTER: NewsletterCharter = {
   logoUrl: "https://gaspe-fr.pages.dev/assets/logo.png",
   logoWhiteUrl: "https://gaspe-fr.pages.dev/assets/logo-white.png",
   fontFamily: "Arial, Helvetica, sans-serif",
-  footerSignature: "© GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
-  addressRgpd: "Maison de la Mer — Daniel Gilard · Quai de la Fosse · 44000 Nantes",
+  footerSignature: "© GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
+  addressRgpd: "Maison de la Mer – Daniel Gilard · Quai de la Fosse · 44000 Nantes",
   unsubscribeUrl: "{{unsubscribe_url}}",
   webVersionUrl: "{{webversion_url}}",
   linkedinUrl: "https://www.linkedin.com/company/gaspe-groupement-des-armateurs-de-services-publics-maritimes/",

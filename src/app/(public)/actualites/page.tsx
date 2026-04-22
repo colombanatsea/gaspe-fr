@@ -38,7 +38,7 @@ export default function ActualitesPage() {
 
       <PageHeader
         title="Actualités"
-        description="Toutes les prises de parole et actualités récentes du GASPE — flux mis à jour en continu."
+        description="Toutes les prises de parole et actualités récentes du GASPE – flux mis à jour en continu."
         breadcrumbs={[{ label: "Actualités" }]}
       />
 

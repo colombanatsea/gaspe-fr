@@ -55,7 +55,7 @@ function sec(
   return { id, label, type, content };
 }
 
-describe("diffSections — statuses", () => {
+describe("diffSections – statuses", () => {
   it("flags unchanged sections when content is identical", () => {
     const res = diffSections([sec("hero-title", "Hello")], [sec("hero-title", "Hello")]);
     expect(res).toHaveLength(1);
@@ -90,7 +90,7 @@ describe("diffSections — statuses", () => {
   });
 });
 
-describe("diffSections — ordering", () => {
+describe("diffSections – ordering", () => {
   it("orders kinds : modified, added, removed, unchanged", () => {
     const before: CmsRevisionDetailSection[] = [
       sec("z-unchanged", "same"),
@@ -120,7 +120,7 @@ describe("diffSections — ordering", () => {
   });
 });
 
-describe("diffSections — label and type", () => {
+describe("diffSections – label and type", () => {
   it("prefers the label from `after` when both exist, falls back to before", () => {
     const res = diffSections(
       [sec("id1", "v1", "ancien label")],

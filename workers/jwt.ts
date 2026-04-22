@@ -1,6 +1,6 @@
 /**
  * JWT utilities for Cloudflare Workers
- * Uses Web Crypto API (HMAC-SHA256) — no external dependencies
+ * Uses Web Crypto API (HMAC-SHA256) – no external dependencies
  */
 
 interface JwtPayload {

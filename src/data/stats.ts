@@ -1,6 +1,6 @@
 import type { StatItem } from "@/types";
 
-/** Key stats — source: gaspe.fr homepage */
+/** Key stats – source: gaspe.fr homepage */
 export const keyStats: StatItem[] = [
   { value: 1951, label: "date de création" },
   { value: 28, label: "compagnies adhérentes" },

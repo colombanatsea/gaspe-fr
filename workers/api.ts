@@ -1,5 +1,5 @@
 /**
- * GASPE API Worker — Cloudflare Workers
+ * GASPE API Worker – Cloudflare Workers
  *
  * Deployment:
  *   npx wrangler deploy --config workers/wrangler.toml
@@ -10,53 +10,53 @@
  *   - Environment: BREVO_API_KEY, CONTACT_EMAIL, JWT_SECRET
  *
  * Endpoints:
- *   POST /api/auth/register    — create account
- *   POST /api/auth/login       — authenticate → JWT cookie
- *   POST /api/auth/logout      — clear session
- *   GET  /api/auth/me          — current user from JWT
- *   GET  /api/auth/users       — admin: list all users
- *   PATCH /api/auth/users/:id  — admin: update/approve user
- *   DELETE /api/auth/users/:id — admin: reject/delete user
- *   POST /api/auth/forgot-password — request password reset email
- *   POST /api/auth/reset-password  — reset password with token
- *   GET  /api/organizations       — list all organizations
- *   GET  /api/organizations/:id   — org details + contacts
- *   PATCH /api/organizations/:id  — update org (primary/admin)
- *   POST /api/organizations/:id/invite — invite contact (primary/admin)
- *   GET  /api/organizations/:id/invitations — list invitations
- *   POST /api/invitations/:token/accept — accept invitation
- *   GET  /api/preferences         — get newsletter preferences
- *   PATCH /api/preferences        — update newsletter preferences
- *   POST /api/contact          — send contact email via Brevo
- *   POST /api/newsletter       — subscribe to newsletter
- *   POST /api/newsletter/send  — admin: bulk send newsletter by category
- *   POST /api/hydros/publish   — publish offer to Hydros Alumni (JWT auth)
- *   POST /api/enm/import       — import data from Espace Numérique Maritime
- *   POST /api/upload           — upload CV/documents to R2
- *   GET  /api/health           — health check
+ *   POST /api/auth/register    – create account
+ *   POST /api/auth/login       – authenticate → JWT cookie
+ *   POST /api/auth/logout      – clear session
+ *   GET  /api/auth/me          – current user from JWT
+ *   GET  /api/auth/users       – admin: list all users
+ *   PATCH /api/auth/users/:id  – admin: update/approve user
+ *   DELETE /api/auth/users/:id – admin: reject/delete user
+ *   POST /api/auth/forgot-password – request password reset email
+ *   POST /api/auth/reset-password  – reset password with token
+ *   GET  /api/organizations       – list all organizations
+ *   GET  /api/organizations/:id   – org details + contacts
+ *   PATCH /api/organizations/:id  – update org (primary/admin)
+ *   POST /api/organizations/:id/invite – invite contact (primary/admin)
+ *   GET  /api/organizations/:id/invitations – list invitations
+ *   POST /api/invitations/:token/accept – accept invitation
+ *   GET  /api/preferences         – get newsletter preferences
+ *   PATCH /api/preferences        – update newsletter preferences
+ *   POST /api/contact          – send contact email via Brevo
+ *   POST /api/newsletter       – subscribe to newsletter
+ *   POST /api/newsletter/send  – admin: bulk send newsletter by category
+ *   POST /api/hydros/publish   – publish offer to Hydros Alumni (JWT auth)
+ *   POST /api/enm/import       – import data from Espace Numérique Maritime
+ *   POST /api/upload           – upload CV/documents to R2
+ *   GET  /api/health           – health check
  *
  *   CMS pages:
- *   GET  /api/cms/pages           — list all CMS page content
- *   GET  /api/cms/pages/:pageId   — get single page content
- *   PUT  /api/cms/pages/:pageId   — upsert page sections
+ *   GET  /api/cms/pages           – list all CMS page content
+ *   GET  /api/cms/pages/:pageId   – get single page content
+ *   PUT  /api/cms/pages/:pageId   – upsert page sections
  *
  *   Jobs:
- *   GET    /api/jobs              — list all jobs (public: published only)
- *   GET    /api/jobs/:id          — get single job
- *   POST   /api/jobs              — create job (admin/adherent)
- *   PATCH  /api/jobs/:id          — update job (admin/owner)
- *   DELETE /api/jobs/:id          — delete job (admin/owner)
+ *   GET    /api/jobs              – list all jobs (public: published only)
+ *   GET    /api/jobs/:id          – get single job
+ *   POST   /api/jobs              – create job (admin/adherent)
+ *   PATCH  /api/jobs/:id          – update job (admin/owner)
+ *   DELETE /api/jobs/:id          – delete job (admin/owner)
  *
  *   Medical visits:
- *   GET    /api/medical-visits       — list user's medical visits (JWT)
- *   POST   /api/medical-visits       — create medical visit (JWT)
- *   PATCH  /api/medical-visits/:id   — update medical visit (JWT)
- *   DELETE /api/medical-visits/:id   — delete medical visit (JWT)
+ *   GET    /api/medical-visits       – list user's medical visits (JWT)
+ *   POST   /api/medical-visits       – create medical visit (JWT)
+ *   PATCH  /api/medical-visits/:id   – update medical visit (JWT)
+ *   DELETE /api/medical-visits/:id   – delete medical visit (JWT)
  *
  *   Media files:
- *   GET    /api/media             — list media files (admin)
- *   POST   /api/media             — upload media file to R2 (admin)
- *   DELETE /api/media/:id         — delete media file + R2 object (admin)
+ *   GET    /api/media             – list media files (admin)
+ *   POST   /api/media             – upload media file to R2 (admin)
+ *   DELETE /api/media/:id         – delete media file + R2 object (admin)
  */
 
 import { signJwt, verifyJwt } from "./jwt";
@@ -69,14 +69,14 @@ interface Env {
   BREVO_API_KEY: string;
   CONTACT_EMAIL: string;
   JWT_SECRET: string;
-  // Newsletter v2 — ces vars sont optionnelles tant que Brevo n'est pas configuré.
+  // Newsletter v2 – ces vars sont optionnelles tant que Brevo n'est pas configuré.
   // Quand elles sont définies, les endpoints send/webhook/unsub deviennent actifs.
   BREVO_SENDER_EMAIL?: string;
   BREVO_SENDER_NAME?: string;
   BREVO_REPLY_TO?: string;
   BREVO_WEBHOOK_SECRET?: string;
   NEWSLETTER_UNSUB_SECRET?: string;
-  // 10 list IDs Brevo (une par catégorie D1) — à configurer via `wrangler secret put`.
+  // 10 list IDs Brevo (une par catégorie D1) – à configurer via `wrangler secret put`.
   // Les noms correspondent aux colonnes de `newsletter_preferences` (migration 0003).
   BREVO_LIST_INFO_GENERALES?: string;
   BREVO_LIST_AG?: string;
@@ -210,9 +210,9 @@ async function hashPasswordServer(password: string): Promise<string> {
 }
 
 async function verifyPasswordServer(password: string, stored: string): Promise<boolean> {
-  // Handle legacy SHA-256 hashes (64 hex chars) — always accept for migration
+  // Handle legacy SHA-256 hashes (64 hex chars) – always accept for migration
   if (/^[a-f0-9]{64}$/.test(stored)) {
-    // Legacy client-side hash — can't verify without email salt, reject
+    // Legacy client-side hash – can't verify without email salt, reject
     // Users with legacy hashes should reset password
     return false;
   }
@@ -341,7 +341,7 @@ export default {
       if (path === "/api/organizations" && request.method === "GET") {
         return handleListOrganizations(request, env, corsHeaders);
       }
-      // Fleet — must match BEFORE the generic :id route so "fleet" isn't
+      // Fleet – must match BEFORE the generic :id route so "fleet" isn't
       // interpreted as an organization id.
       if (path === "/api/organizations/fleet" && request.method === "GET") {
         return handleListAllFleets(request, env, corsHeaders);
@@ -501,7 +501,7 @@ export default {
         return handleNewsletterSubscribers(request, env, corsHeaders);
       }
 
-      // ── Newsletter v2 — envois (test-send / bulk-send) ──
+      // ── Newsletter v2 – envois (test-send / bulk-send) ──
       if (path.match(/^\/api\/newsletter\/drafts\/[^/]+\/test-send$/) && request.method === "POST") {
         const draftId = path.split("/")[4];
         return handleNewsletterTestSend(request, env, corsHeaders, draftId);
@@ -511,12 +511,12 @@ export default {
         return handleNewsletterBulkSend(request, env, corsHeaders, draftId);
       }
 
-      // ── Newsletter — webhook Brevo (tracking open/click/bounce/unsubscribe) ──
+      // ── Newsletter – webhook Brevo (tracking open/click/bounce/unsubscribe) ──
       if (path === "/api/newsletter/brevo/webhook" && request.method === "POST") {
         return handleBrevoWebhook(request, env, corsHeaders);
       }
 
-      // ── Newsletter — désinscription publique tokenisée ──
+      // ── Newsletter – désinscription publique tokenisée ──
       if (path === "/api/newsletter/unsubscribe" && request.method === "POST") {
         return handleNewsletterUnsubscribe(request, env, corsHeaders);
       }
@@ -869,7 +869,7 @@ async function handleForgotPassword(request: Request, env: Env, corsHeaders: Rec
                 <p style="margin:0;color:#6B6560;font-size:13px;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
               </div>
               <div style="margin-top:32px;padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-family:'DM Sans',Helvetica,sans-serif;font-size:12px;color:#6B6560;">
-                <p style="margin:0;">GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
+                <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
               </div>
             </div>
           </body>
@@ -1027,7 +1027,7 @@ function toFrontendOrg(row: DbOrganization) {
 async function handleListOrganizations(request: Request, env: Env, corsHeaders: Record<string, string>) {
   const url = new URL(request.url);
   const includeArchived = url.searchParams.get("include_archived") === "1";
-  // Fetch all then filter in JS — resilient to missing archived column (pre-migration 0007)
+  // Fetch all then filter in JS – resilient to missing archived column (pre-migration 0007)
   const { results } = await env.DB.prepare("SELECT * FROM organizations ORDER BY name").all<DbOrganization>();
   const rows = results ?? [];
   const filtered = includeArchived ? rows : rows.filter((r) => r.archived !== 1);
@@ -1303,7 +1303,7 @@ async function handleUpdatePreferences(request: Request, env: Env, corsHeaders: 
 
   await env.DB.prepare(`UPDATE newsletter_preferences SET ${updates.join(", ")} WHERE user_id = ?`).bind(...values).run();
 
-  // Sync Brevo contact (non-bloquant — si Brevo non configuré ou erreur, on ignore).
+  // Sync Brevo contact (non-bloquant – si Brevo non configuré ou erreur, on ignore).
   // Les préférences à jour sont relues depuis la DB pour éviter une race avec l'UPDATE.
   try {
     const prefs = await env.DB.prepare(
@@ -1442,7 +1442,7 @@ async function handleContact(request: Request, env: Env, corsHeaders: Record<str
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Admin only — renvoie la liste complète des abonnés newsletter avec
+ * Admin only – renvoie la liste complète des abonnés newsletter avec
  *   - le détail par catégorie (10 booleans de `newsletter_preferences`)
  *   - les inscrits "legacy" (email seul, table `newsletter`) ajoutés via le formulaire public
  *
@@ -1603,7 +1603,7 @@ async function handleNewsletterSend(request: Request, env: Env, corsHeaders: Rec
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Hydros Alumni — Cross-publication
+//  Hydros Alumni – Cross-publication
 // ═══════════════════════════════════════════════════════════
 
 async function handleHydrosPublish(request: Request, env: Env, corsHeaders: Record<string, string>) {
@@ -1771,7 +1771,7 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
     return json({ error: "Fichier trop volumineux (max 10 Mo)" }, corsHeaders, 400);
   }
 
-  // Magic bytes validation — read first 4 bytes to verify actual file type
+  // Magic bytes validation – read first 4 bytes to verify actual file type
   const buffer = await file.arrayBuffer();
   if (!validateMagicBytes(buffer, file.type)) {
     return json(
@@ -1791,7 +1791,7 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
 }
 
 // ═══════════════════════════════════════════════════════════
-//  ENM — Espace Numérique Maritime import
+//  ENM – Espace Numérique Maritime import
 //  Login + scrape sea service, certificates, medical aptitude
 // ═══════════════════════════════════════════════════════════
 
@@ -2024,7 +2024,7 @@ function cleanHtmlText(text: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  CMS Pages — CRUD for page content
+//  CMS Pages – CRUD for page content
 // ═══════════════════════════════════════════════════════════
 
 async function handleCmsListPages(env: Env, corsHeaders: Record<string, string>) {
@@ -2136,7 +2136,7 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
       `).bind(pageId, pageId).run();
     }
   } catch {
-    /* migration 0011 pas encore appliquée — versioning silencieusement désactivé */
+    /* migration 0011 pas encore appliquée – versioning silencieusement désactivé */
   }
 
   for (const section of body.sections) {
@@ -2155,7 +2155,7 @@ async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Reco
 }
 
 // ═══════════════════════════════════════════════════════════
-//  CMS revisions — migration 0011
+//  CMS revisions – migration 0011
 //  Rétention 30 snapshots par page. Restore écrase l'état courant
 //  mais crée AUSSI un nouveau snapshot au préalable (versionning complet).
 // ═══════════════════════════════════════════════════════════
@@ -2179,7 +2179,7 @@ async function handleCmsListRevisions(
   if ("error" in auth) return auth.error;
 
   try {
-    // LEFT JOIN pour ramener l'email de l'auteur — un utilisateur peut avoir
+    // LEFT JOIN pour ramener l'email de l'auteur – un utilisateur peut avoir
     // été supprimé, donc on tolère le NULL.
     const { results } = await env.DB.prepare(
       `SELECT r.id, r.page_id, r.snapshot_json, r.created_by, r.label, r.created_at,
@@ -2340,7 +2340,7 @@ async function handleCmsRestoreRevision(
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Jobs — CRUD for job offers
+//  Jobs – CRUD for job offers
 // ═══════════════════════════════════════════════════════════
 
 interface DbJob {
@@ -2535,7 +2535,7 @@ async function handleJobDelete(request: Request, env: Env, corsHeaders: Record<s
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Medical Visits — CRUD for sailor medical visits
+//  Medical Visits – CRUD for sailor medical visits
 // ═══════════════════════════════════════════════════════════
 
 interface DbMedicalVisit {
@@ -2670,7 +2670,7 @@ async function handleMedicalDelete(request: Request, env: Env, corsHeaders: Reco
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Media Files — Upload/list/delete with R2 storage
+//  Media Files – Upload/list/delete with R2 storage
 // ═══════════════════════════════════════════════════════════
 
 // Image magic bytes for media uploads (extends document magic bytes)
@@ -2788,7 +2788,7 @@ async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record
 }
 
 /**
- * Public raw media serving — GET /api/media/raw/:r2Key
+ * Public raw media serving – GET /api/media/raw/:r2Key
  * Pas d'auth : les images uploadées via CMS sont destinées à être affichées
  * publiquement (photos bureau, illustrations de pages, etc.).
  * Clé R2 nettoyée pour n'accepter que les préfixes connus.
@@ -2809,7 +2809,7 @@ async function handleMediaRaw(env: Env, corsHeaders: Record<string, string>, r2K
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Newsletter drafts — CRUD (Phase 1 foundation)
+//  Newsletter drafts – CRUD (Phase 1 foundation)
 //  Sending endpoints live separately once Brevo list IDs are configured.
 // ═══════════════════════════════════════════════════════════
 
@@ -2838,7 +2838,7 @@ async function ensureNlDraftsTable(env: Env) {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`).run();
-  } catch { /* table may exist with different schema — ignore */ }
+  } catch { /* table may exist with different schema – ignore */ }
 }
 
 async function requireAdmin(request: Request, env: Env, corsHeaders: Record<string, string>) {
@@ -2940,7 +2940,7 @@ async function handleNlDraftsDelete(request: Request, env: Env, corsHeaders: Rec
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// Newsletter v2 — Phase 3/4/6 : test-send, bulk-send, webhook, unsub
+// Newsletter v2 – Phase 3/4/6 : test-send, bulk-send, webhook, unsub
 // Bloqué par config Brevo (list IDs + webhook secret). Les endpoints
 // existent pour permettre l'intégration complète dès que les secrets
 // sont provisionnés via `wrangler secret put …`.
@@ -2973,7 +2973,7 @@ const CATEGORY_TO_LIST_ENV: Record<string, keyof Env> = {
 const ALL_NEWSLETTER_CATEGORIES = Object.keys(CATEGORY_TO_LIST_ENV);
 
 /**
- * Rendu HTML minimal côté Worker — la charte complète reste dans le renderer
+ * Rendu HTML minimal côté Worker – la charte complète reste dans le renderer
  * frontend. Pour le POC, on envoie le HTML pré-rendu par le client (champ
  * `htmlContent` dans le body de l'envoi). Plus tard : récupérer les blocs
  * JSON et rerender côté Worker pour garantir intégrité charte.
@@ -3068,7 +3068,7 @@ async function handleNewsletterBulkSend(request: Request, env: Env, corsHeaders:
   const senderEmail = env.BREVO_SENDER_EMAIL ?? env.CONTACT_EMAIL ?? "contact@gaspe.fr";
   const senderName = env.BREVO_SENDER_NAME ?? "GASPE";
 
-  // Campagne Brevo classique via "email campaigns" — plus scalable que SMTP direct.
+  // Campagne Brevo classique via "email campaigns" – plus scalable que SMTP direct.
   const res = await fetch("https://api.brevo.com/v3/emailCampaigns", {
     method: "POST",
     headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
@@ -3114,7 +3114,7 @@ async function handleNewsletterBulkSend(request: Request, env: Env, corsHeaders:
 }
 
 /**
- * Webhook Brevo — reçoit les événements (open, click, bounce, unsubscribe).
+ * Webhook Brevo – reçoit les événements (open, click, bounce, unsubscribe).
  * Signature HMAC-SHA256 vérifiée avec BREVO_WEBHOOK_SECRET si configuré.
  * Les events sont persistés dans nl_events pour analyse admin.
  */
@@ -3165,7 +3165,7 @@ async function handleBrevoWebhook(request: Request, env: Env, corsHeaders: Recor
 }
 
 /**
- * Désinscription publique — la page `/newsletter/unsubscribe?token=…` appelle
+ * Désinscription publique – la page `/newsletter/unsubscribe?token=…` appelle
  * ce endpoint avec un token HMAC signé par NEWSLETTER_UNSUB_SECRET.
  * Le token est de la forme `<email-base64>.<hmac-hex>`.
  */
@@ -3207,7 +3207,7 @@ async function handleNewsletterUnsubscribe(request: Request, env: Env, corsHeade
 }
 
 // ═══════════════════════════════════════════════════════════
-//  CMS Documents — migration 0010_cms_documents.sql
+//  CMS Documents – migration 0010_cms_documents.sql
 //  Gère la page publique /documents + l'admin /admin/documents.
 // ═══════════════════════════════════════════════════════════
 
@@ -3451,7 +3451,7 @@ async function handleDocumentDelete(
 }
 
 // ═══════════════════════════════════════════════════════════
-//  Organization Vessels — per-organization fleet
+//  Organization Vessels – per-organization fleet
 //  (migration 0012_organization_vessels.sql)
 // ═══════════════════════════════════════════════════════════
 
@@ -3546,11 +3546,11 @@ async function ensureVesselsTable(env: Env): Promise<void> {
     )`).run();
     await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_org_vessels_org ON organization_vessels(organization_id)").run();
   } catch {
-    /* ignore — table may already exist */
+    /* ignore – table may already exist */
   }
 }
 
-/** GET /api/organizations/:slug/fleet — public. */
+/** GET /api/organizations/:slug/fleet – public. */
 async function handleGetFleet(
   _request: Request,
   env: Env,
@@ -3570,7 +3570,7 @@ async function handleGetFleet(
   return json({ vessels: (results ?? []).map(toFrontendVessel) }, corsHeaders);
 }
 
-/** GET /api/organizations/fleet — admin-only view of all fleets. */
+/** GET /api/organizations/fleet – admin-only view of all fleets. */
 async function handleListAllFleets(
   request: Request,
   env: Env,

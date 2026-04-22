@@ -1,4 +1,4 @@
--- GASPE D1 Migration 0002 — Password reset tokens
+-- GASPE D1 Migration 0002 – Password reset tokens
 -- Apply: npx wrangler d1 execute gaspe-db --file workers/migrations/0002_password_reset.sql
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (

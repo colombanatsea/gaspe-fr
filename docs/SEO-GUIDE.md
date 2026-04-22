@@ -1,4 +1,4 @@
-# GASPE — Guide SEO & Positionnement stratégique
+# GASPE – Guide SEO & Positionnement stratégique
 
 **Version** : 1.2 · session 32 · avril 2026
 **Objectif** : positionner gaspe.fr en **top 1 Google** sur les termes stratégiques du
@@ -44,22 +44,22 @@ Chaque page a ses propres mots-clés complémentaires dans `DEFAULT_PAGE_META` (
 | `src/app/layout.tsx` | Metadata root (title template, keywords, OG, robots, googleBot) |
 | `src/app/(public)/*/layout.tsx` | Metadata par page via `metaFromPageId(pageId)` |
 | `src/components/shared/CmsPageHeader.tsx` | Rend automatiquement `BreadcrumbJsonLd` pour toutes les pages l'utilisant |
-| `src/app/robots.ts` | robots.txt — Disallow `/admin/`, `/api/`, `/espace-adherent/`, `/espace-candidat/` |
+| `src/app/robots.ts` | robots.txt – Disallow `/admin/`, `/api/`, `/espace-adherent/`, `/espace-candidat/` |
 | `src/app/sitemap.ts` | Sitemap dynamique (pages + jobs + membres + formations) |
 
-### 2.2 Structured Data (JSON-LD) — couverture
+### 2.2 Structured Data (JSON-LD) – couverture
 
 | Schema | Où | Impact SERP |
 |--------|-----|-------------|
-| **Organization + TradeAssociation** | layout root — composant enrichi avec `knowsAbout`, `slogan`, `sameAs`, `contactPoint` presse + info | Knowledge Graph |
+| **Organization + TradeAssociation** | layout root – composant enrichi avec `knowsAbout`, `slogan`, `sameAs`, `contactPoint` presse + info | Knowledge Graph |
 | **WebSite** | layout root | Site name dans SERP |
 | **BreadcrumbList** | Toutes pages avec `<CmsPageHeader>` | Fil d'Ariane SERP |
 | **JobPosting** | `/nos-compagnies-recrutent/[slug]` | Rich snippet emploi |
 | **FAQPage** | `/boite-a-outils` (10 Q/R), `/ssgm` (8 Q/R) ✅ session 29 | Rich FAQ SERP |
-| **Event** | `/agenda` — un JSON-LD par événement publié ✅ session 29 | Rich snippet événement |
-| **MaritimeService (custom Organization+LocalBusiness)** | `/nos-adherents/[slug]` — `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29 | Knowledge card compagnie |
-| **Article** | `/positions/[slug]` ✅ session 30+32 — **12 articles** (`src/data/positions.ts`), `datePublished`, `author`, `image`, `headline` | Rich snippet actu, vignette SERP |
-| **RSS 2.0** | `/feed.xml` ✅ session 30+32 — **12 items**, namespaces content:encoded + dc + atom:link self. Auto-discovery via `<link rel="alternate" type="application/rss+xml">` global. | Re-crawl, agrégateurs tiers |
+| **Event** | `/agenda` – un JSON-LD par événement publié ✅ session 29 | Rich snippet événement |
+| **MaritimeService (custom Organization+LocalBusiness)** | `/nos-adherents/[slug]` – `areaServed`, `serviceType`, `geo`, `memberOf` ✅ session 29 | Knowledge card compagnie |
+| **Article** | `/positions/[slug]` ✅ session 30+32 – **12 articles** (`src/data/positions.ts`), `datePublished`, `author`, `image`, `headline` | Rich snippet actu, vignette SERP |
+| **RSS 2.0** | `/feed.xml` ✅ session 30+32 – **12 items**, namespaces content:encoded + dc + atom:link self. Auto-discovery via `<link rel="alternate" type="application/rss+xml">` global. | Re-crawl, agrégateurs tiers |
 
 ---
 
@@ -116,7 +116,7 @@ Quand tu ajoutes une nouvelle page ou modifies le contenu :
 | 5 (fin) | Finir migration `<img>` → `next/image` (espace-adherent, espace-candidat, admin) | ~30 fichiers restants | CWV -10% | 2 h |
 | 9 | Ajouter OG images dédiées par position (`public/assets/og/positions/`) | nouveau | CTR social +5% | 1 h |
 | 10 | Compresser `public/assets/acf_video.MP4` 13,5 Mo → <3 Mo (ffmpeg local) | binaire | LCP -300 ms | 30 min |
-| 11 | Lighthouse réel sur 7 pages (Chrome local) | — | mesure | 1 h |
+| 11 | Lighthouse réel sur 7 pages (Chrome local) | – | mesure | 1 h |
 
 ---
 

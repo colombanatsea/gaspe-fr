@@ -130,7 +130,7 @@ export default function AdherentFormationsPage() {
               {f.duration}
             </p>
           )}
-          <p className="text-xs">{f.registrations?.length ?? 0} / {f.capacity} inscrits — {f.price}</p>
+          <p className="text-xs">{f.registrations?.length ?? 0} / {f.capacity} inscrits – {f.price}</p>
         </div>
 
         {/* Expand/collapse for schedule + attachments */}

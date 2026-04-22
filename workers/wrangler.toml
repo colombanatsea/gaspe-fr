@@ -1,4 +1,4 @@
-# GASPE API Worker — Cloudflare Workers config
+# GASPE API Worker – Cloudflare Workers config
 # Deploy: npx wrangler deploy --config workers/wrangler.toml
 
 name = "gaspe-api"
@@ -18,13 +18,13 @@ binding = "UPLOADS"
 bucket_name = "gaspe-uploads"
 
 # Environment variables (set via wrangler secret)
-# CONTACT_EMAIL — email to receive contact form submissions
+# CONTACT_EMAIL – email to receive contact form submissions
 
 [vars]
 CONTACT_EMAIL = "contact@gaspe.fr"
 
-# JWT_SECRET — set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
-# BREVO_API_KEY — set via: npx wrangler secret put BREVO_API_KEY --config workers/wrangler.toml
+# JWT_SECRET – set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
+# BREVO_API_KEY – set via: npx wrangler secret put BREVO_API_KEY --config workers/wrangler.toml
 
 # D1 migrations applied via: wrangler d1 execute gaspe-db --file workers/migrations/XXXX.sql
 # Or via deploy-worker.yml CI workflow

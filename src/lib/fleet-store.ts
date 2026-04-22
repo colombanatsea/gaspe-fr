@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Fleet Store — dual-mode vessel management per organization        */
+/*  Fleet Store – dual-mode vessel management per organization        */
 /*  localStorage (demo) ↔ API/D1 (production)                         */
 /*                                                                    */
 /*  Data model : per-organization FleetVessel[], keyed by member slug. */

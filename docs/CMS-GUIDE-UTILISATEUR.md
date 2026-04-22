@@ -15,17 +15,17 @@
 
 ## Modifier le contenu d'une page
 
-### Étape 1 — Choisir la page
+### Étape 1 – Choisir la page
 
 En haut, cliquer sur la pastille de la page à éditer : `Accueil`, `Notre Groupement`, `Contact`, etc. 18 pages sont actuellement éditables.
 
-### Étape 2 — Naviguer dans les sections
+### Étape 2 – Naviguer dans les sections
 
 Les sections sont **regroupées par bloc** (ex : `Hero / En-tête`, `Statistiques`, `CTA`). Cliquer sur le titre du groupe pour le replier/déplier.
 
 Une **barre de recherche** apparaît au-dessus de 8 sections : utile pour retrouver une chaîne précise.
 
-### Étape 3 — Éditer
+### Étape 3 – Éditer
 
 Chaque section a un **type** qui conditionne l'éditeur :
 
@@ -41,11 +41,11 @@ Chaque section a un **type** qui conditionne l'éditeur :
 
 **Réinitialiser** : le lien "Réinitialiser" au-dessus de chaque éditeur remet la valeur par défaut du code.
 
-### Étape 4 — Prévisualiser
+### Étape 4 – Prévisualiser
 
 Cliquer sur **Aperçu page** en haut à droite : la page publique s'affiche à droite dans un iframe. Après enregistrement, cliquer sur **Rafraîchir** pour voir les modifications.
 
-### Étape 5 — Enregistrer
+### Étape 5 – Enregistrer
 
 Cliquer sur **Enregistrer** en haut à droite. La confirmation "Enregistré ✓" apparaît pour 3 secondes.
 

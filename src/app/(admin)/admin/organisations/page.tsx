@@ -121,7 +121,7 @@ export default function AdminOrganisationsPage() {
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Organisations</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          {filtered.length} compagnie{filtered.length > 1 ? "s" : ""} — {totalContacts} contact{totalContacts > 1 ? "s" : ""}
+          {filtered.length} compagnie{filtered.length > 1 ? "s" : ""} – {totalContacts} contact{totalContacts > 1 ? "s" : ""}
         </p>
       </div>
 
@@ -215,11 +215,11 @@ export default function AdminOrganisationsPage() {
                       )}
                     </div>
                     <p className="text-xs text-foreground-muted mt-0.5">
-                      {[org.city, org.region].filter(Boolean).join(", ") || "—"}
+                      {[org.city, org.region].filter(Boolean).join(", ") || "–"}
                       {org.contacts.length > 0 && (
-                        <> — {org.contacts.length} contact{org.contacts.length > 1 ? "s" : ""}</>
+                        <> – {org.contacts.length} contact{org.contacts.length > 1 ? "s" : ""}</>
                       )}
-                      {primary && <> — Resp. : {primary.name}</>}
+                      {primary && <> – Resp. : {primary.name}</>}
                     </p>
                   </div>
 
@@ -264,7 +264,7 @@ export default function AdminOrganisationsPage() {
                       {(org.employeeCount || org.shipCount) && (
                         <div>
                           {org.employeeCount && <span className="text-foreground">{org.employeeCount} collaborateurs</span>}
-                          {org.employeeCount && org.shipCount && <span className="text-foreground-muted"> — </span>}
+                          {org.employeeCount && org.shipCount && <span className="text-foreground-muted"> – </span>}
                           {org.shipCount && <span className="text-foreground">{org.shipCount} navires</span>}
                         </div>
                       )}
@@ -301,7 +301,7 @@ export default function AdminOrganisationsPage() {
                                     )}
                                   </td>
                                   <td className="py-2 text-foreground-muted">{c.email}</td>
-                                  <td className="py-2 text-foreground-muted hidden sm:table-cell">{c.companyRole ?? "—"}</td>
+                                  <td className="py-2 text-foreground-muted hidden sm:table-cell">{c.companyRole ?? "–"}</td>
                                   <td className="py-2 hidden md:table-cell">
                                     <Badge variant={c.isPrimary ? "teal" : "neutral"}>
                                       {c.isPrimary ? "Responsable" : "Contact"}

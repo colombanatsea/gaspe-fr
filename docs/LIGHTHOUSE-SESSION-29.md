@@ -1,4 +1,4 @@
-# Lighthouse — Session 29 (v2.15.0)
+# Lighthouse – Session 29 (v2.15.0)
 
 **Date** : 2026-04-19
 **Scope** : audit performance statique (avant/après changements session 29). Lighthouse mobile complet **reporté à session 30** (nécessite dev server + device emulation non disponible dans l'environnement de travail actuel).

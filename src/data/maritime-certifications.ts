@@ -1,5 +1,5 @@
 /**
- * Certifications maritimes françaises — hiérarchie STCW.
+ * Certifications maritimes françaises – hiérarchie STCW.
  * Source : Code des transports, Convention STCW, Affaires Maritimes.
  *
  * Chaque certification a un champ `supersedes` indiquant quels brevets
@@ -70,7 +70,7 @@ export const maritimeCertifications: MaritimeCertification[] = [
   },
   {
     id: "capitaine-illimite",
-    label: "Capitaine — Brevet illimité",
+    label: "Capitaine – Brevet illimité",
     shortLabel: "Cap. illimité",
     stcwCode: "STCW II/2",
     category: "pont",
@@ -143,7 +143,7 @@ export const maritimeCertifications: MaritimeCertification[] = [
   },
   {
     id: "chef-mecanicien-illimite",
-    label: "Chef Mécanicien — Brevet illimité",
+    label: "Chef Mécanicien – Brevet illimité",
     shortLabel: "Chef méca. illimité",
     stcwCode: "STCW III/2",
     category: "machine",
@@ -252,7 +252,7 @@ export const maritimeCertifications: MaritimeCertification[] = [
   },
   {
     id: "cgo-petrolier",
-    label: "Certificat de Gestion des Opérations — Pétrolier",
+    label: "Certificat de Gestion des Opérations – Pétrolier",
     shortLabel: "CGO Pétrolier",
     category: "specialise",
     validityYears: 5,
@@ -261,7 +261,7 @@ export const maritimeCertifications: MaritimeCertification[] = [
   },
   {
     id: "cgo-chimiquiers",
-    label: "Certificat de Gestion des Opérations — Chimiquiers",
+    label: "Certificat de Gestion des Opérations – Chimiquiers",
     shortLabel: "CGO Chimiquiers",
     category: "specialise",
     validityYears: 5,

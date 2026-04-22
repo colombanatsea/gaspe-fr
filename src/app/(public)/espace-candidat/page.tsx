@@ -560,7 +560,7 @@ export default function EspaceCandidatPage() {
                               {job.title}
                             </p>
                             <p className="text-sm text-foreground-muted">
-                              {job.company} — {job.location}
+                              {job.company} – {job.location}
                             </p>
                           </div>
                           <div className="flex gap-2 shrink-0">

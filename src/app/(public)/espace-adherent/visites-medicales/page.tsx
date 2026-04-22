@@ -126,7 +126,7 @@ export default function VisitesMedicalesPage() {
             </svg>
             <p className="text-sm font-medium text-red-700 [data-theme=dark]:text-red-400">
               {expiredCount > 0 && <>{expiredCount} visite{expiredCount > 1 ? "s" : ""} expirée{expiredCount > 1 ? "s" : ""}</>}
-              {expiredCount > 0 && expiringCount > 0 && " — "}
+              {expiredCount > 0 && expiringCount > 0 && " – "}
               {expiringCount > 0 && <>{expiringCount} visite{expiringCount > 1 ? "s" : ""} expire{expiringCount > 1 ? "nt" : ""} dans moins de 60 jours</>}
             </p>
           </div>
@@ -248,13 +248,13 @@ export default function VisitesMedicalesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-foreground">{visit.sailorName}</p>
-                      {visit.sailorRole && <span className="text-xs text-foreground-muted">— {visit.sailorRole}</span>}
+                      {visit.sailorRole && <span className="text-xs text-foreground-muted">– {visit.sailorRole}</span>}
                       <Badge variant={sConfig.variant}>{sConfig.label}</Badge>
                     </div>
                     <p className="text-xs text-foreground-muted mt-1">
-                      {typeInfo?.label ?? visit.type} — {new Date(visit.date).toLocaleDateString("fr-FR")}
+                      {typeInfo?.label ?? visit.type} – {new Date(visit.date).toLocaleDateString("fr-FR")}
                       {visit.expiryDate && (
-                        <> — Expire le {new Date(visit.expiryDate).toLocaleDateString("fr-FR")}</>
+                        <> – Expire le {new Date(visit.expiryDate).toLocaleDateString("fr-FR")}</>
                       )}
                     </p>
                     {visit.doctorName && (

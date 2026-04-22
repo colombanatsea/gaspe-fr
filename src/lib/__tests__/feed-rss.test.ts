@@ -54,7 +54,7 @@ describe("/feed.xml", () => {
   it("escapes XML-reserved characters in description", async () => {
     const xml = await fetchFeed();
     // Ensure there are no raw unescaped & in text nodes that look like entities
-    // (Basic sanity — & must be followed by amp; / lt; / gt; / quot; / apos;)
+    // (Basic sanity – & must be followed by amp; / lt; / gt; / quot; / apos;)
     const matches = xml.match(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/g);
     expect(matches).toBeNull();
   });

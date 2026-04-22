@@ -1,5 +1,5 @@
 /**
- * BrandLogo — logo marque, swap-ready pour le rebrand ACF (nov. 2026).
+ * BrandLogo – logo marque, swap-ready pour le rebrand ACF (nov. 2026).
  *
  * Par défaut, affiche le logo GASPE (marque actuelle). Quand la marque
  * bascule en ACF, il suffit de :
@@ -8,10 +8,10 @@
  *  3. Changer la constante `DEFAULT_BRAND` ci-dessous.
  *
  * Les assets sont dans `public/assets/brand/` :
- *  - `logo-gaspe.png` — wordmark GASPE (PNG transparent)
- *  - `logo-acf.png` — logo ACF full (avec horizon teal→cyan)
- *  - `logo-acf-contour.svg` — logo ACF contour, horizontal wide
- *  - `logo-gaspe-monogramme.jpg` — monogramme "A" (continuité visuelle,
+ *  - `logo-gaspe.png` – wordmark GASPE (PNG transparent)
+ *  - `logo-acf.png` – logo ACF full (avec horizon teal→cyan)
+ *  - `logo-acf-contour.svg` – logo ACF contour, horizontal wide
+ *  - `logo-gaspe-monogramme.jpg` – monogramme "A" (continuité visuelle,
  *    utilisable en favicon / avatar pendant la transition).
  */
 
@@ -28,12 +28,12 @@ const BRAND_ASSETS: Record<
 > = {
   gaspe: {
     src: "/assets/brand/logo-gaspe.png",
-    alt: "GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
+    alt: "GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau",
     aspect: 860 / 293, // ~2.93:1
   },
   acf: {
     src: "/assets/brand/logo-acf-contour.svg",
-    alt: "ACF — Armateurs Côtiers Français",
+    alt: "ACF – Armateurs Côtiers Français",
     aspect: 3.2, // approx wordmark ratio
   },
 };
@@ -70,7 +70,7 @@ export function BrandLogo({
 }
 
 /**
- * Monogramme "A" — continuité visuelle pendant la transition GASPE → ACF.
+ * Monogramme "A" – continuité visuelle pendant la transition GASPE → ACF.
  * Convient pour favicons, avatars, badges, icônes d'app.
  */
 export function BrandMonogram({
@@ -83,7 +83,7 @@ export function BrandMonogram({
   return (
     <Image
       src="/assets/brand/logo-gaspe-monogramme.jpg"
-      alt="GASPE / ACF — monogramme"
+      alt="GASPE / ACF – monogramme"
       width={size}
       height={size}
       unoptimized

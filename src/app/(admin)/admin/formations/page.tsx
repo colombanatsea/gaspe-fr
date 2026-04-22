@@ -51,7 +51,7 @@ const SEED_FORMATIONS: Formation[] = [
     id: "form-cfbs",
     title: "Certificat de Formation de Base à la Sécurité (CFBS)",
     description: "Formation réglementaire obligatoire pour tout personnel embarqué. Inclut lutte incendie, survie en mer, premiers secours et sécurité individuelle.",
-    organizer: "ENSM — École Nationale Supérieure Maritime",
+    organizer: "ENSM – École Nationale Supérieure Maritime",
     startDate: "2026-05-12",
     endDate: "2026-05-16",
     location: "Le Havre",
@@ -65,18 +65,18 @@ const SEED_FORMATIONS: Formation[] = [
     status: "open",
     modality: "presentiel",
     schedule: [
-      { date: "2026-05-12", location: "ENSM Le Havre — Salle A" },
-      { date: "2026-05-13", location: "ENSM Le Havre — Salle A" },
-      { date: "2026-05-14", location: "ENSM Le Havre — Bassin" },
-      { date: "2026-05-15", location: "ENSM Le Havre — Bassin" },
-      { date: "2026-05-16", location: "ENSM Le Havre — Salle A" },
+      { date: "2026-05-12", location: "ENSM Le Havre – Salle A" },
+      { date: "2026-05-13", location: "ENSM Le Havre – Salle A" },
+      { date: "2026-05-14", location: "ENSM Le Havre – Bassin" },
+      { date: "2026-05-15", location: "ENSM Le Havre – Bassin" },
+      { date: "2026-05-16", location: "ENSM Le Havre – Salle A" },
     ],
   },
   {
     id: "form-capitaine-200",
     title: "Brevet de Capitaine 200",
     description: "Formation au commandement de navires de moins de 200 UMS en navigation côtière. Réglementation, navigation, manœuvre, météo, anglais maritime.",
-    organizer: "ENSM — Le Havre",
+    organizer: "ENSM – Le Havre",
     startDate: "2026-06-02",
     endDate: "2026-07-11",
     location: "Le Havre",
@@ -94,7 +94,7 @@ const SEED_FORMATIONS: Formation[] = [
     id: "form-mecanicien-750",
     title: "Brevet de Mécanicien 750 kW",
     description: "Formation à la conduite et la maintenance des installations machine de navires jusqu'à 750 kW. Moteurs diesel, systèmes hydrauliques, électricité bord.",
-    organizer: "ENSM — Marseille",
+    organizer: "ENSM – Marseille",
     startDate: "2026-09-15",
     endDate: "2026-10-24",
     location: "Marseille",
@@ -192,12 +192,12 @@ const SEED_FORMATIONS: Formation[] = [
   },
   {
     id: "form-ccn-3228",
-    title: "Convention Collective Nationale 3228 — Mise à jour",
+    title: "Convention Collective Nationale 3228 – Mise à jour",
     description: "Séminaire sur les évolutions de la CCN 3228 applicable au transport maritime de passagers. Grilles salariales, congés, régime ENIM, accords de branche récents.",
     organizer: "GASPE",
     startDate: "2026-05-19",
     endDate: "2026-05-19",
-    location: "Paris — Siège GASPE",
+    location: "Paris – Siège GASPE",
     duration: "1 jour (7h)",
     capacity: 50,
     enrolled: 31,
@@ -314,8 +314,8 @@ export default function AdminFormationsPage() {
           <h1 className="font-heading text-2xl font-bold text-foreground">Formations</h1>
           <p className="mt-1 text-sm text-foreground-muted">
             {formations.length} formation{formations.length !== 1 ? "s" : ""}
-            {openCount > 0 && <span className="text-[var(--gaspe-green-500)]"> — {openCount} ouverte{openCount > 1 ? "s" : ""}</span>}
-            {fullCount > 0 && <span className="text-foreground-muted"> — {fullCount} complète{fullCount > 1 ? "s" : ""}</span>}
+            {openCount > 0 && <span className="text-[var(--gaspe-green-500)]"> – {openCount} ouverte{openCount > 1 ? "s" : ""}</span>}
+            {fullCount > 0 && <span className="text-foreground-muted"> – {fullCount} complète{fullCount > 1 ? "s" : ""}</span>}
           </p>
         </div>
         <Link

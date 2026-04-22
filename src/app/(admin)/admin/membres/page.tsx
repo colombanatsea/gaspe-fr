@@ -163,7 +163,7 @@ export default function AdminMembresPage() {
             {activeCount} membre{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}
             {archivedCount > 0 && (
               <span className="ml-2 text-foreground-muted">
-                — {archivedCount} archivé{archivedCount > 1 ? "s" : ""}
+                – {archivedCount} archivé{archivedCount > 1 ? "s" : ""}
               </span>
             )}
           </p>
@@ -316,13 +316,13 @@ export default function AdminMembresPage() {
                 {/* Ship count */}
                 <div className="text-sm text-foreground">
                   <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">Navires :</span>
-                  {m.shipCount ?? "—"}
+                  {m.shipCount ?? "–"}
                 </div>
 
                 {/* Employee count */}
                 <div className="text-sm text-foreground">
                   <span className="lg:hidden text-xs font-semibold text-foreground-muted mr-1">Employés :</span>
-                  {m.employeeCount ?? "—"}
+                  {m.employeeCount ?? "–"}
                 </div>
 
                 {/* Archived status */}
