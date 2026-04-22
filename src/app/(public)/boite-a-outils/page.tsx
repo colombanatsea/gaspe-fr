@@ -18,6 +18,7 @@ import {
   LEAVE_RULES,
   BRANCH_AGREEMENTS,
   SALARY_DISCLAIMER,
+  SALARY_SOURCES,
   LAST_UPDATED,
   CATEGORY_LABELS,
   EMPLOYER_GUIDES,
@@ -365,6 +366,20 @@ function AccordsBranche() {
 function Classifications() {
   return (
     <div>
+      {/* Note pédagogique : la classification salariale combine fonction +
+          tranche de jauge UMS — pas le brevet détenu. */}
+      <div className="reveal mb-6 rounded-xl border border-[var(--gaspe-teal-400)]/30 bg-[var(--gaspe-teal-600)]/5 p-4 text-sm text-foreground-muted">
+        <p className="flex items-start gap-2">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+          </svg>
+          <span>
+            <strong className="text-foreground">Ce qui compte pour la paie, c&apos;est la fonction + la jauge du navire</strong>
+            , pas le brevet détenu. Un officier titulaire d&apos;un brevet supérieur exerçant comme second sur un petit navire est rémunéré au minimum de sa fonction réelle. La colonne « Brevet » liste le titre STCW <em>minimum</em> requis pour accéder au poste ; voir la grille NAO 2026 pour le minimum conventionnel associé à chaque tranche UMS.
+          </span>
+        </p>
+      </div>
+
       {CATEGORIES.map((cat) => {
         const levels = CLASSIFICATION_LEVELS.filter((l) => l.category === cat);
         return (
@@ -385,6 +400,11 @@ function Classifications() {
                     <h4 className="font-heading text-sm font-bold text-foreground">{lvl.label}</h4>
                   </div>
                   <p className="text-xs text-foreground-muted mb-3 leading-relaxed">{lvl.description}</p>
+                  {lvl.salaryGridRef && (
+                    <p className="text-[10px] text-[var(--gaspe-teal-700)] font-semibold mb-2">
+                      Grille NAO 2026 : {lvl.salaryGridRef}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-1">
                     {lvl.requiredCertificates.map((cert) => (
                       <Badge key={cert} variant="neutral" className="text-[10px]">
@@ -451,23 +471,28 @@ function SimulateurSalaire() {
 
       {result && (
         <div className="reveal mt-6 rounded-xl border-2 border-[var(--gaspe-teal-600)]/30 bg-[var(--gaspe-teal-600)]/5 p-6">
-          <h3 className="font-heading text-base font-bold text-foreground mb-4 flex items-center gap-2">
+          <h3 className="font-heading text-base font-bold text-foreground mb-1 flex items-center gap-2">
             <SectionIcon icon="calculator" className="h-5 w-5 text-[var(--gaspe-teal-600)]" />
-            Estimation salariale — {entry?.fonction}
+            Minima conventionnels — {entry?.fonction}
           </h3>
+          <p className="text-xs text-foreground-muted mb-4">
+            Plancher légal de rémunération (CCN 3228, avenant NAO 2026). Le salaire effectivement versé peut être supérieur.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <ResultCard label="Brut mensuel" value={fmt.format(result.gross)} highlight />
-            <ResultCard label="Cotisations salarie" value={`- ${fmt.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
-            <ResultCard label="Net estime" value={fmt.format(result.estimatedNet)} highlight />
-            <ResultCard label="Brut annuel" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt.format(result.annualPremium)} de prime`} />
+            <ResultCard label="Brut mensuel minimum" value={fmt.format(result.gross)} highlight />
+            <ResultCard label="Cotisations salarié" value={`- ${fmt.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
+            <ResultCard label="Net minimum estimé" value={fmt.format(result.estimatedNet)} highlight />
+            <ResultCard label="Brut annuel minimum" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt.format(result.annualPremium)} de prime`} />
           </div>
           <div className="grid gap-4 sm:grid-cols-3 mt-4">
-            <ResultCard label="Taux horaire" value={fmt.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois" />
+            <ResultCard label="Taux horaire minimum" value={fmt.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois" />
             <ResultCard label="Taux HS (25 %)" value={fmt.format(result.tauxHS)} />
-            <ResultCard label="Net horaire estime" value={fmt.format(result.hourlyNet)} />
+            <ResultCard label="Net horaire minimum" value={fmt.format(result.hourlyNet)} />
           </div>
           {entry?.enim && (
-            <p className="mt-3 text-xs text-foreground-muted text-center">{entry.enim} ENIM</p>
+            <p className="mt-3 text-xs text-foreground-muted text-center">
+              Correspondance cotisations : {entry.enim} ENIM
+            </p>
           )}
         </div>
       )}
@@ -747,14 +772,12 @@ export default function BoiteAOutilsPage() {
         {/* Sources */}
         <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Convention Collective Nationale du personnel navigant des entreprises de passages d&apos;eau (CCN 3228, IDCC 3228) — Legifrance, Journal officiel</li>
-            <li>Grilles salariales et classifications : avenant salarial CCN 3228, NAO 2026</li>
-            <li>Taux ENIM : baremes officiels publies par la Caisse des Gens de Mer</li>
-            <li>Droits a conges : articles du Code des transports (Livre V, titre V) et CCN 3228</li>
-            <li>Guides employeur : fiches pratiques GASPE elaborees a partir de la CCN 3228 et du Code du travail maritime</li>
+            {SALARY_SOURCES.map((src, i) => (
+              <li key={i}>{src}</li>
+            ))}
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">
-            Ces informations sont fournies a titre indicatif et ne constituent pas un conseil juridique.
+            Ces informations sont fournies à titre indicatif et ne constituent pas un conseil juridique. Pour l&apos;application de ces minima à un cas particulier, se référer au texte de la CCN 3228 et consulter un juriste de la branche.
           </p>
         </CollapsibleSources>
 
