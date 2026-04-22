@@ -8,9 +8,12 @@
 
 ---
 
-## 1. Apply D1 Migrations (0001–0006)
+## 1. Apply D1 Migrations (0001–0012)
 
 The D1 database `gaspe-db` must be provisioned before applying migrations.
+Since session 21 the GitHub workflow `deploy-worker.yml` auto-applies
+migrations on push to `main` with `--remote` (requires `CF_CONFIGURED=true`).
+The steps below are for first-time setup or manual recovery.
 
 ### Option A: Wrangler CLI (recommended)
 
@@ -19,28 +22,34 @@ The D1 database `gaspe-db` must be provisioned before applying migrations.
 wrangler login
 
 # Apply migrations in order
-wrangler d1 execute gaspe-db --file workers/migrations/0001_auth.sql
-wrangler d1 execute gaspe-db --file workers/migrations/0002_password_reset.sql
-wrangler d1 execute gaspe-db --file workers/migrations/0003_organizations.sql
-wrangler d1 execute gaspe-db --file workers/migrations/0004_link_users_organizations.sql
-wrangler d1 execute gaspe-db --file workers/migrations/0005_cms_jobs_medical_media.sql
-wrangler d1 execute gaspe-db --file workers/migrations/0006_profile_linkedin.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0001_auth.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0002_password_reset.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0003_organizations.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0004_link_users_organizations.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0005_cms_jobs_medical_media.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0006_profile_linkedin.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0007_org_archived.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0008_newsletter.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0009_brevo_sync.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0010_cms_documents.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0011_cms_revisions.sql
+wrangler d1 execute gaspe-db --remote --file workers/migrations/0012_organization_vessels.sql
 ```
 
 ### Option B: Cloudflare Dashboard
 
 1. Go to **Workers & Pages > D1 > gaspe-db > Console**
-2. Paste each migration SQL file content in order (0001 → 0006)
+2. Paste each migration SQL file content in order (0001 → 0012)
 3. Click **Execute** for each
 
 ### Verification
 
 ```bash
 # List tables
-wrangler d1 execute gaspe-db --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+wrangler d1 execute gaspe-db --remote --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
 ```
 
-Expected tables (13): `auth`, `cms_pages`, `contact_messages`, `invitations`, `jobs`, `media_files`, `medical_visits`, `newsletter`, `newsletter_preferences`, `organizations`, `password_reset_tokens`, `sessions`, `users`
+Expected tables (20): `auth`, `cms_documents`, `cms_pages`, `cms_revisions`, `contact_messages`, `invitations`, `jobs`, `media_files`, `medical_visits`, `newsletter`, `newsletter_preferences`, `nl_drafts`, `nl_events`, `nl_sends`, `nl_templates`, `organization_vessels`, `organizations`, `password_reset_tokens`, `sessions`, `users`
 
 ### Migration Summary
 
@@ -52,6 +61,12 @@ Expected tables (13): `auth`, `cms_pages`, `contact_messages`, `invitations`, `j
 | 0004 | `0004_link_users_organizations.sql` | — | Links existing users to orgs, sets is_primary |
 | 0005 | `0005_cms_jobs_medical_media.sql` | cms_pages, jobs, medical_visits, media_files | CMS composite PK |
 | 0006 | `0006_profile_linkedin.sql` | — | Adds profile_photo, linkedin_url, company_linkedin_url to users |
+| 0007 | `0007_org_archived.sql` | — | Adds organizations.archived flag + index |
+| 0008 | `0008_newsletter.sql` | nl_drafts, nl_sends, nl_events, nl_templates | Newsletter v2 foundation |
+| 0009 | `0009_brevo_sync.sql` | — | Adds users.brevo_synced_at (contact sync timestamp) |
+| 0010 | `0010_cms_documents.sql` | cms_documents | Documents officiels GASPE + 9 rows seed |
+| 0011 | `0011_cms_revisions.sql` | cms_revisions | Auto-snapshot on every CMS page PUT |
+| 0012 | `0012_organization_vessels.sql` | organization_vessels | Per-org fleet editor (28 cols, FK CASCADE, indexes on imo/year) |
 
 ---
 
