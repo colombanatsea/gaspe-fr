@@ -3,11 +3,11 @@
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**121 pages** — deployed on Cloudflare Pages (static export)
+**123 pages** — deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.21.0 (cohérence compteurs dynamiques · forward-compat ACF · type FleetVessel + affichage IMO/capacités)
+- **Version**: v2.22.0 (flotte détaillée éditable par compagnie · seed 110 navires · admin voit tout · adhérent voit sa compagnie · migration D1 0012)
 
 ## Commands
 ```bash
@@ -33,6 +33,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ Migrations D1 appliquées : 0001-0007 (dont 0007 org_archived appliquée via deploy-worker `--remote`)
 - ⏳ Migration 0008 (newsletter v2 : nl_drafts, nl_sends, nl_events, nl_templates) appliquée automatiquement au merge session 26 sur main
 - ⏳ Migration 0009 (session 29 : ajoute `users.brevo_synced_at` pour tracker la synchronisation contact Brevo) — à appliquer au prochain merge main
+- ⏳ Migration 0012 (session 35 : table `organization_vessels` pour la flotte détaillée par compagnie — `ensureVesselsTable()` défensif côté Worker en fallback) — à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -160,7 +161,7 @@ Admin consulte les abonnés via `/admin/newsletter/abonnes` (table + filtre par 
 src/
 ├── app/
 │   ├── (public)/          # 34 routes publiques (+ positions/[slug], /actualites refont, /feed.xml)
-│   ├── (admin)/           # 12 sections admin + dashboard (16 pages avec /new)
+│   ├── (admin)/           # 13 sections admin + dashboard (17 pages avec /new et /flotte)
 │   ├── (auth)/            # 6 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
@@ -176,9 +177,10 @@ src/
 │   ├── simulator/         # AdemeSimulator (Recharts, lazy-loaded, ssr: false)
 │   ├── news/              # News-related components
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
+│   ├── fleet/             # FleetVesselForm, FleetVesselCard (admin + adhérent + public)
 │   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay
 │   └── ui/                # Badge, Button, Card, ThemeToggle
-├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications, positions)
+├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications, positions, fleet-seed)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
 │   ├── theme/             # ThemeContext (dark mode)
@@ -193,6 +195,7 @@ src/
 │   ├── jobs-store.ts      # Jobs dual-mode store (localStorage ↔ D1)
 │   ├── medical-store.ts   # Medical visits dual-mode store (localStorage ↔ D1)
 │   ├── members-store.ts   # Members localStorage store
+│   ├── fleet-store.ts     # Fleet dual-mode store (localStorage ↔ D1, per-org, fallback seed)
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
 │   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
 │   └── __tests__/         # Unit tests (221 tests, 21 files)
@@ -216,7 +219,7 @@ workers/
     └── 0011_cms_revisions.sql            # CMS versioning — snapshots auto + restore (session 32)
 ```
 
-## Worker API — 58 endpoints
+## Worker API — 61 endpoints
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | /api/health | GET | — |
@@ -273,8 +276,11 @@ workers/
 | /api/cms/documents/:id | GET | — (JWT+adherent/admin pour privés) |
 | /api/cms/documents/:id | PUT | JWT+admin |
 | /api/cms/documents/:id | DELETE | JWT+admin |
+| /api/organizations/fleet | GET | JWT+admin |
+| /api/organizations/:slug/fleet | GET | — |
+| /api/organizations/:slug/fleet | PUT | JWT+admin/same-org |
 
-## Database (D1 — 19 tables, migrations 0001-0011 applied)
+## Database (D1 — 20 tables, migrations 0001-0012 applied)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary, brevo_synced_at (0009) |
@@ -296,6 +302,7 @@ workers/
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 | `cms_documents` | **Documents officiels GASPE** (CCN, accords, statuts, rapports) — title, description, category, file_url (R2 key ou externe), file_name, published_at, sort_order, is_public, published. Géré via `/admin/documents`, affiché sur `/documents`. (session 31) |
 | `cms_revisions` | **Versioning des pages CMS** — snapshot JSON automatique de `cms_pages` à chaque PUT. Permet rollback via `/api/cms/pages/:pageId/revisions/:id/restore`. Rétention : 30 snapshots par page. Le restore crée lui-même un snapshot préalable (rollback du rollback). (session 32) |
+| `organization_vessels` | **Flotte détaillée par compagnie adhérente** — 28 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (110 navires, 25 compagnies) sert de fallback tant que la table est vide. (session 35) |
 
 ## Testing
 - **Unit tests**: Vitest — 221 tests, 21 spec files
@@ -453,6 +460,7 @@ All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` 
 | Media | `gaspe_media_library` | `/api/media/*` | Done (session 23) |
 | Members | `gaspe_members` | `/api/organizations` | Done (session 24) |
 | Documents | `gaspe_documents` | `/api/cms/documents/*` | Done (session 31) |
+| Fleet | `gaspe_fleet` | `/api/organizations/:slug/fleet` | Done (session 35) |
 
 Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
 
@@ -495,3 +503,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 33c | 2.20.0 | **+4 positions SEO longue traîne** (24 articles total RSS + sitemap) : pavillon français premier registre vs RIF (CCN 3228, ENIM, exonérations charges, taxe au tonnage), cybersécurité passerelle ECDIS / radar (résolution OMI MSC.428(98), IACS UR E26-E27, BIMCO, spoofing GPS/AIS, segmentation VLAN), Vendée Globe / Route du Rhum (impact pic trafic 1-2M visiteurs, plans de transport renforcés, partenariats organisateurs), parc roulier ferries côtiers et véhicules électriques (SOLAS II-2, IMDG, DAM 2024, thermal runaway, équipements anti-feu batteries). **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (**24 positions pré-rendues**). |
 | 33d | 2.20.1 | **Nettoyage des données de démonstration** avant mise en main éditoriale : `src/data/positions.ts` vidé (les 24 articles précédents étaient des brouillons générés pour illustrer la longue traîne SEO ; ils seront remplacés par des contenus validés éditorialement via `/admin/positions` en prod). `src/data/jobs.ts` réduit aux **4 annonces Karu'Ferry / Step Group** (Responsable Technique Flotte, Chef Mécanicien 3000 kW, Chef Mécanicien 8000 kW, Capitaine 500) — suppression des 7 offres Manche Iles Express / DTM Gironde / Seine-Maritime qui étaient des exemples. Pour conserver un build `output: 'export'` valide sur la route dynamique `/positions/[slug]`, `generateStaticParams` renvoie un slug sentinel `__placeholder__` (résolu en 404 par `notFound()`) + `dynamicParams = false` lorsque le tableau est vide. Page `/actualites` : empty state ajouté ("Aucune actualité publiée pour le moment"). Test `positions.test.ts:15` "at least 4 published positions" remplacé par un test structurel `is a valid array` ; `getPositionBySlug` test conditionnel (skippé si tableau vide). **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (4 slugs STEP Group pré-rendus + placeholder). |
 | 34 | 2.21.0 | **Cohérence compteurs** : les 3 chiffres "165 navires" hardcodés (`cms-defaults.ts` quick-stats, `positions/page.tsx`, `AdemeSimulator.tsx`) remplacés par `memberStats.totalShips` / placeholder `{navires}` → 1 seule source de vérité (`src/data/members.ts`). **Data adhérents** : Kéolis Bordeaux métropole retiré (plus adhérent), BreizhGo Ile D'Arz `shipCount: 4` (était absent), LD Tide `shipCount: 7` (était absent). Compteurs à jour : **30 adhérents, 26 compagnies, 128 navires**. SEO strings (`constants.ts`, `seo.ts`, `SEOJsonLd.tsx`) alignées 26/30. **Forward-compat ACF** (rebrand nov. 2026, bundle de design `api.anthropic.com/v1/design/h/Avhur3MlK54RUZ1jPOi6OA` récupéré et intégré) : assets ACF copiés dans `public/assets/brand/` (logo-acf.png/jpg/contour.svg, monogramme GASPE, logo-gaspe.png), tokens miroir `--acf-*` ajoutés dans `globals.css` (aliasés 1:1 sur `--gaspe-*`), nouveau composant `src/components/shared/BrandLogo.tsx` (swap via `variant` prop ou `NEXT_PUBLIC_BRAND=acf` env var) + `BrandMonogram`. **Flotte détaillée** : nouveau type `FleetVessel` (name, imo, type, yearBuilt, passengerCapacity, vehicleCapacity, flag, imageUrl) ajouté au champ optionnel `Member.fleet`. La section Flotte de `/nos-adherents/[slug]` affiche en priorité `member.fleet` (éditorial, source de vérité) puis fallback sur `profile.vessels` (déclaré par l'adhérent connecté). **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK. |
+| 35 | 2.22.0 | **Flotte adhérents éditable** — remontée complète du tableur armateurs v2024/2025 dans le site, avec éditeurs scopés par rôle. **Type étendu** : `FleetVessel` passe de 8 à 28 champs optionnels (ajouts : `operatingLine`, `length`, `beam`, `grossTonnage`, `freightCapacity`, `renewalType`, `renewalYear`, `owner`, `shipyard`, `shipyardCountry`, `propulsionType`, `fuelType`, `cruiseSpeed`, `consumptionPerTrip`, `rotationsPerYear`, `crewSize`, `powerKw`, `altFuelTests`, `shorePower`, `hullTreatment`, `emissionReduction`, `id`). Les champs mixtes du tableur ("2 x 2300 CV", "70 L/h", "2/3", "2032-2034") restent des strings pour préserver les formats. **Seed** `src/data/fleet-seed.ts` : dictionnaire `Record<slug, FleetVessel[]>` — **110 navires sur 25 compagnies** (toutes les compagnies adhérentes sauf Jalilo qui n'a pas remonté de flotte). Helpers `FLEET_SEED`, `getFleetForSlug(slug)`, `TOTAL_SEED_VESSELS`. **Store dual-mode** `src/lib/fleet-store.ts` : localStorage `gaspe_fleet` ↔ API `/api/organizations/:slug/fleet` ; fallback automatique sur le seed si la clé est vide ; `getFleet`, `addVessel`, `updateVessel`, `deleteVessel`, `saveFleet`, `getAllFleets`, `resetFleetToSeed`. **Composants partagés** `src/components/fleet/` : `FleetVesselForm` (sectionné : Identité, Caractéristiques, Capacités, Exploitation, Propulsion & énergie, Renouvellement, Environnement, Média) et `FleetVesselCard` (lecture seule + actions edit/delete). **Page admin** `/admin/flotte` : sélecteur compagnies à gauche (search, badge compteur seed), panneau d'édition à droite avec "Réinitialiser au seed" ; experts filtrés (`memberType === "expert"`). **Page adhérent** `/espace-adherent/flotte` : résout la compagnie de l'utilisateur via `user.company → member.slug`, CRUD scopé à sa seule compagnie ; lien vers la fiche publique pour visualiser. **Affichage public** `/nos-adherents/[slug]` : consomme `fleet-store.getFleet(slug)` (fallback transparent sur seed), rendu via `FleetVesselCard readOnly` avec tous les champs riches (dimensions, capacités, propulsion, renouvellement, environnement, rotations annuelles). **Migration D1 0012** (`0012_organization_vessels.sql`) : table `organization_vessels` avec FK `organizations(id) ON DELETE CASCADE`, colonnes numériques indexables (year_built, length_m, beam_m, gross_tonnage, passenger_capacity, vehicle_capacity, freight_capacity, cruise_speed, rotations_per_year) + colonnes TEXT pour les formats libres, index `(organization_id)`, `(imo)` partiel, `(year_built)`. **Worker endpoints** (+3 → **61 endpoints**) : `GET /api/organizations/fleet` (admin-only batch), `GET /api/organizations/:slug/fleet` (public), `PUT /api/organizations/:slug/fleet` (admin OR `users.organization_id === org.id`, remplace atomiquement via D1 batch delete + insert). `ensureVesselsTable()` défensif côté Worker pour tolérer un déploiement avant migration. **Nav** : item "Flotte" dans `AdminSidebar` (section Organisation, AnchorIcon SVG) + carte "Ma flotte" sur dashboard `/espace-adherent`. **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (123 pages). |
