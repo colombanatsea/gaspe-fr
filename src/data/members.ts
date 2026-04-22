@@ -329,7 +329,6 @@ export const members: Member[] = [
     category: "associe",
     memberType: "expert",
     description: "Capstan Avocats est un cabinet d'avocats spécialisé en droit social et maritime, au service du secteur maritime.",
-    logoUrl: "/assets/logos/image12.png",
   },
   {
     name: "Compagnie Maritime DNO (Manche Iles Express)",
@@ -341,6 +340,7 @@ export const members: Member[] = [
     territory: "metropole",
     category: "associe",
     description: "La Compagnie Maritime DNO (Manche Iles Express) est une compagnie maritime assurant des liaisons vers Jersey, Guernesey et Sark depuis Granville.",
+    logoUrl: "/assets/logos/image12.png",
     websiteUrl: "https://www.manche-iles.com/fr/",
     shipCount: 2,
   },
