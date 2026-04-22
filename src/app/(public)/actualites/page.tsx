@@ -66,6 +66,13 @@ export default function ActualitesPage() {
           </Link>
         </div>
 
+        {publishedPositions.length === 0 && (
+          <div className="rounded-xl border border-dashed border-[var(--gaspe-neutral-200)] bg-white/60 p-8 text-center text-sm text-foreground-muted">
+            Aucune actualité ou position publiée pour le moment. Revenez
+            bientôt – le flux RSS vous préviendra automatiquement.
+          </div>
+        )}
+
         <div className="space-y-4">
           {publishedPositions.map((position) => (
             <Link
