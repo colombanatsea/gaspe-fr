@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
+import { getFleet } from "@/lib/fleet-store";
 import type { Vessel } from "@/lib/auth/AuthContext";
+import type { FleetVessel } from "@/types";
 
 /* ---------- Adherent profile data from localStorage ---------- */
 
@@ -58,6 +61,18 @@ export function MemberDetail({ slug }: { slug: string }) {
   const [profile] = useState<AdherentProfile | null>(() =>
     member ? getAdherentProfile(member.name) : null
   );
+  const [fleetVessels, setFleetVessels] = useState<FleetVessel[]>([]);
+
+  useEffect(() => {
+    if (!member) return;
+    let cancelled = false;
+    getFleet(member.slug).then((list) => {
+      if (!cancelled) setFleetVessels(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [member]);
 
   if (!member) {
     return (
@@ -84,41 +99,18 @@ export function MemberDetail({ slug }: { slug: string }) {
     (j) => j.companySlug === member.slug
   );
 
-  // Flotte : on privilégie la liste éditoriale statique (`member.fleet`,
-  // typée `FleetVessel` avec IMO / type / capacité / année). Si elle n'est
-  // pas fournie, on retombe sur la flotte déclarée par l'adhérent dans son
-  // espace (type `Vessel`, champs plus minimaux).
-  type DisplayVessel = {
-    key: string;
-    name: string;
-    imo?: string;
-    ums?: string;
-    type?: string;
-    size?: string;
-    yearBuilt?: number;
-    passengerCapacity?: number;
-    vehicleCapacity?: number;
-    flag?: string;
-  };
-  const vessels: DisplayVessel[] =
-    member.fleet && member.fleet.length > 0
-      ? member.fleet.map((v, i) => ({
-          key: `${member.slug}-fleet-${i}`,
-          name: v.name,
-          imo: v.imo,
-          type: v.type,
-          yearBuilt: v.yearBuilt,
-          passengerCapacity: v.passengerCapacity,
-          vehicleCapacity: v.vehicleCapacity,
-          flag: v.flag,
-        }))
-      : (profile?.vessels ?? []).map((v) => ({
-          key: v.id,
-          name: v.name,
-          imo: v.imo,
-          ums: v.ums,
-          size: v.size,
-        }));
+  // Flotte : priorité à la source éditable (fleet-store, admin + adhérent)
+  // qui retombe automatiquement sur le seed statique si rien n'a été édité.
+  // En dernier recours, on affiche la flotte minimale déclarée par l'adhérent
+  // dans son ancien onglet Navires (champs imo/ums/size).
+  const legacyVessels: FleetVessel[] = (profile?.vessels ?? []).map((v: Vessel) => ({
+    id: v.id,
+    name: v.name,
+    imo: v.imo,
+    // on stocke l'info libre "size" dans crewSize faute de mieux — absent du
+    // tableur de toute façon, c'est un affichage best-effort.
+  }));
+  const vessels: FleetVessel[] = fleetVessels.length > 0 ? fleetVessels : legacyVessels;
   const logoUrl = profile?.companyLogo || member.logoUrl;
   const territoryLabel =
     member.territory === "dom-tom" ? "Outre-mer" : "Hexagone";
@@ -193,83 +185,12 @@ export function MemberDetail({ slug }: { slug: string }) {
                   Flotte
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {vessels.map((vessel) => (
-                    <div
-                      key={vessel.key}
-                      className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-5 gaspe-card-hover"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gaspe-teal-50)]">
-                          <svg
-                            className="h-5 w-5 text-[var(--gaspe-teal-600)]"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M3 17h1l1-5h14l1 5h1M5 17l-2 4h18l-2-4M12 3v4m-4 0h8"
-                            />
-                          </svg>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-heading font-semibold text-foreground truncate">
-                            {vessel.name}
-                          </h4>
-                          {vessel.type && (
-                            <p className="text-xs text-foreground-muted capitalize">
-                              {vessel.type}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <dl className="space-y-1 text-sm text-foreground-muted">
-                        {vessel.imo && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">IMO</dt>
-                            <dd className="font-mono">{vessel.imo}</dd>
-                          </div>
-                        )}
-                        {vessel.yearBuilt && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Année</dt>
-                            <dd>{vessel.yearBuilt}</dd>
-                          </div>
-                        )}
-                        {vessel.passengerCapacity && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Passagers</dt>
-                            <dd>{vessel.passengerCapacity}</dd>
-                          </div>
-                        )}
-                        {vessel.vehicleCapacity && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Véhicules</dt>
-                            <dd>{vessel.vehicleCapacity}</dd>
-                          </div>
-                        )}
-                        {vessel.flag && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Pavillon</dt>
-                            <dd>{vessel.flag}</dd>
-                          </div>
-                        )}
-                        {vessel.ums && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">UMS</dt>
-                            <dd>{vessel.ums}</dd>
-                          </div>
-                        )}
-                        {vessel.size && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Taille</dt>
-                            <dd>{vessel.size}</dd>
-                          </div>
-                        )}
-                      </dl>
-                    </div>
+                  {vessels.map((vessel, i) => (
+                    <FleetVesselCard
+                      key={vessel.id ?? `${member.slug}-fleet-${i}`}
+                      vessel={vessel}
+                      readOnly
+                    />
                   ))}
                 </div>
               </section>
