@@ -35,6 +35,7 @@ export const members: Member[] = [
     description: "BreizhGo Ile D'Arz est une compagnie maritime de service public assurant des liaisons de transport de passagers vers l'Île d'Arz dans le Golfe du Morbihan.",
     logoUrl: "/assets/logos/BrestGO-Ile-Darz.png",
     websiteUrl: "https://www.ile-arz.fr/",
+    shipCount: 4,
   },
   {
     name: "BreizhGo Océane",
@@ -399,19 +400,6 @@ export const members: Member[] = [
     shipCount: 1,
   },
   {
-    name: "Kéolis Bordeaux métropole",
-    slug: "keolis-bordeaux-metropole",
-    city: "Bordeaux",
-    latitude: 44.851,
-    longitude: -0.557,
-    region: "Nouvelle-Aquitaine",
-    territory: "metropole",
-    category: "associe",
-    description: "Kéolis Bordeaux métropole est un opérateur de transport public incluant les navettes fluviales BatCub, basé à Bordeaux.",
-    logoUrl: "/assets/logos/k-olis-bordeaux.jpg",
-    websiteUrl: "https://www.kb2m.fr/",
-  },
-  {
     name: "LD Tide",
     slug: "ld-tide",
     city: "Suresnes",
@@ -423,6 +411,7 @@ export const members: Member[] = [
     description: "LD Tide est une entreprise spécialisée dans les solutions de décarbonation et les navires à voile, basée en Île-de-France.",
     logoUrl: "/assets/logos/image10.png",
     websiteUrl: "http://www.lda.fr/",
+    shipCount: 7,
   },
   {
     name: "Syndicat Professionnel Lamanage des ports de la Manche et de l'Atlantique (SPLMNA)",

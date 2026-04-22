@@ -82,6 +82,52 @@
   --color-surface-teal: var(--gaspe-teal-50);
   --color-border: var(--gaspe-neutral-300);
   --color-border-light: var(--gaspe-neutral-200);
+
+  /* ═══════════════════════════════════════════════
+     Tokens miroir `--acf-*` — forward-compat rebrand
+     Armateurs Côtiers Français (ACF, nov 2026).
+     Miroir 1:1 des tokens --gaspe-* ; utiliser les
+     deux noms de manière interchangeable pendant la
+     transition (préférer --gaspe-* dans le code
+     existant).
+     ═══════════════════════════════════════════════ */
+  --acf-teal-50:  var(--gaspe-teal-50);
+  --acf-teal-100: var(--gaspe-teal-100);
+  --acf-teal-200: var(--gaspe-teal-200);
+  --acf-teal-300: var(--gaspe-teal-300);
+  --acf-teal-400: var(--gaspe-teal-400);
+  --acf-teal-500: var(--gaspe-teal-500);
+  --acf-teal-600: var(--gaspe-teal-600);
+  --acf-teal-700: var(--gaspe-teal-700);
+  --acf-teal-800: var(--gaspe-teal-800);
+  --acf-teal-900: var(--gaspe-teal-900);
+
+  --acf-blue-50:  var(--gaspe-blue-50);
+  --acf-blue-100: var(--gaspe-blue-100);
+  --acf-blue-200: var(--gaspe-blue-200);
+  --acf-blue-300: var(--gaspe-blue-300);
+  --acf-blue-400: var(--gaspe-blue-400);
+  --acf-blue-500: var(--gaspe-blue-500);
+  --acf-blue-600: var(--gaspe-blue-600);
+  --acf-blue-700: var(--gaspe-blue-700);
+  --acf-blue-800: var(--gaspe-blue-800);
+  --acf-blue-900: var(--gaspe-blue-900);
+
+  --acf-neutral-50:  var(--gaspe-neutral-50);
+  --acf-neutral-100: var(--gaspe-neutral-100);
+  --acf-neutral-200: var(--gaspe-neutral-200);
+  --acf-neutral-300: var(--gaspe-neutral-300);
+  --acf-neutral-400: var(--gaspe-neutral-400);
+  --acf-neutral-500: var(--gaspe-neutral-500);
+  --acf-neutral-600: var(--gaspe-neutral-600);
+  --acf-neutral-700: var(--gaspe-neutral-700);
+  --acf-neutral-800: var(--gaspe-neutral-800);
+  --acf-neutral-900: var(--gaspe-neutral-900);
+  --acf-neutral-950: var(--gaspe-neutral-950);
+
+  --acf-gradient-start: var(--gaspe-gradient-start);
+  --acf-gradient-mid:   var(--gaspe-gradient-mid);
+  --acf-gradient-end:   var(--gaspe-gradient-end);
 }
 
 /* ── Dark mode overrides ── */

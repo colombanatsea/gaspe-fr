@@ -83,7 +83,42 @@ export function MemberDetail({ slug }: { slug: string }) {
   const companyJobs = publishedJobs.filter(
     (j) => j.companySlug === member.slug
   );
-  const vessels = profile?.vessels ?? [];
+
+  // Flotte : on privilégie la liste éditoriale statique (`member.fleet`,
+  // typée `FleetVessel` avec IMO / type / capacité / année). Si elle n'est
+  // pas fournie, on retombe sur la flotte déclarée par l'adhérent dans son
+  // espace (type `Vessel`, champs plus minimaux).
+  type DisplayVessel = {
+    key: string;
+    name: string;
+    imo?: string;
+    ums?: string;
+    type?: string;
+    size?: string;
+    yearBuilt?: number;
+    passengerCapacity?: number;
+    vehicleCapacity?: number;
+    flag?: string;
+  };
+  const vessels: DisplayVessel[] =
+    member.fleet && member.fleet.length > 0
+      ? member.fleet.map((v, i) => ({
+          key: `${member.slug}-fleet-${i}`,
+          name: v.name,
+          imo: v.imo,
+          type: v.type,
+          yearBuilt: v.yearBuilt,
+          passengerCapacity: v.passengerCapacity,
+          vehicleCapacity: v.vehicleCapacity,
+          flag: v.flag,
+        }))
+      : (profile?.vessels ?? []).map((v) => ({
+          key: v.id,
+          name: v.name,
+          imo: v.imo,
+          ums: v.ums,
+          size: v.size,
+        }));
   const logoUrl = profile?.companyLogo || member.logoUrl;
   const territoryLabel =
     member.territory === "dom-tom" ? "Outre-mer" : "Hexagone";
@@ -160,7 +195,7 @@ export function MemberDetail({ slug }: { slug: string }) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {vessels.map((vessel) => (
                     <div
-                      key={vessel.id}
+                      key={vessel.key}
                       className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-5 gaspe-card-hover"
                     >
                       <div className="flex items-center gap-3 mb-3">
@@ -179,15 +214,46 @@ export function MemberDetail({ slug }: { slug: string }) {
                             />
                           </svg>
                         </div>
-                        <h4 className="font-heading font-semibold text-foreground">
-                          {vessel.name}
-                        </h4>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-heading font-semibold text-foreground truncate">
+                            {vessel.name}
+                          </h4>
+                          {vessel.type && (
+                            <p className="text-xs text-foreground-muted capitalize">
+                              {vessel.type}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <dl className="space-y-1 text-sm text-foreground-muted">
                         {vessel.imo && (
                           <div className="flex justify-between">
                             <dt className="font-medium">IMO</dt>
-                            <dd>{vessel.imo}</dd>
+                            <dd className="font-mono">{vessel.imo}</dd>
+                          </div>
+                        )}
+                        {vessel.yearBuilt && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Année</dt>
+                            <dd>{vessel.yearBuilt}</dd>
+                          </div>
+                        )}
+                        {vessel.passengerCapacity && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Passagers</dt>
+                            <dd>{vessel.passengerCapacity}</dd>
+                          </div>
+                        )}
+                        {vessel.vehicleCapacity && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Véhicules</dt>
+                            <dd>{vessel.vehicleCapacity}</dd>
+                          </div>
+                        )}
+                        {vessel.flag && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Pavillon</dt>
+                            <dd>{vessel.flag}</dd>
                           </div>
                         )}
                         {vessel.ums && (

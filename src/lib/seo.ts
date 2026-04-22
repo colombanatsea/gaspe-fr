@@ -105,21 +105,21 @@ export const DEFAULT_PAGE_META: Record<
   homepage: {
     title: "GASPE – Organisation patronale du maritime côtier français",
     description:
-      "Le GASPE fédère 27 compagnies d'armateurs assurant le service public maritime côtier en France : passages d'eau, liaisons îles, transport de passagers et continuité territoriale.",
+      "Le GASPE fédère 26 compagnies d'armateurs assurant le service public maritime côtier en France : passages d'eau, liaisons îles, transport de passagers et continuité territoriale.",
     keywords: ["maritime côtier", "service public maritime", "armateurs côtiers"],
     path: "/",
   },
   "notre-groupement": {
     title: "Notre Groupement",
     description:
-      "Depuis 1951, le GASPE rassemble 31 adhérents (27 compagnies + 4 experts) au service du transport maritime côtier français et de la continuité territoriale.",
+      "Depuis 1951, le GASPE rassemble 30 adhérents (26 compagnies + 4 experts) au service du transport maritime côtier français et de la continuité territoriale.",
     keywords: ["GASPE histoire", "armateurs côtiers France", "1951"],
     path: "/notre-groupement",
   },
   "nos-adherents": {
-    title: "Nos Adhérents – 27 compagnies maritimes côtières",
+    title: "Nos Adhérents – 26 compagnies maritimes côtières",
     description:
-      "Découvrez les 27 compagnies armateurs adhérentes du GASPE sur l'ensemble du littoral français : hexagone et outre-mer, passages d'eau, liaisons îles.",
+      "Découvrez les 26 compagnies armateurs adhérentes du GASPE sur l'ensemble du littoral français : hexagone et outre-mer, passages d'eau, liaisons îles.",
     keywords: ["compagnies maritimes France", "armateurs Bretagne", "liaisons îles françaises"],
     path: "/nos-adherents",
   },

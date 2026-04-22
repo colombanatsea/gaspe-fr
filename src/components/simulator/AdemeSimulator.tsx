@@ -43,6 +43,7 @@ import {
   Tooltip, Legend, ResponsiveContainer, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, PieChart, Pie, Cell
 } from "recharts";
+import { memberStats } from "@/data/members";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -2349,7 +2350,7 @@ export default function AdemeSimulator() {
                 la transition énergétique.
                 <br /><br />
                 Le porteur est membre du GASPE (Groupement des Armateurs de Services Publics Maritimes
-                de Passages d'Eau), qui représente 165 navires et 30 compagnies de transport maritime
+                de Passages d'Eau), qui représente {memberStats.totalShips} navires et {memberStats.compagnies} compagnies de transport maritime
                 de proximité, dont 90% de TPE/PME.
               </div>
             </Cd>

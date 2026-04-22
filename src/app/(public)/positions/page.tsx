@@ -13,6 +13,7 @@ import {
   type PositionItem,
   type PositionTag,
 } from "@/data/positions";
+import { memberStats } from "@/data/members";
 
 const PAGE_ID = "positions";
 const D = (s: string) => getCmsDefault(PAGE_ID, s);
@@ -211,10 +212,11 @@ export default function PositionsPage() {
                 </h3>
                 <p className="text-sm text-foreground-muted leading-relaxed mb-4">
                   Le GASPE – Groupement des Armateurs de Services Publics
-                  Maritimes de Passages d&apos;Eau – fédère 27 compagnies
-                  maritimes côtières françaises assurant les liaisons de service
-                  public sur l&apos;hexagone et en outre-mer. 1&nbsp;494
-                  marins français, 165 navires, 25 M+ de passagers par an.
+                  Maritimes de Passages d&apos;Eau – fédère{" "}
+                  {memberStats.compagnies} compagnies maritimes côtières
+                  françaises assurant les liaisons de service public sur
+                  l&apos;hexagone et en outre-mer. 1&nbsp;494 marins français,{" "}
+                  {memberStats.totalShips} navires, 25 M+ de passagers par an.
                 </p>
 
                 <p className="text-sm text-foreground-muted mb-6">
