@@ -9,7 +9,7 @@ export const SITE_TAGLINE = "D'un littoral à l'autre. Localement ancrés. Socia
  * Longueur : ~155-160 caractères (optimum meta description Google).
  */
 export const SITE_DESCRIPTION =
-  "Le GASPE, organisation patronale représentative du maritime côtier français, fédère 27 compagnies armateurs assurant la continuité territoriale (passages d'eau, îles, liaisons côtières).";
+  "Le GASPE, organisation patronale représentative du maritime côtier français, fédère 26 compagnies armateurs assurant la continuité territoriale (passages d'eau, îles, liaisons côtières).";
 /** Mots-clés cibles stratégiques (ordre décroissant de priorité). */
 export const SITE_KEYWORDS = [
   "maritime côtier",

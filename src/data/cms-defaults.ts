@@ -194,8 +194,8 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "filters-heading": "Filtres",
     "quick-stats": JSON.stringify([
       { value: "1 494", label: "Collaborateurs" },
-      { value: "165", label: "Navires" },
-      { value: "31", label: "Adhérents" },
+      { value: "{navires}", label: "Navires" },
+      { value: "{adherents}", label: "Adhérents" },
     ]),
   },
 

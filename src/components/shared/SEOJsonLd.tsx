@@ -40,7 +40,7 @@ export function OrganizationJsonLd() {
         image: "https://www.gaspe.fr/og-image.png",
         foundingDate: "1951",
         description:
-          "Organisation patronale représentative du maritime côtier français — fédère 27 compagnies armateurs assurant service public, continuité territoriale, passages d'eau et liaisons îles.",
+          "Organisation patronale représentative du maritime côtier français — fédère 26 compagnies armateurs assurant service public, continuité territoriale, passages d'eau et liaisons îles.",
         slogan: "D'un littoral à l'autre. Localement ancrés. Socialement engagés.",
         knowsAbout: [
           "Transport maritime côtier",

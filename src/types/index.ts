@@ -7,6 +7,30 @@
 
 /* ── Core domain types (defined here) ── */
 
+/**
+ * Détail d'un navire de la flotte d'une compagnie adhérente.
+ * Champs optionnels — un nom minimal suffit ; les autres se remplissent au fil
+ * des données éditoriales (importées du tableur adhérents).
+ */
+export interface FleetVessel {
+  /** Nom commercial du navire */
+  name: string;
+  /** Numéro IMO (7 chiffres) — identifiant unique OMI, sans préfixe "IMO " */
+  imo?: string;
+  /** Type / usage : bac, catamaran, ferry, navette fluviale, roulier… */
+  type?: string;
+  /** Année de mise en service */
+  yearBuilt?: number;
+  /** Capacité passagers max */
+  passengerCapacity?: number;
+  /** Capacité véhicules max */
+  vehicleCapacity?: number;
+  /** Pavillon (ex: "RIF", "Premier registre") */
+  flag?: string;
+  /** URL photo ou page fiche navire */
+  imageUrl?: string;
+}
+
 export interface Member {
   name: string;
   slug: string;
@@ -28,6 +52,14 @@ export interface Member {
   websiteUrl?: string;
   employeeCount?: number;
   shipCount?: number;
+  /**
+   * Flotte détaillée — liste des navires avec nom / IMO / type / capacité.
+   * Saisie via le tableur adhérents puis intégrée en code ou via l'admin CMS.
+   * Quand renseignée, la page publique `/nos-adherents/[slug]` affiche un
+   * bloc "Flotte" avec les détails par navire. `shipCount` reste la source
+   * de vérité pour le compteur total (tolère les flottes non détaillées).
+   */
+  fleet?: FleetVessel[];
 }
 
 export interface NavItem {
