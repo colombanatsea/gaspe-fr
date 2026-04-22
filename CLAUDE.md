@@ -33,7 +33,8 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ Migrations D1 appliquées : 0001-0007 (dont 0007 org_archived appliquée via deploy-worker `--remote`)
 - ⏳ Migration 0008 (newsletter v2 : nl_drafts, nl_sends, nl_events, nl_templates) appliquée automatiquement au merge session 26 sur main
 - ⏳ Migration 0009 (session 29 : ajoute `users.brevo_synced_at` pour tracker la synchronisation contact Brevo) — à appliquer au prochain merge main
-- ⏳ Migration 0012 (session 35 : table `organization_vessels` pour la flotte détaillée par compagnie — `ensureVesselsTable()` défensif côté Worker en fallback) — à appliquer au prochain merge main
+- ✅ Migration 0012 (session 35 : table `organization_vessels`) appliquée en prod (vérifié via `/api/organizations/:slug/fleet`)
+- ⏳ Migration 0013 (session 35 : seed initial `organization_vessels` — 110 navires sur 25 compagnies via `INSERT OR IGNORE`, idempotent — généré par `scripts/build-fleet-seed-sql.ts`) — à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
