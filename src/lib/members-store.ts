@@ -51,8 +51,19 @@ function getLocalMembers(): StoredMember[] {
     return seeded;
   }
   const parsed = safeParse(membersArraySchema, raw, staticMembers as StoredMember[]);
-  // Force re-seed if cached data has stale logos (v2.12: replaced placeholders with real logos)
-  if (parsed.some((m) => m.logoUrl?.includes("gaspe.fr/wp-content") || m.logoUrl?.includes("placeholder-"))) {
+  // Force re-seed if cached data is stale. Les déclencheurs reflètent les
+  // ruptures passées (placeholders WP, puis logo Capstan/MIE échangé en
+  // v2.22.1, puis retrait Kéolis Bordeaux). Le test Capstan est l'union
+  // de "logoUrl toujours présent" ET "cache plus vieux que session 34" —
+  // en pratique ça déclenche le re-seed une seule fois.
+  const hasStalePlaceholder = parsed.some(
+    (m) => m.logoUrl?.includes("gaspe.fr/wp-content") || m.logoUrl?.includes("placeholder-")
+  );
+  const hasStaleCapstanLogo = parsed.some(
+    (m) => m.slug === "capstan-avocats" && m.logoUrl === "/assets/logos/image12.png"
+  );
+  const hasKeolisBordeaux = parsed.some((m) => m.slug === "keolis-bordeaux-metropole");
+  if (hasStalePlaceholder || hasStaleCapstanLogo || hasKeolisBordeaux) {
     const seeded: StoredMember[] = staticMembers.map((m) => ({ ...m, archived: false }));
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(seeded));
     return seeded;
