@@ -637,6 +637,157 @@ export const positions: PositionItem[] = [
       <p>Le Groupement anime un retour d'expérience mutualisé entre adhérents, publie des fiches techniques, dialogue avec les éco-organismes (Corepile, Screlec, Cyclevia) et porte auprès des pouvoirs publics la prise en compte des spécificités du maritime côtier dans les filières REP.</p>
     `,
   },
+  {
+    title: "Pavillon français premier registre vs RIF : enjeux pour les liaisons côtières",
+    date: "Avril 2026",
+    sortKey: "2026-04-05",
+    publishedAt: "2026-04-05T09:00:00+02:00",
+    excerpt:
+      "Premier registre, RIF, registres internationaux : décryptage des choix de pavillonnement pour les compagnies maritimes côtières françaises et leurs implications sociales et fiscales.",
+    tag: "Position",
+    slug: "pavillon-francais-premier-registre-vs-rif",
+    body: `
+      <h2>Trois régimes de pavillonnement français</h2>
+      <p>Une compagnie maritime française dispose de trois cadres juridiques principaux pour pavillonner ses navires :</p>
+      <ul>
+        <li><strong>Premier registre</strong> (registre métropolitain) – application complète du Code du travail français et de la <strong>CCN 3228</strong> pour les passages d'eau, ENIM (Établissement national des invalides de la marine) pour la protection sociale.</li>
+        <li><strong>Registre des Terres australes et antarctiques françaises (TAAF)</strong> – pour les liaisons d'outre-mer, application des conventions collectives spécifiques.</li>
+        <li><strong>Registre international français (RIF)</strong> – créé en 2005, conçu pour la concurrence internationale ; permet d'embaucher jusqu'à 75% de navigants extra-communautaires sur les rôles, hors capitaine et second.</li>
+      </ul>
+      <h2>Pourquoi les liaisons côtières restent au premier registre</h2>
+      <p>Les compagnies adhérentes du GASPE exploitent leurs navires sous <strong>premier registre</strong> dans la quasi-totalité des cas, pour 4 raisons principales :</p>
+      <ul>
+        <li><strong>Mission de service public</strong> – les délégations de service public (DSP) imposent souvent un cadre social français complet.</li>
+        <li><strong>Continuité territoriale</strong> – les liaisons hexagone-îles et inter-îles relèvent du transport de proximité, non du commerce international.</li>
+        <li><strong>Convention collective protectrice</strong> – la CCN 3228 garantit des conditions de rémunération et de travail alignées sur le droit commun.</li>
+        <li><strong>Identité française des équipages</strong> – les <strong>1 494 marins français</strong> du GASPE sont un atout culturel et opérationnel (langue, ancrage local).</li>
+      </ul>
+      <h2>Implications sociales et fiscales</h2>
+      <ul>
+        <li><strong>Cotisations ENIM</strong> – régime spécial des marins (assurance maladie, maternité, retraite, invalidité) financé par l'employeur et le marin.</li>
+        <li><strong>Exonérations dégressives de charges patronales</strong> – mesures de soutien au pavillon français pour les navires en concurrence internationale (article 137 du Code des douanes).</li>
+        <li><strong>Taxe au tonnage</strong> – option d'imposition forfaitaire ouverte aux compagnies pavillonnées en France et exposées à la concurrence (peu utilisée par les armateurs côtiers).</li>
+        <li><strong>TVA</strong> – exonération sur les ventes de carburant et de provisions de bord pour les navires affectés à la navigation maritime (article 262 du CGI).</li>
+      </ul>
+      <h2>Position du GASPE</h2>
+      <p>Le pavillon français premier registre est <strong>un actif stratégique pour le maritime côtier</strong> : il garantit la qualité du service public, la sécurité des passagers, et préserve un savoir-faire national irremplaçable. Le Groupement s'oppose à toute proposition de glissement des liaisons côtières vers le RIF et défend au contraire un renforcement du soutien public au pavillon premier registre via les DSP, les compensations de continuité territoriale et l'investissement dans la formation des marins français.</p>
+    `,
+  },
+  {
+    title: "Cybersécurité passerelle ECDIS et radar : guide de bonnes pratiques",
+    date: "Mars 2026",
+    sortKey: "2026-03-05",
+    publishedAt: "2026-03-05T09:00:00+01:00",
+    excerpt:
+      "Les systèmes électroniques de la passerelle (ECDIS, radar, AIS, GMDSS) sont devenus des cibles cyber. Recommandations opérationnelles pour les compagnies maritimes côtières.",
+    tag: "Position",
+    slug: "cybersecurite-passerelle-ecdis-radar-bonnes-pratiques",
+    body: `
+      <h2>La passerelle, surface d'attaque sous-estimée</h2>
+      <p>Les passerelles modernes des navires concentrent une dizaine de systèmes électroniques interconnectés : <strong>ECDIS</strong> (cartes électroniques), <strong>radars X et S band</strong>, <strong>AIS</strong> (transpondeur d'identification automatique), <strong>GMDSS</strong> (radio de détresse), <strong>GPS</strong>, <strong>compas électronique</strong>, <strong>loch</strong>, <strong>conning display</strong>, <strong>VDR</strong> (boîte noire). La plupart partagent des bus de données NMEA / Ethernet et beaucoup acceptent des entrées USB pour les mises à jour de cartes ou de logiciels.</p>
+      <h2>Vecteurs d'attaque documentés</h2>
+      <ul>
+        <li><strong>Spoofing GPS / GNSS</strong> – émission d'un signal GPS leurre depuis le quai ou un navire proche, le récepteur affiche une position fausse.</li>
+        <li><strong>Spoofing AIS</strong> – injection de cibles AIS fictives ou modification des données du navire émetteur.</li>
+        <li><strong>Mises à jour cartes ECDIS</strong> – clés USB compromises lors d'interventions en escale, malware introduit silencieusement.</li>
+        <li><strong>Maintenance OEM</strong> – portables des techniciens équipementiers connectés au réseau passerelle, parfois reliés à internet en parallèle.</li>
+        <li><strong>Wi-Fi non segmenté</strong> – le wifi équipage / passagers partageant le même réseau physique que les systèmes opérationnels.</li>
+      </ul>
+      <h2>Cadre normatif applicable</h2>
+      <ul>
+        <li><strong>Résolution OMI MSC.428(98)</strong> – obligation de prendre en compte la cybersécurité dans le système de gestion de la sécurité (SGS) ISM.</li>
+        <li><strong>Directives BIMCO / ISO 27001</strong> – guides détaillés pour les armateurs.</li>
+        <li><strong>IACS UR E26 et E27</strong> – exigences cyber sur les nouveaux navires (entrée en vigueur juillet 2024 pour les navires neufs).</li>
+        <li><strong>NIS 2</strong> (UE) – pour les armateurs entités essentielles ou importantes.</li>
+      </ul>
+      <h2>Recommandations opérationnelles GASPE</h2>
+      <ul>
+        <li><strong>Segmenter le réseau</strong> : VLAN dédié à la passerelle, isolé du wifi équipage / passagers et de l'administratif bord.</li>
+        <li><strong>Désactiver les ports USB</strong> non essentiels ou ne les autoriser que sur des stations de mise à jour dédiées (sas USB).</li>
+        <li><strong>Authentifier toute intervention OEM</strong> : badge nominatif, journalisation, supervision visuelle par l'officier de quart.</li>
+        <li><strong>Croiser GPS et autres sources</strong> : éphémérides solaires, points connus, radar côtier – détection précoce du spoofing.</li>
+        <li><strong>Sauvegarder les cartes ECDIS</strong> et conserver des cartes papier de secours sur les routes côtières.</li>
+        <li><strong>Tester régulièrement</strong> les procédures de continuité (panne ECDIS / GPS / radar).</li>
+        <li><strong>Former l'équipage</strong> aux signaux faibles d'une attaque cyber (comportement anormal d'un instrument).</li>
+      </ul>
+      <h2>Rôle du GASPE</h2>
+      <p>Le Groupement diffuse à ses adhérents une fiche pratique mise à jour annuellement, organise des exercices avec les ports d'accueil et coopère avec l'<strong>ANSSI</strong>, le <strong>BEAmer</strong> et l'<strong>ENISA</strong> pour partager les retours d'expérience anonymisés.</p>
+    `,
+  },
+  {
+    title: "Vendée Globe et Route du Rhum : impact sur les liaisons maritimes côtières",
+    date: "Octobre 2025",
+    sortKey: "2025-10-22",
+    publishedAt: "2025-10-22T10:00:00+02:00",
+    excerpt:
+      "Au-delà du spectacle sportif, les grandes courses au large génèrent un afflux exceptionnel de passagers et de véhicules sur les liaisons côtières. Comment les armateurs s'organisent.",
+    tag: "Actualité",
+    slug: "vendee-globe-route-rhum-impact-liaisons-cotieres",
+    body: `
+      <h2>Un événement sportif structurant pour les façades maritimes</h2>
+      <p>Le <strong>Vendée Globe</strong> (départ tous les 4 ans des Sables-d'Olonne) et la <strong>Route du Rhum</strong> (départ tous les 4 ans de Saint-Malo) attirent à chaque édition entre <strong>1 et 2 millions de visiteurs</strong> sur les sites de départ, étalés sur 2 à 3 semaines de village course. La Transat Jacques Vabre (Le Havre), l'Ocean Race ou la Volvo Ocean Race produisent des effets comparables sur d'autres ports français.</p>
+      <h2>Effet sur les liaisons côtières adjacentes</h2>
+      <ul>
+        <li><strong>Pic de trafic passagers et véhicules</strong> sur les liaisons île d'Yeu / Yeu-continent, Bréhat, Cézembre, Glénan en saison de course.</li>
+        <li><strong>Réservations explosent</strong> – jusqu'à +60% de fréquentation sur certaines liaisons, avec saturation possible plusieurs week-ends consécutifs.</li>
+        <li><strong>Profil passagers atypique</strong> – familles touristes, professionnels du nautisme, journalistes, équipes sponsors – avec besoins spécifiques (gros bagages, matériel pro).</li>
+        <li><strong>Rotation accrue</strong> et aménagements horaires temporaires.</li>
+      </ul>
+      <h2>Comment les armateurs s'organisent</h2>
+      <ul>
+        <li><strong>Plan de transport renforcé</strong> – rotations supplémentaires, ouverture des billetteries en ligne en avance, billets non remboursables encadrés par les conditions générales.</li>
+        <li><strong>Personnel d'accueil renforcé</strong> – recrutement saisonnier formé, équipes bilingues, pictogrammes multilingues.</li>
+        <li><strong>Coordination avec les organisateurs</strong> – réunions préparatoires avec SAEM Vendée, Pen Duick, OC Sport pour anticiper les flux.</li>
+        <li><strong>Coordination avec collectivités</strong> – plans de circulation aux abords des terminaux, navettes terrestres complémentaires.</li>
+        <li><strong>Communication anticipée</strong> – campagnes "réservez tôt", FAQ dédiées sur les sites web, alertes par email aux passagers réguliers.</li>
+      </ul>
+      <h2>Retombées économiques pour les armateurs</h2>
+      <p>Au-delà du chiffre d'affaires direct sur les billets, les courses au large constituent une <strong>vitrine pour les liaisons côtières</strong> auprès d'un public francophone et international. Plusieurs compagnies adhérentes ont signé des partenariats de visibilité avec les courses, accueillent des skippers et leurs équipes de communication pour des reportages, ou affrètent leurs navires comme bateaux suiveurs lors des largages au large.</p>
+      <h2>Engagement du GASPE</h2>
+      <p>Le Groupement coordonne un retour d'expérience post-course entre les compagnies concernées, partage les indicateurs de fréquentation et les bonnes pratiques de gestion de pic. Il dialogue avec les <strong>collectivités hôtes</strong> et les <strong>organisateurs</strong> pour intégrer en amont les contraintes opérationnelles des armateurs côtiers dans les schémas d'accueil.</p>
+    `,
+  },
+  {
+    title: "Parc roulier des ferries côtiers : adaptation aux véhicules électriques et mobilités douces",
+    date: "Juin 2025",
+    sortKey: "2025-06-18",
+    publishedAt: "2025-06-18T10:00:00+02:00",
+    excerpt:
+      "L'évolution rapide du parc roulier (vélos électriques, motos, voitures électriques, trottinettes) impose aux ferries côtiers une adaptation des équipements de sécurité et des protocoles d'embarquement.",
+    tag: "Position",
+    slug: "parc-roulier-ferries-cotiers-mobilites-douces-vehicules-electriques",
+    body: `
+      <h2>Mutation rapide du parc roulier embarqué</h2>
+      <p>Les <strong>165 navires</strong> exploités par les compagnies adhérentes du GASPE transportent chaque année <strong>6,9 millions de véhicules</strong>. La composition de ce parc roulier évolue rapidement :</p>
+      <ul>
+        <li><strong>Voitures électriques et hybrides rechargeables</strong> – part en croissance constante (estimée à 20% des véhicules embarqués en 2026, contre 5% en 2020).</li>
+        <li><strong>Vélos à assistance électrique (VAE)</strong> – fort développement sur les liaisons touristiques et îles.</li>
+        <li><strong>Motos et scooters électriques</strong> – peu nombreux mais en croissance.</li>
+        <li><strong>Trottinettes électriques</strong> – afflux saisonnier non négligeable, souvent personnelles, parfois en location.</li>
+        <li><strong>Vélos cargos</strong> et <strong>vélos couchés</strong> – encombrement spécifique, zones d'amarrage à adapter.</li>
+      </ul>
+      <h2>Risques spécifiques aux véhicules électriques</h2>
+      <p>Les batteries lithium-ion peuvent en cas de défaillance partir en <strong>thermal runaway</strong> (emballement thermique) très rapide, libérant des gaz toxiques et résistant aux moyens d'extinction classiques. Les retours d'expérience de l'<strong>OMI</strong> et des grands armateurs européens convergent : les feux de batterie de voiture électrique sont parmi les sinistres les plus complexes à maîtriser à bord.</p>
+      <h2>Cadre réglementaire en évolution</h2>
+      <ul>
+        <li><strong>Convention SOLAS chapitre II-2</strong> (sécurité incendie) – révisée pour intégrer les véhicules électriques (entrée en vigueur progressive 2026-2028).</li>
+        <li><strong>Code IMDG</strong> – les batteries lithium-ion en transport autonome relèvent du fret dangereux ; les véhicules embarqués bénéficient d'exemptions sous conditions.</li>
+        <li><strong>DAM – instruction technique 2024</strong> – recommandations françaises sur l'embarquement des véhicules électriques sur les navires à passagers.</li>
+      </ul>
+      <h2>Bonnes pratiques mises en œuvre par les adhérents</h2>
+      <ul>
+        <li><strong>Inspection visuelle systématique</strong> à l'embarquement (état général, traces de chauffe, déformations).</li>
+        <li><strong>Identification des véhicules électriques</strong> sur le plan de chargement avec stationnement préférentiel près des accès lutte-incendie.</li>
+        <li><strong>Détecteurs de chaleur et caméras thermiques</strong> dans les garages voitures sur les nouveaux navires.</li>
+        <li><strong>Couvertures anti-feu spécifiques batteries</strong> et rideaux d'eau dans les garages.</li>
+        <li><strong>Formation équipage</strong> à la gestion d'un sinistre batterie, en lien avec les SDIS portuaires.</li>
+        <li><strong>Espace dédié aux mobilités douces</strong> (vélos, trottinettes) avec sangles d'amarrage et signalétique.</li>
+        <li><strong>Information passagers</strong> – consignes de stationnement, interdiction de recharger en navigation.</li>
+      </ul>
+      <h2>Position du GASPE</h2>
+      <p>Le Groupement accompagne ses adhérents dans la mise à niveau de leurs procédures, mutualise les retours d'expérience et porte auprès de la <strong>DAM</strong>, de l'<strong>OMI</strong> et des constructeurs de navires une demande d'<strong>équipements standardisés</strong> de prévention incendie batteries dans les nouveaux ferries. La transition électrique des véhicules est une bonne nouvelle pour la décarbonation, à condition que la sécurité maritime suive le même rythme.</p>
+    `,
+  },
 ];
 
 /** Tri naturel par sortKey décroissant (plus récent en tête) */
