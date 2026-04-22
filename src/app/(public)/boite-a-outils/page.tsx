@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
@@ -692,6 +692,29 @@ export default function BoiteAOutilsPage() {
   const [activeSection, setActiveSection] = useState(TOOLKIT_SECTIONS[0].id);
   const currentSection = TOOLKIT_SECTIONS.find((s) => s.id === activeSection);
 
+  // Deep-link : active l'onglet demandé par le hash (`#guides-employeur`, etc.)
+  // Synchronisé à l'hydratation + sur les navigations hashchange.
+  useEffect(() => {
+    const applyHash = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (!hash) return;
+      const target = TOOLKIT_SECTIONS.find((s) => s.id === hash);
+      if (target) setActiveSection(target.id);
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+  // Reflète l'onglet actif dans le hash pour que le deep link reste partageable
+  // (sans ajouter d'entrée à l'historique de navigation).
+  const handleSelect = (id: string) => {
+    setActiveSection(id);
+    if (typeof window !== "undefined" && window.location.hash !== `#${id}`) {
+      history.replaceState(null, "", `#${id}`);
+    }
+  };
+
   return (
     <>
       <FAQJsonLd items={[...CCN3228_FAQ]} />
@@ -704,7 +727,7 @@ export default function BoiteAOutilsPage() {
 
       <div ref={ref} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Section tabs */}
-        <SectionNav activeId={activeSection} onSelect={setActiveSection} />
+        <SectionNav activeId={activeSection} onSelect={handleSelect} />
 
         {/* Section header */}
         {currentSection && (
