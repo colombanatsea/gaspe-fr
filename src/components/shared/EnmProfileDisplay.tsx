@@ -86,7 +86,7 @@ export function EnmProfileDisplay({ user }: Props) {
         </div>
         <div className="rounded-xl border border-border-light bg-background p-3 text-center">
           <p className={`text-lg font-bold font-heading ${medicalExpired ? "text-red-500" : "text-green-600"}`}>
-            {medical?.decision ? (medicalExpired ? "Expiree" : "Valide") : "—"}
+            {medical?.decision ? (medicalExpired ? "Expiree" : "Valide") : "–"}
           </p>
           <p className="text-[10px] text-foreground-muted uppercase tracking-wider">Aptitude med.</p>
         </div>
@@ -140,7 +140,7 @@ export function EnmProfileDisplay({ user }: Props) {
                           </div>
                           <p className="text-xs text-foreground-muted mt-1">
                             {formatDate(s.startDate)}
-                            {s.endDate && <> — {formatDate(s.endDate)}</>}
+                            {s.endDate && <> – {formatDate(s.endDate)}</>}
                           </p>
                         </div>
                       </div>

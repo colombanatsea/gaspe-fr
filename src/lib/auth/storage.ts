@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Auth storage — admin seeding + legacy helpers                      */
+/*  Auth storage – admin seeding + legacy helpers                      */
 /*  Uses AuthStore interface for all read/write operations.            */
 /* ------------------------------------------------------------------ */
 

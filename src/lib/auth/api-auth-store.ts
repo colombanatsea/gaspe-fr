@@ -1,5 +1,5 @@
 /**
- * API-backed AuthStore — replaces LocalStorageAuthStore
+ * API-backed AuthStore – replaces LocalStorageAuthStore
  *
  * Calls the GASPE API Worker for all auth operations.
  * JWT token is stored in localStorage and sent via Authorization header

@@ -71,7 +71,7 @@ export function UnsubscribeClient() {
         <p className="mt-4 text-foreground-muted">
           {!token
             ? "Ce lien de désinscription est invalide ou a expiré. Contactez-nous à contact@gaspe.fr."
-            : "Mode démo — fonctionnalité disponible uniquement en production."}
+            : "Mode démo – fonctionnalité disponible uniquement en production."}
         </p>
       </main>
     );

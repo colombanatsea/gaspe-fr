@@ -54,7 +54,7 @@ export function exportAccountsCsv(users: ExportableUser[]) {
     u.company ?? "",
     u.phone ?? "",
     u.approved ? "Actif" : "En attente",
-    u.membershipStatus ?? "—",
+    u.membershipStatus ?? "–",
     u.companyRole ?? "",
     u.archived ? "Oui" : "Non",
     new Date(u.createdAt).toLocaleDateString("fr-FR"),

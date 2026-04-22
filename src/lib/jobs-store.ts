@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Jobs Store — dual-mode job management                              */
+/*  Jobs Store – dual-mode job management                              */
 /*  localStorage (demo) ↔ API/D1 (production)                         */
 /* ------------------------------------------------------------------ */
 
@@ -79,7 +79,7 @@ export async function getAllPublishedJobs(): Promise<Job[]> {
   }).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
-/** Get ALL offers (published + drafts) — admin only */
+/** Get ALL offers (published + drafts) – admin only */
 export async function getAllOffers(): Promise<Job[]> {
   if (isApiMode()) {
     try {

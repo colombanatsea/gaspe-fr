@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Transactional email service — via CF Worker proxy to Brevo         */
+/*  Transactional email service – via CF Worker proxy to Brevo         */
 /*  The API key stays server-side. Client sends to /api/email.         */
 /* ------------------------------------------------------------------ */
 
@@ -21,7 +21,7 @@ async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; e
   const endpoint = API_URL ? `${API_URL}/api/email` : "/api/email";
 
   if (!API_URL) {
-    console.warn("[Email] Pas d'API_URL configurée — email non envoyé (mode localStorage)");
+    console.warn("[Email] Pas d'API_URL configurée – email non envoyé (mode localStorage)");
     return { success: false, error: "API_URL non configurée" };
   }
 
@@ -72,7 +72,7 @@ const HEADER = `
 
 const FOOTER = `
   <div style="margin-top:32px;padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-family:'DM Sans',Helvetica,sans-serif;font-size:12px;color:#6B6560;">
-    <p style="margin:0;">GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
+    <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
     <p style="margin:4px 0 0;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
   </div>
 `;
@@ -109,7 +109,7 @@ export async function sendNewAdherentNotification(adherent: {
 
   return sendEmail({
     to: [{ email: adminEmail, name: "Administrateur GASPE" }],
-    subject: `Nouvelle demande d'adhésion — ${adherent.name}`,
+    subject: `Nouvelle demande d'adhésion – ${adherent.name}`,
     htmlContent: emailWrapper(`
       <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Nouvelle demande d'adhésion</h2>
       <p style="margin:0 0 8px;color:#222221;font-size:15px;">Un nouvel adhérent demande à rejoindre le GASPE :</p>
@@ -124,7 +124,7 @@ export async function sendNewAdherentNotification(adherent: {
         </a>
       </p>
     `),
-    textContent: `Nouvelle demande d'adhésion de ${adherent.name} (${adherent.email})${adherent.company ? ` — ${adherent.company}` : ""}. Connectez-vous à ${SITE_URL}/admin/comptes pour valider.`,
+    textContent: `Nouvelle demande d'adhésion de ${adherent.name} (${adherent.email})${adherent.company ? ` – ${adherent.company}` : ""}. Connectez-vous à ${SITE_URL}/admin/comptes pour valider.`,
   });
 }
 
@@ -181,7 +181,7 @@ export async function sendWelcomeCandidatNotification(candidat: {
 }): Promise<{ success: boolean; error?: string }> {
   return sendEmail({
     to: [{ email: candidat.email, name: candidat.name }],
-    subject: "Bienvenue sur GASPE — Votre espace candidat est prêt",
+    subject: "Bienvenue sur GASPE – Votre espace candidat est prêt",
     htmlContent: emailWrapper(`
       <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Bienvenue sur GASPE !</h2>
       <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${candidat.name},</p>
@@ -218,7 +218,7 @@ export async function sendApplicationReceivedNotification(data: {
 }): Promise<{ success: boolean; error?: string }> {
   return sendEmail({
     to: [{ email: data.recruiterEmail, name: data.recruiterName }],
-    subject: `Nouvelle candidature — ${data.jobTitle}`,
+    subject: `Nouvelle candidature – ${data.jobTitle}`,
     htmlContent: emailWrapper(`
       <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Nouvelle candidature reçue</h2>
       <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.recruiterName},</p>
@@ -259,7 +259,7 @@ export async function sendApplicationStatusNotification(data: {
 
   return sendEmail({
     to: [{ email: data.candidateEmail, name: data.candidateName }],
-    subject: `Candidature "${data.jobTitle}" — ${data.statusLabel}`,
+    subject: `Candidature "${data.jobTitle}" – ${data.statusLabel}`,
     htmlContent: emailWrapper(`
       <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Mise à jour de votre candidature</h2>
       <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.candidateName},</p>
@@ -291,7 +291,7 @@ export async function sendContactConfirmation(data: {
 }): Promise<{ success: boolean; error?: string }> {
   return sendEmail({
     to: [{ email: data.email, name: data.name }],
-    subject: "Votre message a bien été reçu — GASPE",
+    subject: "Votre message a bien été reçu – GASPE",
     htmlContent: emailWrapper(`
       <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Message reçu</h2>
       <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${data.name},</p>

@@ -4,12 +4,12 @@ import { useEffect, useImperativeHandle, forwardRef, useState, useRef } from "re
 import type { Member } from "@/types";
 import { cn } from "@/lib/utils";
 
-// DOM-TOM quick-fly destinations — zoom 6 pour la vue France donne le meilleur
+// DOM-TOM quick-fly destinations – zoom 6 pour la vue France donne le meilleur
 // rapport contexte mer / identification des sites littoraux.
 const DEFAULT_CENTER: [number, number] = [46.8, -1.8];
 const DEFAULT_ZOOM = 6;
 
-// Bounding box de l'hexagone — utilisé par `fitBounds` au chargement pour
+// Bounding box de l'hexagone – utilisé par `fitBounds` au chargement pour
 // s'adapter à la hauteur réelle du conteneur (sinon, sur grand écran avec
 // un panneau plein-hauteur, le zoom 6 fixe déborde jusqu'en mer du Nord).
 // Coins SW (Pyrénées orientales) → NE (Dunkerque / Ardennes).
@@ -80,7 +80,7 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
           worldCopyJump: true,
         });
 
-        // Fond Esri World Ocean Base — mise en valeur de la mer (bathymétrie
+        // Fond Esri World Ocean Base – mise en valeur de la mer (bathymétrie
         // visible : plateau continental, fosses) et terre en gris très clair
         // sans aucune route. Idéal pour un site maritime.
         L.tileLayer(

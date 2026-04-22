@@ -1,7 +1,7 @@
 import type { Member } from "@/types";
 
 /**
- * Adhérents GASPE — source : https://www.gaspe.fr/nos-adherents/tous-nos-adherents/
+ * Adhérents GASPE – source : https://www.gaspe.fr/nos-adherents/tous-nos-adherents/
  * Triés par ordre alphabétique, noms exacts du site officiel
  */
 
@@ -458,7 +458,7 @@ export const experts = members.filter((m) => m.memberType === "expert");
 export const compagnies = members.filter((m) => m.memberType !== "expert");
 
 /* ═══════════════════════════════════════════════════════════════════
- * Compteurs dérivés — utilisés partout sur le site pour rester
+ * Compteurs dérivés – utilisés partout sur le site pour rester
  * cohérents quand on ajoute/retire/modifie un adhérent.
  * ═══════════════════════════════════════════════════════════════════
  */

@@ -107,7 +107,7 @@ export function MemberDetail({ slug }: { slug: string }) {
     id: v.id,
     name: v.name,
     imo: v.imo,
-    // on stocke l'info libre "size" dans crewSize faute de mieux — absent du
+    // on stocke l'info libre "size" dans crewSize faute de mieux – absent du
     // tableur de toute façon, c'est un affichage best-effort.
   }));
   const vessels: FleetVessel[] = fleetVessels.length > 0 ? fleetVessels : legacyVessels;
@@ -166,7 +166,7 @@ export function MemberDetail({ slug }: { slug: string }) {
 
         {/* Two-column layout */}
         <div className="grid gap-10 lg:grid-cols-3">
-          {/* Left column — 2/3 */}
+          {/* Left column – 2/3 */}
           <div className="lg:col-span-2 space-y-10">
             {/* Description */}
             <section>
@@ -264,7 +264,7 @@ export function MemberDetail({ slug }: { slug: string }) {
             )}
           </div>
 
-          {/* Right sidebar — 1/3 */}
+          {/* Right sidebar – 1/3 */}
           <div className="space-y-6">
             {/* Informations card */}
             <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-6">

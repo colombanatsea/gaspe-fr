@@ -1,12 +1,12 @@
 /**
- * CMS Defaults — default content for each editable page section.
+ * CMS Defaults – default content for each editable page section.
  *
  * These values serve two purposes:
  * 1. **Admin editor**: when opening a page editor and CMS is empty,
  *    these values are pre-filled so admins see the current live content
  *    instead of empty fields.
  * 2. **Public pages**: used as fallback via `useCmsContent(pageId, sectionId, fallback)`
- *    — when no CMS override exists, the hardcoded default displays.
+ *    – when no CMS override exists, the hardcoded default displays.
  *
  * When an admin edits and saves, the D1 `cms_pages` table stores the override.
  * The public page will then prefer the stored override.
@@ -282,7 +282,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "redirect-cta": "Voir les Positions",
   },
 
-  // Charte newsletter — éditée via /admin/newsletter/charte, injectée dans le
+  // Charte newsletter – éditée via /admin/newsletter/charte, injectée dans le
   // renderer HTML (src/lib/newsletter/render.ts) pour personnaliser l'identité
   // graphique des emails envoyés via Brevo.
   "newsletter-charte": {
@@ -303,7 +303,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
 
   footer: {
     "newsletter-title": "Restez informé des actualités maritimes",
-    // Tiret semi-quadratique (–) et non tiret quadratique (—) : règle typo GASPE.
+    // Tiret semi-quadratique (–) et non tiret quadratique (–) : règle typo GASPE.
     "newsletter-cta": "Positions, événements, offres d'emploi – directement dans votre boîte mail.",
     "social-linkedin": "https://www.linkedin.com/company/gaspe-groupement-des-armateurs-de-services-publics-maritimes/",
     "contact-email": "contact@gaspe.fr",

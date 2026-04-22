@@ -154,7 +154,7 @@ export default function EquipePage() {
                 onChange={(e) => setInviteForm({ ...inviteForm, orgRole: e.target.value })}
                 className={inputClass}
               >
-                <option value="">— Choisir —</option>
+                <option value="">– Choisir –</option>
                 <option value="dirigeant">Dirigeant</option>
                 <option value="exploitation">Exploitation</option>
                 <option value="armement">Armement</option>

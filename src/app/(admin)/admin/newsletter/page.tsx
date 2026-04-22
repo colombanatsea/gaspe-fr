@@ -35,7 +35,7 @@ function buildNewsletterHtml(content: string, categoryLabel: string): string {
       ${bodyHtml}
     </div>
     <div style="padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-size:12px;color:#6B6560;">
-      <p style="margin:0;">GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
+      <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
       <p style="margin:4px 0 0;">Pour modifier vos préférences de newsletter, connectez-vous sur votre espace.</p>
     </div>
   </div>
@@ -73,8 +73,8 @@ export default function AdminNewsletterPage() {
     setSending(true);
 
     if (!API_URL) {
-      // Demo mode — no API configured
-      console.warn("[Newsletter] Mode démo — API_URL non configurée");
+      // Demo mode – no API configured
+      console.warn("[Newsletter] Mode démo – API_URL non configurée");
       await new Promise((r) => setTimeout(r, 1000));
       setSending(false);
       setResult({ type: "success", message: "Newsletter envoyée avec succès ! (mode démo)" });
@@ -122,7 +122,7 @@ export default function AdminNewsletterPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter — Envoi rapide</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter – Envoi rapide</h1>
           <p className="mt-1 text-sm text-foreground-muted">
             Envoyez des newsletters texte ciblées par catégorie (v1).
           </p>

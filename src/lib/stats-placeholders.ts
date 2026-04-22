@@ -1,5 +1,5 @@
 /**
- * Stats placeholders — substitution dynamique dans les chaînes CMS.
+ * Stats placeholders – substitution dynamique dans les chaînes CMS.
  *
  * Les contenus éditoriaux (via `cms-defaults.ts` et D1 `cms_pages`) peuvent
  * contenir des placeholders `{key}` qui seront remplacés au rendu par les

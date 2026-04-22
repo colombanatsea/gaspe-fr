@@ -19,7 +19,7 @@ interface SubscriberRow {
   status: "pending" | "approved" | "rejected";
   brevo_synced_at?: string | null;
   preferences_updated_at?: string | null;
-  // 10 catégories canoniques (colonnes D1 — matchent NEWSLETTER_CATEGORIES)
+  // 10 catégories canoniques (colonnes D1 – matchent NEWSLETTER_CATEGORIES)
   info_generales?: number | null;
   ag?: number | null;
   emploi?: number | null;
@@ -287,7 +287,7 @@ export default function AdminNewsletterSubscribersPage() {
                     return (
                     <tr key={u.id} className="border-b border-border-light/60 hover:bg-surface/50">
                       <td className="px-3 py-2 font-mono text-xs">{u.email}</td>
-                      <td className="px-3 py-2">{[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}</td>
+                      <td className="px-3 py-2">{[u.first_name, u.last_name].filter(Boolean).join(" ") || "–"}</td>
                       <td className="px-3 py-2">
                         <Badge variant={u.role === "admin" ? "teal" : u.role === "adherent" ? "blue" : "warm"}>
                           {u.role}

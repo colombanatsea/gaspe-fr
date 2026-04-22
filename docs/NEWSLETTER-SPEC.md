@@ -1,4 +1,4 @@
-# GASPE Newsletter — Specification technique et fonctionnelle
+# GASPE Newsletter – Specification technique et fonctionnelle
 
 **Version** : 1.0 · avril 2026
 **Scope** : Système complet de newsletter éditoriale avec templates chartés GASPE, envoi via Brevo API, gestion contacts, désinscriptions, tracking
@@ -117,7 +117,7 @@ CREATE TABLE nl_templates (
 );
 ```
 
-### 2.3 Modèle de données — Blocs newsletter
+### 2.3 Modèle de données – Blocs newsletter
 
 Un brouillon est une liste ordonnée de **blocs**. Chaque bloc a un `type` et des `content` :
 
@@ -160,13 +160,13 @@ Les blocs sont convertis en HTML email par `src/lib/newsletter/render.ts` :
 
 ## 3. Interface admin
 
-### 3.1 `/admin/newsletter` — Liste
+### 3.1 `/admin/newsletter` – Liste
 
 - Table des brouillons (titre, sujet, dernière modif, statut)
 - Bouton "Nouveau brouillon" → sélecteur template ou vierge
 - Historique des envois (avec stats : ouvertures, clics)
 
-### 3.2 `/admin/newsletter/:id/edit` — Éditeur
+### 3.2 `/admin/newsletter/:id/edit` – Éditeur
 
 **Layout 3 colonnes** :
 
@@ -396,7 +396,7 @@ Bouton "Exporter" → télécharge CSV : `email, event_type, event_at, ...`
 
 - **D1 `nl_events`** : email + event_type + timestamp (→ données personnelles RGPD)
 - **D1 `nl_sends`** : HTML final envoyé (archivage)
-- **Brevo** : gère les contacts dans l'UE (Francfort) — compatibilité RGPD
+- **Brevo** : gère les contacts dans l'UE (Francfort) – compatibilité RGPD
 
 ### 7.2 Conservation
 
@@ -420,7 +420,7 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 
 ## 8. Roadmap d'implémentation
 
-### Phase 1 : Foundation (3h) — ✅ **DONE (session 26)**
+### Phase 1 : Foundation (3h) – ✅ **DONE (session 26)**
 - [x] Migration `workers/migrations/0008_newsletter.sql` (nl_drafts, nl_sends, nl_events, nl_templates)
 - [x] Renderer HTML charté GASPE (`src/lib/newsletter/render.ts`, table-based, inline CSS, Outlook-safe)
 - [x] 9 types de blocs : header, heading, paragraph, image, button, divider, columns, spacer, footer
@@ -430,14 +430,14 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [x] Store dual-mode `src/lib/newsletter/drafts-store.ts` (localStorage ↔ D1)
 - [x] 12 tests renderer dans `src/lib/__tests__/newsletter-render.test.ts`
 
-### Phase 2 : Éditeur admin (5h) — ✅ **DONE (session 26)**
+### Phase 2 : Éditeur admin (5h) – ✅ **DONE (session 26)**
 - [x] Page `/admin/newsletter/drafts` (liste + CRUD brouillons)
 - [x] Page `/admin/newsletter/edit?id=…` (éditeur 3 colonnes + aperçu live)
 - [x] Composant `NewsletterBlockEditor` : add/reorder/remove/edit par type
 - [x] Aperçu iframe live desktop/mobile
 - [x] Sélecteur variables (`{{firstname}}`, etc.)
 
-### Phase 3 : Envoi production (3h) — ⏸ bloqué par config Brevo
+### Phase 3 : Envoi production (3h) – ⏸ bloqué par config Brevo
 - [x] Endpoint `POST /api/newsletter/drafts/:id/test-send` (worker, session 28)
 - [x] Endpoint `POST /api/newsletter/drafts/:id/send` (worker, session 28)
 - [x] Personnalisation par destinataire (renderer `render.ts`, variables {{firstname}}…)
@@ -451,7 +451,7 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 - [ ] Page `/admin/newsletter/:sendId/stats` (dashboard)
 - [ ] Export CSV
 
-### Phase 5 : Sync contacts Brevo (2h) — partiellement done session 29
+### Phase 5 : Sync contacts Brevo (2h) – partiellement done session 29
 - [ ] Création 10 listes Brevo dans le dashboard + configuration des env vars (`BREVO_LIST_INFO_GENERALES`, `BREVO_LIST_AG`, `BREVO_LIST_EMPLOI`, `BREVO_LIST_FORMATION_OPCO`, `BREVO_LIST_VEILLE_JURIDIQUE`, `BREVO_LIST_VEILLE_SOCIALE`, `BREVO_LIST_VEILLE_SURETE`, `BREVO_LIST_VEILLE_DATA`, `BREVO_LIST_VEILLE_ENVIRONNEMENT`, `BREVO_LIST_ACTUALITES_GASPE`) via `wrangler secret put`
 - [ ] Sync inscription publique (`POST /api/newsletter`) → Brevo
 - [x] **Sync préférences** → Brevo contact + attributs PRENOM/NOM (session 29, `syncBrevoContact` dans `workers/api.ts`). Silencieux si list IDs non configurés. Met à jour `users.brevo_synced_at`.
@@ -483,9 +483,9 @@ Endpoint `DELETE /api/auth/users/:id` doit :
 
 - Pas de **A/B testing** (possible en v2 via Brevo A/B)
 - Pas de **segmentation dynamique** fine (filtres simples sur les 10 catégories uniquement)
-- Pas de **workflows automatisés** (welcome series, anniversaires) — possible en v2 via Brevo Automations
-- Pas d'**éditeur visuel drag-drop WYSIWYG riche** (pas de Tiptap dans un email) — blocs préconfigurés uniquement
-- **Un seul expéditeur par défaut** (GASPE) — possibilité de choisir manuellement dans le modal d'envoi
+- Pas de **workflows automatisés** (welcome series, anniversaires) – possible en v2 via Brevo Automations
+- Pas d'**éditeur visuel drag-drop WYSIWYG riche** (pas de Tiptap dans un email) – blocs préconfigurés uniquement
+- **Un seul expéditeur par défaut** (GASPE) – possibilité de choisir manuellement dans le modal d'envoi
 
 ---
 
@@ -522,7 +522,7 @@ NEWSLETTER_UNSUB_SECRET = "..."     # NOUVEAU, pour signer les tokens désinscri
 wrangler secret put BREVO_WEBHOOK_SECRET --name gaspe-api
 wrangler secret put NEWSLETTER_UNSUB_SECRET --name gaspe-api
 
-# Variables (visibles — les list IDs ne sont pas sensibles)
+# Variables (visibles – les list IDs ne sont pas sensibles)
 wrangler secret put BREVO_LIST_INFO_GENERALES --name gaspe-api
 wrangler secret put BREVO_LIST_AG --name gaspe-api
 # … répéter pour les 10 listes

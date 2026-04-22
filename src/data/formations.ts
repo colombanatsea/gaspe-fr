@@ -31,10 +31,10 @@ export const formations: Formation[] = [
 
       <h3>Programme détaillé</h3>
       <ul>
-        <li><strong>Module 1 — Survie en mer :</strong> techniques de mise à l'eau, utilisation des radeaux de sauvetage, survie en eau froide, signaux de détresse</li>
-        <li><strong>Module 2 — Lutte incendie :</strong> classes de feux, extincteurs, ARI (Appareil Respiratoire Isolant), manœuvre d'équipe</li>
-        <li><strong>Module 3 — Premiers secours :</strong> gestes d'urgence, massage cardiaque, DEA, immobilisation, évacuation</li>
-        <li><strong>Module 4 — Sécurité individuelle :</strong> prévention des risques, EPI, procédures d'urgence à bord, exercices d'abandon</li>
+        <li><strong>Module 1 – Survie en mer :</strong> techniques de mise à l'eau, utilisation des radeaux de sauvetage, survie en eau froide, signaux de détresse</li>
+        <li><strong>Module 2 – Lutte incendie :</strong> classes de feux, extincteurs, ARI (Appareil Respiratoire Isolant), manœuvre d'équipe</li>
+        <li><strong>Module 3 – Premiers secours :</strong> gestes d'urgence, massage cardiaque, DEA, immobilisation, évacuation</li>
+        <li><strong>Module 4 – Sécurité individuelle :</strong> prévention des risques, EPI, procédures d'urgence à bord, exercices d'abandon</li>
       </ul>
 
       <h3>Certification</h3>
@@ -43,7 +43,7 @@ export const formations: Formation[] = [
       <h3>Pédagogie</h3>
       <p>Formation en présentiel avec exercices pratiques en conditions réelles : bassins de survie, simulateur incendie, mannequins de secourisme. Évaluation continue tout au long des 5 jours.</p>
     `,
-    organizer: "ENSM — École Nationale Supérieure Maritime",
+    organizer: "ENSM – École Nationale Supérieure Maritime",
     startDate: "2026-05-12",
     endDate: "2026-05-16",
     location: "Le Havre",
@@ -82,7 +82,7 @@ export const formations: Formation[] = [
       <h3>Débouchés</h3>
       <p>Commandement de navettes passagers, vedettes de liaison, bacs côtiers, navires de servitude portuaire. Ce brevet est la porte d'entrée vers le Capitaine 500 et le Capitaine 3000.</p>
     `,
-    organizer: "ENSM — Le Havre",
+    organizer: "ENSM – Le Havre",
     startDate: "2026-06-02",
     endDate: "2026-07-11",
     location: "Le Havre",
@@ -118,7 +118,7 @@ export const formations: Formation[] = [
       <h3>Certification</h3>
       <p>Examen théorique et pratique. Le brevet est conforme aux exigences <strong>STCW III/1</strong> pour les navires à puissance limitée. Passerelle vers le Mécanicien 3000 kW.</p>
     `,
-    organizer: "ENSM — Marseille",
+    organizer: "ENSM – Marseille",
     startDate: "2026-09-15",
     endDate: "2026-10-24",
     location: "Marseille",
@@ -143,9 +143,9 @@ export const formations: Formation[] = [
 
       <h3>Programme détaillé</h3>
       <ul>
-        <li><strong>Jour 1 — Fondamentaux :</strong> Architecture ISM/ISPS, SMS (Safety Management System), SSP (Ship Security Plan), rôles du DPA et du CSO</li>
-        <li><strong>Jour 2 — Méthodologie d'audit :</strong> planification, check-lists, techniques d'entretien, rédaction de constats (NC majeure, NC mineure, observation)</li>
-        <li><strong>Jour 3 — Mise en pratique :</strong> audit simulé sur dossier réel, revue de direction, plan d'actions correctives, clôture d'audit</li>
+        <li><strong>Jour 1 – Fondamentaux :</strong> Architecture ISM/ISPS, SMS (Safety Management System), SSP (Ship Security Plan), rôles du DPA et du CSO</li>
+        <li><strong>Jour 2 – Méthodologie d'audit :</strong> planification, check-lists, techniques d'entretien, rédaction de constats (NC majeure, NC mineure, observation)</li>
+        <li><strong>Jour 3 – Mise en pratique :</strong> audit simulé sur dossier réel, revue de direction, plan d'actions correctives, clôture d'audit</li>
       </ul>
 
       <h3>Certification</h3>
@@ -179,8 +179,8 @@ export const formations: Formation[] = [
 
       <h3>Programme détaillé</h3>
       <ul>
-        <li><strong>Jour 1 — État des lieux :</strong> bilan carbone du secteur, réglementation IMO (CII, EEXI), FuelEU Maritime, taxe carbone européenne ETS</li>
-        <li><strong>Jour 2 — Solutions technologiques :</strong> GNL/bio-GNL, hydrogène et piles à combustible, batteries et hybridation, propulsion vélique assistée, méthanol/ammoniac vert</li>
+        <li><strong>Jour 1 – État des lieux :</strong> bilan carbone du secteur, réglementation IMO (CII, EEXI), FuelEU Maritime, taxe carbone européenne ETS</li>
+        <li><strong>Jour 2 – Solutions technologiques :</strong> GNL/bio-GNL, hydrogène et piles à combustible, batteries et hybridation, propulsion vélique assistée, méthanol/ammoniac vert</li>
       </ul>
 
       <h3>Retours d'expérience</h3>
@@ -249,9 +249,9 @@ export const formations: Formation[] = [
 
       <h3>Programme détaillé</h3>
       <ul>
-        <li><strong>Jour 1 — Leadership maritime :</strong> styles de leadership, assertivité, prise de décision sous pression, autorité et responsabilité du commandant</li>
-        <li><strong>Jour 2 — Communication à bord :</strong> briefings opérationnels, closed-loop communication, BRM (Bridge Resource Management), gestion du CRM (Crew Resource Management)</li>
-        <li><strong>Jour 3 — Situations de crise :</strong> gestion des conflits, fatigue et stress, exercices de gestion d'urgence, débriefing et retour d'expérience</li>
+        <li><strong>Jour 1 – Leadership maritime :</strong> styles de leadership, assertivité, prise de décision sous pression, autorité et responsabilité du commandant</li>
+        <li><strong>Jour 2 – Communication à bord :</strong> briefings opérationnels, closed-loop communication, BRM (Bridge Resource Management), gestion du CRM (Crew Resource Management)</li>
+        <li><strong>Jour 3 – Situations de crise :</strong> gestion des conflits, fatigue et stress, exercices de gestion d'urgence, débriefing et retour d'expérience</li>
       </ul>
 
       <h3>Pédagogie</h3>
@@ -277,7 +277,7 @@ export const formations: Formation[] = [
   {
     id: "form-ccn-3228",
     slug: "ccn-3228-mise-a-jour",
-    title: "Convention Collective Nationale 3228 — Mise à jour",
+    title: "Convention Collective Nationale 3228 – Mise à jour",
     description: "Séminaire sur les évolutions de la CCN 3228 applicable au transport maritime de passagers. Grilles salariales, congés, régime ENIM, accords de branche récents.",
     content: `
       <h3>Objectifs de la formation</h3>
@@ -302,7 +302,7 @@ export const formations: Formation[] = [
     organizer: "GASPE",
     startDate: "2026-05-19",
     endDate: "2026-05-19",
-    location: "Paris — Siège GASPE",
+    location: "Paris – Siège GASPE",
     duration: "1 jour (7h)",
     capacity: 50,
     enrolled: 31,

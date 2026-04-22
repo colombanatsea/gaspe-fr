@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Documents store — dual-mode (localStorage ↔ D1 via Worker)          */
+/*  Documents store – dual-mode (localStorage ↔ D1 via Worker)          */
 /*                                                                     */
 /*  Pattern identique à jobs-store / medical-store / members-store.    */
 /* ------------------------------------------------------------------ */
@@ -36,7 +36,7 @@ function writeLocal(docs: GaspeDocument[]): void {
   try {
     localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(docs));
   } catch {
-    /* quota exceeded — silently ignore */
+    /* quota exceeded – silently ignore */
   }
 }
 
@@ -61,7 +61,7 @@ function sortDocs(docs: GaspeDocument[]): GaspeDocument[] {
 
 /**
  * Liste les documents visibles pour l'utilisateur courant.
- * @param includePrivate — si true, inclut les documents réservés adhérents (et brouillons si admin)
+ * @param includePrivate – si true, inclut les documents réservés adhérents (et brouillons si admin)
  */
 export async function listDocuments(
   includePrivate = false,

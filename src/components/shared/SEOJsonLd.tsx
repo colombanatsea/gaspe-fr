@@ -17,7 +17,7 @@ function JsonLd({ data }: JsonLdProps) {
 }
 
 /**
- * Organization schema enrichie — sert à la fois :
+ * Organization schema enrichie – sert à la fois :
  *   - de "knowledge graph" Google pour la marque GASPE
  *   - de base aux rich snippets (logo, adresse, AG…)
  * Utilise TradeAssociation pour signaler le statut d'organisation patronale.
@@ -40,7 +40,7 @@ export function OrganizationJsonLd() {
         image: "https://www.gaspe.fr/og-image.png",
         foundingDate: "1951",
         description:
-          "Organisation patronale représentative du maritime côtier français — fédère 26 compagnies armateurs assurant service public, continuité territoriale, passages d'eau et liaisons îles.",
+          "Organisation patronale représentative du maritime côtier français – fédère 26 compagnies armateurs assurant service public, continuité territoriale, passages d'eau et liaisons îles.",
         slogan: "D'un littoral à l'autre. Localement ancrés. Socialement engagés.",
         knowsAbout: [
           "Transport maritime côtier",
@@ -87,7 +87,7 @@ export function OrganizationJsonLd() {
 }
 
 /**
- * FAQ schema — chaque {question, answer} devient une rich FAQ dans la SERP.
+ * FAQ schema – chaque {question, answer} devient une rich FAQ dans la SERP.
  * Ne pas dépasser 10 items par page (Google peut dégrader si trop long).
  */
 export function FAQJsonLd({ items }: { items: { question: string; answer: string }[] }) {
@@ -109,7 +109,7 @@ export function FAQJsonLd({ items }: { items: { question: string; answer: string
   );
 }
 
-/** WebSite schema with search action — for layout */
+/** WebSite schema with search action – for layout */
 export function WebSiteJsonLd() {
   return (
     <JsonLd
@@ -146,7 +146,7 @@ export function BreadcrumbJsonLd({
   );
 }
 
-/** JobPosting schema — for individual job pages */
+/** JobPosting schema – for individual job pages */
 export function JobPostingJsonLd({
   title,
   description,
@@ -208,7 +208,7 @@ export function JobPostingJsonLd({
   );
 }
 
-/** Article schema — for news/press detail pages */
+/** Article schema – for news/press detail pages */
 export function ArticleJsonLd({
   title,
   description,
@@ -250,7 +250,7 @@ export function ArticleJsonLd({
   );
 }
 
-/** Event schema — for agenda pages */
+/** Event schema – for agenda pages */
 export function EventJsonLd({
   name,
   description,

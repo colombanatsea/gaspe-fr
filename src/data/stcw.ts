@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Certifications STCW — Catalogue structuré                          */
+/*  Certifications STCW – Catalogue structuré                          */
 /*  Standards of Training, Certification and Watchkeeping (OMI)        */
 /*                                                                     */
 /*  Sources :                                                          */
@@ -170,8 +170,8 @@ export const STCW_CERTIFICATIONS: STCWCertification[] = [
   },
   {
     code: "ISM",
-    frenchName: "Code ISM — Gestion de la sécurité",
-    englishName: "ISM Code — Safety Management",
+    frenchName: "Code ISM – Gestion de la sécurité",
+    englishName: "ISM Code – Safety Management",
     category: "securite",
     stcwRef: "STCW A-I/14",
     validityYears: 5,
@@ -232,7 +232,7 @@ export const STCW_CERTIFICATIONS: STCWCertification[] = [
   },
   {
     code: "ECDIS",
-    frenchName: "ECDIS — Cartes électroniques",
+    frenchName: "ECDIS – Cartes électroniques",
     englishName: "Electronic Chart Display and Information System",
     category: "radio",
     stcwRef: "STCW A-II/1",

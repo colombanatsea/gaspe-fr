@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-// JWT utils are in workers/ — test the core logic here via a copy
+// JWT utils are in workers/ – test the core logic here via a copy
 // since the Worker module uses Web Crypto which is available in Vitest
 
 const ALGORITHM = { name: "HMAC", hash: "SHA-256" } as const;

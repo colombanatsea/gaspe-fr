@@ -1,5 +1,5 @@
 -- 0011_cms_revisions.sql
--- Versioning des pages CMS (`cms_pages`) — chaque PUT sur une page crée un
+-- Versioning des pages CMS (`cms_pages`) – chaque PUT sur une page crée un
 -- snapshot horodaté de l'état précédent. Permet rollback + audit éditorial.
 
 CREATE TABLE IF NOT EXISTS cms_revisions (

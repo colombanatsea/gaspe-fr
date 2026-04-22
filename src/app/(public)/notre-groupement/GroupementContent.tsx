@@ -365,14 +365,14 @@ export function GroupementContent() {
         </div>
       </section>
 
-      {/* Sources — espacement aéré au-dessus pour détacher du bloc Bureau */}
+      {/* Sources – espacement aéré au-dessus pour détacher du bloc Bureau */}
       <section className="mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-8 sm:pt-12">
         <CollapsibleSources>
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Statuts du GASPE — Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondee en 1951</li>
+            <li>Statuts du GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondee en 1951</li>
             <li>Donnees compagnies adherentes : declarations des membres au secretariat du GASPE (effectifs, flotte, territoires desservis)</li>
             <li>Composition du Bureau : election lors de l&apos;Assemblee Generale du GASPE</li>
-            <li>Chiffres cles (compagnies, collaborateurs, navires, passagers) : consolidation annuelle GASPE — Donnees 2025</li>
+            <li>Chiffres cles (compagnies, collaborateurs, navires, passagers) : consolidation annuelle GASPE – Donnees 2025</li>
           </ul>
         </CollapsibleSources>
       </section>

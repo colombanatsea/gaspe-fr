@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------ */
-/*  Password hashing — Web Crypto API (SHA-256 + salt)                 */
-/*  Client-side hashing — prevents plaintext storage in localStorage   */
+/*  Password hashing – Web Crypto API (SHA-256 + salt)                 */
+/*  Client-side hashing – prevents plaintext storage in localStorage   */
 /*  When migrating to backend, replace with bcrypt/argon2              */
 /* ------------------------------------------------------------------ */
 

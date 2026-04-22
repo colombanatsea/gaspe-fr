@@ -1,4 +1,4 @@
--- GASPE D1 Migration 0001 — Auth tables
+-- GASPE D1 Migration 0001 – Auth tables
 -- Apply: npx wrangler d1 execute gaspe-db --file workers/migrations/0001_auth.sql
 
 -- Users table with GASPE-specific fields

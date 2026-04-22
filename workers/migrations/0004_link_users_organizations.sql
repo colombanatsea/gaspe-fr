@@ -1,4 +1,4 @@
--- GASPE D1 Migration 0004 — Link existing users to organizations
+-- GASPE D1 Migration 0004 – Link existing users to organizations
 -- Apply: npx wrangler d1 execute gaspe-db --file workers/migrations/0004_link_users_organizations.sql
 --
 -- This migration matches users.company (free text) to organizations.name

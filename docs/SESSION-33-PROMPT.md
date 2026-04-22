@@ -1,4 +1,4 @@
-# Prompt — Session 33 GASPE
+# Prompt – Session 33 GASPE
 
 Copie-colle ceci dans une nouvelle session Claude Code :
 
@@ -23,15 +23,15 @@ Session 32 (v2.17.0) a livré :
 
 Avant toute chose, lis :
 
-1. `CLAUDE.md` — état complet v2.17.0 (session 32)
-2. `docs/CMS-SPEC.md` §9 — extensions session 31-32 (documents D1 + revisions)
-3. `docs/SEO-GUIDE.md` — couverture JSON-LD + RSS ✅ complète, quickwins restants
-4. `docs/NEWSLETTER-SPEC.md` §10 — runbook `wrangler secret put` complet à exécuter côté admin
-5. `docs/LIGHTHOUSE-SESSION-30.md` — runbook perf + a11y à rejouer
+1. `CLAUDE.md` – état complet v2.17.0 (session 32)
+2. `docs/CMS-SPEC.md` §9 – extensions session 31-32 (documents D1 + revisions)
+3. `docs/SEO-GUIDE.md` – couverture JSON-LD + RSS ✅ complète, quickwins restants
+4. `docs/NEWSLETTER-SPEC.md` §10 – runbook `wrangler secret put` complet à exécuter côté admin
+5. `docs/LIGHTHOUSE-SESSION-30.md` – runbook perf + a11y à rejouer
 
-## Objectif — 4 axes prioritaires
+## Objectif – 4 axes prioritaires
 
-### Axe 1 — Activer Brevo en production (dépend actions admin)
+### Axe 1 – Activer Brevo en production (dépend actions admin)
 
 Le code est 100% prêt depuis session 30. Reste côté admin GASPE à exécuter manuellement (actions externes, non scriptables depuis Claude Code) :
 
@@ -45,7 +45,7 @@ Une fois activé :
 - Cocher phases 3-5 dans `docs/NEWSLETTER-SPEC.md`
 - Section "Validation prod session 33" dans `CLAUDE.md`
 
-### Axe 2 — Search Console + Bing
+### Axe 2 – Search Console + Bing
 
 Le code site consomme déjà `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` et `NEXT_PUBLIC_BING_SITE_VERIFICATION` conditionnellement. Action externe requise :
 
@@ -56,7 +56,7 @@ Le code site consomme déjà `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` et `NEXT_PUB
 5. Redeploy (git push vide ou bouton Cloudflare)
 6. Soumettre sitemap `/sitemap.xml` et flux RSS `/feed.xml` dans Search Console
 
-### Axe 3 — Performance mesurée (local)
+### Axe 3 – Performance mesurée (local)
 
 Runbook `docs/LIGHTHOUSE-SESSION-30.md` inchangé. À exécuter sur une machine avec Chrome + ffmpeg :
 
@@ -65,18 +65,18 @@ Runbook `docs/LIGHTHOUSE-SESSION-30.md` inchangé. À exécuter sur une machine 
 - axe-core / pa11y sur les mêmes pages
 - Compléter `docs/LIGHTHOUSE-SESSION-30.md` section "Résultats session 30" avec les scores réels (ou créer `LIGHTHOUSE-SESSION-33.md`)
 
-### Axe 4 — Bonus autonomes (non bloqués)
+### Axe 4 – Bonus autonomes (non bloqués)
 
 Ce que je peux faire en pure code, sans dépendance externe :
 
-- **Migration `armateurscotiers.fr`** — quand tu me donnes le feu vert. 4 fichiers à modifier (`SITE_URL`, `public/_headers` CSP, `workers/api.ts` CORS, `workers/wrangler.toml`), relance le build + redeploy.
+- **Migration `armateurscotiers.fr`** – quand tu me donnes le feu vert. 4 fichiers à modifier (`SITE_URL`, `public/_headers` CSP, `workers/api.ts` CORS, `workers/wrangler.toml`), relance le build + redeploy.
 - **Finir `<img>` → `next/image`** sur les ~30 fichiers restants (espace-adherent, espace-candidat, admin hors scope prod-critique). CWV -10% estimé.
 - **Amélioration versioning CMS** :
   - Bouton "Ajouter un libellé" sur l'action "Enregistrer" pour nommer les révisions (ex. "Correction faute de frappe").
   - Diff visuel entre 2 révisions (vue 3 colonnes : avant / après / différences surlignées).
   - Filtre par auteur et par plage de dates dans `CmsRevisionsModal`.
 - **Ajouter OG images dédiées** pour les positions (`public/assets/og/positions/xxx.png` + référencer via `ogImage` dans `src/data/positions.ts`).
-- **Alimenter +4 positions** pour continuer d'enrichir la longue traîne SEO (candidats : prospection énergies marines, retour ex. navire hybride, recommandations Fret ferroviaire / maritime, cybersécurité port et tiers — scope éditorial fourni).
+- **Alimenter +4 positions** pour continuer d'enrichir la longue traîne SEO (candidats : prospection énergies marines, retour ex. navire hybride, recommandations Fret ferroviaire / maritime, cybersécurité port et tiers – scope éditorial fourni).
 - **Drag & drop blocs newsletter / sections CMS** via `@dnd-kit/core`.
 
 ## Dettes techniques à surveiller
@@ -87,7 +87,7 @@ Ce que je peux faire en pure code, sans dépendance externe :
 
 ## Contraintes
 
-- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `—` interdit dans les textes éditoriaux publics (tests `positions.test.ts` + `feed-rss.test.ts` enforcent)
+- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `–` interdit dans les textes éditoriaux publics (tests `positions.test.ts` + `feed-rss.test.ts` enforcent)
 - **Design** : charte `--gaspe-*` (teal-600 / teal-400 / neutral-100), jamais de hex dur dans les composants
 - Chaque chiffre d'adhérents/compagnies/navires doit passer par `memberStats` ou placeholder `{xxx}` CMS
 - TypeScript : 0 erreur `tsc --noEmit`, 0 erreur ESLint, tests passent
@@ -106,9 +106,9 @@ Ce que je peux faire en pure code, sans dépendance externe :
 ## Ordre d'exécution conseillé
 
 1. Lire les 5 docs (15 min)
-2. Axe 4 — bonus autonomes (2-4h selon choix)
-3. Axe 1 — Brevo prod si tu as les creds admin (1h)
-4. Axe 2 — Search Console env vars (5 min si tu as les codes)
-5. Axe 3 — perf mesurée si ffmpeg + Chrome dispos (2h)
+2. Axe 4 – bonus autonomes (2-4h selon choix)
+3. Axe 1 – Brevo prod si tu as les creds admin (1h)
+4. Axe 2 – Search Console env vars (5 min si tu as les codes)
+5. Axe 3 – perf mesurée si ffmpeg + Chrome dispos (2h)
 
 Commence par répondre « Je suis prêt. Voici mon plan d'attaque : » puis liste les étapes dans l'ordre avec un estimé horaire, puis développe en autonomie.

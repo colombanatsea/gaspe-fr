@@ -24,7 +24,7 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-[var(--gaspe-neutral-950)] min-h-[85vh] flex items-center">
-      {/* Video background — poster évite le flash noir et réduit le LCP sur mobile */}
+      {/* Video background – poster évite le flash noir et réduit le LCP sur mobile */}
       <div className="pointer-events-none absolute inset-0">
         <video
           autoPlay

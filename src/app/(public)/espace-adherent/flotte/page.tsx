@@ -18,7 +18,7 @@ import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
 import type { FleetVessel } from "@/types";
 
 /**
- * Espace adhérent — édition de la flotte de SA propre compagnie.
+ * Espace adhérent – édition de la flotte de SA propre compagnie.
  * Le slug est résolu depuis `user.company` (nom affiché) en regardant dans
  * le store membres. En mode API, le Worker re-vérifie `organization_id` du
  * JWT avant d'accepter PUT/POST/DELETE.
@@ -98,7 +98,7 @@ export default function AdherentFlottePage() {
         <h1 className="font-heading text-2xl font-bold text-foreground">Ma flotte</h1>
         {myMember && (
           <p className="mt-1 text-sm text-foreground-muted">
-            {myMember.name} — {vessels.length} navire{vessels.length !== 1 ? "s" : ""} enregistré
+            {myMember.name} – {vessels.length} navire{vessels.length !== 1 ? "s" : ""} enregistré
             {vessels.length !== 1 ? "s" : ""}. Ces données s&apos;affichent sur votre fiche
             publique <Link href={`/nos-adherents/${myMember.slug}`} className="text-primary hover:underline">/nos-adherents/{myMember.slug}</Link>.
           </p>

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Hydros Alumni — Mapping GASPE → AlumnForce dropdown IDs            */
+/*  Hydros Alumni – Mapping GASPE → AlumnForce dropdown IDs            */
 /*  Used for cross-publication on hydros-alumni.org                     */
 /* ------------------------------------------------------------------ */
 

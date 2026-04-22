@@ -367,7 +367,7 @@ function Classifications() {
   return (
     <div>
       {/* Note pédagogique : la classification salariale combine fonction +
-          tranche de jauge UMS — pas le brevet détenu. */}
+          tranche de jauge UMS – pas le brevet détenu. */}
       <div className="reveal mb-6 rounded-xl border border-[var(--gaspe-teal-400)]/30 bg-[var(--gaspe-teal-600)]/5 p-4 text-sm text-foreground-muted">
         <p className="flex items-start gap-2">
           <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -461,7 +461,7 @@ function SimulateurSalaire() {
             value={selectedIdx}
             onChange={(e) => setSelectedIdx(e.target.value ? Number(e.target.value) : "")}
           >
-            <option value="">— Choisir une fonction —</option>
+            <option value="">– Choisir une fonction –</option>
             {SALARY_GRID_NAO_2026.map((entry, i) => (
               <option key={i} value={i}>{entry.fonction}</option>
             ))}
@@ -473,7 +473,7 @@ function SimulateurSalaire() {
         <div className="reveal mt-6 rounded-xl border-2 border-[var(--gaspe-teal-600)]/30 bg-[var(--gaspe-teal-600)]/5 p-6">
           <h3 className="font-heading text-base font-bold text-foreground mb-1 flex items-center gap-2">
             <SectionIcon icon="calculator" className="h-5 w-5 text-[var(--gaspe-teal-600)]" />
-            Minima conventionnels — {entry?.fonction}
+            Minima conventionnels – {entry?.fonction}
           </h3>
           <p className="text-xs text-foreground-muted mb-4">
             Plancher légal de rémunération (CCN 3228, avenant NAO 2026). Le salaire effectivement versé peut être supérieur.
@@ -746,7 +746,7 @@ export default function BoiteAOutilsPage() {
       <CmsPageHeader
         pageId="boite-a-outils"
         defaultTitle="Boîte à outils CCN 3228"
-        defaultDescription="Convention Collective Nationale du personnel navigant des passages d'eau — grilles salariales, classifications, congés, régime ENIM et simulateur."
+        defaultDescription="Convention Collective Nationale du personnel navigant des passages d'eau – grilles salariales, classifications, congés, régime ENIM et simulateur."
         breadcrumbs={[{ label: "Boîte à outils" }]}
       />
 

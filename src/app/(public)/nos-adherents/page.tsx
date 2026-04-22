@@ -129,7 +129,7 @@ export default function NosAdherentsPage() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-      {/* Map — 70% on desktop */}
+      {/* Map – 70% on desktop */}
       <div className="flex-1 lg:w-[70%]">
         <ErrorBoundary name="Leaflet Map" fallback={
           <div className="flex h-[50vh] lg:h-full items-center justify-center bg-[var(--gaspe-neutral-100)]">
@@ -140,7 +140,7 @@ export default function NosAdherentsPage() {
         </ErrorBoundary>
       </div>
 
-      {/* Sidebar — 30% on desktop */}
+      {/* Sidebar – 30% on desktop */}
       <aside className="lg:w-[30%] lg:max-w-md border-l border-border-light bg-background overflow-y-auto">
         {/* Geolocation button */}
         <div className="p-4 border-b border-border-light">

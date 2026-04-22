@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Auth types — shared across the auth module                         */
+/*  Auth types – shared across the auth module                         */
 /* ------------------------------------------------------------------ */
 
 export type UserRole = "admin" | "adherent" | "candidat";
@@ -80,7 +80,7 @@ export interface Organization {
 /* ── Newsletter preferences (per-user, 10 categories) ── */
 
 /**
- * 10 catégories newsletter — clés alignées sur les colonnes de la table D1
+ * 10 catégories newsletter – clés alignées sur les colonnes de la table D1
  * `newsletter_preferences` (migration 0003) et sur `CATEGORY_TO_LIST_ENV`
  * dans `workers/api.ts`. Session 29 : `communication_marque` supprimée,
  * remplacée par `veille_data` (ADF) pour cohérence DB ↔ frontend ↔ Brevo.
@@ -151,7 +151,7 @@ export interface User {
   cvFilename?: string;
   profilePhoto?: string; // base64 data URL
   linkedinUrl?: string;
-  /** Structured certifications — ENM titres format */
+  /** Structured certifications – ENM titres format */
   structuredCertifications?: {
     certId: string;
     title: string;
@@ -162,7 +162,7 @@ export interface User {
     reference?: string;
     verified?: boolean;
   }[];
-  /** Sea service history — ENM lignes de service format */
+  /** Sea service history – ENM lignes de service format */
   seaService?: {
     id: string;
     vesselName: string;
@@ -174,7 +174,7 @@ export interface User {
     endDate?: string;
     source?: "manual" | "enm_csv";
   }[];
-  /** Medical aptitude — ENM aptitude médicale format */
+  /** Medical aptitude – ENM aptitude médicale format */
   medicalAptitude?: {
     visitType?: string;
     lastVisitDate?: string;

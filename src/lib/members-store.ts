@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Members Store — dual-mode member management                       */
+/*  Members Store – dual-mode member management                       */
 /*  localStorage (demo) ↔ API/D1 (production)                        */
 /*  In API mode, members are fetched from /api/organizations          */
 /* ------------------------------------------------------------------ */
@@ -15,7 +15,7 @@ export interface StoredMember extends Member {
   archived?: boolean;
 }
 
-/** Lookup table from static members.ts — used to fill gaps in D1 data */
+/** Lookup table from static members.ts – used to fill gaps in D1 data */
 const staticBySlug = new Map(staticMembers.map((m) => [m.slug, m]));
 
 /** Map API organization response to StoredMember, enriching from static data */
@@ -54,7 +54,7 @@ function getLocalMembers(): StoredMember[] {
   // Force re-seed if cached data is stale. Les déclencheurs reflètent les
   // ruptures passées (placeholders WP, puis logo Capstan/MIE échangé en
   // v2.22.1, puis retrait Kéolis Bordeaux). Le test Capstan est l'union
-  // de "logoUrl toujours présent" ET "cache plus vieux que session 34" —
+  // de "logoUrl toujours présent" ET "cache plus vieux que session 34" –
   // en pratique ça déclenche le re-seed une seule fois.
   const hasStalePlaceholder = parsed.some(
     (m) => m.logoUrl?.includes("gaspe.fr/wp-content") || m.logoUrl?.includes("placeholder-")

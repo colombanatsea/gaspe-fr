@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  SSGM — Services de Santé des Gens de Mer                          */
+/*  SSGM – Services de Santé des Gens de Mer                          */
 /*  Centres et médecins agréés pour les visites médicales maritimes    */
 /*                                                                     */
 /*  Sources :                                                          */
@@ -378,13 +378,13 @@ export const ssgmCenters: SSGMCenter[] = [
   },
 ];
 
-/* ── Approved doctors (sample — to be completed with real data) ── */
+/* ── Approved doctors (sample – to be completed with real data) ── */
 
 export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-martin-brest",
     name: "Dr. Philippe Martin",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-brest",
     city: "Brest",
     region: "Bretagne",
@@ -395,7 +395,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-leroy-le-havre",
     name: "Dr. Catherine Leroy",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-le-havre",
     city: "Le Havre",
     region: "Normandie",
@@ -406,7 +406,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-dupont-marseille",
     name: "Dr. Jean-Pierre Dupont",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-marseille",
     city: "Marseille",
     region: "Provence-Alpes-Côte d'Azur",
@@ -417,7 +417,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-bernard-bordeaux",
     name: "Dr. Marie Bernard",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-bordeaux",
     city: "Bordeaux",
     region: "Nouvelle-Aquitaine",
@@ -428,7 +428,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-petit-saint-malo",
     name: "Dr. Anne Petit",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-saint-malo",
     city: "Saint-Malo",
     region: "Bretagne",
@@ -439,7 +439,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-garcia-sete",
     name: "Dr. Luis Garcia",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-sete",
     city: "Sète",
     region: "Occitanie",
@@ -450,7 +450,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-morel-lorient",
     name: "Dr. François Morel",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-lorient",
     city: "Lorient",
     region: "Bretagne",
@@ -461,7 +461,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-charles-fdf",
     name: "Dr. Yvette Charles",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-fort-de-france",
     city: "Fort-de-France",
     region: "Martinique",
@@ -472,7 +472,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-joseph-pap",
     name: "Dr. Max Joseph",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-pointe-a-pitre",
     city: "Pointe-à-Pitre",
     region: "Guadeloupe",
@@ -483,7 +483,7 @@ export const approvedDoctors: ApprovedDoctor[] = [
   {
     id: "dr-riviere-saint-nazaire",
     name: "Dr. Hélène Rivière",
-    specialty: "Médecine maritime — Aptitude navigants",
+    specialty: "Médecine maritime – Aptitude navigants",
     centerId: "ssgm-saint-nazaire",
     city: "Saint-Nazaire",
     region: "Pays de la Loire",
@@ -512,7 +512,7 @@ export const SSGM_REGIONS = [
 ] as const;
 
 /**
- * FAQ éditoriale SSGM — utilisée pour injecter FAQPage JSON-LD sur /ssgm
+ * FAQ éditoriale SSGM – utilisée pour injecter FAQPage JSON-LD sur /ssgm
  * et enrichir la SERP (rich FAQ Google). Sources : décret 2015-1575, STCW,
  * MLC 2006, Direction des Affaires Maritimes.
  */

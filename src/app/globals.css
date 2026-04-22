@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════
-   GASPE Design System v2 — Tokens CSS
+   GASPE Design System v2 – Tokens CSS
    ═══════════════════════════════════════════ */
 
 :root {
@@ -10,9 +10,9 @@
   --gaspe-teal-100: #D8ECED;
   --gaspe-teal-200: #B1D9DC;
   --gaspe-teal-300: #8AC6CA;
-  --gaspe-teal-400: #6DAAAC;   /* logo, décor, gradient — JAMAIS pour texte sur blanc */
+  --gaspe-teal-400: #6DAAAC;   /* logo, décor, gradient – JAMAIS pour texte sur blanc */
   --gaspe-teal-500: #4A9396;
-  --gaspe-teal-600: #1B7E8A;   /* texte, boutons, liens — WCAG AA */
+  --gaspe-teal-600: #1B7E8A;   /* texte, boutons, liens – WCAG AA */
   --gaspe-teal-700: #156A74;   /* hover state */
   --gaspe-teal-800: #10545C;
   --gaspe-teal-900: #0B3E44;
@@ -24,7 +24,7 @@
   --gaspe-blue-300: #7EAECF;
   --gaspe-blue-400: #6AA7CF;   /* décor uniquement */
   --gaspe-blue-500: #4D8FB8;
-  --gaspe-blue-600: #2F72A0;   /* fonctionnel — WCAG AA */
+  --gaspe-blue-600: #2F72A0;   /* fonctionnel – WCAG AA */
   --gaspe-blue-700: #255B80;
   --gaspe-blue-800: #1B4460;
   --gaspe-blue-900: #112D40;
@@ -84,7 +84,7 @@
   --color-border-light: var(--gaspe-neutral-200);
 
   /* ═══════════════════════════════════════════════
-     Tokens miroir `--acf-*` — forward-compat rebrand
+     Tokens miroir `--acf-*` – forward-compat rebrand
      Armateurs Côtiers Français (ACF, nov 2026).
      Miroir 1:1 des tokens --gaspe-* ; utiliser les
      deux noms de manière interchangeable pendant la
@@ -389,7 +389,7 @@ body {
   transform: translateY(-100%);
 }
 
-/* ── Native select options — fix visibility (CSS vars unsupported in option popups) ── */
+/* ── Native select options – fix visibility (CSS vars unsupported in option popups) ── */
 select option {
   color: #222221;
   background: #fff;

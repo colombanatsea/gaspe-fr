@@ -91,7 +91,7 @@ export function MemberCultureContent({ slug }: { slug: string }) {
     <>
       <PageHeader
         title={member.name}
-        description={`${member.city} · ${member.region} — ${member.category === "titulaire" ? "Membre titulaire" : "Membre associé"} du GASPE`}
+        description={`${member.city} · ${member.region} – ${member.category === "titulaire" ? "Membre titulaire" : "Membre associé"} du GASPE`}
         breadcrumbs={[
           { label: "Nos Adhérents", href: "/nos-adherents" },
           { label: member.name },

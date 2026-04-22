@@ -6,7 +6,7 @@
  * `/api/cms/pages/:pageId/revisions/:revisionId/restore` (restore) et
  * `/api/cms/pages/:pageId/revisions/:revisionId` (diff).
  *
- * Ne s'affiche qu'en mode API (production) — en mode localStorage dev,
+ * Ne s'affiche qu'en mode API (production) – en mode localStorage dev,
  * aucune révision n'est conservée.
  *
  * Session 33 : filtres auteur + plage de dates, sélection pour comparaison
@@ -31,7 +31,7 @@ interface Props {
   pageId: string;
   open: boolean;
   onClose: () => void;
-  /** Appelé après un restore réussi — le parent devrait recharger le contenu. */
+  /** Appelé après un restore réussi – le parent devrait recharger le contenu. */
   onRestored?: () => void;
 }
 
@@ -124,7 +124,7 @@ export function CmsRevisionsModal({ pageId, open, onClose, onRestored }: Props) 
     return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
   }, [revisions]);
 
-  // Filtrage côté client (les filtres restent éphémères — pas de persistance)
+  // Filtrage côté client (les filtres restent éphémères – pas de persistance)
   const filteredRevisions = useMemo(() => {
     const fromTs = boundDate(fromDate, false);
     const toTs = boundDate(toDate, true);
@@ -435,7 +435,7 @@ export function CmsRevisionsModal({ pageId, open, onClose, onRestored }: Props) 
         </div>
       </div>
 
-      {/* Diff modal — surcouche au-dessus de celle-ci */}
+      {/* Diff modal – surcouche au-dessus de celle-ci */}
       {diffRevisions && (
         <CmsRevisionDiff
           pageId={pageId}

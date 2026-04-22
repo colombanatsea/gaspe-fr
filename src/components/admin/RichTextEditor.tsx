@@ -40,7 +40,7 @@ const TOOLBAR: ToolbarAction[] = [
   { id: "link", label: "Lien", icon: "🔗", group: "insert", action: "link" },
   { id: "image", label: "Image", icon: "🖼", group: "insert", action: "image" },
   { id: "table", label: "Tableau", icon: "⊞", group: "insert", action: "table" },
-  { id: "hr", label: "Ligne horizontale", icon: "—", group: "insert", action: "hr" },
+  { id: "hr", label: "Ligne horizontale", icon: "–", group: "insert", action: "hr" },
   { id: "columns", label: "Colonnes", icon: "⫼", group: "insert", action: "columns" },
 ];
 

@@ -20,7 +20,7 @@ import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
 import type { FleetVessel } from "@/types";
 
 /**
- * Admin — Gestion de la flotte de TOUS les adhérents.
+ * Admin – Gestion de la flotte de TOUS les adhérents.
  * Sélecteur d'organisation à gauche, listing + éditeur à droite.
  * Peut réinitialiser une compagnie à la donnée seed éditoriale.
  */
@@ -114,7 +114,7 @@ export default function AdminFlottePage() {
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Flotte des adhérents</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          Admin — consulte et édite la flotte détaillée de toutes les compagnies adhérentes.
+          Admin – consulte et édite la flotte détaillée de toutes les compagnies adhérentes.
           Les adhérents connectés ne voient et éditent que leur propre flotte.
         </p>
       </div>

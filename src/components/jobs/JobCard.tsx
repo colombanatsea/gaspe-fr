@@ -140,7 +140,7 @@ export function JobCard({
               </span>
             </div>
 
-            {/* View CTA — always visible on touch, hover on desktop */}
+            {/* View CTA – always visible on touch, hover on desktop */}
             <div className="mt-3 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--gaspe-teal-600)]">
                 Voir l&apos;offre

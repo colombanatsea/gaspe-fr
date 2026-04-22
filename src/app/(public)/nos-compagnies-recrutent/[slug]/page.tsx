@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: `Offre d'emploi : ${job.title} chez ${job.company} à ${job.location}. ${job.contractType}.`,
     openGraph: {
       title: `${job.title} - ${job.company} | GASPE`,
-      description: `${job.contractType} — ${job.location}. ${job.salaryRange ?? ""}`.trim(),
+      description: `${job.contractType} – ${job.location}. ${job.salaryRange ?? ""}`.trim(),
       type: "article",
       url: `https://gaspe-fr.pages.dev/nos-compagnies-recrutent/${slug}`,
     },
@@ -145,7 +145,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             {job.title}
           </h1>
           <p className="mt-3 text-lg text-white/60">
-            {job.company} — {job.location}
+            {job.company} – {job.location}
           </p>
         </div>
 

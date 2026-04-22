@@ -12,7 +12,7 @@
  * échappé pour l'affichage afin d'éviter toute interprétation dans le modal.
  *
  * La logique pure (`diffSections`, `previewContent`, `summarizeChanges`) vit
- * dans `src/lib/cms-revision-diff.ts` — elle est unit-testée.
+ * dans `src/lib/cms-revision-diff.ts` – elle est unit-testée.
  */
 
 import { useMemo } from "react";
@@ -88,8 +88,8 @@ export function CmsRevisionDiff({ pageId, before, after, onClose }: Props) {
   const summary = useMemo(() => summarizeChanges(changes), [changes]);
   const unchangedCount = summary.unchanged;
 
-  const authorBefore = before.createdByEmail ?? before.createdBy ?? "—";
-  const authorAfter = after.createdByEmail ?? after.createdBy ?? "—";
+  const authorBefore = before.createdByEmail ?? before.createdBy ?? "–";
+  const authorAfter = after.createdByEmail ?? after.createdBy ?? "–";
 
   return (
     <div
@@ -175,7 +175,7 @@ export function CmsRevisionDiff({ pageId, before, after, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {diffs.length === 0 ? (
             <p className="py-8 text-center text-sm text-foreground-muted">
-              Les 2 révisions sont identiques — aucune différence détectée.
+              Les 2 révisions sont identiques – aucune différence détectée.
             </p>
           ) : (
             <ul className="space-y-3">

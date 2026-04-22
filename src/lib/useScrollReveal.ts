@@ -44,7 +44,7 @@ export function useScrollReveal() {
 
     // Re-observe sur toute mutation du sous-arbre (ajout d'onglet,
     // hydratation CMS, etc.). Les nœuds déjà observés sont ignorés par
-    // IntersectionObserver — pas de doublon.
+    // IntersectionObserver – pas de doublon.
     const mutationObserver = new MutationObserver(observeAll);
     mutationObserver.observe(root, { childList: true, subtree: true });
 

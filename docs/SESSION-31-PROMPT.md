@@ -1,4 +1,4 @@
-# Prompt — Session 31 GASPE
+# Prompt – Session 31 GASPE
 
 Copie-colle ceci dans une nouvelle session Claude Code :
 
@@ -23,15 +23,15 @@ Session 30 (v2.16.0) a livré :
 
 Avant toute chose, lis :
 
-1. `CLAUDE.md` — état complet v2.16.0
-2. `docs/SEO-GUIDE.md` — couverture JSON-LD + RSS ✅ complète
-3. `docs/NEWSLETTER-SPEC.md` — phases 1-7 ✅, phase 8 (polish) reste
-4. `docs/LIGHTHOUSE-SESSION-30.md` — runbook perf + a11y (à rejouer sur machine avec Chrome + ffmpeg)
-5. `docs/CMS-SPEC.md` — état du CMS, backlog versioning
+1. `CLAUDE.md` – état complet v2.16.0
+2. `docs/SEO-GUIDE.md` – couverture JSON-LD + RSS ✅ complète
+3. `docs/NEWSLETTER-SPEC.md` – phases 1-7 ✅, phase 8 (polish) reste
+4. `docs/LIGHTHOUSE-SESSION-30.md` – runbook perf + a11y (à rejouer sur machine avec Chrome + ffmpeg)
+5. `docs/CMS-SPEC.md` – état du CMS, backlog versioning
 
-## Objectif — 4 axes prioritaires
+## Objectif – 4 axes prioritaires
 
-### Axe 1 — Activer Brevo en production
+### Axe 1 – Activer Brevo en production
 
 Runbook détaillé inchangé, à exécuter côté admin GASPE :
 
@@ -47,14 +47,14 @@ Runbook détaillé inchangé, à exécuter côté admin GASPE :
 
 Une fois activé, **cocher phases 3-5 dans `docs/NEWSLETTER-SPEC.md`** et ajouter une section "Validation prod session 31" dans `CLAUDE.md`.
 
-### Axe 2 — Performance mesurée
+### Axe 2 – Performance mesurée
 
-- Compresser `public/assets/acf_video.MP4` (ffmpeg x264 CRF 28, cible < 3 Mo) — cf. runbook `docs/LIGHTHOUSE-SESSION-30.md` §1.
+- Compresser `public/assets/acf_video.MP4` (ffmpeg x264 CRF 28, cible < 3 Mo) – cf. runbook `docs/LIGHTHOUSE-SESSION-30.md` §1.
 - Lancer Lighthouse mobile sur 7 pages clés (`/`, `/notre-groupement`, `/nos-adherents`, `/nos-compagnies-recrutent`, `/boite-a-outils`, `/positions`, `/actualites`). Cible ≥ 95 perf mobile pour toutes sauf `/nos-adherents` (Leaflet, cible ≥ 90).
 - Audit axe-core / pa11y sur les mêmes pages, corriger toute violation WCAG AA résiduelle.
 - Remplir section "Résultats session 30" de `docs/LIGHTHOUSE-SESSION-30.md` avec les scores réels, ou créer `docs/LIGHTHOUSE-SESSION-31.md` selon préférence.
 
-### Axe 3 — Contenu éditorial additionnel
+### Axe 3 – Contenu éditorial additionnel
 
 Les fondations éditoriales sont prêtes (route, JSON-LD, tests automatiques). Alimenter le flux pour maximiser la valeur SEO :
 
@@ -69,7 +69,7 @@ Les fondations éditoriales sont prêtes (route, JSON-LD, tests automatiques). A
 - Ajouter 2-3 images OG spécifiques dans `public/assets/og/positions/` et référencer via `ogImage` sur les positions correspondantes.
 - Enrichir si pertinent `CCN3228_FAQ_EXTRA` et/ou `SSGM_FAQ` (attention à la limite 10 Q/R par FAQPage JSON-LD).
 
-### Axe 4 — CMS enrichissement (bonus)
+### Axe 4 – CMS enrichissement (bonus)
 
 Backlog reporté de session 30 :
 
@@ -86,7 +86,7 @@ Backlog reporté de session 30 :
 
 ## Contraintes
 
-- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `—` interdit dans les textes éditoriaux publics (tests `positions.test.ts` enforcent cette règle sur title / excerpt / body)
+- **Typo** : tiret semi-quadratique `–` autorisé, tiret quadratique `–` interdit dans les textes éditoriaux publics (tests `positions.test.ts` enforcent cette règle sur title / excerpt / body)
 - **Design** : charte `--gaspe-*` (teal-600 / teal-400 / neutral-100), jamais de hex dur dans les composants
 - Chaque chiffre d'adhérents/compagnies/navires doit passer par `memberStats` ou un placeholder `{xxx}` CMS
 - Tout code TypeScript : 0 erreur `tsc --noEmit`, 0 erreur ESLint, tests passent
@@ -105,9 +105,9 @@ Backlog reporté de session 30 :
 ## Ordre d'exécution conseillé
 
 1. Lire les 5 docs (15 min)
-2. Axe 3 — alimenter positions (zéro dépendance externe, 1h30)
-3. Axe 2 — compression vidéo + Lighthouse réel (2h — dépend ffmpeg + Chrome local)
-4. Axe 1 — Brevo prod (3h — dépend provisionnement secrets + config webhook côté utilisateur)
-5. Axe 4 — versioning CMS ou preview device si temps restant
+2. Axe 3 – alimenter positions (zéro dépendance externe, 1h30)
+3. Axe 2 – compression vidéo + Lighthouse réel (2h – dépend ffmpeg + Chrome local)
+4. Axe 1 – Brevo prod (3h – dépend provisionnement secrets + config webhook côté utilisateur)
+5. Axe 4 – versioning CMS ou preview device si temps restant
 
 Commence par répondre « Je suis prêt. Voici mon plan d'attaque : » puis liste les étapes dans l'ordre avec un estimé horaire, puis développe en autonomie.

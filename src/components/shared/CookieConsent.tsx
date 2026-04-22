@@ -16,7 +16,7 @@ export function CookieConsent() {
   useEffect(() => {
     // Load CF Web Analytics only if consent is accepted
     if (consent === "accepted" && typeof window !== "undefined") {
-      // CF Web Analytics beacon — replace token when connecting domain
+      // CF Web Analytics beacon – replace token when connecting domain
       if (!document.getElementById("cf-analytics")) {
         const script = document.createElement("script");
         script.id = "cf-analytics";

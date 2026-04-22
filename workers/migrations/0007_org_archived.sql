@@ -1,4 +1,4 @@
--- GASPE D1 Migration 0007 — Add archived column to organizations
+-- GASPE D1 Migration 0007 – Add archived column to organizations
 -- Apply: npx wrangler d1 execute gaspe-db --file workers/migrations/0007_org_archived.sql
 
 ALTER TABLE organizations ADD COLUMN archived INTEGER DEFAULT 0;

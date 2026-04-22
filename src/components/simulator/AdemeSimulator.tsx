@@ -1,4 +1,4 @@
-// Ported from standalone sim-ademe.jsx — fully typed
+// Ported from standalone sim-ademe.jsx – fully typed
 "use client";
 /**
  * ============================================================================

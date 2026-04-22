@@ -1,7 +1,7 @@
 import type { FleetVessel } from "@/types";
 
 /**
- * Seed éditorial — flotte des compagnies adhérentes GASPE.
+ * Seed éditorial – flotte des compagnies adhérentes GASPE.
  * Source : tableur adhérents v2024/2025 (remontée directe des armements).
  *
  * Format : dictionnaire `slug de compagnie → FleetVessel[]`.
@@ -11,12 +11,12 @@ import type { FleetVessel } from "@/types";
  *
  * Les champs "libres" (crewSize, powerKw, consumption, renewalYear…) sont
  * conservés tels quels depuis le tableur (ex: "2 x 2300 CV", "70L/H",
- * "2032-2034", "entre 2026 et 2030", "4 ou 3 sur PA") — ils seront
+ * "2032-2034", "entre 2026 et 2030", "4 ou 3 sur PA") – ils seront
  * éditables via un input texte dans les formulaires.
  *
  * Enrichissement : pour ajouter un navire, soit éditer ce seed (source de
  * vérité côté dépôt), soit passer par l'admin CMS (écrase le seed via le
- * store, non-destructif — `scripts/seed-fleet.ts` peut reseed la base D1).
+ * store, non-destructif – `scripts/seed-fleet.ts` peut reseed la base D1).
  */
 
 // --- Compagnie Yeu Continent ---
@@ -73,8 +73,8 @@ const spmFerries: FleetVessel[] = [
 
 // --- Direction des Ports, Bacs et Voies vertes de la Seine-Maritime (CD76) ---
 const dpvSeineMaritime: FleetVessel[] = [
-  { id: "cd76-bac24", name: "BAC 24", imo: "935679", type: "RoRo/Pax amphidrome", operatingLine: "Quillebeuf – Berville", yearBuilt: 2020, length: 40, beam: 11.2, grossTonnage: 418, passengerCapacity: 150, vehicleCapacity: 27, freightCapacity: 101.5, renewalType: "Éco-conduite — baisse à l'étude", owner: "CD76", shipyard: "Merré", shipyardCountry: "France", propulsionType: "Diesel / GO pêche", fuelType: "GO pêche", cruiseSpeed: 10, consumptionPerTrip: "900 L/jour", rotationsPerYear: 13000, crewSize: "4", powerKw: "1352", shorePower: "Effective", emissionReduction: "Non" },
-  { id: "cd76-bac23", name: "BAC 23", imo: "929466", type: "RoRo/Pax amphidrome", operatingLine: "Duclair – Berville", yearBuilt: 2010, length: 31.9, beam: 18.5, grossTonnage: 297, passengerCapacity: 210, vehicleCapacity: 27, freightCapacity: 191, renewalType: "Éco-conduite — baisse", owner: "CD76", shipyard: "Socarénam", shipyardCountry: "France", propulsionType: "Diesel / GO pêche", fuelType: "GO pêche", cruiseSpeed: 0, consumptionPerTrip: "1400 L/jour", rotationsPerYear: 17000, crewSize: "4", powerKw: "750", shorePower: "Effective", emissionReduction: "Non" },
+  { id: "cd76-bac24", name: "BAC 24", imo: "935679", type: "RoRo/Pax amphidrome", operatingLine: "Quillebeuf – Berville", yearBuilt: 2020, length: 40, beam: 11.2, grossTonnage: 418, passengerCapacity: 150, vehicleCapacity: 27, freightCapacity: 101.5, renewalType: "Éco-conduite – baisse à l'étude", owner: "CD76", shipyard: "Merré", shipyardCountry: "France", propulsionType: "Diesel / GO pêche", fuelType: "GO pêche", cruiseSpeed: 10, consumptionPerTrip: "900 L/jour", rotationsPerYear: 13000, crewSize: "4", powerKw: "1352", shorePower: "Effective", emissionReduction: "Non" },
+  { id: "cd76-bac23", name: "BAC 23", imo: "929466", type: "RoRo/Pax amphidrome", operatingLine: "Duclair – Berville", yearBuilt: 2010, length: 31.9, beam: 18.5, grossTonnage: 297, passengerCapacity: 210, vehicleCapacity: 27, freightCapacity: 191, renewalType: "Éco-conduite – baisse", owner: "CD76", shipyard: "Socarénam", shipyardCountry: "France", propulsionType: "Diesel / GO pêche", fuelType: "GO pêche", cruiseSpeed: 0, consumptionPerTrip: "1400 L/jour", rotationsPerYear: 17000, crewSize: "4", powerKw: "750", shorePower: "Effective", emissionReduction: "Non" },
   { id: "cd76-bac13", name: "BAC 13", imo: "302102", type: "RoRo/Pax amphidrome", operatingLine: "En réserve", yearBuilt: 1969, length: 30, beam: 15.7, grossTonnage: 236, passengerCapacity: 130, vehicleCapacity: 28, freightCapacity: 150, renewalType: "Achat neuf, IMO III + HVO", renewalYear: "Fin 2028", owner: "CD76", shipyard: "de Normandie", shipyardCountry: "France", propulsionType: "Diesel / GO pêche", fuelType: "GO pêche", cruiseSpeed: 8, consumptionPerTrip: "1000 L/jour", rotationsPerYear: 4000, crewSize: "4", powerKw: "708", shorePower: "Effective", emissionReduction: "Non" },
 ];
 
@@ -221,7 +221,7 @@ const breizhgoIleDarz: FleetVessel[] = [
   { id: "ileda-waroch", name: "WAROCH", type: "Navire à passagers", operatingLine: "Vannes – Séné – Île d'Arz", yearBuilt: 1975, length: 19.1, beam: 4.7, grossTonnage: 24.68, passengerCapacity: 97, owner: "Bateaux-Bus du Golfe", shipyardCountry: "France", fuelType: "GO", crewSize: "2", powerKw: "470" },
 ];
 
-// --- Services des Transports Maritimes (STM Mayotte — ex-DTM) ---
+// --- Services des Transports Maritimes (STM Mayotte – ex-DTM) ---
 const stmMayotte: FleetVessel[] = [
   { id: "stm-pole", name: "POLE", type: "Amphidrome", operatingLine: "Dzaoudzi – Mamoudzou", passengerCapacity: 470, freightCapacity: 8337, shipyardCountry: "France", cruiseSpeed: 16, powerKw: "1324" },
   { id: "stm-karihani", name: "KARIHANI", type: "Amphidrome", operatingLine: "Dzaoudzi – Mamoudzou", passengerCapacity: 470, freightCapacity: 4075, shipyardCountry: "France", cruiseSpeed: 16, powerKw: "1324" },

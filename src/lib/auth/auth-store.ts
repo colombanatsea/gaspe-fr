@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Auth store interface — abstraction for storage backend             */
+/*  Auth store interface – abstraction for storage backend             */
 /*  Current: localStorage. Future: NextAuth + D1/API.                  */
 /*  To migrate, implement AuthStore with a new backend and swap in     */
 /*  the getAuthStore() factory.                                        */
@@ -77,7 +77,7 @@ class LocalStorageAuthStore implements AuthStore {
   }
 }
 
-/* ── Factory — swap this to change backend ── */
+/* ── Factory – swap this to change backend ── */
 
 let _store: AuthStore | null = null;
 

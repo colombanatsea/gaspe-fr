@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { getStoredMembers, getActiveMembers, saveMembers, MEMBERS_KEY } from "../members-store";
 
-// Mock the static members data — must match Member schema (types/index.ts)
+// Mock the static members data – must match Member schema (types/index.ts)
 vi.mock("@/data/members", () => ({
   members: [
     {

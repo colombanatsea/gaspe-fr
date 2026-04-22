@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Documents officiels GASPE — seed + types                           */
+/*  Documents officiels GASPE – seed + types                           */
 /*                                                                     */
 /*  Source de vérité : table D1 `cms_documents` (migration 0010).      */
 /*  Ce fichier fournit :                                                */
@@ -48,7 +48,7 @@ export const DOCUMENT_CATEGORIES: DocumentCategory[] = [
 ];
 
 /**
- * Seed — miroir 1:1 de `workers/migrations/0010_cms_documents.sql`.
+ * Seed – miroir 1:1 de `workers/migrations/0010_cms_documents.sql`.
  * Sert de fallback pour le mode localStorage (démo/dev) uniquement.
  */
 export const DOCUMENTS_SEED: GaspeDocument[] = [

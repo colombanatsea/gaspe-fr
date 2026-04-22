@@ -1,6 +1,6 @@
 /**
  * Routes maritimes des adhérents GASPE
- * Liaisons de service public — format [lat, lon][]
+ * Liaisons de service public – format [lat, lon][]
  * Chaque route relie un port de départ à une destination
  */
 

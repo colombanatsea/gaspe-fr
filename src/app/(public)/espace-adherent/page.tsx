@@ -53,7 +53,7 @@ export default function EspaceAdherentPage() {
 
   if (!user || user.role !== "adherent") return null;
 
-  // Profile completion (weighted — same logic as profil page)
+  // Profile completion (weighted – same logic as profil page)
   const profileWeights = [
     { filled: !!user.name, weight: 10 },
     { filled: !!user.email, weight: 10 },
@@ -188,7 +188,7 @@ export default function EspaceAdherentPage() {
         <p className="mt-1 text-foreground-muted">
           Bienvenue, <span className="font-semibold text-foreground">{user.name}</span>
           {user.company && (
-            <> — <span className="text-primary font-medium">{user.company}</span></>
+            <> – <span className="text-primary font-medium">{user.company}</span></>
           )}
         </p>
       </div>

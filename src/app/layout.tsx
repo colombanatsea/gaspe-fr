@@ -85,7 +85,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://server.arcgisonline.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* RSS auto-discovery — global pour toutes les pages publiques */}
+        {/* RSS auto-discovery – global pour toutes les pages publiques */}
         <link
           rel="alternate"
           type="application/rss+xml"

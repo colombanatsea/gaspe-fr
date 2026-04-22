@@ -1,4 +1,4 @@
-# Lighthouse & perf — Session 30
+# Lighthouse & perf – Session 30
 
 **Version** : 1.0 · avril 2026
 **Objectif** : mesure perf réelle sur 7 pages SEO-critiques, compression vidéo hero.
@@ -49,7 +49,7 @@ mv acf_video.mp4 acf_video.MP4
 
 ---
 
-## 2. Lighthouse mobile — commandes à rejouer
+## 2. Lighthouse mobile – commandes à rejouer
 
 Installer Lighthouse CLI (une fois) :
 
@@ -106,7 +106,7 @@ done
 | `/positions` | ≥ 95 | ≥ 95 | ≥ 95 | ≥ 95 |
 | `/actualites` | ≥ 95 | ≥ 95 | ≥ 95 | ≥ 95 |
 
-*Remplacer cette section par les scores mesurés après exécution — conserver le tableau pour le diff.*
+*Remplacer cette section par les scores mesurés après exécution – conserver le tableau pour le diff.*
 
 ---
 
@@ -116,7 +116,7 @@ done
 |---|--------------|---------|-------------|
 | 1 | Hero video `poster` + `preload="metadata"` | `components/home/HeroVideo.tsx` | -200 ms LCP |
 | 2 | Leaflet MemberMap lazy-loaded | `components/map/MemberMap.tsx` | -80 KB bundle |
-| 3 | GaspeGlobe Three.js supprimé | — | -15 KB bundle |
+| 3 | GaspeGlobe Three.js supprimé | – | -15 KB bundle |
 | 4 | Unsplash hero → gradient CSS | `components/jobs/RecruitHero.tsx` | 0 req externe |
 | 5 | Google Fonts 11 → 7 poids | `app/layout.tsx` | -30% payload fonts |
 | 6 | Tap targets 44×44 mobile | `MobileNav`, `ThemeToggle`, `MediaLibrary` | A11y tap |
