@@ -9,8 +9,21 @@ import { cn } from "@/lib/utils";
 const DEFAULT_CENTER: [number, number] = [46.8, -1.8];
 const DEFAULT_ZOOM = 6;
 
-const VIEWS = [
-  { label: "France", lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1], zoom: DEFAULT_ZOOM },
+// Bounding box de l'hexagone — utilisé par `fitBounds` au chargement pour
+// s'adapter à la hauteur réelle du conteneur (sinon, sur grand écran avec
+// un panneau plein-hauteur, le zoom 6 fixe déborde jusqu'en mer du Nord).
+// Coins SW (Pyrénées orientales) → NE (Dunkerque / Ardennes).
+const METROPOLE_BOUNDS: [[number, number], [number, number]] = [
+  [42.5, -5.0],
+  [51.0, 8.5],
+];
+
+type View =
+  | { label: string; fitBounds: true }
+  | { label: string; lat: number; lng: number; zoom: number };
+
+const VIEWS: View[] = [
+  { label: "France", fitBounds: true },
   { label: "Guadeloupe", lat: 16.0, lng: -61.6, zoom: 10 },
   { label: "Martinique", lat: 14.6, lng: -61.0, zoom: 11 },
   { label: "Mayotte", lat: -12.8, lng: 45.2, zoom: 11 },
@@ -135,7 +148,19 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
 
         mapRef.current = map;
         map.whenReady(() => {
-          setTimeout(() => map.invalidateSize(), 200);
+          setTimeout(() => {
+            map.invalidateSize();
+            // Ajuste le cadrage aux dimensions réelles du conteneur pour que
+            // l'hexagone soit toujours visible en entier, quelle que soit la
+            // hauteur du panneau (évite le débordement en mer du Nord sur
+            // les grands écrans). `maxZoom` empêche de zoomer trop près sur
+            // petits conteneurs ; `padding` laisse une marge littorale.
+            map.fitBounds(METROPOLE_BOUNDS, {
+              padding: [20, 20],
+              maxZoom: DEFAULT_ZOOM,
+              animate: false,
+            });
+          }, 200);
         });
         setMapReady(true);
       }
@@ -153,6 +178,14 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
       mapRef.current?.flyTo([lat, lng], zoom, { duration: 1.5 });
     }
 
+    function flyToMetropole() {
+      mapRef.current?.flyToBounds(METROPOLE_BOUNDS, {
+        padding: [20, 20],
+        maxZoom: DEFAULT_ZOOM,
+        duration: 1.5,
+      });
+    }
+
     return (
       <div className={cn("relative isolate z-0", className)}>
         <div id="gaspe-member-map" className="w-full h-full" style={{ minHeight: 400 }} />
@@ -162,7 +195,11 @@ export const MemberMap = forwardRef<MemberMapHandle, MemberMapProps>(
           {VIEWS.map((view) => (
             <button
               key={view.label}
-              onClick={() => flyTo(view.lat, view.lng, view.zoom)}
+              onClick={() =>
+                "fitBounds" in view
+                  ? flyToMetropole()
+                  : flyTo(view.lat, view.lng, view.zoom)
+              }
               className="rounded-xl bg-white/95 backdrop-blur-sm px-3.5 py-2 text-xs font-semibold text-foreground shadow-lg hover:bg-white hover:shadow-xl transition-all border border-[var(--gaspe-neutral-200)]"
             >
               {view.label}
