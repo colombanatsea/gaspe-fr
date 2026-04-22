@@ -7,15 +7,15 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.18.0 (versioning CMS enrichi — motif + filtres auteur/date + diff 3 colonnes — +4 positions SEO longue traîne — migration `<img>` → `next/image` sur les espaces privés + admin)
+- **Version**: v2.19.0 (extraction logique diff CMS testable + 18 tests + 20 positions SEO longue traîne)
 
 ## Commands
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 231 tests, 22 files)
+npm run test         # unit tests (Vitest, 249 tests, 23 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 0 warnings — v2.18.0)
+npm run lint         # ESLint (0 errors, 0 warnings — v2.19.0)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -165,7 +165,7 @@ src/
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
 │   ├── globals.css        # Design system + CSS variables + dark mode
 │   ├── not-found.tsx      # 404 page with quick links
-│   ├── feed.xml/          # RSS 2.0 static (session 30) — 16 positions (session 33)
+│   ├── feed.xml/          # RSS 2.0 static (session 30) — 20 positions (session 33b)
 │   └── sitemap.ts         # Sitemap dynamique (jobs, members, formations, positions)
 ├── components/
 │   ├── home/              # Hero, SearchBar, Stats, Marquee, MapPreview, CTA
@@ -305,6 +305,9 @@ workers/
 ### Nouveaux tests v2.16.0 (session 30)
 - `src/lib/__tests__/positions.test.ts` (12 tests) — slugs uniques, sortKey cohérent, body non vide, em-dash interdit, helpers
 - `src/lib/__tests__/feed-rss.test.ts` (6 tests) — enveloppe RSS 2.0, namespaces, atom:link self, 1 item par position, XML bien formé
+
+### Nouveaux tests v2.19.0 (session 33b)
+- `src/lib/__tests__/cms-revision-diff.test.ts` (18 tests) — `previewContent` (HTML strip, normalisation espaces, troncature/ellipse), `diffSections` (statuts added/removed/modified/unchanged, ordre des kinds, alphabétique par id, fallback label/type), `summarizeChanges` (compteurs + totalDiffs)
 
 ## SEO (session 28 — industrialisé)
 
@@ -488,3 +491,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 31 | 2.16.0 | **Hexagone (display)** : remplacement `Métropole` → `Hexagone` sur tous les labels visibles (MapPreview tuile homepage, /ssgm section, admin sélecteur, /nos-adherents slug, /positions presse, SSGM_FAQ). Identifiants techniques (`territory === "metropole"` DB/Zod/types, slug `keolis-bordeaux-metropole`, région ADEME `metropole_standard`) conservés. **Fond de carte MemberMap** : CartoDB → **Esri World Ocean Base** (bathymétrie visible, terre en gris très clair sans aucune route). Default view ajustée `[46.8,-1.8]` zoom 6 pour cadrer l'hexagone + marge littorale. `minZoom=3`, `maxZoom=13`, `worldCopyJump`. CSP `public/_headers` autorise `server.arcgisonline.com` + `*.arcgisonline.com`. `dns-prefetch` root layout mis à jour. **Footer signature** : `Conçu avec 💙 par Colomban · Propulsé et protégé par VAIATA Cyber` (liens colombanatsea.com + vaiata-dynamics.com/fr/cyber/). **CMS documents D1** (voie propre) : migration `0010_cms_documents.sql` + 9 docs seed, 5 endpoints Worker (`/api/cms/documents` GET/POST/PUT/DELETE + `/:id`), dual-mode store `src/lib/documents-store.ts` (localStorage ↔ D1) + types partagés `src/data/documents-seed.ts`, refonte `/admin/documents` (branchée D1, bouton "Depuis la Media Library" qui remplit `fileUrl` + `fileName` avec `/api/media/raw/:key`, champs `publishedAt` / `sortOrder` / `isPublic` / `published`), refonte `/documents` publique (fetch store, empty state, categories Badge + date ISO). **Tests** : +10 (documents-store.test.ts) → 231 tests verts, 0 warning. |
 | 32 | 2.17.0 | **CMS versioning** : migration `0011_cms_revisions.sql` (table `cms_revisions` avec snapshot JSON + page_id + created_by + label + created_at). `handleCmsUpsertPage` snapshotte automatiquement l'état courant avant chaque PUT ; rétention 30 snapshots par page (auto-purge). Nouveaux endpoints Worker : `GET /api/cms/pages/:pageId/revisions` (JWT+admin) et `POST /api/cms/pages/:pageId/revisions/:id/restore` (JWT+admin, crée un pré-snapshot avant restauration). UI : `src/components/admin/CmsRevisionsModal.tsx` + bouton "Historique" dans `/admin/pages`. **Device preview** : `src/components/admin/DevicePreviewSwitcher.tsx` (mobile 390×844 / tablet 820×1180 / desktop 1280×720) branché sur l'iframe d'aperçu `/admin/pages`. **+4 positions éditoriales** : cybersécurité maritime (IACS UR E26/E27, NIS 2), prix de l'électricité à quai (cold ironing, TICFE), bilan social branche 2026, économie circulaire navires (MARPOL V, Hong Kong 2009, AGEC, règlement batteries 2023/1542) → 12 articles dans le flux RSS + sitemap. **Qualité** : 231 tests verts, 0 warning ESLint, 0 erreur tsc, build OK. **Bloqueurs env** (inchangés) : compression vidéo (ffmpeg absent) + Lighthouse mobile (Chrome absent) + Brevo prod (secrets wrangler admin). |
 | 33 | 2.18.0 | **Versioning CMS enrichi** (pas de nouvelle migration — la colonne `label` existait déjà en 0011) : champ "Motif" sur chaque sauvegarde dans `/admin/pages` (propagé vers `apiSavePageContent(page, { label })` puis stocké sur le pré-snapshot automatique). `handleCmsListRevisions` LEFT JOIN `users` pour ramener `createdByEmail` affiché en clair dans le modal. Nouvel endpoint `GET /api/cms/pages/:pageId/revisions/:id` (JWT+admin) qui retourne le snapshot désérialisé → 58 endpoints Worker. Filtres dans `CmsRevisionsModal` : auteur (select dynamique) + plage de dates (`Du` / `Au`) + reset. **Diff visuel 3 colonnes** (`src/components/admin/CmsRevisionDiff.tsx`) : sélection de 2 révisions via checkboxes → fetch en parallèle → appariement par `section.id` → status `added`/`removed`/`modified`/`unchanged`, affichage côte-à-côte avant/après avec couleurs red/teal, compteur de changements. **+4 positions SEO** (16 articles total, RSS + sitemap) : cybersécurité chaîne tierce et systèmes portuaires (NIS 2, ENISA), énergies marines renouvelables (PPE 18 GW, CTV, DSF), retour d'ex. navire hybride (-35% consommation, -40% sonore), multimodalité fret mer-rail (SNBC, 4F). **Migration `<img>` → `next/image`** (8 occurrences) : espace-candidat (2 profile photos), espace-adherent (3 company logos), admin/pages preview, admin/newsletter/charte logo, RichTextEditor modal preview, MediaLibrary thumbnails — toutes avec `unoptimized` + width/height explicites. **Qualité** : 231 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (16 positions pré-rendues). **Hors scope (inchangé)** : AdemeSimulator (4 `<img>` `mixBlendMode: screen` + html2canvas), MemberMap (HTML string Leaflet), RichTextEditor:134 (HTML Tiptap), newsletter/render.ts (HTML Brevo), lib/__tests__ (fixtures). |
+| 33b | 2.19.0 | **Tests CMS revision diff** : extraction de la logique pure `diffSections` / `previewContent` / `summarizeChanges` dans `src/lib/cms-revision-diff.ts` (réutilisée par `CmsRevisionDiff.tsx`). Nouveau `cms-revision-diff.test.ts` avec **18 tests** couvrant : HTML strip + normalisation espaces + troncature/ellipse, statuts `added`/`removed`/`modified`/`unchanged`, ordre canonical des kinds (modified > added > removed > unchanged), tri alphabétique par id intra-groupe, fallback label/type entre before/after, compteurs sommaires. **+4 positions SEO longue traîne** (20 articles total) : sécurité et accessibilité PMR (règlement UE 1177/2010, SOLAS), formation officier de quart passerelle (STCW, ENSM, lycées maritimes, VAE), concertation publique maritime (CNDP, Aarhus, DSF), bio-GNL vs diesel marine (-85% CO₂ well-to-wake, IGF Code, soutage cryogénique). **Qualité** : **249 tests verts** (23 fichiers, +18), 0 warning ESLint, 0 erreur tsc, build OK (20 positions pré-rendues). **Bloqueurs env** (inchangés) : ffmpeg / Chrome / wrangler CLI. |

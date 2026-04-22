@@ -8,6 +8,12 @@ Reprends la suite du site GASPE (gaspe.fr · repo `colombanatsea/gaspe-fr` · br
 
 ## Contexte (lire d'abord)
 
+Session 33b (v2.19.0) a livré en bonus, par-dessus la session 33 :
+
+- **Tests CMS revision diff** : extraction de la logique pure (`diffSections`, `previewContent`, `summarizeChanges`) dans `src/lib/cms-revision-diff.ts` (réutilisée par `CmsRevisionDiff.tsx`). 18 tests Vitest couvrant tous les statuts, l'ordre, le tri alphabétique et les fallbacks label/type.
+- **+4 positions SEO** → **20 articles** dans `/feed.xml` + sitemap : sécurité PMR, formation officier de quart passerelle, concertation publique maritime, bio-GNL vs diesel marine.
+- **249 tests verts** (23 fichiers), 0 warning, 0 erreur tsc, build OK (20 positions pré-rendues).
+
 Session 33 (v2.18.0) a livré :
 
 - **Versioning CMS enrichi** (pas de nouvelle migration — la colonne `label` existait déjà en 0011) :
@@ -79,13 +85,14 @@ Ce que je peux faire en pure code, sans dépendance externe :
 
 - **Migration `armateurscotiers.fr`** — quand tu me donnes le feu vert. 4 fichiers à modifier (`SITE_URL`, `public/_headers` CSP, `workers/api.ts` CORS, `workers/wrangler.toml`), relance du build + redeploy.
 - **Drag & drop blocs newsletter / sections CMS** via `@dnd-kit/core`
-- **Tests unitaires diff CMS** : `CmsRevisionDiff.test.tsx` sur la logique `diffSections` (appariement, ordre des kinds, contenu).
-- **OG images dédiées** pour les 16 positions (`public/assets/og/positions/xxx.png` + référencer via `ogImage` dans `src/data/positions.ts`). Alternative simple : fonction génératrice avec satori ou workflow script qui génère des PNG 1200×630 via Playwright.
-- **+4 positions longue traîne** (20 articles total) — candidats éditoriaux :
-  - Retour d'expérience soute bio-GNL vs diesel marine sur liaison courte
-  - Concertation publique maritime : méthodologie recommandée
-  - Formation officier de quart passerelle : parcours initial et passerelles
-  - Sécurité des passagers PMR : exigences 2026 et bonnes pratiques
+- ~~**Tests unitaires diff CMS**~~ ✅ livré session 33b — 18 tests dans `src/lib/__tests__/cms-revision-diff.test.ts`
+- **OG images dédiées** pour les 20 positions (`public/assets/og/positions/xxx.png` + référencer via `ogImage` dans `src/data/positions.ts`). Alternative simple : fonction génératrice avec satori ou workflow script qui génère des PNG 1200×630 via Playwright.
+- ~~**+4 positions longue traîne**~~ ✅ livré session 33b (20 articles total : sécurité PMR, formation OCQP, concertation publique, bio-GNL vs diesel)
+- **+4 nouvelles positions** (24 articles total) — candidats éditoriaux pour cette session :
+  - Pavillon français premier registre vs RIF : implications sociales et juridiques
+  - Cybersécurité passerelle ECDIS / radar : guide de bonnes pratiques
+  - Préparation Vendée Globe / Route du Rhum : impact sur les liaisons côtières
+  - Évolution du parc roulier (PMR, vélos, motos électriques) sur les ferries côtiers
 - **Éditeur blocs newsletter : templates pré-configurés** (phase 8 NEWSLETTER-SPEC) — quand la phase 3 Brevo est activée
 - **Scoring antispam** côté admin (heuristiques simples : ratio texte/images, mots interdits, longueur liens) — indicateur visuel dans l'éditeur newsletter
 - **Dashboard admin : mini-widgets** "Dernière newsletter envoyée", "Dernières inscriptions", "Dernières révisions CMS" (sur la même page `/admin`)
