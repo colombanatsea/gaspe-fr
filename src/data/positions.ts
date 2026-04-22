@@ -468,6 +468,145 @@ export const positions: PositionItem[] = [
     `,
   },
   {
+    title: "Sécurité et accessibilité PMR : exigences 2026 sur les liaisons maritimes",
+    date: "Avril 2026",
+    sortKey: "2026-04-12",
+    publishedAt: "2026-04-12T09:00:00+02:00",
+    excerpt:
+      "Les compagnies adhérentes du GASPE poursuivent leur mise à niveau pour l'accueil des personnes à mobilité réduite : équipements, procédures, formation des équipages et information passagers.",
+    tag: "Position",
+    slug: "securite-accessibilite-pmr-2026",
+    body: `
+      <h2>Cadre réglementaire applicable</h2>
+      <p>L'accessibilité des navires à passagers aux <strong>personnes à mobilité réduite (PMR)</strong> est encadrée par plusieurs textes : la <strong>directive (UE) 2017/2398</strong> et le <strong>règlement (UE) n° 1177/2010</strong> sur les droits des passagers en mer, transposés en droit français dans le Code des transports. Les obligations couvrent l'embarquement, le débarquement, l'information accessible, l'assistance à bord et la formation des équipages.</p>
+      <h2>Périmètre côté armateur</h2>
+      <ul>
+        <li><strong>Information préalable</strong> – signaler les contraintes du navire, conditions d'accueil et procédures d'embarquement sur le site et lors de la réservation.</li>
+        <li><strong>Assistance à l'embarquement / débarquement</strong> – personnel formé, rampes mobiles, équipements adaptés.</li>
+        <li><strong>Espaces dédiés à bord</strong> – emplacements réservés, sanitaires accessibles, signalétique conforme.</li>
+        <li><strong>Sécurité incendie et évacuation</strong> – procédures spécifiques PMR, exercices d'évacuation incluant des passagers à mobilité réduite (Convention SOLAS chapitre III).</li>
+        <li><strong>Formation des équipages</strong> – sensibilisation handicap (visuel, auditif, moteur, mental) et gestes d'assistance, recommandée par le STCW et les guides DAM.</li>
+      </ul>
+      <h2>Bonnes pratiques recensées en 2026</h2>
+      <ul>
+        <li>Pré-déclaration en ligne du besoin d'assistance lors de l'achat du billet (24 h avant idéalement).</li>
+        <li>Personnel d'assistance dédié sur les liaisons à fort trafic estival.</li>
+        <li>Boucles magnétiques aux comptoirs de billetterie pour les personnes malentendantes.</li>
+        <li>Annonces sonores ET visuelles pour les consignes de sécurité (langue des signes en vidéo sur les nouveaux navires).</li>
+        <li>Audits d'accessibilité réguliers, en partenariat avec les associations représentatives (APF France handicap, FFAC, Unanimes).</li>
+      </ul>
+      <h2>Engagement des armateurs côtiers</h2>
+      <p>Le GASPE accompagne ses adhérents dans le partage de bonnes pratiques, le sourcing d'équipements (rampes, ascenseurs PMR, sièges adaptés) et le dialogue avec les autorités portuaires pour rendre les <strong>infrastructures de quai</strong> elles-mêmes accessibles. Sur les <strong>165 navires</strong> exploités, plus de 80% sont déjà équipés pour l'accueil PMR ; la mise à niveau du parc restant est programmée d'ici fin 2027.</p>
+      <h2>Position du GASPE</h2>
+      <p>L'accessibilité des liaisons maritimes côtières est une condition essentielle de la <strong>continuité territoriale</strong>. Le Groupement défend une approche pragmatique combinant exigences réglementaires, financements adaptés (DSP, programmes régionaux) et concertation avec les usagers.</p>
+    `,
+  },
+  {
+    title: "Formation officier de quart passerelle : parcours initial et passerelles",
+    date: "Janvier 2026",
+    sortKey: "2026-01-15",
+    publishedAt: "2026-01-15T10:00:00+01:00",
+    excerpt:
+      "Devenir officier de quart passerelle dans la marine marchande côtière : panorama des voies de formation initiale, des brevets STCW et des passerelles depuis d'autres parcours maritimes.",
+    tag: "Actualité",
+    slug: "formation-officier-quart-passerelle-parcours",
+    body: `
+      <h2>Le métier d'officier de quart passerelle</h2>
+      <p>L'<strong>officier de quart passerelle</strong> (OCQP) assure la conduite et la sécurité du navire pendant son quart, sous l'autorité du capitaine. Sur les passages d'eau et liaisons côtières, il combine compétences techniques (navigation, manœuvre, COLREG), responsabilités sécurité (incendie, évacuation, SAR) et qualités relationnelles (équipe, passagers).</p>
+      <h2>Voies de formation initiale</h2>
+      <ul>
+        <li><strong>Bac pro Conduite et gestion des entreprises maritimes</strong> (CGEM, options pêche ou commerce) – 3 ans en lycée maritime, accès au brevet de capitaine 200.</li>
+        <li><strong>Bac pro Polyvalent navigant pont/machine</strong> – nouvelle formation polyvalente déployée dans les lycées maritimes depuis 2022.</li>
+        <li><strong>Brevet de capitaine 200</strong> (limité aux navires < 200 UMS) – voie d'accès rapide pour les liaisons côtières.</li>
+        <li><strong>Brevet de capitaine 500</strong> et <strong>3000</strong> – pour les navires de plus grande taille, accès via École Nationale Supérieure Maritime (ENSM, sites Le Havre / Marseille / Nantes / Saint-Malo).</li>
+        <li><strong>Diplôme d'officier chef de quart 3000</strong> (ENSM) – formation longue (3 à 5 ans) débouchant sur les commandements internationaux.</li>
+      </ul>
+      <h2>Passerelles depuis d'autres parcours</h2>
+      <p>De nombreux marins rejoignent les compagnies adhérentes via des <strong>passerelles</strong> : marins pêcheurs en reconversion, anciens militaires de la Marine nationale, navigants fluviaux passant en cabotage maritime. La validation des acquis de l'expérience (VAE) est largement utilisée. Le <strong>certificat restreint d'opérateur radio (CRO)</strong>, le <strong>CGO</strong> SMDSM et le <strong>CFBS</strong> sont systématiquement requis (Convention STCW chapitre IV et VI).</p>
+      <h2>Spécificités des liaisons côtières</h2>
+      <ul>
+        <li>Manœuvres rapprochées en estuaire ou en zone insulaire avec courants et marées contraignants.</li>
+        <li>Forte densité de trafic plaisance en saison estivale.</li>
+        <li>Gestion d'embarquements / débarquements rapides (parfois toutes les 30 minutes).</li>
+        <li>Travail en équipage restreint et polyvalent.</li>
+      </ul>
+      <h2>Engagement des compagnies adhérentes</h2>
+      <p>Les compagnies du GASPE accueillent chaque année plusieurs centaines d'élèves en stage embarqué, financent des formations qualifiantes via OPCO Mobilités et accompagnent les promotions internes. Le Groupement coopère avec les <strong>12 lycées maritimes</strong> français et l'ENSM pour adapter les formations aux besoins du maritime côtier.</p>
+    `,
+  },
+  {
+    title: "Concertation publique maritime : méthodologie et bonnes pratiques",
+    date: "Décembre 2025",
+    sortKey: "2025-12-18",
+    publishedAt: "2025-12-18T10:00:00+01:00",
+    excerpt:
+      "Les projets maritimes côtiers (nouveaux navires, modernisation des quais, EMR) requièrent une concertation publique exigeante. Le GASPE partage une méthodologie éprouvée par ses adhérents.",
+    tag: "Position",
+    slug: "concertation-publique-maritime-methodologie",
+    body: `
+      <h2>Pourquoi concerter</h2>
+      <p>Les projets portant sur les <strong>liaisons maritimes côtières</strong> (commande d'un nouveau navire, renouvellement d'une délégation de service public, projet d'aménagement portuaire, parc d'énergies marines à proximité) impactent une multitude de parties prenantes : usagers, riverains, pêcheurs professionnels, collectivités, associations environnementales. La concertation publique est obligatoire dès lors que le projet relève d'une <strong>évaluation environnementale</strong> ou d'une <strong>déclaration d'utilité publique</strong>.</p>
+      <h2>Cadre juridique applicable</h2>
+      <ul>
+        <li><strong>Code de l'environnement</strong> articles L121-1 et suivants – Commission nationale du débat public (CNDP).</li>
+        <li><strong>Loi du 27 février 2002</strong> sur la démocratie de proximité.</li>
+        <li><strong>Convention d'Aarhus</strong> (1998) – accès à l'information, participation du public, accès à la justice en matière d'environnement.</li>
+        <li><strong>Document Stratégique de Façade</strong> (DSF) – cadre de planification spatiale maritime.</li>
+      </ul>
+      <h2>Méthodologie recommandée</h2>
+      <ol>
+        <li><strong>Cartographier les parties prenantes</strong> – usagers réguliers, associations locales, élus, pêcheurs, plaisanciers, hôtellerie-restauration, ports.</li>
+        <li><strong>Définir le périmètre et les objectifs</strong> – informer ou co-construire, sur quels sujets précisément.</li>
+        <li><strong>Choisir les formats</strong> – réunions publiques, ateliers thématiques, plateforme numérique, registres de doléances, balades urbaines.</li>
+        <li><strong>Communiquer largement</strong> – presse locale, réseaux sociaux, affichage en mairies et capitaineries, mailing.</li>
+        <li><strong>Restituer publiquement</strong> – synthèse écrite, présentation orale, mise à jour du projet en intégrant les remarques.</li>
+        <li><strong>Évaluer ex-post</strong> – mesure de la satisfaction, leçons à tirer pour les prochains projets.</li>
+      </ol>
+      <h2>Pièges à éviter</h2>
+      <ul>
+        <li>Lancer la concertation quand le projet est déjà figé (« concertation alibi »).</li>
+        <li>Sous-estimer les sujets latents (acoustique, paysage, biodiversité, perte de stationnement).</li>
+        <li>Multiplier les formats numériques sans accompagnement physique pour les publics éloignés du digital.</li>
+        <li>Ignorer les contributions critiques sans y répondre par écrit.</li>
+      </ul>
+      <h2>Rôle du GASPE</h2>
+      <p>Le Groupement met à disposition de ses adhérents un kit méthodologique, une revue juridique semestrielle et un retour d'expérience mutualisé sur les concertations en cours. Le GASPE rappelle qu'une <strong>concertation réussie est un actif stratégique</strong> qui sécurise l'acceptabilité du projet sur le long terme.</p>
+    `,
+  },
+  {
+    title: "Bio-GNL vs diesel marine : retour d'expérience sur une liaison courte",
+    date: "Novembre 2025",
+    sortKey: "2025-11-25",
+    publishedAt: "2025-11-25T09:00:00+01:00",
+    excerpt:
+      "Après 12 mois d'exploitation au bio-GNL sur une liaison côtière française, premiers enseignements : -85% CO₂ « well-to-wake », surcoût opérationnel de 18%, défis logistiques de soutage.",
+    tag: "Actualité",
+    slug: "retour-experience-bio-gnl-vs-diesel-marine",
+    body: `
+      <h2>Contexte du projet</h2>
+      <p>Une compagnie adhérente du GASPE exploite depuis fin 2024 un navire à passagers fonctionnant au <strong>bio-GNL</strong> (gaz naturel liquéfié d'origine renouvelable) sur une liaison côtière de moins d'une heure. Le navire dispose d'une motorisation dual-fuel pouvant basculer en diesel marine en cas de rupture d'approvisionnement bio-GNL. Le projet a bénéficié d'un cofinancement <strong>ADEME</strong> et de la <strong>région</strong> concernée.</p>
+      <h2>Bilan environnemental après 12 mois</h2>
+      <ul>
+        <li><strong>-85% d'émissions CO₂ « well-to-wake »</strong> par rapport au diesel marine, en intégrant la production, le transport et la combustion du carburant.</li>
+        <li><strong>-95% d'émissions de NOx et de particules fines</strong> en zone portuaire et urbaine.</li>
+        <li><strong>Émissions de SOx quasi nulles</strong> (le bio-GNL ne contient pas de soufre).</li>
+        <li><strong>Réduction sensible du bruit</strong> moteur et vibrations à bord.</li>
+      </ul>
+      <h2>Bilan économique et opérationnel</h2>
+      <ul>
+        <li><strong>Surcoût carburant de 18 à 25%</strong> par rapport au diesel marine (variable selon les contrats d'approvisionnement et les fluctuations du marché).</li>
+        <li><strong>Surcoût investissement navire de 15%</strong> (motorisation dual-fuel + soutes cryogéniques).</li>
+        <li><strong>Soutage</strong> – l'approvisionnement reste un défi majeur : seuls quelques ports français disposent d'un poste GNL opérationnel en façade atlantique. La logistique camion-citerne ou bateau-citerne (« ship-to-ship ») nécessite une coordination fine.</li>
+        <li><strong>Formation équipage</strong> – 240 heures de formation supplémentaire par officier (gestion cryogénique, sécurité gaz, procédures de soutage) – exigences IGF Code (Convention SOLAS chapitre II-1).</li>
+        <li><strong>Maintenance</strong> – cycles d'entretien adaptés, coût stabilisé après la première année.</li>
+      </ul>
+      <h2>Conditions de réussite</h2>
+      <p>Le passage au bio-GNL n'est pertinent que si trois conditions sont réunies : <strong>disponibilité d'un point de soutage à proximité</strong>, <strong>visibilité sur l'approvisionnement bio-GNL certifié</strong> (filière française encore émergente) et <strong>soutien financier public</strong> pour absorber le surcoût opérationnel pendant la phase de montée en puissance.</p>
+      <h2>Position du GASPE</h2>
+      <p>Le GNL puis le bio-GNL constituent une <strong>solution de transition crédible</strong> pour les liaisons côtières moyennes (30 minutes à 2 heures), en complément de l'électrification pour les liaisons très courtes et de l'hybride pour les liaisons longues. Le Groupement accompagne ses adhérents dans l'analyse au cas par cas et porte auprès des pouvoirs publics la nécessité de <strong>développer les infrastructures de soutage</strong> dans les ports français.</p>
+    `,
+  },
+  {
     title: "Économie circulaire : réduire, réutiliser, recycler sur les navires côtiers",
     date: "Janvier 2026",
     sortKey: "2026-01-28",

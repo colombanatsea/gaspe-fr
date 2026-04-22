@@ -10,16 +10,21 @@
  *
  * Les sections sont appariées par leur `id`. Le contenu HTML (richtext) est
  * échappé pour l'affichage afin d'éviter toute interprétation dans le modal.
+ *
+ * La logique pure (`diffSections`, `previewContent`, `summarizeChanges`) vit
+ * dans `src/lib/cms-revision-diff.ts` — elle est unit-testée.
  */
 
 import { useMemo } from "react";
+import {
+  diffSections,
+  previewContent,
+  summarizeChanges,
+  type ChangeKind,
+  type CmsRevisionDetailSection,
+} from "@/lib/cms-revision-diff";
 
-export interface CmsRevisionDetailSection {
-  id: string;
-  label: string;
-  type: string;
-  content: string;
-}
+export type { CmsRevisionDetailSection };
 
 export interface CmsRevisionDetail {
   id: number;
@@ -53,80 +58,6 @@ function formatTs(iso: string): string {
   }
 }
 
-/** Préview courte du contenu d'une section (max ~200 car, HTML strippé). */
-function previewContent(content: string, max = 240): string {
-  if (!content) return "(vide)";
-  const plain = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  if (!plain) return "(vide)";
-  return plain.length > max ? plain.slice(0, max) + "…" : plain;
-}
-
-type ChangeKind = "added" | "removed" | "modified" | "unchanged";
-
-interface SectionChange {
-  id: string;
-  label: string;
-  type: string;
-  kind: ChangeKind;
-  beforeContent: string | null;
-  afterContent: string | null;
-}
-
-function diffSections(
-  before: CmsRevisionDetailSection[],
-  after: CmsRevisionDetailSection[],
-): SectionChange[] {
-  const beforeMap = new Map(before.map((s) => [s.id, s]));
-  const afterMap = new Map(after.map((s) => [s.id, s]));
-  const allIds = new Set<string>([...beforeMap.keys(), ...afterMap.keys()]);
-
-  const changes: SectionChange[] = [];
-  for (const id of allIds) {
-    const b = beforeMap.get(id);
-    const a = afterMap.get(id);
-    if (b && !a) {
-      changes.push({
-        id,
-        label: b.label,
-        type: b.type,
-        kind: "removed",
-        beforeContent: b.content,
-        afterContent: null,
-      });
-    } else if (!b && a) {
-      changes.push({
-        id,
-        label: a.label,
-        type: a.type,
-        kind: "added",
-        beforeContent: null,
-        afterContent: a.content,
-      });
-    } else if (b && a) {
-      changes.push({
-        id,
-        label: a.label || b.label,
-        type: a.type,
-        kind: b.content === a.content ? "unchanged" : "modified",
-        beforeContent: b.content,
-        afterContent: a.content,
-      });
-    }
-  }
-  // Ordre : changements d'abord, puis inchangés ; alphabétique par id au sein du groupe.
-  const order: Record<ChangeKind, number> = {
-    modified: 0,
-    added: 1,
-    removed: 2,
-    unchanged: 3,
-  };
-  changes.sort((x, y) => {
-    const d = order[x.kind] - order[y.kind];
-    return d !== 0 ? d : x.id.localeCompare(y.id);
-  });
-  return changes;
-}
-
 function kindBadge(kind: ChangeKind): { label: string; classes: string } {
   switch (kind) {
     case "added":
@@ -154,7 +85,8 @@ export function CmsRevisionDiff({ pageId, before, after, onClose }: Props) {
   ]);
 
   const diffs = changes.filter((c) => c.kind !== "unchanged");
-  const unchangedCount = changes.length - diffs.length;
+  const summary = useMemo(() => summarizeChanges(changes), [changes]);
+  const unchangedCount = summary.unchanged;
 
   const authorBefore = before.createdByEmail ?? before.createdBy ?? "—";
   const authorAfter = after.createdByEmail ?? after.createdBy ?? "—";
@@ -230,13 +162,11 @@ export function CmsRevisionDiff({ pageId, before, after, onClose }: Props) {
               Différences
             </p>
             <p className="mt-0.5 text-foreground">
-              {diffs.length} changement{diffs.length !== 1 ? "s" : ""}
+              {summary.totalDiffs} changement{summary.totalDiffs !== 1 ? "s" : ""}
             </p>
             <p className="text-foreground-muted">
-              {diffs.filter((c) => c.kind === "modified").length} modif.,{" "}
-              {diffs.filter((c) => c.kind === "added").length} ajout
-              {diffs.filter((c) => c.kind === "added").length !== 1 ? "s" : ""},{" "}
-              {diffs.filter((c) => c.kind === "removed").length} suppr.
+              {summary.modified} modif., {summary.added} ajout
+              {summary.added !== 1 ? "s" : ""}, {summary.removed} suppr.
             </p>
           </div>
         </div>

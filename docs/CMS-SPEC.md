@@ -469,3 +469,12 @@ Construit par-dessus la migration 0011 (pas de nouvelle migration nécessaire �
 4. Filtrer par auteur → liste ne contient que ses révisions
 5. Activer "Comparer 2 révisions", cocher les 2, cliquer "Voir le diff"
 6. Vérifier que les sections modifiées apparaissent en rouge/teal avec le bon texte côté avant/après
+
+**Tests unitaires (session 33b)**
+
+Logique pure isolée dans `src/lib/cms-revision-diff.ts` (réutilisée par `CmsRevisionDiff.tsx`) :
+- `previewContent(content, max?)` — HTML strippé via regex, espaces normalisés, troncature avec ellipse
+- `diffSections(before, after)` — appariement par `section.id`, retourne `SectionChange[]` avec `kind` ∈ `added|removed|modified|unchanged`, ordonné `modified > added > removed > unchanged` puis alphabétique
+- `summarizeChanges(changes)` — compteurs `{ modified, added, removed, unchanged, totalDiffs }` (totalDiffs exclut unchanged)
+
+Couverture : `src/lib/__tests__/cms-revision-diff.test.ts` (18 tests) — voir CLAUDE.md §Tests pour le détail.
