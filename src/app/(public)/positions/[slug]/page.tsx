@@ -18,8 +18,14 @@ interface PageProps {
 }
 
 export function generateStaticParams() {
+  // Next.js en mode `output: 'export'` exige au moins un paramètre statique
+  // pour une route dynamique. Si aucune position n'est publiée, on retourne
+  // un slug sentinel qui sera résolu en 404 par `notFound()` ci-dessous.
+  if (positions.length === 0) return [{ slug: "__placeholder__" }];
   return positions.map((p) => ({ slug: p.slug }));
 }
+
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
