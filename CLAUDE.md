@@ -36,6 +36,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ✅ Migration 0012 (session 35 : table `organization_vessels`) appliquée en prod (vérifié via `/api/organizations/:slug/fleet`)
 - ✅ Migration 0013 (session 35b : seed initial `organization_vessels` – 110 navires sur 25 compagnies via `INSERT OR IGNORE`, idempotent – généré par `scripts/build-fleet-seed-sql.ts`) appliquée en prod
 - ✅ Migration 0014 (session 35b : archive `keolis-bordeaux-metropole` – `UPDATE organizations SET archived=1 WHERE slug='keolis-bordeaux-metropole'`, idempotent) appliquée en prod – aligne le count dual-mode (`/notre-groupement` → 30, cohérent avec `memberStats`)
+- ⏳ Migration 0015 (session 36 : remontée des URLs gaspe.fr dans `cms_documents` – `UPDATE` conditionnels sur `file_url = '#'` + `INSERT OR IGNORE` des 10 nouveaux docs : rapport extension NAO, égalité pro, retraites supp, formulaires adhésion/candidatures, kit média logo/couleurs, rapports comptes 2024 + conventions réglementées ; idempotente) – à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD

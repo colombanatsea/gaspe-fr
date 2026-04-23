@@ -44,9 +44,21 @@ describe("documents-seed", () => {
     }
   });
 
-  it("does not ship live PDF URLs (all seed points to '#')", () => {
+  it("fileUrl is either a placeholder '#' or a valid absolute URL", () => {
+    // Session 36 : les URLs pointent vers les fichiers publics sur gaspe.fr
+    // (WordPress media library) ou restent à "#" pour les docs pas encore publiés.
     for (const d of DOCUMENTS_SEED) {
-      expect(d.fileUrl, `seed "${d.id}" should not embed live URL`).toBe("#");
+      const ok =
+        d.fileUrl === "#" ||
+        d.fileUrl.startsWith("https://") ||
+        d.fileUrl.startsWith("/api/media/raw/") ||
+        d.fileUrl.startsWith("/assets/");
+      expect(ok, `seed "${d.id}" has invalid fileUrl: ${d.fileUrl}`).toBe(true);
+
+      // Si l'URL est concrète, le fileName ne doit pas être vide.
+      if (d.fileUrl !== "#") {
+        expect(d.fileName.length, `seed "${d.id}" has URL but empty fileName`).toBeGreaterThan(0);
+      }
     }
   });
 });
