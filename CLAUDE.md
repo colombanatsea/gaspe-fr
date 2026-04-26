@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.27.3 (système de votes complet – Lot 7a-d : schéma D1 + 9 endpoints Worker + UI admin (création / résultats / mailto) + UI adhérent (formulaires par type + suppléant + dashboard) + tab démo /decouvrir-espace-adherent)
+- **Version**: v2.28.0 (template CSV flotte + import client-side – Lot 5b : `src/lib/fleet-csv.ts` (RFC 4180, séparateur `;` UTF-8 BOM Excel-FR), `<FleetCsvImporter>` réutilisable (download template + upload + parse + preview + remplacement atomique). Intégré dans `/admin/flotte` et `/espace-adherent/flotte`)
 
 ## Commands
 ```bash

@@ -15,6 +15,8 @@ import {
 } from "@/lib/fleet-store";
 import { FleetVesselForm } from "@/components/fleet/FleetVesselForm";
 import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
+import { FleetCsvImporter } from "@/components/fleet/FleetCsvImporter";
+import { saveFleet } from "@/lib/fleet-store";
 import type { FleetVessel } from "@/types";
 
 /**
@@ -132,6 +134,19 @@ export default function AdherentFlottePage() {
               + Ajouter un navire
             </Button>
           </div>
+
+          {!showForm && (
+            <div className="mb-4">
+              <FleetCsvImporter
+                existingCount={vessels.length}
+                onImport={async (newVessels) => {
+                  if (!myMember) return;
+                  await saveFleet(myMember.slug, newVessels);
+                  setVessels(newVessels);
+                }}
+              />
+            </div>
+          )}
 
           {showForm && (
             <div className="mb-4">
