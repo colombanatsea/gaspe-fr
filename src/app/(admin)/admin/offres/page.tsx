@@ -19,14 +19,14 @@ export default function AdminOffresPage() {
   const [filterStatus, setFilterStatus] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
       return;
     }
     getAllOffers().then(setAllJobs);
   }, [user, router]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filtered = allJobs.filter((j) => {
     const matchSearch =

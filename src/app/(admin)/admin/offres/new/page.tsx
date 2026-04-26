@@ -47,7 +47,7 @@ export default function AdminNewOffrePage() {
     handiAccessible: false,
   });
 
-  if (!user || user.role !== "admin") {
+  if (!user || !(user.role === "admin" || user.role === "staff")) {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }

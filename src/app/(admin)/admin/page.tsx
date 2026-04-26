@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
     formations: 0, positions: 0, events: 0, documents: 0,
   });
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
+    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
     getAllUsers().then((users) => {
       setCounts({
         pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,
@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
     }).finally(() => { /* loaded */ });
   }, [user, router, getAllUsers]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const statCards = [
     {

@@ -65,7 +65,7 @@ function EditorContent() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
       return;
     }
@@ -92,7 +92,7 @@ function EditorContent() {
     if (ok) setSavedAt(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
   }, [draft]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   if (loading) {
     return <p className="text-sm text-foreground-muted py-8 text-center">Chargement…</p>;

@@ -83,7 +83,7 @@ export default function AdminAgendaPage() {
   });
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -92,7 +92,7 @@ export default function AdminAgendaPage() {
     setEvents(getEvents());
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   function saveEvents(updated: AgendaEvent[]) {
     localStorage.setItem(AGENDA_KEY, JSON.stringify(updated));

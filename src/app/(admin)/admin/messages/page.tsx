@@ -35,7 +35,7 @@ export default function AdminMessagesPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -44,7 +44,7 @@ export default function AdminMessagesPage() {
     setMessages(readMessages());
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const unreadCount = messages.filter((m) => !m.read).length;
 

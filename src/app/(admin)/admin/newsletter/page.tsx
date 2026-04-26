@@ -53,10 +53,10 @@ export default function AdminNewsletterPage() {
   const [result, setResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

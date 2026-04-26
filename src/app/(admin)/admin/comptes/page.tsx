@@ -4,15 +4,22 @@ import { useState, useEffect, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, type User, type UserRole, type MembershipStatus, COMPANY_ROLES } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
+import { ALL_STAFF_PERMISSIONS, STAFF_PERMISSION_LABELS, type StaffPermission } from "@/lib/auth/types";
 
 const roleBadge: Record<UserRole, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   admin: { label: "Admin", variant: "teal" },
+  staff: { label: "Staff GASPE", variant: "teal" },
   adherent: { label: "Adhérent", variant: "blue" },
   candidat: { label: "Candidat", variant: "warm" },
 };
 
 const roleIcons: Record<UserRole, React.ReactNode> = {
   admin: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+    </svg>
+  ),
+  staff: (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
     </svg>
@@ -44,6 +51,7 @@ export default function AdminComptesPage() {
   const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
   const [membershipFilter, setMembershipFilter] = useState<"all" | MembershipStatus>("all");
+  const [staffEditing, setStaffEditing] = useState<User | null>(null);
 
   const refresh = useCallback(async () => {
     const all = await getAllUsers();
@@ -51,7 +59,7 @@ export default function AdminComptesPage() {
   }, [getAllUsers]);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
+    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
     startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
@@ -104,7 +112,7 @@ export default function AdminComptesPage() {
   const paidCount = users.filter((u) => u.role === "adherent" && !u.archived && u.membershipStatus === "paid").length;
   const dueCount = users.filter((u) => u.role === "adherent" && !u.archived && (u.membershipStatus === "due" || !u.membershipStatus)).length;
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   return (
     <div className="space-y-6">
@@ -328,6 +336,15 @@ export default function AdminComptesPage() {
                             Supprimer
                           </button>
                         )}
+                        {/* Maître admin uniquement : promouvoir un user en staff GASPE + accorder des permissions granulaires */}
+                        {user?.role === "admin" && u.id !== user.id && (u.role === "staff" || u.role === "candidat" || u.role === "adherent") && (
+                          <button
+                            onClick={() => setStaffEditing(u)}
+                            className="rounded-lg border border-[var(--gaspe-teal-200)] px-3.5 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                          >
+                            {u.role === "staff" ? "Modifier accès staff" : "Promouvoir staff"}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -336,6 +353,92 @@ export default function AdminComptesPage() {
             })}
           </div>
         )}
+      </div>
+      {staffEditing && (
+        <StaffPermissionsModal
+          user={staffEditing}
+          onClose={() => setStaffEditing(null)}
+          onSave={(updated) => {
+            updateUser(updated);
+            setStaffEditing(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─────────── Modal accès staff (Lot 9, session 39) ─────────── */
+
+function StaffPermissionsModal({
+  user,
+  onClose,
+  onSave,
+}: {
+  user: User;
+  onClose: () => void;
+  onSave: (u: User) => void;
+}) {
+  const [perms, setPerms] = useState<StaffPermission[]>(
+    Array.isArray(user.staffPermissions) ? user.staffPermissions : [],
+  );
+  const [makeStaff, setMakeStaff] = useState(user.role === "staff");
+
+  function togglePerm(p: StaffPermission) {
+    setPerms((cur) => cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]);
+  }
+
+  function handleSave() {
+    onSave({
+      ...user,
+      role: makeStaff ? "staff" : (user.role === "staff" ? "adherent" : user.role),
+      staffPermissions: makeStaff ? perms : undefined,
+      approved: true,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+        <div className="flex items-baseline justify-between mb-2">
+          <h3 className="font-heading text-lg font-bold text-foreground">Accès staff GASPE</h3>
+          <button onClick={onClose} className="text-foreground-muted hover:text-foreground" aria-label="Fermer">✕</button>
+        </div>
+        <p className="text-sm text-foreground-muted mb-4">
+          {user.name} ({user.email}) — choisissez les permissions accordées. L&apos;admin maître bypasse toutes les permissions.
+        </p>
+        <label className="flex items-center gap-3 mb-4 p-3 rounded-lg border border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)]">
+          <input
+            type="checkbox"
+            checked={makeStaff}
+            onChange={(e) => setMakeStaff(e.target.checked)}
+          />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Activer le rôle staff GASPE</p>
+            <p className="text-xs text-foreground-muted">Donne accès à la console admin avec les permissions cochées ci-dessous.</p>
+          </div>
+        </label>
+        <div className="space-y-1.5">
+          {ALL_STAFF_PERMISSIONS.map((p) => (
+            <label key={p} className={`flex items-center gap-3 p-2.5 rounded-lg border ${perms.includes(p) ? "border-[var(--gaspe-teal-300)] bg-[var(--gaspe-teal-50)]" : "border-[var(--gaspe-neutral-200)]"} ${makeStaff ? "cursor-pointer hover:bg-[var(--gaspe-neutral-50)]" : "opacity-50"}`}>
+              <input
+                type="checkbox"
+                checked={perms.includes(p)}
+                onChange={() => togglePerm(p)}
+                disabled={!makeStaff}
+              />
+              <span className="text-sm text-foreground">{STAFF_PERMISSION_LABELS[p]}</span>
+            </label>
+          ))}
+        </div>
+        <div className="mt-6 flex gap-3 justify-end pt-4 border-t border-[var(--gaspe-neutral-100)]">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground">
+            Annuler
+          </button>
+          <button onClick={handleSave} className="rounded-lg bg-primary text-white px-4 py-2 text-sm font-heading font-semibold hover:bg-primary-hover shadow-teal-soft hover:shadow-teal">
+            Enregistrer
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export default function AdminFlottePage() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
       return;
     }
@@ -70,7 +70,7 @@ export default function AdminFlottePage() {
     else setVessels([]);
   }, [selectedSlug, refreshFleet]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filteredMembers = members.filter((m) => {
     if (!search) return true;

@@ -2,7 +2,39 @@
 /*  Auth types – shared across the auth module                         */
 /* ------------------------------------------------------------------ */
 
-export type UserRole = "admin" | "adherent" | "candidat";
+export type UserRole = "admin" | "staff" | "adherent" | "candidat";
+
+/**
+ * Permissions granulaires pour les comptes `role: "staff"` (collaborateurs
+ * GASPE invités par l'administrateur maître). Le `role: "admin"` (compte
+ * maître admin@gaspe.fr) bypasse toujours ces checks.
+ */
+export type StaffPermission =
+  | "manage_formations"      // CRUD formations + inscriptions
+  | "manage_positions"       // Positions / Presse / Actualités
+  | "manage_cms"             // Pages CMS + documents
+  | "manage_jobs"            // Offres d'emploi + candidatures
+  | "manage_candidates"      // Comptes candidats
+  | "manage_newsletter"      // Newsletter (drafts + envoi)
+  | "manage_votes"           // Votes (création + clôture + résultats)
+  | "manage_organizations"   // Organisations + cotisations + membres
+  | "manage_messages"        // Messages de contact
+  | "manage_agenda";         // Agenda / événements
+
+export const STAFF_PERMISSION_LABELS: Record<StaffPermission, string> = {
+  manage_formations: "Formations & inscriptions",
+  manage_positions: "Positions, presse & actualités",
+  manage_cms: "Pages CMS & documents",
+  manage_jobs: "Annonces d'emploi & candidatures",
+  manage_candidates: "Comptes candidats",
+  manage_newsletter: "Newsletter (drafts + envoi)",
+  manage_votes: "Votes (création + résultats)",
+  manage_organizations: "Organisations, cotisations & membres",
+  manage_messages: "Messages de contact",
+  manage_agenda: "Agenda & événements",
+};
+
+export const ALL_STAFF_PERMISSIONS: StaffPermission[] = Object.keys(STAFF_PERMISSION_LABELS) as StaffPermission[];
 
 export type ApplicationStatus =
   | "pending"      // Envoyée
@@ -126,6 +158,8 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  /** Permissions accordées au staff (collaborateurs GASPE). Vide ou absent pour les autres rôles. */
+  staffPermissions?: StaffPermission[];
   company?: string;
   phone?: string;
   approved?: boolean;
