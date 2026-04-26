@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.27.0 (Lot 7a votes – schéma D1 (votes, vote_responses) + types VoteType/Audience/Response/Results + 9 endpoints Worker (CRUD votes + submit response + results + suppléant). UI adhérent/admin à venir Lot 7b/c)
+- **Version**: v2.27.3 (système de votes complet – Lot 7a-d : schéma D1 + 9 endpoints Worker + UI admin (création / résultats / mailto) + UI adhérent (formulaires par type + suppléant + dashboard) + tab démo /decouvrir-espace-adherent)
 
 ## Commands
 ```bash

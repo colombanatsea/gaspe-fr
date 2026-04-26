@@ -170,7 +170,7 @@ const statusConfig: Record<string, { label: string; variant: "teal" | "blue" | "
    Demo page sections
    ────────────────────────────────────────────── */
 
-type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "visites" | "preferences";
+type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "visites" | "votes" | "preferences";
 
 const TABS: { key: DemoTab; label: string }[] = [
   { key: "dashboard", label: "Tableau de bord" },
@@ -180,6 +180,7 @@ const TABS: { key: DemoTab; label: string }[] = [
   { key: "documents", label: "Documents" },
   { key: "annuaire", label: "Annuaire" },
   { key: "equipe", label: "Mon équipe" },
+  { key: "votes", label: "Votes" },
   { key: "preferences", label: "Préférences" },
 ];
 
@@ -794,8 +795,93 @@ export default function DecouvrirEspaceAdherentPage() {
         {activeTab === "documents" && <DocumentsTab />}
         {activeTab === "annuaire" && <AnnuaireTab />}
         {activeTab === "equipe" && <EquipeTab />}
+        {activeTab === "votes" && <VotesTab />}
         {activeTab === "preferences" && <PreferencesTab />}
       </div>
     </>
+  );
+}
+
+/* ── Votes Tab (démo, session 38) ── */
+
+const DEMO_VOTES = [
+  {
+    id: "vote-ag-2026",
+    title: "Approbation des comptes annuels 2025",
+    type: "Choix simple" as const,
+    audience: "AG (A+B)" as const,
+    status: "open" as const,
+    closesAt: "2026-05-30",
+    response: "Pour" as const,
+  },
+  {
+    id: "vote-nao-2026",
+    title: "Mandat NAO 2026 – grille salariale",
+    type: "Choix multiple" as const,
+    audience: "Social 3228" as const,
+    status: "open" as const,
+    closesAt: "2026-06-15",
+    response: null as string | null,
+  },
+  {
+    id: "vote-dates-ag",
+    title: "Disponibilités pour AG 2026",
+    type: "Sélection de dates" as const,
+    audience: "AG (A+B)" as const,
+    status: "closed" as const,
+    closesAt: "2026-04-15",
+    response: "12 mai, 13 mai" as const,
+  },
+];
+
+function VotesTab() {
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="font-heading text-xl font-bold text-foreground mb-2">Votes</h2>
+        <p className="text-sm text-foreground-muted">
+          Votez pour les décisions importantes : AG / AGE pour les Collèges A et B, NAO et mandats sociaux pour les compagnies sous CCN 3228.
+          1 vote par compagnie ; titulaire et suppléant peuvent répondre, le titulaire peut écraser le vote du suppléant.
+        </p>
+      </div>
+
+      {/* Bandeau démo : suppléant non désigné */}
+      <div className="mb-6 rounded-2xl border border-[var(--gaspe-warm-300)] bg-[var(--gaspe-warm-50)] p-4">
+        <div className="flex items-start gap-3">
+          <svg className="h-5 w-5 shrink-0 mt-0.5 text-[var(--gaspe-warm-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">Vous n&apos;avez pas désigné de suppléant.</p>
+            <p className="text-xs text-foreground-muted mt-0.5">
+              Le suppléant peut voter en votre nom. Désignable depuis le profil entreprise.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {DEMO_VOTES.map((v) => (
+          <div key={v.id} className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-5 hover:border-[var(--gaspe-teal-200)] transition-colors">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <p className="font-heading text-sm font-semibold text-foreground">{v.title}</p>
+                  <Badge variant="neutral">{v.type}</Badge>
+                  <Badge variant={v.audience === "AG (A+B)" ? "teal" : "blue"}>{v.audience}</Badge>
+                  {v.response ? <Badge variant="green">✓ Répondu</Badge> : v.status === "open" ? <Badge variant="warm">À voter</Badge> : <Badge variant="neutral">Clôturé</Badge>}
+                </div>
+                <div className="text-xs text-foreground-muted mt-1">
+                  Clôture {v.status === "closed" ? "le" : "auto le"} {v.closesAt}
+                  {v.response && <> · Votre vote : <span className="font-semibold text-foreground">{v.response}</span></>}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <AdhesionCTA variant="inline" />
+    </div>
   );
 }
