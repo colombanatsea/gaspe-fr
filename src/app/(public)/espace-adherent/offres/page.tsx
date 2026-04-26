@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { addNotification } from "@/lib/notifications";
 import { sendApplicationStatusNotification } from "@/lib/email";
+import { publishToHydros } from "@/lib/jobs-store";
 
 const APPLICATION_STATUSES = [
   { value: "sent", label: "Envoyée", variant: "neutral" as const },
@@ -187,6 +188,42 @@ export default function AdherentOffresPage() {
       };
       all.push(newOffer);
       writeOffers(all);
+
+      // Publication automatique Hydros Alumni si offre active (pas brouillon)
+      // Silencieux si secrets Worker absents — n'interrompt pas la création
+      if (newOffer.status === "active") {
+        void (async () => {
+          const result = await publishToHydros({
+            title: newOffer.title,
+            description: newOffer.description ?? "",
+            profile: newOffer.profile ?? "",
+            conditions: newOffer.conditions ?? "",
+            company: newOffer.company,
+            companyDescription: user.companyDescription ?? `${newOffer.company}, compagnie maritime adhérente du GASPE.`,
+            reference: newOffer.reference,
+            contractType: newOffer.contractType,
+            category: newOffer.category,
+            location: newOffer.location,
+            startDate: newOffer.startDate,
+            handiAccessible: newOffer.handiAccessible,
+            contactFirstName: user.name?.split(" ")[0] ?? "",
+            contactLastName: user.name?.split(" ").slice(1).join(" ") ?? "",
+            contactEmail: newOffer.contactEmail,
+            contactPhone: newOffer.contactPhone,
+            applicationUrl: newOffer.applicationUrl,
+          });
+          if (result.success && result.hydrosOfferUrl) {
+            const fresh = readOffers();
+            const idx2 = fresh.findIndex((o) => o.id === newOffer.id);
+            if (idx2 >= 0) {
+              fresh[idx2].hydrosOfferUrl = result.hydrosOfferUrl;
+              fresh[idx2].hydrosOfferId = result.hydrosOfferId;
+              writeOffers(fresh);
+              setOffers(fresh.filter((o) => o.ownerId === user.id));
+            }
+          }
+        })();
+      }
     }
 
     setOffers(readOffers().filter((o) => o.ownerId === user.id));

@@ -5,6 +5,7 @@
 
 import { publishedJobs, type Job } from "@/data/jobs";
 import { apiFetch, isApiMode } from "./api-client";
+import { buildHydrosPayload } from "@/lib/hydros-mapping";
 
 const ADMIN_OFFERS_KEY = "gaspe_admin_offers";
 const ADHERENT_OFFERS_KEY = "gaspe_adherent_offers";
@@ -170,4 +171,32 @@ export async function deleteJob(id: string): Promise<boolean> {
   const adherentOffers = getLocalAdherentOffers().filter((j) => j.id !== id);
   setLocalAdherentOffers(adherentOffers);
   return true;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Hydros Alumni cross-publication (Lot 8, session 38)
+   Câblé après création d'une offre. Silencieux si secrets Worker absents.
+───────────────────────────────────────────────────────────────────── */
+
+interface HydrosResult {
+  success: boolean;
+  hydrosOfferUrl?: string;
+  hydrosOfferId?: string;
+  error?: string;
+}
+
+export async function publishToHydros(job: Parameters<typeof buildHydrosPayload>[0]): Promise<HydrosResult> {
+  if (!isApiMode()) {
+    return { success: false, error: "Mode API requis pour publier sur Hydros Alumni." };
+  }
+  const payload = buildHydrosPayload(job);
+  try {
+    const res = await apiFetch<HydrosResult>("/api/hydros/publish", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return res;
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Erreur inconnue" };
+  }
 }
