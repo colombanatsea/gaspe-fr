@@ -13,6 +13,11 @@ export const MEMBERS_KEY = "gaspe_members";
 
 export interface StoredMember extends Member {
   archived?: boolean;
+  /** Champs admin-only (PATCH-ables côté API + persistés en mode demo session 40). */
+  email?: string;
+  phone?: string;
+  address?: string;
+  membershipStatus?: "paid" | "pending" | "due";
 }
 
 /** Lookup table from static members.ts – used to fill gaps in D1 data */
