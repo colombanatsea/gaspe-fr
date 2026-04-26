@@ -10,6 +10,8 @@ import { listVotes, createVote, deleteVote, closeVote, getVoteResults, type Crea
 import { VOTE_TYPE_LABELS, VOTE_AUDIENCE_LABELS, VOTE_AUDIENCE_HINTS } from "@/types";
 import type { Vote, VoteType, VoteAudience, VoteResults, VoteOption } from "@/types";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
+import { VoteOptionsEditor } from "@/components/votes/VoteOptionsEditor";
+import { DateOptionsPicker } from "@/components/votes/DateOptionsPicker";
 
 export default function AdminVotesPage() {
   const { user } = useAuth();
@@ -152,7 +154,10 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
   const [description, setDescription] = useState("");
   const [type, setType] = useState<VoteType>("single_choice");
   const [audience, setAudience] = useState<VoteAudience>("ag_ab");
-  const [optionsText, setOptionsText] = useState("");
+  // labelOptions : single_choice / multiple_choice / ranking (libellés textuels)
+  // dateOptions : date_selection (ISO yyyy-mm-dd)
+  const [labelOptions, setLabelOptions] = useState<string[]>(["", ""]);
+  const [dateOptions, setDateOptions] = useState<string[]>([]);
   const [closesAt, setClosesAt] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -161,19 +166,18 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
 
     let options: VoteOption[] | string[] = [];
     if (type === "single_choice" || type === "multiple_choice" || type === "ranking") {
-      const lines = optionsText.split("\n").map((l) => l.trim()).filter(Boolean);
-      options = lines.map((label, i) => ({ id: `opt-${i + 1}`, label }));
-      if (options.length < 2) {
+      const cleaned = labelOptions.map((l) => l.trim()).filter(Boolean);
+      if (cleaned.length < 2) {
         alert("Au moins 2 options nécessaires pour ce type de vote.");
         return;
       }
+      options = cleaned.map((label, i) => ({ id: `opt-${i + 1}`, label }));
     } else if (type === "date_selection") {
-      const lines = optionsText.split("\n").map((l) => l.trim()).filter(Boolean);
-      options = lines;
-      if (options.length === 0) {
-        alert("Au moins 1 date à proposer (format ISO yyyy-mm-dd).");
+      if (dateOptions.length === 0) {
+        alert("Au moins 1 date à proposer.");
         return;
       }
+      options = [...dateOptions];
     }
 
     onSubmit({
@@ -186,8 +190,13 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
     });
   }
 
-  const showOptions = type !== "text";
-  const optionsLabel = type === "date_selection" ? "Dates proposées (1 par ligne, format yyyy-mm-dd)" : "Options (1 par ligne)";
+  const placeholderByType: Record<VoteType, string> = {
+    single_choice: "Pour",
+    multiple_choice: "Lundi soir",
+    ranking: "Priorité 1",
+    text: "",
+    date_selection: "",
+  };
 
   return (
     <Card topAccent>
@@ -216,10 +225,29 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
             <p className="text-xs text-foreground-muted italic mt-1">{VOTE_AUDIENCE_HINTS[audience]}</p>
           </div>
         </div>
-        {showOptions && (
+        {(type === "single_choice" || type === "multiple_choice" || type === "ranking") && (
           <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1">{optionsLabel}</label>
-            <textarea value={optionsText} onChange={(e) => setOptionsText(e.target.value)} rows={5} className={inputClass} placeholder={type === "date_selection" ? "2026-05-12\n2026-05-13\n2026-05-14" : "Pour\nContre\nAbstention"} />
+            <label className="block text-xs font-medium text-foreground-muted mb-2">
+              {type === "single_choice"
+                ? "Options (les votants choisiront une seule réponse)"
+                : type === "multiple_choice"
+                ? "Options (les votants pourront en cocher plusieurs)"
+                : "Options à classer (les votants les réordonneront par priorité)"}
+            </label>
+            <VoteOptionsEditor
+              value={labelOptions}
+              onChange={setLabelOptions}
+              placeholder={placeholderByType[type]}
+              minItems={2}
+            />
+          </div>
+        )}
+        {type === "date_selection" && (
+          <div>
+            <label className="block text-xs font-medium text-foreground-muted mb-2">
+              Dates proposées (les votants cocheront leurs disponibilités)
+            </label>
+            <DateOptionsPicker value={dateOptions} onChange={setDateOptions} />
           </div>
         )}
         <div>

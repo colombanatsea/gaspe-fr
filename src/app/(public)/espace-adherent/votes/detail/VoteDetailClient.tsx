@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { getVote, submitVoteResponse } from "@/lib/votes-store";
 import { VOTE_TYPE_LABELS } from "@/types";
 import type { Vote, VoteResponse, VoteOption } from "@/types";
+import { DragRanking } from "@/components/votes/DragRanking";
 
 export default function VoteDetailClient({ id }: { id: string }) {
   const { user } = useAuth();
@@ -145,14 +146,6 @@ export default function VoteDetailClient({ id }: { id: string }) {
     }
   }
 
-  function moveRanking(idx: number, dir: -1 | 1) {
-    const next = [...ranking];
-    const target = idx + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    setRanking(next);
-  }
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <Link href="/espace-adherent/votes" className="text-sm text-foreground-muted hover:text-foreground inline-flex items-center gap-1 mb-4">
@@ -235,23 +228,7 @@ export default function VoteDetailClient({ id }: { id: string }) {
           )}
 
           {vote.type === "ranking" && hasOptions && (
-            <div className="space-y-2">
-              <p className="text-xs text-foreground-muted mb-2">Classez les options de la plus prioritaire (en haut) à la moins prioritaire (en bas).</p>
-              {ranking.map((optId, idx) => {
-                const opt = options.find((o) => o.id === optId);
-                if (!opt) return null;
-                return (
-                  <div key={optId} className="flex items-center gap-2 p-3 rounded-lg border border-[var(--gaspe-neutral-200)] bg-white">
-                    <span className="font-mono text-xs w-5 text-right text-foreground-muted">{idx + 1}.</span>
-                    <span className="text-sm text-foreground flex-1">{opt.label}</span>
-                    <div className="flex gap-1">
-                      <button type="button" onClick={() => moveRanking(idx, -1)} disabled={!canVote || idx === 0} className="rounded-md px-2 py-1 text-xs bg-[var(--gaspe-neutral-100)] hover:bg-[var(--gaspe-neutral-200)] disabled:opacity-30">↑</button>
-                      <button type="button" onClick={() => moveRanking(idx, 1)} disabled={!canVote || idx === ranking.length - 1} className="rounded-md px-2 py-1 text-xs bg-[var(--gaspe-neutral-100)] hover:bg-[var(--gaspe-neutral-200)] disabled:opacity-30">↓</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <DragRanking items={ranking} options={options} onChange={setRanking} disabled={!canVote} />
           )}
 
           {vote.type === "date_selection" && dates.length > 0 && (
