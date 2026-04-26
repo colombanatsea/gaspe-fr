@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ProfileCompletenessCard } from "@/components/shared/ProfileCompletenessCard";
+import { computeProfileCompleteness } from "@/lib/profile-completeness";
+import { getFleet } from "@/lib/fleet-store";
+import { members } from "@/data/members";
+import type { FleetVessel } from "@/types";
 
 const OFFERS_KEY = "gaspe_adherent_offers";
 const FORMATIONS_KEY = "gaspe_formations";
@@ -21,6 +26,7 @@ export default function EspaceAdherentPage() {
   const [formationsCount, setFormationsCount] = useState(0);
   const [myFormationsCount, setMyFormationsCount] = useState(0);
   const [documentsCount, setDocumentsCount] = useState(0);
+  const [fleet, setFleet] = useState<FleetVessel[]>([]);
 
   useEffect(() => {
     if (!user || user.role !== "adherent") router.push("/connexion");
@@ -51,25 +57,42 @@ export default function EspaceAdherentPage() {
     } catch { /* empty */ }
   }
 
+  // Charge la flotte de la compagnie pour calculer la complétude (en arrière-plan).
+  useEffect(() => {
+    if (!user?.company) return;
+    const member = members.find((m) => m.name === user.company);
+    if (!member) return;
+    let cancelled = false;
+    getFleet(member.slug).then((vessels) => {
+      if (!cancelled) setFleet(vessels);
+    }).catch(() => { /* fleet absent, OK */ });
+    return () => { cancelled = true; };
+  }, [user?.company]);
+
   if (!user || user.role !== "adherent") return null;
 
-  // Profile completion (weighted – same logic as profil page)
-  const profileWeights = [
-    { filled: !!user.name, weight: 10 },
-    { filled: !!user.email, weight: 10 },
-    { filled: !!user.phone, weight: 5 },
-    { filled: !!user.company, weight: 10 },
-    { filled: !!user.companyRole, weight: 15 },
-    { filled: !!user.companyDescription, weight: 15 },
-    { filled: !!user.companyEmail, weight: 5 },
-    { filled: !!user.companyPhone, weight: 5 },
-    { filled: !!user.companyAddress, weight: 10 },
-    { filled: !!user.companyLogo, weight: 5 },
-    { filled: (user.vessels ?? []).length > 0, weight: 10 },
-  ];
-  const totalWeight = profileWeights.reduce((s, w) => s + w.weight, 0);
-  const filledWeight = profileWeights.reduce((s, w) => s + (w.filled ? w.weight : 0), 0);
-  const profileCompletion = Math.round((filledWeight / totalWeight) * 100);
+  // Trouve la fiche Member pour récupérer collège + données financières
+  const member = members.find((m) => m.name === user.company);
+  const completeness = computeProfileCompleteness({
+    user: {
+      company: user.company,
+      companyDescription: user.companyDescription,
+      companyLogo: user.companyLogo,
+      companyEmail: user.companyEmail,
+      companyPhone: user.companyPhone,
+      companyAddress: user.companyAddress,
+      companyLinkedinUrl: user.companyLinkedinUrl,
+    },
+    member,
+    fleet,
+    college: member?.college,
+    org: {
+      employeeCount: member?.employeeCount,
+      // Le CA n'est pas encore stocké côté front (champ confidentiel)
+      // → undefined pour le moment ; sera complété PR Lot 5b
+      revenue: undefined,
+    },
+  });
 
   const dashboardCards = [
     {
@@ -194,7 +217,7 @@ export default function EspaceAdherentPage() {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="rounded-lg bg-background p-4 shadow-sm border-l-[3px] border-l-[var(--gaspe-teal-600)]">
           <p className="text-2xl font-bold font-heading text-foreground">{activeOffersCount}</p>
           <p className="text-sm text-foreground-muted">Offres actives</p>
@@ -203,10 +226,11 @@ export default function EspaceAdherentPage() {
           <p className="text-2xl font-bold font-heading text-foreground">{applicationsCount}</p>
           <p className="text-sm text-foreground-muted">Candidatures reçues</p>
         </div>
-        <div className="rounded-lg bg-background p-4 shadow-sm border-l-[3px] border-l-[var(--gaspe-green-300)]">
-          <p className="text-2xl font-bold font-heading text-foreground">{profileCompletion}%</p>
-          <p className="text-sm text-foreground-muted">Profil complété</p>
-        </div>
+      </div>
+
+      {/* Complétude du profil — barre gamifiée + sections détaillées */}
+      <div className="mb-8">
+        <ProfileCompletenessCard result={completeness} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

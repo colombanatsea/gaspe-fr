@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.24.0 (composition équipage par brevet CCN 3228 sur chaque navire, 17 niveaux Pont/Machine/Services/NAVPAX, migration D1 0017, éditeur compact dans FleetVesselForm + lecture seule dans FleetVesselCard)
+- **Version**: v2.25.0 (profile completeness gamifié – barre de progression 100% strict + 6 sections pondérées (profil 20% / financials 15% / fleet 10+25+20+10), affichée sur dashboard adhérent. Mention CA confidentiel. Spreadsheet upload reporté en PR Lot 5b)
 
 ## Commands
 ```bash
