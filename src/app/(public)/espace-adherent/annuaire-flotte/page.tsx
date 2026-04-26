@@ -49,7 +49,6 @@ export default function AnnuaireFlottePage() {
   const [lengthBucket, setLengthBucket] = useState<string>("all");
   const [passengerBucket, setPassengerBucket] = useState<string>("all");
   const [brevetFilter, setBrevetFilter] = useState<CrewBrevetKey | "all">("all");
-  const [fuelFilter, setFuelFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!user || user.role !== "adherent") {
@@ -101,12 +100,6 @@ export default function AnnuaireFlottePage() {
     return rows;
   }, [allFleets, myMember?.slug]);
 
-  const fuelOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of allRows) if (r.vessel.fuelType) set.add(r.vessel.fuelType);
-    return ["all", ...Array.from(set).sort()];
-  }, [allRows]);
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const lenBucket = LENGTH_BUCKETS.find((b) => b.key === lengthBucket) ?? LENGTH_BUCKETS[0];
@@ -129,12 +122,9 @@ export default function AnnuaireFlottePage() {
         const n = r.vessel.crewByBrevet?.[brevetFilter] ?? 0;
         if (n <= 0) return false;
       }
-      if (fuelFilter !== "all") {
-        if (r.vessel.fuelType !== fuelFilter) return false;
-      }
       return true;
     });
-  }, [allRows, search, companyFilter, lengthBucket, passengerBucket, brevetFilter, fuelFilter]);
+  }, [allRows, search, companyFilter, lengthBucket, passengerBucket, brevetFilter]);
 
   if (!user || user.role !== "adherent") return null;
 
@@ -227,16 +217,6 @@ export default function AnnuaireFlottePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1">Carburant</label>
-            <select
-              value={fuelFilter}
-              onChange={(e) => setFuelFilter(e.target.value)}
-              className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
-            >
-              {fuelOptions.map((f) => <option key={f} value={f}>{f === "all" ? "Tous carburants" : f}</option>)}
-            </select>
-          </div>
-          <div>
             <label className="block text-xs font-medium text-foreground-muted mb-1">Longueur</label>
             <select
               value={lengthBucket}
@@ -305,7 +285,6 @@ function FleetRow({ row }: { row: Row }) {
         <div className="flex items-center gap-3 text-xs text-foreground-muted shrink-0">
           {v.length !== undefined && <span><strong className="text-foreground">{v.length}</strong> m</span>}
           {v.passengerCapacity !== undefined && <span><strong className="text-foreground">{v.passengerCapacity}</strong> pax</span>}
-          {v.fuelType && <span>{v.fuelType}</span>}
         </div>
       </div>
     </Link>
