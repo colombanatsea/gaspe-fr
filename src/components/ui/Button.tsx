@@ -1,15 +1,17 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, AnchorHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary" | "tertiary";
+type Variant = "primary" | "secondary" | "tertiary" | "white";
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary",
+    "bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary shadow-teal-soft hover:shadow-teal",
   secondary:
     "border-2 border-primary text-primary hover:bg-surface-teal focus-visible:ring-primary",
   tertiary:
     "text-primary underline underline-offset-4 hover:text-primary-hover",
+  white:
+    "bg-white text-[var(--gaspe-teal-700)] hover:bg-[var(--gaspe-teal-50)] focus-visible:ring-primary",
 };
 
 type BaseProps = {
