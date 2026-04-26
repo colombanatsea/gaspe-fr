@@ -7,7 +7,15 @@
  *  Source de vérité : API /api/organizations (mode prod) — fallback localStorage
  *  Listing API-first inspiré de /admin/organisations, avec contacts inline.
  *  Filtres : recherche, catégorie, collège A/B/C, CCN 3228, statut, cotisation.
- *  Actions : modifier (modal — commit 2), archiver/restaurer via PATCH.
+ *  Actions : modifier (modal CRUD), archiver/restaurer via PATCH.
+ *
+ *  Modal :
+ *    - Champs PATCH-able (mode prod) : email, phone, address, websiteUrl,
+ *      logoUrl, description, employeeCount, shipCount, college, social3228,
+ *      membershipStatus, archived. Cf. handleUpdateOrganization workers/api.ts.
+ *    - Champs seed-only : name, slug, city, region, lat/lng, territory,
+ *      category — read-only en mode prod, éditables en mode demo via
+ *      saveMembers() (members-store localStorage).
  * ────────────────────────────────────────────────────────────────────────── */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -17,7 +25,12 @@ import { Badge } from "@/components/ui/Badge";
 import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import type { Organization, MembershipStatus, User } from "@/lib/auth/types";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
-import { getStoredMembers, toggleMemberArchived, type StoredMember } from "@/lib/members-store";
+import {
+  getStoredMembers,
+  saveMembers,
+  toggleMemberArchived,
+  type StoredMember,
+} from "@/lib/members-store";
 import { isApiMode, apiFetch } from "@/lib/api-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -60,6 +73,10 @@ export default function AdminAdherentsPage() {
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>("all");
   const [view, setView] = useState<ViewMode>("expanded");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // ── Modal state ──
+  const [editing, setEditing] = useState<OrgRow | null>(null);
+  const [saving, setSaving] = useState(false);
 
   /** Tente l'API d'abord (sole source pour college/social3228/membershipStatus
    *  côté admin) ; retombe sur le store localStorage sinon. */
@@ -171,6 +188,81 @@ export default function AdminAdherentsPage() {
     archived: rows.length - activeRows.length,
     contacts: rows.reduce((sum, o) => sum + o.contacts.length, 0),
   }), [activeRows, rows]);
+
+  /** Sauvegarde modal : PATCH les champs API-éditables, et applique les
+   *  champs seed-only au store local en mode demo. */
+  async function handleSave(form: EditFormState) {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      // 1) Champs supportés par PATCH /api/organizations/:id
+      const patchPayload: Record<string, unknown> = {};
+      const patchKeys: (keyof EditFormState)[] = [
+        "email",
+        "phone",
+        "address",
+        "websiteUrl",
+        "logoUrl",
+        "description",
+        "employeeCount",
+        "shipCount",
+        "membershipStatus",
+        "college",
+        "social3228",
+      ];
+      for (const k of patchKeys) {
+        const v = form[k];
+        // On envoie tout, y compris les valeurs vidées (string "" => clear DB)
+        if (v !== undefined) patchPayload[k] = v === "" ? null : v;
+      }
+
+      if (isApiMode()) {
+        try {
+          await apiFetch(`/api/organizations/${editing.id}`, {
+            method: "PATCH",
+            body: JSON.stringify(patchPayload),
+          });
+        } catch {
+          alert("Échec de la mise à jour côté API.");
+          setSaving(false);
+          return;
+        }
+      } else {
+        // Mode demo : on persiste tout dans members-store (incluant les seed-only)
+        const list = await getStoredMembers();
+        const idx = list.findIndex((m) => m.slug === editing.slug);
+        if (idx !== -1) {
+          list[idx] = {
+            ...list[idx],
+            name: form.name,
+            city: form.city,
+            region: form.region,
+            latitude: form.latitude,
+            longitude: form.longitude,
+            territory: form.territory,
+            category: form.category,
+            college: form.college,
+            social3228: form.social3228,
+            email: form.email || undefined,
+            phone: form.phone || undefined,
+            address: form.address || undefined,
+            websiteUrl: form.websiteUrl || undefined,
+            logoUrl: form.logoUrl || undefined,
+            description: form.description || undefined,
+            employeeCount: form.employeeCount,
+            shipCount: form.shipCount,
+            membershipStatus: form.membershipStatus,
+          } as StoredMember;
+          saveMembers(list);
+        }
+      }
+
+      setEditing(null);
+      void fetchData();
+    } finally {
+      setSaving(false);
+    }
+  }
 
   /** Archive/désarchive via PATCH API (mode prod) ou via store local (demo). */
   async function handleToggleArchive(org: OrgRow) {
@@ -323,9 +415,23 @@ export default function AdminAdherentsPage() {
           expandedId={expandedId}
           onToggleExpand={(id) => setExpandedId(expandedId === id ? null : id)}
           onArchive={handleToggleArchive}
+          onEdit={(org) => setEditing(org)}
         />
       ) : (
-        <CompactTable rows={filtered} onArchive={handleToggleArchive} />
+        <CompactTable
+          rows={filtered}
+          onArchive={handleToggleArchive}
+          onEdit={(org) => setEditing(org)}
+        />
+      )}
+
+      {editing && (
+        <EditModal
+          org={editing}
+          saving={saving}
+          onClose={() => setEditing(null)}
+          onSave={handleSave}
+        />
       )}
     </div>
   );
@@ -366,11 +472,13 @@ function ExpandedList({
   expandedId,
   onToggleExpand,
   onArchive,
+  onEdit,
 }: {
   rows: OrgRow[];
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
   onArchive: (org: OrgRow) => void;
+  onEdit: (org: OrgRow) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -499,6 +607,14 @@ function ExpandedList({
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-1">
+                  {!isArchived && (
+                    <button
+                      onClick={() => onEdit(org)}
+                      className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted transition-colors hover:border-[var(--gaspe-teal-200)] hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)]"
+                    >
+                      Modifier
+                    </button>
+                  )}
                   <button
                     onClick={() => onArchive(org)}
                     className={`rounded-lg border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
@@ -532,9 +648,11 @@ function Field({ label, value }: { label: string; value: string }) {
 function CompactTable({
   rows,
   onArchive,
+  onEdit,
 }: {
   rows: OrgRow[];
   onArchive: (org: OrgRow) => void;
+  onEdit: (org: OrgRow) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white">
@@ -597,6 +715,14 @@ function CompactTable({
               </span>
               <span className="text-sm text-foreground">{org.contacts.length}</span>
               <div className="flex flex-wrap gap-2 lg:justify-end">
+                {!isArchived && (
+                  <button
+                    onClick={() => onEdit(org)}
+                    className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3 py-1.5 text-xs font-semibold text-foreground-muted transition-colors hover:border-[var(--gaspe-teal-200)] hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)]"
+                  >
+                    Modifier
+                  </button>
+                )}
                 <button
                   onClick={() => onArchive(org)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -612,6 +738,295 @@ function CompactTable({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/* ───── Modal d'édition ─────
+ *  Tous les champs s'affichent ; en mode API, les champs seed-only (name, slug,
+ *  city, region, lat/lng, territory, category) sont en lecture seule avec un
+ *  hint explicite. */
+type EditFormState = {
+  // seed (API: read-only)
+  name: string;
+  slug: string;
+  city: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  territory: "metropole" | "dom-tom";
+  category: "titulaire" | "associe";
+  // PATCH-able
+  email: string;
+  phone: string;
+  address: string;
+  websiteUrl: string;
+  logoUrl: string;
+  description: string;
+  employeeCount: number | undefined;
+  shipCount: number | undefined;
+  membershipStatus: MembershipStatus | undefined;
+  college: "A" | "B" | "C" | undefined;
+  social3228: boolean;
+};
+
+function orgToForm(org: Organization & { archived?: boolean }): EditFormState {
+  return {
+    name: org.name,
+    slug: org.slug,
+    city: org.city ?? "",
+    region: org.region ?? "",
+    latitude: org.latitude ?? 0,
+    longitude: org.longitude ?? 0,
+    territory: org.territory ?? "metropole",
+    category: org.category,
+    email: org.email ?? "",
+    phone: org.phone ?? "",
+    address: org.address ?? "",
+    websiteUrl: org.websiteUrl ?? "",
+    logoUrl: org.logoUrl ?? "",
+    description: org.description ?? "",
+    employeeCount: org.employeeCount,
+    shipCount: org.shipCount,
+    membershipStatus: org.membershipStatus,
+    college: org.college,
+    social3228: org.social3228 === true,
+  };
+}
+
+function EditModal({
+  org,
+  saving,
+  onClose,
+  onSave,
+}: {
+  org: OrgRow;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (form: EditFormState) => void;
+}) {
+  const [form, setForm] = useState<EditFormState>(() => orgToForm(org));
+  const apiMode = isApiMode();
+
+  function update<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const inputClass =
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)] disabled:bg-[var(--gaspe-neutral-50)] disabled:text-foreground-muted disabled:cursor-not-allowed";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white shadow-xl">
+        <div className="flex items-center justify-between rounded-t-2xl border-b border-[var(--gaspe-neutral-200)] bg-white px-6 py-4">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-foreground">Modifier {org.name}</h2>
+            <p className="text-xs text-foreground-muted">
+              {apiMode
+                ? "Mode prod – les champs seed (nom, ville, coordonnées, catégorie) sont en lecture seule."
+                : "Mode démo – tous les champs sont éditables (persistance localStorage)."}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-foreground-muted transition-colors hover:bg-[var(--gaspe-neutral-100)]"
+            aria-label="Fermer"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-5 overflow-y-auto p-6">
+          <Section title="Identité (seed)">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field2 label="Nom">
+                <input className={inputClass} value={form.name} disabled={apiMode}
+                  onChange={(e) => update("name", e.target.value)} />
+              </Field2>
+              <Field2 label="Slug">
+                <input className={inputClass} value={form.slug} disabled={apiMode}
+                  onChange={(e) => update("slug", e.target.value)} />
+              </Field2>
+              <Field2 label="Ville">
+                <input className={inputClass} value={form.city} disabled={apiMode}
+                  onChange={(e) => update("city", e.target.value)} />
+              </Field2>
+              <Field2 label="Région">
+                <input className={inputClass} value={form.region} disabled={apiMode}
+                  onChange={(e) => update("region", e.target.value)} />
+              </Field2>
+              <Field2 label="Latitude">
+                <input type="number" step="any" className={inputClass} value={form.latitude} disabled={apiMode}
+                  onChange={(e) => update("latitude", parseFloat(e.target.value) || 0)} />
+              </Field2>
+              <Field2 label="Longitude">
+                <input type="number" step="any" className={inputClass} value={form.longitude} disabled={apiMode}
+                  onChange={(e) => update("longitude", parseFloat(e.target.value) || 0)} />
+              </Field2>
+              <Field2 label="Territoire">
+                <select className={inputClass} value={form.territory} disabled={apiMode}
+                  onChange={(e) => update("territory", e.target.value as "metropole" | "dom-tom")}>
+                  <option value="metropole">Hexagone</option>
+                  <option value="dom-tom">Outre-mer</option>
+                </select>
+              </Field2>
+              <Field2 label="Catégorie">
+                <select className={inputClass} value={form.category} disabled={apiMode}
+                  onChange={(e) => update("category", e.target.value as "titulaire" | "associe")}>
+                  <option value="titulaire">Titulaire</option>
+                  <option value="associe">Associé</option>
+                </select>
+              </Field2>
+            </div>
+          </Section>
+
+          <Section title="Gouvernance ACF (admin)">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Field2 label="Collège">
+                <select
+                  className={inputClass}
+                  value={form.college ?? ""}
+                  onChange={(e) =>
+                    update("college", e.target.value ? (e.target.value as "A" | "B" | "C") : undefined)
+                  }
+                >
+                  <option value="">— Non renseigné —</option>
+                  <option value="A">A — Opérateurs publics</option>
+                  <option value="B">B — Opérateurs privés</option>
+                  <option value="C">C — Experts / Collectivités</option>
+                </select>
+              </Field2>
+              <Field2 label="Soumis CCN 3228">
+                <label className="flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.social3228}
+                    onChange={(e) => update("social3228", e.target.checked)}
+                    className="h-4 w-4 accent-[var(--gaspe-teal-600)]"
+                  />
+                  <span>Vote NAO et mandats sociaux</span>
+                </label>
+              </Field2>
+              <Field2 label="Cotisation">
+                <select
+                  className={inputClass}
+                  value={form.membershipStatus ?? ""}
+                  onChange={(e) =>
+                    update(
+                      "membershipStatus",
+                      e.target.value ? (e.target.value as MembershipStatus) : undefined,
+                    )
+                  }
+                >
+                  <option value="">— Non renseigné —</option>
+                  <option value="paid">Payée</option>
+                  <option value="pending">En cours</option>
+                  <option value="due">Due</option>
+                </select>
+              </Field2>
+            </div>
+          </Section>
+
+          <Section title="Contact">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field2 label="Email">
+                <input type="email" className={inputClass} value={form.email}
+                  onChange={(e) => update("email", e.target.value)} />
+              </Field2>
+              <Field2 label="Téléphone">
+                <input className={inputClass} value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)} />
+              </Field2>
+              <Field2 label="Adresse">
+                <input className={inputClass} value={form.address}
+                  onChange={(e) => update("address", e.target.value)} />
+              </Field2>
+              <Field2 label="Site web">
+                <input className={inputClass} value={form.websiteUrl} placeholder="https://…"
+                  onChange={(e) => update("websiteUrl", e.target.value)} />
+              </Field2>
+            </div>
+          </Section>
+
+          <Section title="Présentation">
+            <div className="space-y-4">
+              <Field2 label="URL du logo">
+                <input className={inputClass} value={form.logoUrl}
+                  onChange={(e) => update("logoUrl", e.target.value)} placeholder="/assets/logos/…" />
+              </Field2>
+              <Field2 label="Description">
+                <textarea
+                  className={inputClass + " min-h-[80px] resize-y"}
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  rows={3}
+                />
+              </Field2>
+            </div>
+          </Section>
+
+          <Section title="Effectifs & flotte">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field2 label="Nombre de collaborateurs">
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={form.employeeCount ?? ""}
+                  onChange={(e) =>
+                    update("employeeCount", e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
+                />
+              </Field2>
+              <Field2 label="Nombre de navires">
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={form.shipCount ?? ""}
+                  onChange={(e) =>
+                    update("shipCount", e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
+                />
+              </Field2>
+            </div>
+          </Section>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 rounded-b-2xl border-t border-[var(--gaspe-neutral-200)] bg-white px-6 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-[var(--gaspe-neutral-200)] px-5 py-2.5 text-sm font-semibold text-foreground-muted transition-colors hover:bg-[var(--gaspe-neutral-50)]"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={() => onSave(form)}
+            disabled={saving || !form.name.trim()}
+            className="rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--gaspe-teal-700)] disabled:pointer-events-none disabled:opacity-50"
+          >
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground-muted">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Field2({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-semibold text-foreground">{label}</label>
+      {children}
     </div>
   );
 }
