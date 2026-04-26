@@ -7,6 +7,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const AGENDA_KEY = "gaspe_agenda";
 
@@ -83,7 +84,7 @@ export default function AdminAgendaPage() {
   });
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -92,7 +93,7 @@ export default function AdminAgendaPage() {
     setEvents(getEvents());
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   function saveEvents(updated: AgendaEvent[]) {
     localStorage.setItem(AGENDA_KEY, JSON.stringify(updated));

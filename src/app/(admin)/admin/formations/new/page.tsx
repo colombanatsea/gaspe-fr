@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import type { FormationModality, FormationDay } from "../page";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -34,7 +35,7 @@ export default function AdminNewFormationPage() {
   const [schedule, setSchedule] = useState<FormationDay[]>([]);
   const [newDay, setNewDay] = useState<FormationDay>({ date: "", location: "", visioLink: "" });
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) {
+  if (!user || !isStaffOrAdmin(user)) {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }

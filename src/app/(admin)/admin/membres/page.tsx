@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { getStoredMembers, saveMembers, type StoredMember } from "@/lib/members-store";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -66,7 +67,7 @@ export default function AdminMembresPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
     else startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
@@ -151,7 +152,7 @@ export default function AdminMembresPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   return (
     <div className="space-y-6">

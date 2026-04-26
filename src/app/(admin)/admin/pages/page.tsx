@@ -28,6 +28,7 @@ import {
 } from "@/lib/cms-store";
 import { isApiMode } from "@/lib/api-client";
 import { getCmsDefault } from "@/data/cms-defaults";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 /** Map page id → public preview URL (for iframe). Footer has no public page. */
 const PAGE_PREVIEW_URL: Record<string, string | null> = {
@@ -127,7 +128,7 @@ export default function AdminPagesPage() {
   const [saveLabel, setSaveLabel] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
     }
   }, [user, router]);
@@ -233,7 +234,7 @@ export default function AdminPagesPage() {
   const previewUrl = PAGE_PREVIEW_URL[selectedPageId] ?? null;
   const modifiedCount = modifiedIds.size;
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   return (
     <div className="space-y-6">

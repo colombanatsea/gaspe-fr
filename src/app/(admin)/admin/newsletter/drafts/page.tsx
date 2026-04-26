@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { listDrafts, createDraft, deleteDraft } from "@/lib/newsletter/drafts-store";
 import type { NewsletterDraft } from "@/lib/newsletter/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 export default function AdminNewsletterDraftsPage() {
   const { user } = useAuth();
@@ -24,14 +25,14 @@ export default function AdminNewsletterDraftsPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
       return;
     }
     startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   async function handleCreate() {
     setCreating(true);

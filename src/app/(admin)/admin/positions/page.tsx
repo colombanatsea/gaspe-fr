@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const POSITIONS_KEY = "gaspe_positions";
 
@@ -36,7 +37,7 @@ export default function AdminPositionsPage() {
   const [filterCat, setFilterCat] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -45,7 +46,7 @@ export default function AdminPositionsPage() {
     setPositions(getPositions());
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filtered = positions.filter((p) => {
     const matchSearch =

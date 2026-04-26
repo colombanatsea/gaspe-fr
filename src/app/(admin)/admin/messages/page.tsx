@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 interface ContactMessage {
   nom: string;
@@ -35,7 +36,7 @@ export default function AdminMessagesPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -44,7 +45,7 @@ export default function AdminMessagesPage() {
     setMessages(readMessages());
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const unreadCount = messages.filter((m) => !m.read).length;
 

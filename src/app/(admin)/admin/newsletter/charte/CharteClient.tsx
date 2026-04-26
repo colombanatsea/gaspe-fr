@@ -16,6 +16,7 @@ import { isApiMode } from "@/lib/api-client";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const PAGE_ID = "newsletter-charte";
 
@@ -26,7 +27,7 @@ export function CharteClient() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export function CharteClient() {
     update(id, getCmsDefault(PAGE_ID, id));
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   return (
     <div className="space-y-4">

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -240,7 +241,7 @@ export default function AdminFormationsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -249,7 +250,7 @@ export default function AdminFormationsPage() {
     setFormations(getFormations());
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filtered = formations.filter(
     (f) => !search || f.title.toLowerCase().includes(search.toLowerCase()) || f.organizer.toLowerCase().includes(search.toLowerCase()),

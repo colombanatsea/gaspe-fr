@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import type { Organization, MembershipStatus, User } from "@/lib/auth/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -93,11 +94,11 @@ export default function AdminOrganisationsPage() {
   }, [getAllUsers]);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
+    if (!user || !isStaffOrAdmin(user)) { router.push("/connexion"); return; }
     fetchData();
   }, [user, router, fetchData]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filtered = orgs.filter((org) => {
     if (categoryFilter !== "all" && org.category !== categoryFilter) return false;

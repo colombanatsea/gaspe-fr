@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { publishedJobs } from "@/data/jobs";
 import { exportAccountsCsv, exportMembershipsCsv } from "@/lib/export-csv";
 import { SITE_VERSION } from "@/lib/constants";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const FORMATIONS_KEY = "gaspe_formations";
 const POSITIONS_KEY = "gaspe_positions";
@@ -26,7 +27,7 @@ export default function AdminDashboardPage() {
     formations: 0, positions: 0, events: 0, documents: 0,
   });
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
+    if (!user || !isStaffOrAdmin(user)) { router.push("/connexion"); return; }
     getAllUsers().then((users) => {
       setCounts({
         pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,
@@ -41,7 +42,7 @@ export default function AdminDashboardPage() {
     }).finally(() => { /* loaded */ });
   }, [user, router, getAllUsers]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const statCards = [
     {
