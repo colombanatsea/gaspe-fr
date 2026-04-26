@@ -13,10 +13,12 @@ import {
   updateVessel,
   deleteVessel,
   resetFleetToSeed,
+  saveFleet,
 } from "@/lib/fleet-store";
 import { FLEET_SEED } from "@/data/fleet-seed";
 import { FleetVesselForm } from "@/components/fleet/FleetVesselForm";
 import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
+import { FleetCsvImporter } from "@/components/fleet/FleetCsvImporter";
 import type { FleetVessel } from "@/types";
 
 /**
@@ -208,6 +210,18 @@ export default function AdminFlottePage() {
                     onCancel={() => {
                       setShowForm(false);
                       setEditingVessel(null);
+                    }}
+                  />
+                </div>
+              )}
+
+              {!showForm && selectedMember && (
+                <div className="mb-4">
+                  <FleetCsvImporter
+                    existingCount={vessels.length}
+                    onImport={async (newVessels) => {
+                      await saveFleet(selectedMember.slug, newVessels);
+                      setVessels(newVessels);
                     }}
                   />
                 </div>
