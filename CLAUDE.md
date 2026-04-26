@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.28.0 (template CSV flotte + import client-side – Lot 5b : `src/lib/fleet-csv.ts` (RFC 4180, séparateur `;` UTF-8 BOM Excel-FR), `<FleetCsvImporter>` réutilisable (download template + upload + parse + preview + remplacement atomique). Intégré dans `/admin/flotte` et `/espace-adherent/flotte`)
+- **Version**: v2.29.0 (Hydros Alumni publication auto câblée – Lot 8 : audit confirmé que tout le backend (endpoint Worker, mapping, payload builder) + UI publique (badge, applicationUrl, reference, contactPhone) existait déjà depuis sessions 23-29. Reste à câbler : helper `publishToHydros` dans `jobs-store.ts` + appel async sur `handleSave(asDraft=false)` du formulaire adhérent, mise à jour silencieuse de `hydrosOfferUrl` après succès)
 
 ## Commands
 ```bash
