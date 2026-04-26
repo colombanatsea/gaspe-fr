@@ -143,12 +143,21 @@ export const memberSchema = z.object({
   region: z.string(),
   territory: z.enum(["metropole", "dom-tom"]),
   category: z.enum(["titulaire", "associe"]),
+  // ── Gouvernance ACF (session 38) ──
+  college: z.enum(["A", "B", "C"]).optional(),
+  social3228: z.boolean().optional(),
+  // ── Présentation ──
   description: z.string().optional(),
   logoUrl: z.string().optional(),
   websiteUrl: z.string().optional(),
   employeeCount: z.number().optional(),
   shipCount: z.number().optional(),
   archived: z.boolean().optional(),
+  // ── Champs PATCH-ables persistés en mode demo (session 40) ──
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  membershipStatus: z.enum(["paid", "pending", "due"]).optional(),
 });
 
 export const membersArraySchema = z.array(memberSchema);

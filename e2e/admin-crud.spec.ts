@@ -82,11 +82,17 @@ test.describe("Admin documents", () => {
   });
 });
 
-test.describe("Admin membres", () => {
-  test("loads members management", async ({ page }) => {
+test.describe("Admin adhérents", () => {
+  test("loads adherents management", async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto("/admin/adherents");
+    await expect(page.locator("h1").first()).toBeVisible();
+  });
+
+  test("legacy /admin/membres redirects to /admin/adherents", async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto("/admin/membres");
-    await expect(page.locator("h1").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/adherents$/);
   });
 });
 
