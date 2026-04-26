@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.25.0 (profile completeness gamifié – barre de progression 100% strict + 6 sections pondérées (profil 20% / financials 15% / fleet 10+25+20+10), affichée sur dashboard adhérent. Mention CA confidentiel. Spreadsheet upload reporté en PR Lot 5b)
+- **Version**: v2.26.0 (annuaire flotte cross-compagnies – page `/espace-adherent/annuaire-flotte` débloquée à 100% completeness. Recherche multi-critères : compagnie, longueur, capacité passagers, brevet équipage requis, carburant. Endpoint Worker `/api/organizations/fleet` ouvert aux adhérents authentifiés)
 
 ## Commands
 ```bash

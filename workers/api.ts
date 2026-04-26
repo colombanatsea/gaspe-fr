@@ -3594,14 +3594,26 @@ async function handleGetFleet(
   return json({ vessels: (results ?? []).map(toFrontendVessel) }, corsHeaders);
 }
 
-/** GET /api/organizations/fleet – admin-only view of all fleets. */
+/**
+ * GET /api/organizations/fleet
+ * Vue agrégée de toutes les flottes par compagnie.
+ * Auth : tout adhérent authentifié (le gating "completeness 100%" est
+ * appliqué côté frontend via /espace-adherent/annuaire-flotte). L'admin
+ * peut aussi appeler. Le candidat ou l'utilisateur non authentifié ne
+ * peut pas accéder.
+ */
 async function handleListAllFleets(
   request: Request,
   env: Env,
   corsHeaders: Record<string, string>,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
-  if ("error" in auth) return auth.error;
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  if (payload.role !== "admin" && payload.role !== "adherent") {
+    return json({ error: "Accès refusé" }, corsHeaders, 403);
+  }
 
   await ensureVesselsTable(env);
   const { results } = await env.DB.prepare(

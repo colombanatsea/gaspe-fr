@@ -149,6 +149,19 @@ export default function EspaceAdherentPage() {
       ),
     },
     {
+      title: "Annuaire flotte cross-compagnies",
+      count: null,
+      href: "/espace-adherent/annuaire-flotte",
+      description: completeness.isComplete
+        ? "Recherchez les navires de tous les adhérents"
+        : `Verrouillé · profil ${completeness.total}% / 100%`,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+          <path d="M3 17h1l1-5h14l1 5h1M5 17l-2 4h18l-2-4M12 3v4m-4 0h8" />
+        </svg>
+      ),
+    },
+    {
       title: "Visites médicales",
       count: null,
       href: "/espace-adherent/visites-medicales",
