@@ -37,10 +37,31 @@ jobs:
       - name: Apply D1 migrations
         if: steps.check-secrets.outputs.skip != 'true'
         run: |
+          set +e
+          unexpected=0
           for f in workers/migrations/*.sql; do
-            echo "Applying $f..."
-            npx wrangler d1 execute gaspe-db --remote --file "$f" --config workers/wrangler.toml --yes || echo "Migration $f skipped (already applied or error)"
+            echo "::group::Applying $f"
+            output=$(npx wrangler d1 execute gaspe-db --remote --file "$f" --config workers/wrangler.toml --yes 2>&1)
+            status=$?
+            echo "$output"
+            if [ $status -ne 0 ]; then
+              # ALTER ADD COLUMN ne supporte pas IF NOT EXISTS en SQLite : un re-run
+              # produit "duplicate column name" — c'est attendu et inoffensif.
+              if echo "$output" | grep -qiE "duplicate column name|already exists"; then
+                echo "::warning::$f: déjà appliquée (colonne existe), suite ignorée pour ce fichier"
+              else
+                echo "::error::$f: échec inattendu (voir log ci-dessus)"
+                unexpected=$((unexpected + 1))
+              fi
+            fi
+            echo "::endgroup::"
           done
+          if [ $unexpected -gt 0 ]; then
+            echo "::warning::$unexpected migration(s) ont échoué pour une raison inattendue. Vérifier les logs."
+          fi
+          # On ne fait PAS échouer le job pour rester rétro-compatible avec les
+          # migrations partiellement appliquées en prod (cf. session 40 fix).
+          # À durcir une fois la table _migrations_applied en place.
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
