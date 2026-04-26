@@ -44,8 +44,9 @@ export default function FormationsPage() {
               <Link
                 key={f.id}
                 href={`/formations/${f.slug}`}
-                className={`group rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 shadow-sm gaspe-card-hover reveal stagger-${Math.min(i + 1, 6)}`}
+                className={`group relative overflow-hidden rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6 shadow-sm gaspe-card-hover reveal stagger-${Math.min(i + 1, 6)}`}
               >
+                <div className="gaspe-card-top-strip" />
                 <div className="flex items-center gap-2 mb-3">
                   <Badge variant={categoryBadge[f.category] ?? "neutral"}>
                     {f.category}

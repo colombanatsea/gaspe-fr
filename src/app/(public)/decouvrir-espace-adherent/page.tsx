@@ -600,7 +600,7 @@ function EquipeTab() {
                   {member.name}
                   {member.primary && (
                     <span className="ml-1.5 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                      Responsable
+                      Titulaire
                     </span>
                   )}
                 </td>
@@ -608,7 +608,7 @@ function EquipeTab() {
                 <td className="px-4 py-3 text-foreground-muted hidden sm:table-cell">{member.role}</td>
                 <td className="px-4 py-3">
                   <Badge variant={member.primary ? "teal" : "neutral"}>
-                    {member.primary ? "Responsable" : "Contact"}
+                    {member.primary ? "Titulaire" : "Contact"}
                   </Badge>
                 </td>
               </tr>

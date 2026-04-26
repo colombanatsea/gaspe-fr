@@ -296,7 +296,7 @@ export default function AdminOrganisationsPage() {
                                     {c.name}
                                     {c.isPrimary && (
                                       <span className="ml-1.5 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                                        Responsable
+                                        Titulaire
                                       </span>
                                     )}
                                   </td>
@@ -304,7 +304,7 @@ export default function AdminOrganisationsPage() {
                                   <td className="py-2 text-foreground-muted hidden sm:table-cell">{c.companyRole ?? "–"}</td>
                                   <td className="py-2 hidden md:table-cell">
                                     <Badge variant={c.isPrimary ? "teal" : "neutral"}>
-                                      {c.isPrimary ? "Responsable" : "Contact"}
+                                      {c.isPrimary ? "Titulaire" : "Contact"}
                                     </Badge>
                                   </td>
                                   <td className="py-2 hidden md:table-cell">
