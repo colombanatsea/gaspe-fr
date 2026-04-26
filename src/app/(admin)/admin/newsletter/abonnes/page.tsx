@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
 import { isApiMode } from "@/lib/api-client";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -105,13 +106,13 @@ export default function AdminNewsletterSubscribersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
     }
   }, [user, router]);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) return;
+    if (!user || !isStaffOrAdmin(user)) return;
     if (!isApiMode() || !API_URL) {
       startTransition(() => {
         setLoading(false);
@@ -164,7 +165,7 @@ export default function AdminNewsletterSubscribersPage() {
     URL.revokeObjectURL(url);
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   return (
     <div className="space-y-6">

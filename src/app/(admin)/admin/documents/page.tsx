@@ -20,6 +20,7 @@ import {
   type DocumentCategory,
   type GaspeDocument,
 } from "@/data/documents-seed";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const emptyForm: GaspeDocument = {
   id: "",
@@ -48,11 +49,11 @@ export default function AdminDocumentsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) return;
+    if (!user || !isStaffOrAdmin(user)) return;
     startTransition(() => {
       setLoading(true);
       listDocuments(true).then((docs) => {
@@ -129,7 +130,7 @@ export default function AdminDocumentsPage() {
     setShowMedia(false);
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filtered = documents.filter(
     (d) => !filterCat || d.category === filterCat,

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { type Job } from "@/data/jobs";
 import { formatDate } from "@/lib/utils";
 import { getAllOffers, toggleJobPublished, deleteJob } from "@/lib/jobs-store";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 export default function AdminOffresPage() {
   const { user } = useAuth();
@@ -19,14 +20,14 @@ export default function AdminOffresPage() {
   const [filterStatus, setFilterStatus] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
       return;
     }
     getAllOffers().then(setAllJobs);
   }, [user, router]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filtered = allJobs.filter((j) => {
     const matchSearch =

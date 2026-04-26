@@ -22,6 +22,7 @@ import type {
   BlockSpacer,
   BlockFooter,
 } from "@/lib/newsletter/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const inputClass =
   "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
@@ -65,7 +66,7 @@ function EditorContent() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
       return;
     }
@@ -92,7 +93,7 @@ function EditorContent() {
     if (ok) setSavedAt(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
   }, [draft]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   if (loading) {
     return <p className="text-sm text-foreground-muted py-8 text-center">Chargement…</p>;

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { listVotes, createVote, deleteVote, closeVote, getVoteResults, type CreateVoteInput } from "@/lib/votes-store";
 import { VOTE_TYPE_LABELS, VOTE_AUDIENCE_LABELS, VOTE_AUDIENCE_HINTS } from "@/types";
 import type { Vote, VoteType, VoteAudience, VoteResults, VoteOption } from "@/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 export default function AdminVotesPage() {
   const { user } = useAuth();
@@ -27,14 +28,14 @@ export default function AdminVotesPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
       return;
     }
     startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   async function handleCreate(input: CreateVoteInput) {
     const created = await createVote(input);

@@ -11,6 +11,7 @@ import { slugify } from "@/lib/utils";
 import { ZONE_LABELS, START_DATE_OPTIONS } from "@/data/jobs";
 import type { Job, Zone } from "@/data/jobs";
 import { createJob } from "@/lib/jobs-store";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance", "Autres"];
 const categories = [
@@ -47,7 +48,7 @@ export default function AdminNewOffrePage() {
     handiAccessible: false,
   });
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) {
+  if (!user || !isStaffOrAdmin(user)) {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }

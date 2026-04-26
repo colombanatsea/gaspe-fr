@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, type User, type UserRole, type MembershipStatus, COMPANY_ROLES } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { ALL_STAFF_PERMISSIONS, STAFF_PERMISSION_LABELS, type StaffPermission } from "@/lib/auth/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const roleBadge: Record<UserRole, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   admin: { label: "Admin", variant: "teal" },
@@ -59,7 +60,7 @@ export default function AdminComptesPage() {
   }, [getAllUsers]);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
+    if (!user || !isStaffOrAdmin(user)) { router.push("/connexion"); return; }
     startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
@@ -112,7 +113,7 @@ export default function AdminComptesPage() {
   const paidCount = users.filter((u) => u.role === "adherent" && !u.archived && u.membershipStatus === "paid").length;
   const dueCount = users.filter((u) => u.role === "adherent" && !u.archived && (u.membershipStatus === "due" || !u.membershipStatus)).length;
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   return (
     <div className="space-y-6">

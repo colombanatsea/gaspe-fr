@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const POSITIONS_KEY = "gaspe_positions";
 
@@ -31,7 +32,7 @@ export default function AdminNewPositionPage() {
     tags: "",
   });
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) {
+  if (!user || !isStaffOrAdmin(user)) {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }

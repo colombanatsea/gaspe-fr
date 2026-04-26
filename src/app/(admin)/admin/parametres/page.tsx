@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hashPassword, verifyPassword } from "@/lib/auth/hash";
 import { Badge } from "@/components/ui/Badge";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const SETTINGS_KEY = "gaspe_settings";
 const PASSWORDS_KEY = "gaspe_passwords";
@@ -34,7 +35,7 @@ export default function AdminParametresPage() {
   const [passwordMsg, setPasswordMsg] = useState("");
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -44,7 +45,7 @@ export default function AdminParametresPage() {
     if (raw) setSettings(JSON.parse(raw));
   }
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   function handleSettingsChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSettings((prev) => ({ ...prev, [e.target.name]: e.target.value }));

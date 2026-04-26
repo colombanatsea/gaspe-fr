@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { NEWSLETTER_CATEGORIES } from "@/lib/auth/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -53,10 +54,10 @@ export default function AdminNewsletterPage() {
   const [result, setResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
+    if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

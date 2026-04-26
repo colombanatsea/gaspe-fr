@@ -20,6 +20,7 @@ import { FleetVesselForm } from "@/components/fleet/FleetVesselForm";
 import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
 import { FleetCsvImporter } from "@/components/fleet/FleetCsvImporter";
 import type { FleetVessel } from "@/types";
+import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 /**
  * Admin – Gestion de la flotte de TOUS les adhérents.
@@ -46,7 +47,7 @@ export default function AdminFlottePage() {
   }, []);
 
   useEffect(() => {
-    if (!user || !(user.role === "admin" || user.role === "staff")) {
+    if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
       return;
     }
@@ -70,7 +71,7 @@ export default function AdminFlottePage() {
     else setVessels([]);
   }, [selectedSlug, refreshFleet]);
 
-  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
+  if (!user || !isStaffOrAdmin(user)) return null;
 
   const filteredMembers = members.filter((m) => {
     if (!search) return true;
