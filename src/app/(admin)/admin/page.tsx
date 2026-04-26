@@ -196,7 +196,7 @@ export default function AdminDashboardPage() {
               { label: "Nouvelle offre d'emploi", href: "/admin/offres/new", icon: "+" },
               { label: "Nouvelle formation", href: "/admin/formations/new", icon: "+" },
               { label: "Nouveau contenu", href: "/admin/positions/new", icon: "+" },
-              { label: "Gérer les membres", href: "/admin/membres", icon: "→" },
+              { label: "Gérer les adhérents", href: "/admin/adherents", icon: "→" },
               { label: "Gérer les comptes", href: "/admin/comptes", icon: "→" },
               { label: "Paramètres du site", href: "/admin/parametres", icon: "→" },
             ].map((action) => (
