@@ -2,8 +2,8 @@
 
 ## Project
 Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
-Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau)
-**123 pages** – deployed on Cloudflare Pages (static export)
+Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau, en cours de rebrand vers ACF – Armateurs Côtiers Français – nov. 2026)
+**109 pages statiques** générées – deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
@@ -13,9 +13,9 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 249 tests, 23 files)
+npm run test         # unit tests (Vitest, 254 tests, 24 files)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 0 warnings – v2.20.0)
+npm run lint         # ESLint (0 errors, 0 warnings)
 git push origin main # auto-deploy to CF Pages (~1 min)
 ```
 
@@ -38,6 +38,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ⏳ Migration 0014 (session 36 : archive `keolis-bordeaux-metropole` côté D1 pour cohérence avec retrait de `members.ts` en session 34) – à appliquer au prochain merge main
 - ⏳ Migration 0015 (session 37 : ajoute le navire "Le Jalilo" pour la compagnie Jalilo, qui n'avait pas remonté de flotte au seed initial – source : jalilo.fr/le-bateau, idempotent) – à appliquer au prochain merge main
 - ⏳ Migration 0016 (session 38 : collèges ACF A/B/C + flag CCN 3228 sur table `organizations`. A=23 opérateurs publics, B=4 privés, C=3 experts/collectivités. Index `idx_organizations_college` et `idx_organizations_social3228` pour requêtes votes) – à appliquer au prochain merge main
+- ⏳ Migration 0017 (session 38 : ALTER ADD `organization_vessels.crew_by_brevet TEXT` – stockage JSON de la composition d'équipage par brevet CCN 3228, 17 clés `CrewBrevetKey`) – à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -69,10 +70,13 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - CTA title: "Rejoignez les armateurs côtiers"
 - Typo : **tiret semi-quadratique `–`** autorisé, **tiret quadratique `—` interdit** dans les textes éditoriaux GASPE
 - All member data comes from `src/data/members.ts` (30 adhérents : 21 titulaires + 9 associés/experts) + D1 `organizations` table
-- Répartition : **26 compagnies** (21 titulaires + 5 associés compagnies) + **4 experts** (Capstan Avocats, Filhet Allard, Howden, SPLMNA)
-- Territoire : **22 compagnies hexagone + 4 outre-mer** (calculé dynamiquement via `memberStats.compagniesHexagone/OutreMer`)
-- Stats : 1951, 26 compagnies, 1 494 marins français, 128 navires, 25M+ passagers, 6,9M véhicules, 200M€ CA
-- Compteurs dérivés : `src/data/members.ts` exporte `memberStats` (adherents, compagnies, titulaires, associes, experts, compagniesHexagone/OutreMer, regions, totalShips, totalEmployees)
+- Répartition par catégorie : **27 compagnies** (21 titulaires + 6 associés compagnies, dont SPLMNA reclassé compagnie session 38) + **3 experts** (Capstan Avocats, Filhet Allard, Howden)
+- **Collèges ACF (session 38)** : Collège A = 23 opérateurs publics, Collège B = 4 opérateurs privés (Cie Vendéenne, Jalilo, LD Tide, TMC), Collège C = 3 experts/collectivités
+- **Flag CCN 3228** (`social3228`) : vrai pour A et B (votent NAO + mandats sociaux), faux pour C
+- Territoire : **23 compagnies hexagone + 4 outre-mer** (calculé dynamiquement via `memberStats.compagniesHexagone/OutreMer`)
+- Stats : 1951, 27 compagnies, 1 494 marins français, 128 navires, 25M+ passagers, 6,9M véhicules, 200M€ CA
+- Compteurs dérivés : `src/data/members.ts` exporte `memberStats` (adherents, compagnies, titulaires, associes, experts, compagniesHexagone/OutreMer, regions, totalShips, totalEmployees, **collegeA/B/C, social3228**)
+- Helpers exportés : `collegeA`, `collegeB`, `collegeC`, `compagniesSocial3228` (filtres prêts à l'emploi)
 - Placeholders CMS : les valeurs saisies dans le CMS peuvent utiliser `{adherents}`, `{compagnies}`, `{navires}`, `{compagniesHexagone}`, `{compagniesOutreMer}`, etc. – remplacés au rendu via `src/lib/stats-placeholders.ts`
 - Job offers in `src/data/jobs.ts` (12 offres) + dual-mode store (localStorage/D1)
 - Employer guides in `src/data/ccn3228.ts` (10 guides: apprentissage, aides, STCW, ENIM…)
@@ -164,7 +168,7 @@ Admin consulte les abonnés via `/admin/newsletter/abonnes` (table + filtre par 
 ```
 src/
 ├── app/
-│   ├── (public)/          # 34 routes publiques (+ positions/[slug], /actualites refont, /feed.xml)
+│   ├── (public)/          # 35 routes publiques (+ positions/[slug], /actualites refont, /feed.xml, /espace-adherent/annuaire-flotte session 38)
 │   ├── (admin)/           # 13 sections admin + dashboard (17 pages avec /new et /flotte)
 │   ├── (auth)/            # 6 routes auth (+ invitation, reset password)
 │   ├── layout.tsx         # Layout racine (fonts, providers, SW)
@@ -181,9 +185,9 @@ src/
 │   ├── simulator/         # AdemeSimulator (Recharts, lazy-loaded, ssr: false)
 │   ├── news/              # News-related components
 │   ├── admin/             # RichTextEditor, MediaLibrary, ContentPreview
-│   ├── fleet/             # FleetVesselForm, FleetVesselCard (admin + adhérent + public)
-│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay
-│   └── ui/                # Badge, Button, Card, ThemeToggle
+│   ├── fleet/             # FleetVesselForm (+ CrewByBrevetEditor session 38), FleetVesselCard (+ CrewByBrevetSummary)
+│   ├── shared/            # PageHeader, ErrorBoundary, MemberLogo, SEOJsonLd, NotificationBell, NewsletterForm, EnmImport, EnmProfileDisplay, BrandLogo, CmsPageHeader, CookieConsent, **CollegeBadge (session 38)**, **ProfileCompletenessCard (session 38)**
+│   └── ui/                # Badge, Button (+ variant `white` session 38), Card (+ topAccent prop), ThemeToggle
 ├── data/                  # Static data (members, jobs, ccn3228, stcw, formations, ssgm, navigation, stats, routes, maritime-certifications, positions, fleet-seed)
 ├── lib/
 │   ├── auth/              # AuthContext, AuthStore, ApiAuthStore, types
@@ -202,17 +206,19 @@ src/
 │   ├── fleet-store.ts     # Fleet dual-mode store (localStorage ↔ D1, per-org, fallback seed)
 │   ├── enm-parser.ts        # ENM text parser (copy-paste from portal)
 │   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
-│   └── __tests__/         # Unit tests (221 tests, 21 files)
+│   ├── profile-completeness.ts # **session 38** – calcul score 6 sections + gating annuaire flotte
+│   ├── cms-revision-diff.ts  # CMS versioning – diff sections (session 33b)
+│   └── __tests__/         # Unit tests (254 tests, 24 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
-├── api.ts                 # CF Worker: 46 endpoints
+├── api.ts                 # CF Worker: 61 endpoints (cf. tableau ci-dessous)
 ├── jwt.ts                 # JWT sign/verify (HMAC-SHA256)
 ├── wrangler.toml          # Worker config (D1, R2, secrets)
-└── migrations/
+└── migrations/            # 17 migrations totales
     ├── 0001_auth.sql      # Users, auth, sessions, newsletter, contact_messages
     ├── 0002_password_reset.sql  # Password reset tokens
-    ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + 31 seed
+    ├── 0003_organizations.sql   # Organizations, newsletter_preferences, invitations + seed
     ├── 0004_link_users_organizations.sql  # Link users → organizations + is_primary
     ├── 0005_cms_jobs_medical_media.sql   # CMS pages, jobs, medical visits, media files
     ├── 0006_profile_linkedin.sql         # Profile photo, LinkedIn, company LinkedIn
@@ -220,7 +226,13 @@ workers/
     ├── 0008_newsletter.sql               # Newsletter v2 – drafts, sends, events, templates
     ├── 0009_brevo_sync.sql               # users.brevo_synced_at (session 29)
     ├── 0010_cms_documents.sql            # Documents officiels D1 (session 31)
-    └── 0011_cms_revisions.sql            # CMS versioning – snapshots auto + restore (session 32)
+    ├── 0011_cms_revisions.sql            # CMS versioning – snapshots auto + restore (session 32)
+    ├── 0012_organization_vessels.sql     # Table flotte par compagnie (session 35)
+    ├── 0013_seed_organization_vessels.sql # Seed initial 110 navires (session 35)
+    ├── 0014_archive_keolis_bordeaux.sql  # Archive Kéolis Bordeaux côté D1 (session 36)
+    ├── 0015_seed_jalilo.sql              # Ajout navire "Le Jalilo" (session 37)
+    ├── 0016_organization_college.sql     # Collèges A/B/C + flag CCN 3228 (session 38)
+    └── 0017_organization_vessels_crew_by_brevet.sql # crew_by_brevet JSON (session 38)
 ```
 
 ## Worker API – 61 endpoints
@@ -280,16 +292,16 @@ workers/
 | /api/cms/documents/:id | GET | – (JWT+adherent/admin pour privés) |
 | /api/cms/documents/:id | PUT | JWT+admin |
 | /api/cms/documents/:id | DELETE | JWT+admin |
-| /api/organizations/fleet | GET | JWT+admin |
+| /api/organizations/fleet | GET | JWT+adherent ou admin (session 38) |
 | /api/organizations/:slug/fleet | GET | – |
 | /api/organizations/:slug/fleet | PUT | JWT+admin/same-org |
 
-## Database (D1 – 20 tables, migrations 0001-0012 applied)
+## Database (D1 – 20 tables, migrations 0001-0017 prêtes ; 0001-0007 appliquées en prod, 0008-0017 à appliquer au prochain merge main)
 | Table | Description |
 |-------|-------------|
 | `users` | All accounts (admin, adherent, candidat) + organization_id, is_primary, brevo_synced_at (0009) |
 | `auth` | PBKDF2 password hashes |
-| `organizations` | 31 GASPE member companies (seeded from members.ts) + archived flag |
+| `organizations` | 30 GASPE member companies (Kéolis Bordeaux archivé en 0014). Colonnes : archived flag, **college (A/B/C, session 38)**, **social3228 (boolean, session 38)** |
 | `newsletter_preferences` | 10 boolean columns per user |
 | `invitations` | Team member invitations (token, 7-day expiry) |
 | `password_reset_tokens` | Reset tokens (1h expiry, single-use) |
@@ -306,10 +318,10 @@ workers/
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 | `cms_documents` | **Documents officiels GASPE** (CCN, accords, statuts, rapports) – title, description, category, file_url (R2 key ou externe), file_name, published_at, sort_order, is_public, published. Géré via `/admin/documents`, affiché sur `/documents`. (session 31) |
 | `cms_revisions` | **Versioning des pages CMS** – snapshot JSON automatique de `cms_pages` à chaque PUT. Permet rollback via `/api/cms/pages/:pageId/revisions/:id/restore`. Rétention : 30 snapshots par page. Le restore crée lui-même un snapshot préalable (rollback du rollback). (session 32) |
-| `organization_vessels` | **Flotte détaillée par compagnie adhérente** – 28 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (**111 navires, 26 compagnies** depuis session 37 + Jalilo) sert de fallback tant que la table est vide. (session 35, étendu sessions 36-37) |
+| `organization_vessels` | **Flotte détaillée par compagnie adhérente** – 29 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction ; **`crew_by_brevet TEXT` JSON depuis session 38**). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (**111 navires, 26 compagnies** depuis session 37 + Jalilo) sert de fallback tant que la table est vide. (session 35, étendu sessions 36-38) |
 
 ## Testing
-- **Unit tests**: Vitest – 221 tests, 21 spec files
+- **Unit tests**: Vitest – 254 tests, 24 spec files (session 38 : +5 tests profile-completeness)
 - **E2E tests**: Playwright – 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 
@@ -508,3 +520,4 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 | 33d | 2.20.1 | **Nettoyage des données de démonstration** avant mise en main éditoriale : `src/data/positions.ts` vidé (les 24 articles précédents étaient des brouillons générés pour illustrer la longue traîne SEO ; ils seront remplacés par des contenus validés éditorialement via `/admin/positions` en prod). `src/data/jobs.ts` réduit aux **4 annonces Karu'Ferry / Step Group** (Responsable Technique Flotte, Chef Mécanicien 3000 kW, Chef Mécanicien 8000 kW, Capitaine 500) – suppression des 7 offres Manche Iles Express / DTM Gironde / Seine-Maritime qui étaient des exemples. Pour conserver un build `output: 'export'` valide sur la route dynamique `/positions/[slug]`, `generateStaticParams` renvoie un slug sentinel `__placeholder__` (résolu en 404 par `notFound()`) + `dynamicParams = false` lorsque le tableau est vide. Page `/actualites` : empty state ajouté ("Aucune actualité publiée pour le moment"). Test `positions.test.ts:15` "at least 4 published positions" remplacé par un test structurel `is a valid array` ; `getPositionBySlug` test conditionnel (skippé si tableau vide). **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (4 slugs STEP Group pré-rendus + placeholder). |
 | 34 | 2.21.0 | **Cohérence compteurs** : les 3 chiffres "165 navires" hardcodés (`cms-defaults.ts` quick-stats, `positions/page.tsx`, `AdemeSimulator.tsx`) remplacés par `memberStats.totalShips` / placeholder `{navires}` → 1 seule source de vérité (`src/data/members.ts`). **Data adhérents** : Kéolis Bordeaux métropole retiré (plus adhérent), BreizhGo Ile D'Arz `shipCount: 4` (était absent), LD Tide `shipCount: 7` (était absent). Compteurs à jour : **30 adhérents, 26 compagnies, 128 navires**. SEO strings (`constants.ts`, `seo.ts`, `SEOJsonLd.tsx`) alignées 26/30. **Forward-compat ACF** (rebrand nov. 2026, bundle de design `api.anthropic.com/v1/design/h/Avhur3MlK54RUZ1jPOi6OA` récupéré et intégré) : assets ACF copiés dans `public/assets/brand/` (logo-acf.png/jpg/contour.svg, monogramme GASPE, logo-gaspe.png), tokens miroir `--acf-*` ajoutés dans `globals.css` (aliasés 1:1 sur `--gaspe-*`), nouveau composant `src/components/shared/BrandLogo.tsx` (swap via `variant` prop ou `NEXT_PUBLIC_BRAND=acf` env var) + `BrandMonogram`. **Flotte détaillée** : nouveau type `FleetVessel` (name, imo, type, yearBuilt, passengerCapacity, vehicleCapacity, flag, imageUrl) ajouté au champ optionnel `Member.fleet`. La section Flotte de `/nos-adherents/[slug]` affiche en priorité `member.fleet` (éditorial, source de vérité) puis fallback sur `profile.vessels` (déclaré par l'adhérent connecté). **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK. |
 | 35 | 2.22.0 | **Flotte adhérents éditable** – remontée complète du tableur armateurs v2024/2025 dans le site, avec éditeurs scopés par rôle. **Type étendu** : `FleetVessel` passe de 8 à 28 champs optionnels (ajouts : `operatingLine`, `length`, `beam`, `grossTonnage`, `freightCapacity`, `renewalType`, `renewalYear`, `owner`, `shipyard`, `shipyardCountry`, `propulsionType`, `fuelType`, `cruiseSpeed`, `consumptionPerTrip`, `rotationsPerYear`, `crewSize`, `powerKw`, `altFuelTests`, `shorePower`, `hullTreatment`, `emissionReduction`, `id`). Les champs mixtes du tableur ("2 x 2300 CV", "70 L/h", "2/3", "2032-2034") restent des strings pour préserver les formats. **Seed** `src/data/fleet-seed.ts` : dictionnaire `Record<slug, FleetVessel[]>` – **110 navires sur 25 compagnies** (toutes les compagnies adhérentes sauf Jalilo qui n'a pas remonté de flotte). Helpers `FLEET_SEED`, `getFleetForSlug(slug)`, `TOTAL_SEED_VESSELS`. **Store dual-mode** `src/lib/fleet-store.ts` : localStorage `gaspe_fleet` ↔ API `/api/organizations/:slug/fleet` ; fallback automatique sur le seed si la clé est vide ; `getFleet`, `addVessel`, `updateVessel`, `deleteVessel`, `saveFleet`, `getAllFleets`, `resetFleetToSeed`. **Composants partagés** `src/components/fleet/` : `FleetVesselForm` (sectionné : Identité, Caractéristiques, Capacités, Exploitation, Propulsion & énergie, Renouvellement, Environnement, Média) et `FleetVesselCard` (lecture seule + actions edit/delete). **Page admin** `/admin/flotte` : sélecteur compagnies à gauche (search, badge compteur seed), panneau d'édition à droite avec "Réinitialiser au seed" ; experts filtrés (`memberType === "expert"`). **Page adhérent** `/espace-adherent/flotte` : résout la compagnie de l'utilisateur via `user.company → member.slug`, CRUD scopé à sa seule compagnie ; lien vers la fiche publique pour visualiser. **Affichage public** `/nos-adherents/[slug]` : consomme `fleet-store.getFleet(slug)` (fallback transparent sur seed), rendu via `FleetVesselCard readOnly` avec tous les champs riches (dimensions, capacités, propulsion, renouvellement, environnement, rotations annuelles). **Migration D1 0012** (`0012_organization_vessels.sql`) : table `organization_vessels` avec FK `organizations(id) ON DELETE CASCADE`, colonnes numériques indexables (year_built, length_m, beam_m, gross_tonnage, passenger_capacity, vehicle_capacity, freight_capacity, cruise_speed, rotations_per_year) + colonnes TEXT pour les formats libres, index `(organization_id)`, `(imo)` partiel, `(year_built)`. **Worker endpoints** (+3 → **61 endpoints**) : `GET /api/organizations/fleet` (admin-only batch), `GET /api/organizations/:slug/fleet` (public), `PUT /api/organizations/:slug/fleet` (admin OR `users.organization_id === org.id`, remplace atomiquement via D1 batch delete + insert). `ensureVesselsTable()` défensif côté Worker pour tolérer un déploiement avant migration. **Nav** : item "Flotte" dans `AdminSidebar` (section Organisation, AnchorIcon SVG) + carte "Ma flotte" sur dashboard `/espace-adherent`. **Qualité** : 249 tests verts, 0 warning ESLint, 0 erreur tsc, build OK (123 pages). |
+| 38 | 2.26.0 | **8 PR thématiques mergées** (#45 → #52) – session de continuation post-flotte. (1) **PR #45 v2.22.1** : migrations 0013 (seed 110 navires) + 0014 (archive Kéolis Bordeaux) + corrections éditoriales (CCN 3228 boîte à outils Chef méca aligné UMS, sweep em-dashes, compteur 31→30, logos Capstan/MIE, kit presse, fix map fitBounds). (2) **PR #46 v2.22.2 fix(jalilo)** : description corrigée ("opérateur croisières Arcachon" au lieu de "solutions numériques"), ajout navire "Le Jalilo" (CAT ACERT, 17 nœuds, 2012) + migration 0015 idempotente. Script `build-fleet-seed-sql.ts` sécurisé (n'écrit plus dans 0013, écrit snapshot dans `scripts/_canonical-fleet-seed.snapshot.sql` gitignored). (3) **PR #47 v2.22.3 polish** : sweep résiduel Kéolis (`routes.ts`), em-dashes PWA (manifest.json + offline.html → 0 em-dash dans tous contenus user-facing), `Responsable` → `Titulaire` (équipe + admin orgs + démo, conservé en RGPD/fiches métier/STCW), nouveau **filet supérieur dégradé** (`.gaspe-card-top-strip` utility + `Card.topAccent` prop + 4 pages : positions, actualités, formations, espace-adherent/formations). (4) **PR #48 v2.23.0 Collèges A/B/C** : refonte logique statut adhérents – `Member.college` (A/B/C) + `Member.social3228` (boolean) sur 30 adhérents (A=23 publics, B=4 privés, C=3 experts). SPLMNA reclassé memberType:expert→compagnie + collège A. CollegeBadge component (compact + complet, sous-badge 3228 avec tooltip métier). Affiché : /nos-adherents (listing + fiche), /admin/organisations. **Migration 0016** : ALTER ADD college TEXT + social3228 INTEGER, UPDATE par slug, indexes. DbOrganization + toFrontendOrg + handleUpdateOrganization étendus (admin-only). (5) **PR #49 v2.23.1 Design System ACF** : alignement gradient signature sur l'horizon ACF officiel (`#50A8A8` → `#44A5B1` → `#3EA7C5`, fini en bleu cyan au lieu du vert). Tokens `--shadow-teal` + `--shadow-teal-soft` + utilities. Button primary : shadow-teal-soft repos + shadow-teal hover. Nouveau variant `Button` "white" (CTA dark). (6) **PR #50 v2.24.0 Crew par brevet CCN 3228** : 17 brevets `CrewBrevetKey` (Pont 8, Machine 6, Services 2, NAVPAX 1) alignés sur la grille classifications de /boite-a-outils. `FleetVessel.crewByBrevet?: Partial<Record<CrewBrevetKey, number>>` (cohabite avec `crewSize` libre). `CrewByBrevetEditor` (grille compacte 4 cards groupées, inputs numériques w-16 text-right, tooltips métier sur libellés). `CrewByBrevetSummary` (lecture seule sur card publique, regroupé par catégorie). **Migration 0017** : ALTER ADD crew_by_brevet TEXT (JSON sérialisé). Worker : sérialisation/désérialisation JSON sécurisée (filtre valeurs ≤ 0). (7) **PR #51 v2.25.0 Profile completeness gamifié** : `src/lib/profile-completeness.ts` (fonction pure, 6 sections pondérées : profile 20% / financials 15% / fleet-presence 10% / fleet-details 25% / crew-brevets 20% / environment 10%, collège C renormalisé à 2 sections). `ProfileCompletenessCard` (barre dégradée horizon, message contextuel "Plus que X% pour…", **mention CA strictement confidentiel** avec pictogramme cadenas, sections détaillées avec liens directs et items manquants). Intégrée sur dashboard `/espace-adherent` en remplacement de l'ancien calcul ad hoc. +5 tests unitaires. (8) **PR #52 v2.26.0 Annuaire flotte cross-compagnies** : nouvelle page `/espace-adherent/annuaire-flotte` débloquée à 100% completeness (réciprocité stricte). Filtres : recherche libre, compagnie, longueur (5 buckets), capacité passagers (5 buckets), brevet équipage requis (17 brevets), carburant (auto-extraction). Liste compacte avec collège A/B/C par ligne, lien vers fiche publique compagnie. Endpoint Worker `/api/organizations/fleet` ouvert aux adhérents authentifiés (gating UX côté front). Card dashboard reflète l'état verrouillé/déverrouillé. **Qualité globale session 38** : 254 tests verts (+5), 0 warning ESLint, 0 erreur tsc, build 109 pages, 17 migrations totales, 61 endpoints Worker. **À faire** : Lot 5b (template + upload spreadsheet flotte), Lot 7 (système de votes AG/NAO + tab démo), Lot 8 (Hydros Alumni publication auto). |
