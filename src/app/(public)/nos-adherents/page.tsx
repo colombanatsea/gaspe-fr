@@ -20,6 +20,7 @@ const MemberMap = dynamic(
 );
 import { Badge } from "@/components/ui/Badge";
 import { MemberLogo } from "@/components/shared/MemberLogo";
+import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import { getUserPosition, haversineDistance, formatDistance, type GeoPosition } from "@/lib/geolocation";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
@@ -49,11 +50,14 @@ function MemberRow({
               <h3 className="font-heading text-sm font-semibold text-foreground leading-tight">
                 {member.name}
               </h3>
-              {member.territory === "dom-tom" && (
-                <Badge variant="blue" className="shrink-0 text-[10px]">
-                  Outre-mer
-                </Badge>
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                <CollegeBadge college={member.college} compact />
+                {member.territory === "dom-tom" && (
+                  <Badge variant="blue" className="text-[10px]">
+                    Outre-mer
+                  </Badge>
+                )}
+              </div>
             </div>
             <p className="mt-0.5 text-xs text-foreground-muted">
               {member.city} &middot; {member.region}

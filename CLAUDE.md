@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.22.2 (flotte détaillée éditable par compagnie · seed 111 navires sur 26 compagnies · Jalilo correction description + ajout "Le Jalilo" via migration 0015)
+- **Version**: v2.23.0 (collèges ACF A/B/C + flag CCN 3228 sur tous adhérents · badges visibles fiche/listing/admin · migration D1 0016)
 
 ## Commands
 ```bash
@@ -37,6 +37,7 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ⏳ Migration 0013 (session 35 : seed initial `organization_vessels` – 110 navires sur 25 compagnies via `INSERT OR IGNORE`, idempotent – généré par `scripts/build-fleet-seed-sql.ts`) – à appliquer au prochain merge main
 - ⏳ Migration 0014 (session 36 : archive `keolis-bordeaux-metropole` côté D1 pour cohérence avec retrait de `members.ts` en session 34) – à appliquer au prochain merge main
 - ⏳ Migration 0015 (session 37 : ajoute le navire "Le Jalilo" pour la compagnie Jalilo, qui n'avait pas remonté de flotte au seed initial – source : jalilo.fr/le-bateau, idempotent) – à appliquer au prochain merge main
+- ⏳ Migration 0016 (session 38 : collèges ACF A/B/C + flag CCN 3228 sur table `organizations`. A=23 opérateurs publics, B=4 privés, C=3 experts/collectivités. Index `idx_organizations_college` et `idx_organizations_social3228` pour requêtes votes) – à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD

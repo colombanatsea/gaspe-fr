@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
+import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import type { Organization, MembershipStatus, User } from "@/lib/auth/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -208,6 +209,7 @@ export default function AdminOrganisationsPage() {
                       {org.category && categoryBadge[org.category] && (
                         <Badge variant={categoryBadge[org.category].variant}>{categoryBadge[org.category].label}</Badge>
                       )}
+                      <CollegeBadge college={org.college} social3228={org.social3228} />
                       {org.membershipStatus && membershipBadge[org.membershipStatus] && (
                         <Badge variant={membershipBadge[org.membershipStatus].variant}>
                           Cotisation {membershipBadge[org.membershipStatus].label.toLowerCase()}

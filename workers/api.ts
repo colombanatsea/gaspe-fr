@@ -997,6 +997,7 @@ async function handleEmail(request: Request, env: Env, corsHeaders: Record<strin
 
 interface DbOrganization {
   id: string; slug: string; name: string; category: string;
+  college: string | null; social3228: number | null;
   territory: string | null; region: string | null; city: string | null;
   latitude: number | null; longitude: number | null;
   logo_url: string | null; website_url: string | null;
@@ -1011,6 +1012,8 @@ interface DbOrganization {
 function toFrontendOrg(row: DbOrganization) {
   return {
     id: row.id, slug: row.slug, name: row.name, category: row.category,
+    college: (row.college as "A" | "B" | "C" | null) ?? undefined,
+    social3228: row.social3228 === 1 ? true : row.social3228 === 0 ? false : undefined,
     territory: row.territory ?? undefined, region: row.region ?? undefined,
     city: row.city ?? undefined,
     latitude: row.latitude ?? undefined, longitude: row.longitude ?? undefined,
@@ -1073,16 +1076,20 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
     email: "email", phone: "phone", description: "description",
     employeeCount: "employee_count", shipCount: "ship_count",
     membershipStatus: "membership_status", archived: "archived",
+    college: "college", social3228: "social3228",
   };
 
   const updates: string[] = [];
   const values: unknown[] = [];
   for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
     if (frontendKey in body) {
-      // membershipStatus and archived can only be changed by admin
-      if ((frontendKey === "membershipStatus" || frontendKey === "archived") && payload.role !== "admin") continue;
+      // Champs admin-only : membershipStatus, archived, college, social3228
+      const adminOnly = new Set(["membershipStatus", "archived", "college", "social3228"]);
+      if (adminOnly.has(frontendKey) && payload.role !== "admin") continue;
       updates.push(`${dbCol} = ?`);
-      values.push(body[frontendKey]);
+      // social3228 : booléen frontend → 0/1 SQLite
+      const val = frontendKey === "social3228" ? (body[frontendKey] ? 1 : 0) : body[frontendKey];
+      values.push(val);
     }
   }
 

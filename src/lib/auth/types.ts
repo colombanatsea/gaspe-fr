@@ -59,6 +59,10 @@ export interface Organization {
   slug: string;
   name: string;
   category: "titulaire" | "associe";
+  /** Collège ACF (A=opérateurs publics, B=opérateurs privés, C=experts/collectivités) */
+  college?: "A" | "B" | "C";
+  /** Soumis à la CCN 3228 (vote NAO/sociaux) */
+  social3228?: boolean;
   territory?: "metropole" | "dom-tom";
   region?: string;
   city?: string;

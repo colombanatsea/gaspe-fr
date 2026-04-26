@@ -94,6 +94,20 @@ export interface Member {
    * Défaut : "compagnie" si non précisé, "expert" sinon géré au filtrage.
    */
   memberType?: "compagnie" | "expert";
+  /**
+   * Collège ACF (gouvernance, droits de vote AG / cotisations) :
+   * - "A" : Opérateurs publics (SEM, régies, services départementaux, syndicats mixtes)
+   * - "B" : Opérateurs privés (SAS, SA, entreprises)
+   * - "C" : Experts (avocats, courtiers) & Collectivités
+   * Source : dispatch ACF (cf. simulation cotisations).
+   */
+  college?: "A" | "B" | "C";
+  /**
+   * Compagnie soumise à la CCN 3228 (Convention collective passages d'eau).
+   * → participe aux votes NAO et mandats sociaux. Affiché en badge "3228".
+   * Vrai pour la plupart des compagnies A et B, faux pour les experts/collectivités.
+   */
+  social3228?: boolean;
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;

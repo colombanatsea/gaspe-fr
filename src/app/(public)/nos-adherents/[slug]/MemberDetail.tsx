@@ -6,6 +6,7 @@ import { members } from "@/data/members";
 import { publishedJobs } from "@/data/jobs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import { FleetVesselCard } from "@/components/fleet/FleetVesselCard";
 import { getFleet } from "@/lib/fleet-store";
 import type { Vessel } from "@/lib/auth/AuthContext";
@@ -155,8 +156,9 @@ export function MemberDetail({ slug }: { slug: string }) {
               <Badge
                 variant={member.category === "titulaire" ? "teal" : "blue"}
               >
-                {member.category === "titulaire" ? "Titulaire" : "Associe"}
+                {member.category === "titulaire" ? "Titulaire" : "Associé"}
               </Badge>
+              <CollegeBadge college={member.college} social3228={member.social3228} />
             </div>
             <p className="mt-1 text-foreground-muted">
               {member.city} &middot; {member.region}
