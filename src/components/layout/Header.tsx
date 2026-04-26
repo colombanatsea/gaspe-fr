@@ -16,6 +16,7 @@ import { GaspeLogo } from "@/components/shared/GaspeLogo";
 
 const roleBadge = {
   admin: { label: "Admin", variant: "teal" as const },
+  staff: { label: "Staff GASPE", variant: "teal" as const },
   adherent: { label: "Adhérent", variant: "blue" as const },
   candidat: { label: "Candidat", variant: "warm" as const },
 };

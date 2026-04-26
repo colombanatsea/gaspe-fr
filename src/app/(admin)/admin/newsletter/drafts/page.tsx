@@ -24,14 +24,14 @@ export default function AdminNewsletterDraftsPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
       return;
     }
     startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   async function handleCreate() {
     setCreating(true);

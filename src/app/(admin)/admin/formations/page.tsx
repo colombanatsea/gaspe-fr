@@ -240,7 +240,7 @@ export default function AdminFormationsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -249,7 +249,7 @@ export default function AdminFormationsPage() {
     setFormations(getFormations());
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filtered = formations.filter(
     (f) => !search || f.title.toLowerCase().includes(search.toLowerCase()) || f.organizer.toLowerCase().includes(search.toLowerCase()),

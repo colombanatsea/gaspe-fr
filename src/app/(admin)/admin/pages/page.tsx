@@ -127,7 +127,7 @@ export default function AdminPagesPage() {
   const [saveLabel, setSaveLabel] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
     }
   }, [user, router]);
@@ -233,7 +233,7 @@ export default function AdminPagesPage() {
   const previewUrl = PAGE_PREVIEW_URL[selectedPageId] ?? null;
   const modifiedCount = modifiedIds.size;
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   return (
     <div className="space-y-6">

@@ -95,7 +95,8 @@ interface DbUser {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "adherent" | "candidat";
+  role: "admin" | "staff" | "adherent" | "candidat";
+  staff_permissions: string | null;
   company: string | null;
   phone: string | null;
   approved: number;
@@ -130,6 +131,7 @@ function toFrontendUser(row: DbUser) {
     email: row.email,
     name: row.name,
     role: row.role,
+    staffPermissions: parseStaffPerms(row.staff_permissions),
     company: row.company ?? undefined,
     phone: row.phone ?? undefined,
     approved: row.approved === 1,
@@ -776,6 +778,7 @@ async function handleUpdateUser(request: Request, env: Env, corsHeaders: Record<
   const allowedFields: Record<string, string> = {
     name: "name", phone: "phone", company: "company",
     approved: "approved", archived: "archived",
+    role: "role", staffPermissions: "staff_permissions",
     companyRole: "company_role", companyDescription: "company_description",
     companyLogo: "company_logo", companyAddress: "company_address",
     companyEmail: "company_email", companyPhone: "company_phone",
@@ -787,16 +790,19 @@ async function handleUpdateUser(request: Request, env: Env, corsHeaders: Record<
     membershipStatus: "membership_status",
   };
 
-  // Non-admin users can't change role, approved, archived
-  const adminOnly = ["approved", "archived", "role"];
+  // Non-admin users can't change role, approved, archived, staffPermissions
+  const adminOnly = ["approved", "archived", "role", "staffPermissions"];
 
   for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
     if (frontendKey in body) {
       if (adminOnly.includes(frontendKey) && payload.role !== "admin") continue;
       updates.push(`${dbCol} = ?`);
-      // Convert booleans to integers for SQLite
       const val = body[frontendKey];
-      values.push(typeof val === "boolean" ? (val ? 1 : 0) : val);
+      // Convert booleans to integers for SQLite
+      // Convert staffPermissions array to JSON string
+      if (typeof val === "boolean") values.push(val ? 1 : 0);
+      else if (frontendKey === "staffPermissions" && Array.isArray(val)) values.push(JSON.stringify(val));
+      else values.push(val);
     }
   }
 
@@ -2122,12 +2128,9 @@ async function handleCmsGetPage(env: Env, corsHeaders: Record<string, string>, p
 }
 
 async function handleCmsUpsertPage(request: Request, env: Env, corsHeaders: Record<string, string>, pageId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload || payload.role !== "admin") {
-    return json({ error: "Accès refusé" }, corsHeaders, 403);
-  }
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
+  if ("error" in auth) return auth.error;
+  const payload = { sub: auth.userId };
 
   const body = await request.json() as {
     sections: { id: string; label: string; type: string; content: string }[];
@@ -2216,7 +2219,7 @@ async function handleCmsListRevisions(
   corsHeaders: Record<string, string>,
   pageId: string,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   try {
@@ -2273,7 +2276,7 @@ async function handleCmsGetRevision(
   pageId: string,
   revisionId: number,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   try {
@@ -2330,7 +2333,7 @@ async function handleCmsRestoreRevision(
   pageId: string,
   revisionId: number,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   const row = await env.DB.prepare(
@@ -2732,12 +2735,8 @@ function validateMediaMagicBytes(buffer: ArrayBuffer, declaredType: string): boo
 }
 
 async function handleMediaList(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload || payload.role !== "admin") {
-    return json({ error: "Accès refusé" }, corsHeaders, 403);
-  }
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
+  if ("error" in auth) return auth.error;
 
   const { results } = await env.DB.prepare(
     "SELECT * FROM media_files ORDER BY created_at DESC"
@@ -2758,12 +2757,8 @@ async function handleMediaList(request: Request, env: Env, corsHeaders: Record<s
 }
 
 async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload || payload.role !== "admin") {
-    return json({ error: "Accès refusé" }, corsHeaders, 403);
-  }
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
+  if ("error" in auth) return auth.error;
 
   const formData = await request.formData();
   const file = formData.get("file") as File;
@@ -2810,12 +2805,8 @@ async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record
 }
 
 async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record<string, string>, mediaId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload || payload.role !== "admin") {
-    return json({ error: "Accès refusé" }, corsHeaders, 403);
-  }
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
+  if ("error" in auth) return auth.error;
 
   const row = await env.DB.prepare("SELECT r2_key FROM media_files WHERE id = ?").bind(mediaId).first<{ r2_key: string }>();
   if (!row) return json({ error: "Fichier introuvable" }, corsHeaders, 404);
@@ -2892,8 +2883,50 @@ async function requireAdmin(request: Request, env: Env, corsHeaders: Record<stri
   return { userId: String(payload.sub) };
 }
 
+/** Parse JSON staff_permissions column → string[] */
+function parseStaffPerms(raw: string | null): string[] | undefined {
+  if (!raw) return undefined;
+  try {
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) return arr.filter((p) => typeof p === "string");
+  } catch { /* ignore */ }
+  return undefined;
+}
+
+/**
+ * Check that the caller is the master admin OR a staff with the given
+ * permission (Lot 9, session 39). Returns `{ userId }` on success or
+ * `{ error: Response }` on failure.
+ */
+async function requireStaffPermission(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  permission: string,
+) {
+  const token = extractToken(request);
+  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return { error: json({ error: "Token invalide" }, corsHeaders, 401) };
+
+  // Master admin bypasses all permission checks
+  if (payload.role === "admin") return { userId: String(payload.sub) };
+
+  // Staff : check permission in DB
+  if (payload.role === "staff") {
+    try {
+      const row = await env.DB.prepare("SELECT staff_permissions FROM users WHERE id = ?")
+        .bind(payload.sub)
+        .first<{ staff_permissions: string | null }>();
+      const perms = parseStaffPerms(row?.staff_permissions ?? null);
+      if (perms && perms.includes(permission)) return { userId: String(payload.sub) };
+    } catch { /* ignore – fail closed below */ }
+  }
+  return { error: json({ error: "Accès refusé : permission requise" }, corsHeaders, 403) };
+}
+
 async function handleNlDraftsList(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
   try {
@@ -2907,7 +2940,7 @@ async function handleNlDraftsList(request: Request, env: Env, corsHeaders: Recor
 }
 
 async function handleNlDraftsGet(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
   const row = await env.DB.prepare("SELECT * FROM nl_drafts WHERE id = ?").bind(id).first<NlDraftRow>();
@@ -2915,7 +2948,7 @@ async function handleNlDraftsGet(request: Request, env: Env, corsHeaders: Record
 }
 
 async function handleNlDraftsCreate(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
 
@@ -2945,7 +2978,7 @@ async function handleNlDraftsCreate(request: Request, env: Env, corsHeaders: Rec
 }
 
 async function handleNlDraftsUpdate(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
 
@@ -2973,7 +3006,7 @@ async function handleNlDraftsUpdate(request: Request, env: Env, corsHeaders: Rec
 }
 
 async function handleNlDraftsDelete(request: Request, env: Env, corsHeaders: Record<string, string>, id: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
   await env.DB.prepare("DELETE FROM nl_drafts WHERE id = ?").bind(id).run();
@@ -3036,7 +3069,7 @@ async function loadDraftOrError(env: Env, id: string) {
 }
 
 async function handleNewsletterTestSend(request: Request, env: Env, corsHeaders: Record<string, string>, draftId: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
 
   if (!env.BREVO_API_KEY) {
@@ -3081,7 +3114,7 @@ async function handleNewsletterTestSend(request: Request, env: Env, corsHeaders:
 }
 
 async function handleNewsletterBulkSend(request: Request, env: Env, corsHeaders: Record<string, string>, draftId: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
 
   const body = await request.json().catch(() => ({})) as { category?: string };
@@ -3358,7 +3391,7 @@ async function handleDocumentCreate(
   env: Env,
   corsHeaders: Record<string, string>,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   const body = (await request.json()) as Record<string, unknown>;
@@ -3418,7 +3451,7 @@ async function handleDocumentUpdate(
   corsHeaders: Record<string, string>,
   docId: string,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   const existing = await env.DB.prepare("SELECT id FROM cms_documents WHERE id = ?")
@@ -3479,7 +3512,7 @@ async function handleDocumentDelete(
   corsHeaders: Record<string, string>,
   docId: string,
 ) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
 
   const existing = await env.DB.prepare("SELECT id FROM cms_documents WHERE id = ?")
@@ -3958,7 +3991,7 @@ async function handleListVotes(request: Request, env: Env, corsHeaders: Record<s
 }
 
 async function handleCreateVote(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_votes");
   if ("error" in auth) return auth.error;
 
   await ensureVotesTables(env);
@@ -4089,7 +4122,7 @@ async function handleSubmitVoteResponse(request: Request, env: Env, corsHeaders:
 }
 
 async function handleVoteResults(request: Request, env: Env, corsHeaders: Record<string, string>, voteId: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_votes");
   if ("error" in auth) return auth.error;
 
   await ensureVotesTables(env);
@@ -4186,7 +4219,7 @@ async function handleVoteResults(request: Request, env: Env, corsHeaders: Record
 }
 
 async function handleCloseVote(request: Request, env: Env, corsHeaders: Record<string, string>, voteId: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_votes");
   if ("error" in auth) return auth.error;
 
   await ensureVotesTables(env);
@@ -4197,7 +4230,7 @@ async function handleCloseVote(request: Request, env: Env, corsHeaders: Record<s
 }
 
 async function handleDeleteVote(request: Request, env: Env, corsHeaders: Record<string, string>, voteId: string) {
-  const auth = await requireAdmin(request, env, corsHeaders);
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_votes");
   if ("error" in auth) return auth.error;
 
   await ensureVotesTables(env);

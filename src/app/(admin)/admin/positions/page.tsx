@@ -36,7 +36,7 @@ export default function AdminPositionsPage() {
   const [filterCat, setFilterCat] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -45,7 +45,7 @@ export default function AdminPositionsPage() {
     setPositions(getPositions());
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filtered = positions.filter((p) => {
     const matchSearch =

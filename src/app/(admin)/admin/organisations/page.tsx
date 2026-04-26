@@ -93,11 +93,11 @@ export default function AdminOrganisationsPage() {
   }, [getAllUsers]);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") { router.push("/connexion"); return; }
+    if (!user || !(user.role === "admin" || user.role === "staff")) { router.push("/connexion"); return; }
     fetchData();
   }, [user, router, fetchData]);
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filtered = orgs.filter((org) => {
     if (categoryFilter !== "all" && org.category !== categoryFilter) return false;

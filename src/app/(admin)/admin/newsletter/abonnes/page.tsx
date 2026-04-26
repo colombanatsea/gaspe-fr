@@ -105,13 +105,13 @@ export default function AdminNewsletterSubscribersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!user || !(user.role === "admin" || user.role === "staff")) {
       router.push("/connexion");
     }
   }, [user, router]);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") return;
+    if (!user || !(user.role === "admin" || user.role === "staff")) return;
     if (!isApiMode() || !API_URL) {
       startTransition(() => {
         setLoading(false);
@@ -164,7 +164,7 @@ export default function AdminNewsletterSubscribersPage() {
     URL.revokeObjectURL(url);
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   return (
     <div className="space-y-6">

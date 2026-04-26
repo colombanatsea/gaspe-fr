@@ -34,7 +34,7 @@ export default function AdminParametresPage() {
   const [passwordMsg, setPasswordMsg] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   const [initialized, setInitialized] = useState(false);
@@ -44,7 +44,7 @@ export default function AdminParametresPage() {
     if (raw) setSettings(JSON.parse(raw));
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   function handleSettingsChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSettings((prev) => ({ ...prev, [e.target.name]: e.target.value }));

@@ -66,7 +66,7 @@ export default function AdminMembresPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
     else startTransition(() => { void refresh(); });
   }, [user, router, refresh]);
 
@@ -151,7 +151,7 @@ export default function AdminMembresPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   return (
     <div className="space-y-6">

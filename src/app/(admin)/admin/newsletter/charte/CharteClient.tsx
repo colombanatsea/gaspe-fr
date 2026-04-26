@@ -26,7 +26,7 @@ export function CharteClient() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function CharteClient() {
     update(id, getCmsDefault(PAGE_ID, id));
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   return (
     <div className="space-y-4">

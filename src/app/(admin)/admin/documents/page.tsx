@@ -48,11 +48,11 @@ export default function AdminDocumentsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") router.push("/connexion");
+    if (!user || !(user.role === "admin" || user.role === "staff")) router.push("/connexion");
   }, [user, router]);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") return;
+    if (!user || !(user.role === "admin" || user.role === "staff")) return;
     startTransition(() => {
       setLoading(true);
       listDocuments(true).then((docs) => {
@@ -129,7 +129,7 @@ export default function AdminDocumentsPage() {
     setShowMedia(false);
   }
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !(user.role === "admin" || user.role === "staff")) return null;
 
   const filtered = documents.filter(
     (d) => !filterCat || d.category === filterCat,

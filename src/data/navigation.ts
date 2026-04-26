@@ -13,6 +13,7 @@ export const mainNavigation: NavItem[] = [
 
 export const authNavigation = {
   admin: { label: "Administration", href: "/admin" },
+  staff: { label: "Console GASPE", href: "/admin" },
   adherent: { label: "Espace Adhérent", href: "/espace-adherent" },
   candidat: { label: "Espace Candidat", href: "/espace-candidat" },
 } as const;

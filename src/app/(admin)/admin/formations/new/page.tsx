@@ -34,7 +34,7 @@ export default function AdminNewFormationPage() {
   const [schedule, setSchedule] = useState<FormationDay[]>([]);
   const [newDay, setNewDay] = useState<FormationDay>({ date: "", location: "", visioLink: "" });
 
-  if (!user || user.role !== "admin") {
+  if (!user || !(user.role === "admin" || user.role === "staff")) {
     if (typeof window !== "undefined") router.push("/connexion");
     return null;
   }

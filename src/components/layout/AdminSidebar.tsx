@@ -6,36 +6,49 @@ import { cn } from "@/lib/utils";
 import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 import { SITE_NAME } from "@/lib/constants";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasStaffPermission } from "@/lib/auth/permissions";
+import type { StaffPermission, User } from "@/lib/auth/types";
 import { useState, useEffect } from "react";
 
-const navSections = [
+type NavItem = {
+  label: string;
+  href: string;
+  icon: (p: { className?: string }) => React.JSX.Element;
+  badge?: "pending";
+  /** Permission requise pour voir l'item (admin maître bypasse). */
+  permission?: StaffPermission;
+};
+
+type NavSection = { title: string; items: NavItem[] };
+
+const navSections: NavSection[] = [
   {
     title: "Général",
     items: [
       { label: "Tableau de bord", href: "/admin", icon: LayoutDashboardIcon },
-      { label: "Comptes", href: "/admin/comptes", icon: ShieldIcon, badge: "pending" as const },
+      { label: "Comptes", href: "/admin/comptes", icon: ShieldIcon, badge: "pending" },
     ],
   },
   {
     title: "Contenu",
     items: [
-      { label: "Offres d'emploi", href: "/admin/offres", icon: BriefcaseIcon },
-      { label: "Formations", href: "/admin/formations", icon: GraduationIcon },
-      { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon },
-      { label: "Pages", href: "/admin/pages", icon: PagesIcon },
+      { label: "Offres d'emploi", href: "/admin/offres", icon: BriefcaseIcon, permission: "manage_jobs" },
+      { label: "Formations", href: "/admin/formations", icon: GraduationIcon, permission: "manage_formations" },
+      { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon, permission: "manage_positions" },
+      { label: "Pages", href: "/admin/pages", icon: PagesIcon, permission: "manage_cms" },
     ],
   },
   {
     title: "Organisation",
     items: [
-      { label: "Organisations", href: "/admin/organisations", icon: BuildingIcon },
-      { label: "Membres", href: "/admin/membres", icon: UsersIcon },
-      { label: "Flotte", href: "/admin/flotte", icon: AnchorIcon },
-      { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon },
-      { label: "Documents", href: "/admin/documents", icon: FileIcon },
-      { label: "Messages", href: "/admin/messages", icon: MailIcon },
-      { label: "Newsletter", href: "/admin/newsletter", icon: MailIcon },
-      { label: "Votes", href: "/admin/votes", icon: VoteIcon },
+      { label: "Organisations", href: "/admin/organisations", icon: BuildingIcon, permission: "manage_organizations" },
+      { label: "Membres", href: "/admin/membres", icon: UsersIcon, permission: "manage_organizations" },
+      { label: "Flotte", href: "/admin/flotte", icon: AnchorIcon, permission: "manage_organizations" },
+      { label: "Agenda", href: "/admin/agenda", icon: CalendarIcon, permission: "manage_agenda" },
+      { label: "Documents", href: "/admin/documents", icon: FileIcon, permission: "manage_cms" },
+      { label: "Messages", href: "/admin/messages", icon: MailIcon, permission: "manage_messages" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: MailIcon, permission: "manage_newsletter" },
+      { label: "Votes", href: "/admin/votes", icon: VoteIcon, permission: "manage_votes" },
     ],
   },
   {
@@ -45,6 +58,13 @@ const navSections = [
     ],
   },
 ];
+
+function visibleSections(user: User | null | undefined): NavSection[] {
+  return navSections.map((section) => ({
+    ...section,
+    items: section.items.filter((it) => !it.permission || hasStaffPermission(user, it.permission)),
+  })).filter((section) => section.items.length > 0);
+}
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -104,9 +124,9 @@ export function AdminSidebar() {
         )}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation (filtrée selon les permissions du staff) */}
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-        {navSections.map((section) => (
+        {visibleSections(user).map((section) => (
           <div key={section.title}>
             {!collapsed && (
               <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--gaspe-neutral-500)]">
