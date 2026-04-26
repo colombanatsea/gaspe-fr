@@ -86,7 +86,7 @@ export default function AdherentFormationsPage() {
     const isFull = (f.registrations?.length ?? 0) >= f.capacity;
 
     return (
-      <Card key={f.id}>
+      <Card key={f.id} topAccent>
         <div className="flex items-start justify-between gap-2">
           <div>
             <CardTitle className="text-base">{f.title}</CardTitle>

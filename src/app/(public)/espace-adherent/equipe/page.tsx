@@ -188,7 +188,7 @@ export default function EquipePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-heading text-sm font-semibold text-foreground truncate">{c.name}</p>
-                    {c.isPrimary && <Badge variant="teal">Responsable</Badge>}
+                    {c.isPrimary && <Badge variant="teal">Titulaire</Badge>}
                   </div>
                   <p className="text-xs text-foreground-muted truncate">{c.email}</p>
                   {c.companyRole && (

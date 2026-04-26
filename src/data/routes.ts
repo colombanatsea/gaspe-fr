@@ -107,12 +107,6 @@ export const maritimeRoutes: MaritimeRoute[] = [
     coordinates: [[44.663, -1.169], [44.64, -1.22], [44.63, -1.25]],
     tier: 2,
   },
-  {
-    name: "Bordeaux – Navette fluviale",
-    member: "Keolis Bordeaux",
-    coordinates: [[44.851, -0.557], [44.87, -0.55], [44.89, -0.54]],
-    tier: 2,
-  },
   // ── Loire ──
   {
     name: "Bacs de Loire",

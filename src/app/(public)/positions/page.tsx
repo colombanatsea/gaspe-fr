@@ -144,8 +144,9 @@ export default function PositionsPage() {
                 <Link
                   key={position.slug}
                   href={`/positions/${position.slug}`}
-                  className="block rounded-xl bg-background border-l-[3px] border-l-warm p-6 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className="group relative overflow-hidden block rounded-xl bg-background border border-border-light p-6 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
+                  <div className="gaspe-card-top-strip" />
                   <article>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">

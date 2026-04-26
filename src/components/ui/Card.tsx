@@ -4,19 +4,22 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   accent?: boolean;
+  topAccent?: boolean;
   hover?: boolean;
 }
 
-export function Card({ children, className, accent = true, hover = true }: CardProps) {
+export function Card({ children, className, accent = true, topAccent = false, hover = true }: CardProps) {
   return (
     <div
       className={cn(
         "rounded-2xl bg-background p-6 shadow-sm border border-[var(--gaspe-neutral-200)]",
-        accent && "border-l-[3px] border-l-primary",
+        topAccent && "group relative overflow-hidden",
+        !topAccent && accent && "border-l-[3px] border-l-primary",
         hover && "gaspe-card-hover hover:border-[var(--gaspe-teal-200)]",
         className,
       )}
     >
+      {topAccent && <div className="gaspe-card-top-strip" />}
       {children}
     </div>
   );
