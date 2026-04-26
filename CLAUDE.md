@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.23.1 (alignement Design System ACF officiel : gradient horizon teal→cyan→bleu, shadow-teal CTA primaire, variant `white` du Button)
+- **Version**: v2.24.0 (composition équipage par brevet CCN 3228 sur chaque navire, 17 niveaux Pont/Machine/Services/NAVPAX, migration D1 0017, éditeur compact dans FleetVesselForm + lecture seule dans FleetVesselCard)
 
 ## Commands
 ```bash

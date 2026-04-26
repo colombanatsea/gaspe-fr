@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FleetVessel } from "@/types";
+import type { FleetVessel, CrewBrevetKey, CrewBrevetCategory } from "@/types";
+import { CREW_BREVETS, CREW_BREVET_CATEGORY_LABELS } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 const inputClass =
@@ -129,7 +130,7 @@ export function FleetVesselForm({ initial, onSubmit, onCancel, submitLabel = "En
             <input type="number" value={v.rotationsPerYear ?? ""} onChange={(e) => set("rotationsPerYear", numOrUndef(e.target.value))} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Équipage</label>
+            <label className={labelClass}>Équipage (total libre)</label>
             <input type="text" value={v.crewSize ?? ""} onChange={(e) => set("crewSize", e.target.value)} placeholder="8, 2/3, 4 ou 3 sur PA…" className={inputClass} />
           </div>
           <div>
@@ -138,6 +139,12 @@ export function FleetVesselForm({ initial, onSubmit, onCancel, submitLabel = "En
           </div>
         </div>
       </fieldset>
+
+      {/* Composition d'équipage par brevet (CCN 3228) */}
+      <CrewByBrevetEditor
+        value={v.crewByBrevet}
+        onChange={(next) => set("crewByBrevet", next)}
+      />
 
       {/* Propulsion & énergie */}
       <fieldset className="space-y-3">
@@ -232,5 +239,85 @@ export function FleetVesselForm({ initial, onSubmit, onCancel, submitLabel = "En
         </button>
       </div>
     </form>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Composition d'équipage par brevet (CCN 3228) — éditeur compact
+   Groupé par catégorie (Pont / Machine / Services / Certificat).
+   Chaque ligne : label + input numérique compact (w-20).
+───────────────────────────────────────────────────────────────────── */
+
+function CrewByBrevetEditor({
+  value,
+  onChange,
+}: {
+  value: Partial<Record<CrewBrevetKey, number>> | undefined;
+  onChange: (next: Partial<Record<CrewBrevetKey, number>>) => void;
+}) {
+  const current = value ?? {};
+  const total = Object.values(current).reduce((sum, n) => sum + (typeof n === "number" ? n : 0), 0);
+
+  function setBrevet(key: CrewBrevetKey, raw: string) {
+    const n = raw.trim() === "" ? undefined : Number(raw);
+    const next = { ...current };
+    if (n === undefined || !Number.isFinite(n) || n <= 0) {
+      delete next[key];
+    } else {
+      next[key] = Math.max(0, Math.floor(n));
+    }
+    onChange(next);
+  }
+
+  const categories: CrewBrevetCategory[] = ["pont", "machine", "services", "certificat"];
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="font-heading text-sm font-semibold text-foreground mb-1 flex items-baseline gap-2">
+        <span>Composition d&apos;équipage par brevet (CCN 3228)</span>
+        {total > 0 && (
+          <span className="text-xs font-normal text-foreground-muted">– total {total} qualification{total > 1 ? "s" : ""}</span>
+        )}
+      </legend>
+      <p className="text-xs text-foreground-muted -mt-2">
+        Renseignez le nombre de marins détenteurs de chaque brevet à bord. Inutile de remplir les cases à 0 — laissez vide. Survolez un libellé pour voir le détail réglementaire.
+      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3">
+        {categories.map((cat) => {
+          const items = CREW_BREVETS.filter((b) => b.category === cat);
+          if (items.length === 0) return null;
+          return (
+            <div key={cat} className="rounded-xl border border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] p-3">
+              <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-foreground-muted mb-2">
+                {CREW_BREVET_CATEGORY_LABELS[cat]}
+              </p>
+              <ul className="space-y-1.5">
+                {items.map((b) => (
+                  <li key={b.key} className="flex items-center gap-2">
+                    <label
+                      htmlFor={`crew-${b.key}`}
+                      className="flex-1 text-xs text-foreground truncate"
+                      title={b.hint ?? b.label}
+                    >
+                      {b.label}
+                    </label>
+                    <input
+                      id={`crew-${b.key}`}
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      value={current[b.key] ?? ""}
+                      onChange={(e) => setBrevet(b.key, e.target.value)}
+                      className="w-16 rounded-lg border border-[var(--gaspe-neutral-200)] bg-white px-2 py-1 text-sm text-right text-foreground focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

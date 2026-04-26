@@ -3494,9 +3494,24 @@ interface DbVessel {
   shore_power: string | null;
   hull_treatment: string | null;
   emission_reduction: string | null;
+  crew_by_brevet: string | null;
 }
 
 function toFrontendVessel(row: DbVessel) {
+  let crewByBrevet: Record<string, number> | undefined;
+  if (row.crew_by_brevet) {
+    try {
+      const parsed = JSON.parse(row.crew_by_brevet);
+      if (parsed && typeof parsed === "object") {
+        crewByBrevet = Object.fromEntries(
+          Object.entries(parsed)
+            .filter(([, v]) => typeof v === "number" && Number.isFinite(v) && v > 0)
+            .map(([k, v]) => [k, Math.floor(v as number)]),
+        );
+        if (Object.keys(crewByBrevet).length === 0) crewByBrevet = undefined;
+      }
+    } catch { /* malformed JSON – ignore */ }
+  }
   return {
     id: row.id,
     name: row.name,
@@ -3528,6 +3543,7 @@ function toFrontendVessel(row: DbVessel) {
     shorePower: row.shore_power ?? undefined,
     hullTreatment: row.hull_treatment ?? undefined,
     emissionReduction: row.emission_reduction ?? undefined,
+    crewByBrevet,
   };
 }
 
@@ -3547,6 +3563,7 @@ async function ensureVesselsTable(env: Env): Promise<void> {
       owner TEXT, shipyard TEXT, shipyard_country TEXT,
       propulsion_type TEXT, fuel_type TEXT,
       alt_fuel_tests TEXT, shore_power TEXT, hull_treatment TEXT, emission_reduction TEXT,
+      crew_by_brevet TEXT,
       created_by TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -3668,6 +3685,20 @@ async function handleUpsertFleet(
       return s ? s : null;
     };
 
+    // Sérialisation JSON propre de crewByBrevet (ne stocke que les paires > 0)
+    let crewByBrevetJson: string | null = null;
+    if (v.crewByBrevet && typeof v.crewByBrevet === "object") {
+      const cleaned = Object.fromEntries(
+        Object.entries(v.crewByBrevet as Record<string, unknown>)
+          .map(([k, val]) => {
+            const n = typeof val === "number" ? val : Number(val);
+            return [k, Number.isFinite(n) && n > 0 ? Math.floor(n) : 0];
+          })
+          .filter(([, n]) => (n as number) > 0),
+      );
+      if (Object.keys(cleaned).length > 0) crewByBrevetJson = JSON.stringify(cleaned);
+    }
+
     stmts.push(
       env.DB.prepare(
         `INSERT INTO organization_vessels (
@@ -3679,6 +3710,7 @@ async function handleUpsertFleet(
           renewal_type, renewal_year, owner, shipyard, shipyard_country,
           propulsion_type, fuel_type,
           alt_fuel_tests, shore_power, hull_treatment, emission_reduction,
+          crew_by_brevet,
           created_by, updated_at
         ) VALUES (
           ?, ?, ?, ?, ?, ?, ?, ?,
@@ -3689,6 +3721,7 @@ async function handleUpsertFleet(
           ?, ?, ?, ?, ?,
           ?, ?,
           ?, ?, ?, ?,
+          ?,
           ?, datetime('now')
         )`,
       ).bind(
@@ -3723,6 +3756,7 @@ async function handleUpsertFleet(
         strOrNull(v.shorePower),
         strOrNull(v.hullTreatment),
         strOrNull(v.emissionReduction),
+        crewByBrevetJson,
         String(payload.sub),
       ),
     );
