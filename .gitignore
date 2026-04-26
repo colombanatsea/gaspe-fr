@@ -27,3 +27,6 @@ gaspe-local.db
 
 # claude
 .claude/
+
+# snapshots auto-générés (référence dev, pas du source)
+scripts/_canonical-fleet-seed.snapshot.sql

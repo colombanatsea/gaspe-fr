@@ -1,6 +1,14 @@
 /**
- * Génère workers/migrations/0013_seed_organization_vessels.sql à partir de
- * src/data/fleet-seed.ts. Idempotent : INSERT OR IGNORE avec `id` stable.
+ * Génère un snapshot SQL canonique de FLEET_SEED dans
+ * `scripts/_canonical-fleet-seed.snapshot.sql`.
+ *
+ * IMPORTANT : 0013_seed_organization_vessels.sql est une migration immutable
+ * déjà appliquée en prod (110 navires). Toute évolution de fleet-seed.ts
+ * doit faire l'objet d'une migration delta dédiée (ex : 0015_seed_jalilo.sql)
+ * — ce script ne touche plus aux migrations.
+ *
+ * Le snapshot sert de référence pour vérifier que fleet-seed.ts est cohérent
+ * avec ce qui finira en base après application de toutes les migrations.
  *
  * Usage : npx tsx scripts/build-fleet-seed-sql.ts
  */
@@ -89,15 +97,13 @@ function emitInsert(slug: string, v: FleetVessel): string {
   return `INSERT OR IGNORE INTO organization_vessels (${cols.join(", ")}) VALUES (${values.join(", ")});`;
 }
 
-function generate(): string {
+function generate(totalCompanies: number, totalVessels: number): string {
   const lines: string[] = [];
-  lines.push("-- 0013_seed_organization_vessels.sql");
-  lines.push("-- Seed initial de la flotte détaillée par compagnie adhérente.");
-  lines.push("-- Source : src/data/fleet-seed.ts (110 navires, 25 compagnies).");
-  lines.push("-- Généré par scripts/build-fleet-seed-sql.ts — NE PAS ÉDITER À LA MAIN.");
-  lines.push("-- Idempotent : INSERT OR IGNORE + ids stables (réapplicable sans doublon).");
-  lines.push("-- L'organization_id est résolu via sous-requête sur slug → pas de couplage");
-  lines.push("-- à l'id numérique auto-généré.");
+  lines.push("-- _canonical-fleet-seed.snapshot.sql");
+  lines.push("-- SNAPSHOT auto-généré – PAS UNE MIGRATION (extension .snapshot.sql).");
+  lines.push(`-- État courant de FLEET_SEED : ${totalVessels} navires sur ${totalCompanies} compagnies.`);
+  lines.push("-- Référence pour audit cohérence DB ↔ seed éditorial.");
+  lines.push("-- Idempotent : INSERT OR IGNORE + ids stables.");
   lines.push("");
 
   let total = 0;
@@ -115,6 +121,8 @@ function generate(): string {
   return lines.join("\n");
 }
 
-const outPath = resolve(process.cwd(), "workers/migrations/0013_seed_organization_vessels.sql");
-writeFileSync(outPath, generate(), "utf-8");
-console.log(`Written ${outPath}`);
+const totalCompanies = Object.keys(FLEET_SEED).length;
+const totalVessels = Object.values(FLEET_SEED).reduce((sum, list) => sum + list.length, 0);
+const outPath = resolve(process.cwd(), "scripts/_canonical-fleet-seed.snapshot.sql");
+writeFileSync(outPath, generate(totalCompanies, totalVessels), "utf-8");
+console.log(`Written ${outPath} – ${totalVessels} vessels / ${totalCompanies} companies`);

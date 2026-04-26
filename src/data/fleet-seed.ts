@@ -229,6 +229,13 @@ const stmMayotte: FleetVessel[] = [
   { id: "stm-imane", name: "IMANE", type: "Amphidrome", operatingLine: "Dzaoudzi – Mamoudzou", passengerCapacity: 439, freightCapacity: 3100, shipyardCountry: "France", cruiseSpeed: 25, powerKw: "748" },
 ];
 
+// --- Jalilo (Bassin d'Arcachon) ---
+// Source : https://www.jalilo.fr/le-bateau/ – capacité passagers et autres champs
+// dimensionnels à confirmer par l'opérateur via /espace-adherent/flotte.
+const jalilo: FleetVessel[] = [
+  { id: "jalilo-le-jalilo", name: "Le Jalilo", type: "Vedette à passagers", operatingLine: "Bassin d'Arcachon – Île aux Oiseaux / Cap Ferret / Dune du Pilat", yearBuilt: 2012, propulsionType: "Moteurs Caterpillar à gestion électronique (ACERT)", fuelType: "GO", cruiseSpeed: 17, crewSize: "2", emissionReduction: "Faibles émissions CO₂ (norme ACERT)" },
+];
+
 /**
  * Dictionnaire : slug de compagnie → liste des navires.
  * Les slugs correspondent à `Member.slug` dans `src/data/members.ts`.
@@ -260,6 +267,7 @@ export const FLEET_SEED: Record<string, FleetVessel[]> = {
   "breizhgo-oceane": breizhgoOceane,
   "breizhgo-ile-darz": breizhgoIleDarz,
   "stm-mayotte": stmMayotte,
+  jalilo,
 };
 
 /** Helper : récupère la flotte seed pour une compagnie (fallback vide). */
