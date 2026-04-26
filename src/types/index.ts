@@ -262,3 +262,106 @@ export type { MediaItem, PageSection, PageContent } from "@/lib/cms-store";
 /* ── Members store types ── */
 
 export type { StoredMember } from "@/lib/members-store";
+
+/* ─────────────────────────────────────────────────────────────────────
+   Système de votes (session 38, migration 0018-0019)
+   Spec : 5 types (choix simple/multiple, texte, classement, dates),
+   2 audiences (AG/AGE = Collèges A+B, NAO = social_3228),
+   1 vote par organisation, suppléant peut voter en lieu et place,
+   visibilité admin + titulaire/suppléant uniquement.
+───────────────────────────────────────────────────────────────────── */
+
+export type VoteType =
+  | "single_choice"
+  | "multiple_choice"
+  | "text"
+  | "ranking"
+  | "date_selection";
+
+export type VoteAudience = "ag_ab" | "social_3228";
+
+export type VoteStatus = "draft" | "open" | "closed";
+
+export const VOTE_TYPE_LABELS: Record<VoteType, string> = {
+  single_choice: "Choix simple",
+  multiple_choice: "Choix multiple",
+  text: "Réponse libre",
+  ranking: "Classement de plusieurs items",
+  date_selection: "Sélection de dates",
+};
+
+export const VOTE_AUDIENCE_LABELS: Record<VoteAudience, string> = {
+  ag_ab: "Collèges A et B (AG / AGE)",
+  social_3228: "Collège social CCN 3228 (NAO / mandats sociaux)",
+};
+
+export const VOTE_AUDIENCE_HINTS: Record<VoteAudience, string> = {
+  ag_ab: "Vote ouvert aux compagnies A et B (gouvernance ACF). Les collèges C (experts) ne participent pas.",
+  social_3228: "Vote ouvert aux compagnies sous CCN 3228. Mandats sociaux et négociations collectives.",
+};
+
+/** Une option de vote (pour single/multiple/ranking). */
+export interface VoteOption {
+  id: string;
+  label: string;
+}
+
+export interface Vote {
+  id: string;
+  title: string;
+  description?: string;
+  type: VoteType;
+  audience: VoteAudience;
+  /**
+   * Données structurées dépendant du type :
+   * - single/multiple/ranking : VoteOption[]
+   * - date_selection : string[] (dates ISO)
+   * - text : []
+   */
+  options: VoteOption[] | string[];
+  status: VoteStatus;
+  /** ISO timestamp de clôture automatique (optionnel). */
+  closesAt?: string;
+  createdBy: string;
+  createdAt: string;
+  closedAt?: string;
+  closedBy?: string;
+}
+
+/**
+ * Réponse d'une organisation à un vote.
+ * 1 par (vote_id, organization_id) — le titulaire peut écraser celle du
+ * suppléant (et inversement, le suppléant voit la réponse du titulaire).
+ */
+export interface VoteResponse {
+  id: string;
+  voteId: string;
+  organizationId: string;
+  /** User qui a soumis (id du titulaire OU id du suppléant). */
+  submittedBy: string;
+  /**
+   * Payload du vote, structuré selon `Vote.type` :
+   * - single_choice : string (option id)
+   * - multiple_choice : string[] (option ids)
+   * - text : string
+   * - ranking : string[] (option ids dans l'ordre du classement)
+   * - date_selection : string[] (dates ISO sélectionnées)
+   */
+  response: string | string[];
+  submittedAt: string;
+}
+
+/** Résultats agrégés d'un vote, calculés côté Worker. */
+export interface VoteResults {
+  voteId: string;
+  totalEligible: number;
+  totalResponded: number;
+  /** Pour single/multiple/ranking : nombre de fois où chaque option a été choisie. */
+  optionCounts?: Record<string, number>;
+  /** Pour text : tableau des réponses brutes (pas d'agrégation). */
+  textResponses?: Array<{ organizationName: string; response: string; submittedAt: string }>;
+  /** Liste des organisations ayant répondu (avec timestamp). */
+  responders: Array<{ organizationId: string; organizationName: string; submittedAt: string; submittedByName?: string }>;
+  /** Liste des organisations n'ayant PAS répondu (pour mailto relance). */
+  nonResponders: Array<{ organizationId: string; organizationName: string; titulaireEmail?: string; suppleantEmail?: string }>;
+}
