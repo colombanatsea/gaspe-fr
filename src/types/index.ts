@@ -76,7 +76,100 @@ export interface FleetVessel {
   flag?: string;
   /** URL photo ou page fiche navire */
   imageUrl?: string;
+  /**
+   * Composition d'équipage par brevet/qualification (CCN 3228).
+   * Map clé→effectif. Clés alignées sur `CREW_BREVETS` (cf. ci-dessous).
+   * Coexiste avec `crewSize` (texte libre) — `crewByBrevet` est la version
+   * structurée utilisable pour matching candidat/poste et recherches multi-critères.
+   */
+  crewByBrevet?: Partial<Record<CrewBrevetKey, number>>;
 }
+
+/**
+ * Brevets et niveaux CCN 3228 retenus pour la composition d'équipage des
+ * navires. Aligné sur `CLASSIFICATION_LEVELS` dans `src/data/ccn3228.ts`
+ * (page /boite-a-outils#classifications) — un libellé unique pour le site
+ * institutionnel ET le formulaire flotte.
+ *
+ * Validé par le user (session 38) :
+ * - PONT (8 niveaux) : matelot → capitaine illimité
+ * - MACHINE (5 niveaux) : matelot machine → chef méca illimité
+ * - SERVICES (2 niveaux) : agent polyvalent + commissaire de bord
+ * - NAVPAX : certificat optionnel (pas un brevet, marqué à part)
+ *
+ * Note acronymes pédagogiques :
+ * - CMP = Certificat de Matelot Pont (débutant)
+ * - CMQP = Certificat de Matelot de Quart à la Passerelle (intermédiaire)
+ * - CMQ Pont = Certificat de Marin Qualifié Pont (Able Seafarer Deck STCW II/5)
+ */
+export type CrewBrevetKey =
+  // Pont
+  | "matelot"
+  | "matelot_qualifie"
+  | "maitre_equipage"
+  | "patron_vedette_50ums"
+  | "capitaine_50_200"
+  | "capitaine_200_500"
+  | "capitaine_500_3000"
+  | "capitaine_3000_plus"
+  // Machine
+  | "matelot_machine"
+  | "officier_mecanicien"
+  | "chef_meca_750"
+  | "chef_meca_3000"
+  | "chef_meca_8000"
+  | "chef_meca_illimite"
+  // Services / hôtelier
+  | "agent_service_polyvalent"
+  | "commissaire_bord"
+  // Certificat optionnel passagers
+  | "navpax";
+
+export type CrewBrevetCategory = "pont" | "machine" | "services" | "certificat";
+
+export interface CrewBrevetSpec {
+  key: CrewBrevetKey;
+  /** Libellé court (form + card) */
+  label: string;
+  /** Libellé long (tooltip / aide contextuelle) */
+  hint?: string;
+  category: CrewBrevetCategory;
+}
+
+/**
+ * Liste ordonnée des brevets pour rendu UI. L'ordre détermine l'affichage
+ * dans le formulaire (groupé par catégorie) et la card lecture seule.
+ */
+export const CREW_BREVETS: readonly CrewBrevetSpec[] = [
+  // PONT
+  { key: "matelot", label: "Matelot", category: "pont", hint: "CMP – Certificat de Matelot Pont (débutant)" },
+  { key: "matelot_qualifie", label: "Matelot qualifié", category: "pont", hint: "CMQP – quart passerelle" },
+  { key: "maitre_equipage", label: "Maître d'équipage (Bosco)", category: "pont", hint: "CMQ Pont senior – Able Seafarer Deck STCW II/5" },
+  { key: "patron_vedette_50ums", label: "Patron de vedette < 50 UMS", category: "pont", hint: "Brevet capitaine 200 + CFBS" },
+  { key: "capitaine_50_200", label: "Capitaine 50–200 UMS", category: "pont", hint: "Brevet capitaine 200 + CGO" },
+  { key: "capitaine_200_500", label: "Capitaine 200–500 UMS", category: "pont", hint: "Brevet capitaine 500 + CGO" },
+  { key: "capitaine_500_3000", label: "Capitaine 500–3000 UMS", category: "pont", hint: "Brevet capitaine 3000 + CGO" },
+  { key: "capitaine_3000_plus", label: "Capitaine > 3000 UMS", category: "pont", hint: "Brevet capitaine illimité + CGO" },
+  // MACHINE
+  { key: "matelot_machine", label: "Matelot machine", category: "machine", hint: "Certificat matelot machine + CFBS" },
+  { key: "officier_mecanicien", label: "Officier mécanicien", category: "machine", hint: "Encadrement service machine sous l'autorité du chef méca" },
+  { key: "chef_meca_750", label: "Chef mécanicien 750 kW", category: "machine" },
+  { key: "chef_meca_3000", label: "Chef mécanicien 3000 kW", category: "machine" },
+  { key: "chef_meca_8000", label: "Chef mécanicien 8000 kW", category: "machine" },
+  { key: "chef_meca_illimite", label: "Chef mécanicien illimité", category: "machine", hint: "Sans limitation de puissance" },
+  // SERVICES
+  { key: "agent_service_polyvalent", label: "Agent de service / Matelot polyvalent passagers", category: "services", hint: "CFBS – accueil passagers, sécurité à bord" },
+  { key: "commissaire_bord", label: "Commissaire de bord", category: "services", hint: "CFBS + ISPS – responsable services hôteliers" },
+  // CERTIFICAT
+  { key: "navpax", label: "NAVPAX (formation navires à passagers)", category: "certificat", hint: "STCW V/2 – obligatoire CCN 3228 pour ferries" },
+];
+
+export const CREW_BREVET_CATEGORY_LABELS: Record<CrewBrevetCategory, string> = {
+  pont: "Pont",
+  machine: "Machine",
+  services: "Services / hôtelier",
+  certificat: "Certificat optionnel",
+};
 
 export interface Member {
   name: string;

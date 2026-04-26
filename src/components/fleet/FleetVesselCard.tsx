@@ -1,6 +1,7 @@
 "use client";
 
-import type { FleetVessel } from "@/types";
+import type { FleetVessel, CrewBrevetCategory } from "@/types";
+import { CREW_BREVETS, CREW_BREVET_CATEGORY_LABELS } from "@/types";
 
 type Props = {
   vessel: FleetVessel;
@@ -99,6 +100,10 @@ export function FleetVesselCard({ vessel: v, onEdit, onDelete, readOnly }: Props
           <Row label="Rotations 2024">{v.rotationsPerYear.toLocaleString("fr-FR")}</Row>
         )}
       </dl>
+
+      {v.crewByBrevet && Object.values(v.crewByBrevet).some((n) => typeof n === "number" && n > 0) && (
+        <CrewByBrevetSummary brevets={v.crewByBrevet} />
+      )}
     </div>
   );
 }
@@ -108,6 +113,40 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
     <div className="flex justify-between gap-2 min-w-0">
       <dt className="font-medium">{label}</dt>
       <dd className="text-right truncate text-foreground">{children}</dd>
+    </div>
+  );
+}
+
+function CrewByBrevetSummary({ brevets }: { brevets: NonNullable<FleetVessel["crewByBrevet"]> }) {
+  const total = Object.values(brevets).reduce((sum, n) => sum + (typeof n === "number" ? n : 0), 0);
+  const categories: CrewBrevetCategory[] = ["pont", "machine", "services", "certificat"];
+
+  return (
+    <div className="mt-3 pt-3 border-t border-[var(--gaspe-neutral-100)]">
+      <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-foreground-muted mb-2">
+        Composition équipage par brevet · {total} qualification{total > 1 ? "s" : ""}
+      </p>
+      <div className="space-y-2">
+        {categories.map((cat) => {
+          const items = CREW_BREVETS.filter((b) => b.category === cat && (brevets[b.key] ?? 0) > 0);
+          if (items.length === 0) return null;
+          return (
+            <div key={cat}>
+              <p className="text-[10px] uppercase tracking-wide text-foreground-muted mb-0.5">
+                {CREW_BREVET_CATEGORY_LABELS[cat]}
+              </p>
+              <ul className="text-xs text-foreground space-y-0.5">
+                {items.map((b) => (
+                  <li key={b.key} className="flex items-baseline justify-between gap-2">
+                    <span className="truncate" title={b.hint ?? b.label}>{b.label}</span>
+                    <span className="font-mono text-foreground font-medium">{brevets[b.key]}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
