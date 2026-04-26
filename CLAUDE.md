@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.22.0 (flotte détaillée éditable par compagnie · seed 110 navires · admin voit tout · adhérent voit sa compagnie · migration D1 0012)
+- **Version**: v2.22.2 (flotte détaillée éditable par compagnie · seed 111 navires sur 26 compagnies · Jalilo correction description + ajout "Le Jalilo" via migration 0015)
 
 ## Commands
 ```bash
@@ -35,6 +35,8 @@ git push origin main # auto-deploy to CF Pages (~1 min)
 - ⏳ Migration 0009 (session 29 : ajoute `users.brevo_synced_at` pour tracker la synchronisation contact Brevo) – à appliquer au prochain merge main
 - ✅ Migration 0012 (session 35 : table `organization_vessels`) appliquée en prod (vérifié via `/api/organizations/:slug/fleet`)
 - ⏳ Migration 0013 (session 35 : seed initial `organization_vessels` – 110 navires sur 25 compagnies via `INSERT OR IGNORE`, idempotent – généré par `scripts/build-fleet-seed-sql.ts`) – à appliquer au prochain merge main
+- ⏳ Migration 0014 (session 36 : archive `keolis-bordeaux-metropole` côté D1 pour cohérence avec retrait de `members.ts` en session 34) – à appliquer au prochain merge main
+- ⏳ Migration 0015 (session 37 : ajoute le navire "Le Jalilo" pour la compagnie Jalilo, qui n'avait pas remonté de flotte au seed initial – source : jalilo.fr/le-bateau, idempotent) – à appliquer au prochain merge main
 - Vérifier prod : `curl https://gaspe-api.hello-0d0.workers.dev/api/health`
 
 ## CI/CD
@@ -303,7 +305,7 @@ workers/
 | `nl_templates` | Newsletter v2 pre-configured block templates |
 | `cms_documents` | **Documents officiels GASPE** (CCN, accords, statuts, rapports) – title, description, category, file_url (R2 key ou externe), file_name, published_at, sort_order, is_public, published. Géré via `/admin/documents`, affiché sur `/documents`. (session 31) |
 | `cms_revisions` | **Versioning des pages CMS** – snapshot JSON automatique de `cms_pages` à chaque PUT. Permet rollback via `/api/cms/pages/:pageId/revisions/:id/restore`. Rétention : 30 snapshots par page. Le restore crée lui-même un snapshot préalable (rollback du rollback). (session 32) |
-| `organization_vessels` | **Flotte détaillée par compagnie adhérente** – 28 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (110 navires, 25 compagnies) sert de fallback tant que la table est vide. (session 35) |
+| `organization_vessels` | **Flotte détaillée par compagnie adhérente** – 28 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (**111 navires, 26 compagnies** depuis session 37 + Jalilo) sert de fallback tant que la table est vide. (session 35, étendu sessions 36-37) |
 
 ## Testing
 - **Unit tests**: Vitest – 221 tests, 21 spec files

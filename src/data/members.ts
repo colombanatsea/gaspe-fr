@@ -394,7 +394,7 @@ export const members: Member[] = [
     region: "Nouvelle-Aquitaine",
     territory: "metropole",
     category: "associe",
-    description: "Jalilo est une entreprise de solutions numériques au service du secteur maritime, basée à Arcachon.",
+    description: "Jalilo opère des croisières touristiques commentées sur le Bassin d'Arcachon (Île aux Oiseaux et cabanes tchanquées, Cap Ferret, Dune du Pilat).",
     logoUrl: "/assets/logos/jalilo-petit.jpg",
     websiteUrl: "https://www.jalilo.fr/",
     shipCount: 1,
