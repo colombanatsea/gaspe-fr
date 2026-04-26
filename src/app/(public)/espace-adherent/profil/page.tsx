@@ -8,6 +8,7 @@ import { useAuth, COMPANY_ROLES, type CompanyRole, type Vessel } from "@/lib/aut
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getMySuppleant, setMySuppleant } from "@/lib/votes-store";
 
 export default function AdherentProfilPage() {
   const { user, updateUser } = useAuth();
@@ -425,6 +426,8 @@ export default function AdherentProfilPage() {
                 })}
               </div>
             </Card>
+
+            <SuppleantSection />
           </div>
         </div>
       )}
@@ -556,5 +559,75 @@ export default function AdherentProfilPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ─────────── Suppléant section (Lot 7c, session 38) ─────────── */
+
+function SuppleantSection() {
+  const [info, setInfo] = useState<{ isPrimary: boolean; suppleant: { id: string; name: string; email: string } | null; candidates: Array<{ id: string; name: string; email: string }> } | null>(null);
+  const [selected, setSelected] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getMySuppleant().then((d) => {
+      if (d) {
+        setInfo(d);
+        setSelected(d.suppleant?.id ?? "");
+      }
+    });
+  }, []);
+
+  if (!info) return null;
+  if (!info.isPrimary) return null; // Seul le titulaire peut désigner un suppléant
+
+  async function handleSave() {
+    setSaving(true);
+    setFeedback(null);
+    const ok = await setMySuppleant(selected || null);
+    if (ok) {
+      const fresh = await getMySuppleant();
+      if (fresh) setInfo(fresh);
+      setFeedback("Suppléant enregistré.");
+    } else {
+      setFeedback("Erreur lors de l'enregistrement.");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <Card>
+      <CardTitle>Suppléant pour les votes</CardTitle>
+      <p className="mt-1 text-xs text-foreground-muted">
+        Désignez un suppléant qui pourra voter en votre nom lors des AG/AGE et NAO.
+        Vous pouvez écraser son vote à tout moment et inversement.
+      </p>
+      {info.candidates.length === 0 ? (
+        <div className="mt-3 rounded-lg bg-[var(--gaspe-warm-50)] border border-[var(--gaspe-warm-200)] p-3 text-xs text-foreground">
+          Aucun autre membre dans votre compagnie. Invitez un contact via <a href="/espace-adherent/equipe" className="text-primary hover:underline">/espace-adherent/équipe</a> pour pouvoir le désigner suppléant.
+        </div>
+      ) : (
+        <div className="mt-3 space-y-3">
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
+          >
+            <option value="">— Aucun suppléant —</option>
+            {info.candidates.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
+          </select>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving}>{saving ? "…" : "Enregistrer"}</Button>
+            {feedback && <span className="text-xs text-foreground-muted">{feedback}</span>}
+          </div>
+          {info.suppleant && (
+            <p className="text-xs text-foreground-muted">
+              Suppléant actuel : <strong className="text-foreground">{info.suppleant.name}</strong> ({info.suppleant.email})
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }

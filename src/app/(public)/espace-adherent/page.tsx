@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ProfileCompletenessCard } from "@/components/shared/ProfileCompletenessCard";
 import { computeProfileCompleteness } from "@/lib/profile-completeness";
 import { getFleet } from "@/lib/fleet-store";
+import { getMySuppleant } from "@/lib/votes-store";
 import { members } from "@/data/members";
 import type { FleetVessel } from "@/types";
 
@@ -73,6 +74,7 @@ export default function EspaceAdherentPage() {
 
   // Trouve la fiche Member pour récupérer collège + données financières
   const member = members.find((m) => m.name === user.company);
+  const isPrimary = (user as { isPrimary?: boolean }).isPrimary === true;
   const completeness = computeProfileCompleteness({
     user: {
       company: user.company,
@@ -162,6 +164,18 @@ export default function EspaceAdherentPage() {
       ),
     },
     {
+      title: "Votes",
+      count: null,
+      href: "/espace-adherent/votes",
+      description: "AG / AGE et NAO – consultez et votez",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+          <path d="M9 12l2 2 4-4" />
+          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.22.45 4.56 1.24" />
+        </svg>
+      ),
+    },
+    {
       title: "Visites médicales",
       count: null,
       href: "/espace-adherent/visites-medicales",
@@ -240,6 +254,9 @@ export default function EspaceAdherentPage() {
           <p className="text-sm text-foreground-muted">Candidatures reçues</p>
         </div>
       </div>
+
+      {/* Warning suppléant manquant (pour le titulaire uniquement) */}
+      {isPrimary && <SuppleantWarning />}
 
       {/* Complétude du profil — barre gamifiée + sections détaillées */}
       <div className="mb-8">
@@ -339,6 +356,32 @@ export default function EspaceAdherentPage() {
               ))}
             </nav>
           </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SuppleantWarning() {
+  const [hasSuppleant, setHasSuppleant] = useState<boolean | null>(null);
+  useEffect(() => {
+    void getMySuppleant().then((d) => {
+      if (d && d.isPrimary) setHasSuppleant(!!d.suppleant);
+    });
+  }, []);
+  if (hasSuppleant !== false) return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-[var(--gaspe-warm-300)] bg-[var(--gaspe-warm-50)] p-4">
+      <div className="flex items-start gap-3">
+        <svg className="h-5 w-5 shrink-0 mt-0.5 text-[var(--gaspe-warm-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground">Vous n&apos;avez pas désigné de suppléant.</p>
+          <p className="text-xs text-foreground-muted mt-0.5">
+            Le suppléant peut voter en votre nom lors des AG/AGE et NAO. Vous pouvez écraser son vote à tout moment.
+            <Link href="/espace-adherent/profil" className="ml-1 text-primary hover:underline font-semibold">Désigner un suppléant →</Link>
+          </p>
         </div>
       </div>
     </div>

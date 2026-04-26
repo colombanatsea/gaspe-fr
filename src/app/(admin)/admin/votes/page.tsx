@@ -242,7 +242,7 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
 function ShareUrlButton({ voteId }: { voteId: string }) {
   const [copied, setCopied] = useState(false);
   function copy() {
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/espace-adherent/votes/${voteId}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/espace-adherent/votes/detail?id=${encodeURIComponent(voteId)}`;
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       void navigator.clipboard.writeText(url);
       setCopied(true);
@@ -267,7 +267,7 @@ function ResultsPanel({ results, vote }: { results: VoteResults | null | undefin
   // Mailto pour relance non-responders
   const nonRespEmails = results.nonResponders
     .flatMap((nr) => [nr.titulaireEmail, nr.suppleantEmail].filter((e): e is string => !!e));
-  const reminderMailto = `mailto:?bcc=${nonRespEmails.join(",")}&subject=${encodeURIComponent(`Relance vote : ${vote.title}`)}&body=${encodeURIComponent(`Bonjour,\n\nUn vote en cours sur la plateforme ACF nécessite votre réponse :\n\n${vote.title}\n\nLien : ${typeof window !== "undefined" ? window.location.origin : ""}/espace-adherent/votes/${vote.id}\n\nCordialement,\nL'équipe ACF`)}`;
+  const reminderMailto = `mailto:?bcc=${nonRespEmails.join(",")}&subject=${encodeURIComponent(`Relance vote : ${vote.title}`)}&body=${encodeURIComponent(`Bonjour,\n\nUn vote en cours sur la plateforme ACF nécessite votre réponse :\n\n${vote.title}\n\nLien : ${typeof window !== "undefined" ? window.location.origin : ""}/espace-adherent/votes/detail?id=${encodeURIComponent(vote.id)}\n\nCordialement,\nL'équipe ACF`)}`;
 
   // Mailto pour partage à tous (bcc tous responders+non-responders)
   const allEmails = [
