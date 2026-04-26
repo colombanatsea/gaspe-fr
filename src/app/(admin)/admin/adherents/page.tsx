@@ -196,6 +196,10 @@ export default function AdminAdherentsPage() {
     setSaving(true);
     try {
       // 1) Champs supportés par PATCH /api/organizations/:id
+      // On envoie systématiquement tous les champs editable : `undefined` ou `""`
+      // → `null` côté DB. Ça permet à l'admin de clear un collège ou une cotisation
+      // (sans cette normalisation, sélectionner "— Non renseigné —" laisserait
+      // la valeur précédente intacte).
       const patchPayload: Record<string, unknown> = {};
       const patchKeys: (keyof EditFormState)[] = [
         "email",
@@ -208,13 +212,13 @@ export default function AdminAdherentsPage() {
         "shipCount",
         "membershipStatus",
         "college",
-        "social3228",
       ];
       for (const k of patchKeys) {
         const v = form[k];
-        // On envoie tout, y compris les valeurs vidées (string "" => clear DB)
-        if (v !== undefined) patchPayload[k] = v === "" ? null : v;
+        patchPayload[k] = v === undefined || v === "" ? null : v;
       }
+      // social3228 est un booléen — toujours présent
+      patchPayload.social3228 = form.social3228;
 
       if (isApiMode()) {
         try {
