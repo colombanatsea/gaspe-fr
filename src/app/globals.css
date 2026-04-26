@@ -59,16 +59,21 @@
   --gaspe-green-500: #6FA05A;
   --gaspe-green-600: #578040;
 
-  /* ── Gradient signature GASPE ── */
-  --gaspe-gradient-start: #42B3D5;
-  --gaspe-gradient-mid: #6DAAAC;
-  --gaspe-gradient-end: #5AA89A;
+  /* ── Gradient signature horizon (teal→cyan→bleu) ──
+     Source : Design System ACF (logo officiel). Alignement nov 2026. */
+  --gaspe-gradient-start: #50A8A8;
+  --gaspe-gradient-mid:   #44A5B1;
+  --gaspe-gradient-end:   #3EA7C5;
 
   /* ── Sémantiques ── */
   --gaspe-success: #16A34A;
   --gaspe-warning: #D97706;
   --gaspe-error: #DC2626;
   --gaspe-info: #2563EB;
+
+  /* ── Shadow signature teal (CTA primaire uniquement) ── */
+  --shadow-teal: 0 8px 24px rgb(27 126 138 / 0.25);
+  --shadow-teal-soft: 0 4px 12px rgb(27 126 138 / 0.15);
 
   /* ── Rôles (couche sémantique) ── */
   --color-primary: var(--gaspe-teal-600);
@@ -217,6 +222,10 @@ body {
   pointer-events: none;
 }
 .group:hover .gaspe-card-top-strip { height: 6px; }
+
+/* ── Soft teal shadow pour CTA primaire (charte ACF) ── */
+.shadow-teal-soft { box-shadow: var(--shadow-teal-soft); }
+.hover\:shadow-teal:hover { box-shadow: var(--shadow-teal); }
 
 /* ── Prose list bullets: round dots, no squares ── */
 .prose ul { list-style-type: disc; }

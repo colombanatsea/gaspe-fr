@@ -7,7 +7,7 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
-- **Version**: v2.23.0 (collèges ACF A/B/C + flag CCN 3228 sur tous adhérents · badges visibles fiche/listing/admin · migration D1 0016)
+- **Version**: v2.23.1 (alignement Design System ACF officiel : gradient horizon teal→cyan→bleu, shadow-teal CTA primaire, variant `white` du Button)
 
 ## Commands
 ```bash
