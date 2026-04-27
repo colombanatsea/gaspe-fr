@@ -173,6 +173,32 @@ parfois BTS (PMN, MASEN selon site).
 | 11 | LPM Saint-Nazaire (Daniel-Rigolet) | Saint-Nazaire | Pays de la Loire | 44600 | [lyceemaritime-saintnazaire.fr](https://www.lyceemaritime-saintnazaire.fr/) |
 | 12 | LPM Sète (Paul-Bousquet) | Sète | Occitanie | 34200 | [lyceemaritime-sete.fr](https://lyceemaritime-sete.fr/) |
 
+**Audit live des 12 URLs** : à exécuter manuellement depuis un poste avec
+accès Internet (les sandboxes Claude Code sont coupées du réseau, cf.
+sessions 42 et 43 où l'audit a été reporté). Procédure :
+```bash
+for url in "https://lyc-maritime-bastia.web.ac-corse.fr/" \
+           "https://www.lyceemaritime-boulogne.fr/" \
+           "https://lyceemaritime-cherbourg.fr/" \
+           "https://lyceemaritime-ciboure.fr/" \
+           "https://www.lpmetel.fr/" \
+           "https://lpm-anitaconti.fr/" \
+           "https://lyceemaritime-larochelle.fr/" \
+           "https://lpm-guilvinec.fr/" \
+           "https://lpm-paimpol.fr/" \
+           "https://lyceemaritime-saintmalo.fr/" \
+           "https://www.lyceemaritime-saintnazaire.fr/" \
+           "https://lyceemaritime-sete.fr/"; do
+  printf "%-55s " "$url"
+  curl -s -o /dev/null -L -w "%{http_code} -> %{url_effective}\n" \
+    --max-time 10 "$url"
+done
+```
+Stratégies de remplacement en cas de 404 / parking :
+1. URL académique stable `*.web.ac-<academie>.fr/lyc<nom>/` (priorité 1)
+2. Fiche DAM officielle sur [formation-maritime.fr](https://www.formation-maritime.fr) (priorité 2)
+3. Page récap GASPE en dernier recours
+
 ### 4.2 ENSM – une école, cinq lieux
 
 **L'ENSM est une seule école nationale supérieure**, pas quatre.
@@ -333,6 +359,24 @@ métropole pour obtenir le brevet d'officier. Cette particularité justifie
 le traitement éditorial dédié dans le récit ENSM (« 1 école, 5 lieux »
 plutôt que « 4 sites ENSM »).
 
+**Modélisation retenue (session 43)** : un seul marqueur cartographique
+(`lpm-bastia`, `kind: "lpm"`) qui porte la formation `ENSM_OFFICIER_CHEF`.
+Le compteur `SCHOOL_COUNTS.ensmSites` retourne dynamiquement 5 (4 sites
+ENSM + 1 LPM dont les `formations` contiennent un niveau `officier`),
+sans qu'un 17e marqueur dédié `ensm-bastia` soit nécessaire. Choix
+motivé par :
+- la réalité géographique (un seul campus physique à Bastia, pas deux
+  bâtiments distincts) ;
+- la lisibilité de la carte (deux marqueurs aux mêmes coordonnées
+  créeraient un overlap parasite) ;
+- la cohérence du narratif « 1 école, 5 lieux » qui met en avant
+  l'unité de l'ENSM, non sa fragmentation.
+
+Conséquence pour les filtres : cliquer sur le filtre `ENSM` n'affiche
+**pas** le marqueur Bastia (qui reste sous le filtre `LPM`). C'est un
+trade-off accepté : le narratif explicite et la fiche détaillée Bastia
+mentionnent la double affiliation.
+
 ### 7.5 Ton et tutoiement
 Le ton est délibérément direct et tutoie le lecteur (« Ton bureau ? Il
 tangue. »). C'est un choix de campagne pour la cible 14-25 ans et il doit
@@ -354,6 +398,40 @@ le même nom. Procédure complète dans `public/campagne/README.md` §
 Optimisation. La page utilise `unoptimized` (compatible static export
 Cloudflare Pages), donc aucune optimisation server-side n'est appliquée.
 
+### 7.8 Nettoyage CMS prod – sections à vérifier
+Lorsqu'une section a été éditée via `/admin/pages → Écoles de la mer`
+sur un environnement prod, elle écrase le défaut défini dans
+`src/data/cms-defaults.ts`. Après chaque itération de copy côté code,
+vérifier en prod et soit ré-aligner via l'UI, soit purger l'override
+ciblé via SQL D1.
+
+Sections à auditer après les itérations session 42-43 :
+
+| Section | Valeur attendue (cms-defaults) |
+|---------|--------------------------------|
+| `map-intro` | `12 LPM + 1 ENSM (5 sites incluant l'antenne Bastia). Trouve celui le plus proche de chez toi.` (avec espace `5 sites`) |
+| `narrative-ensm-body` | Version Parcoursup + monovalent pont (3 ans) / monovalent machine (3 ans) / polyvalent (5 ans) |
+| `final-cta-bg-image` | Vide (laisse le défaut `/campagne/embarque-passerelle.jpg`) ou URL Media Library |
+
+Purge ciblée d'un override (mode prod, requiert `wrangler` + admin
+Cloudflare) :
+```bash
+# Inspection
+wrangler d1 execute gaspe-db --remote \
+  --command="SELECT section_id, content FROM cms_pages WHERE page_id='ecoles-de-la-mer';"
+
+# Suppression d'un override unique
+wrangler d1 execute gaspe-db --remote \
+  --command="DELETE FROM cms_pages WHERE page_id='ecoles-de-la-mer' AND section_id='map-intro';"
+
+# Purge totale (à utiliser avec précaution – écrase toutes les éditions admin)
+wrangler d1 execute gaspe-db --remote \
+  --command="DELETE FROM cms_pages WHERE page_id='ecoles-de-la-mer';"
+```
+
+Le hook `useCmsContent(pageId, sectionId, fallback)` renverra alors
+le défaut typescript jusqu'à la prochaine édition admin.
+
 ---
 
 ## Annexe – historique des livraisons
@@ -364,3 +442,6 @@ Cloudflare Pages), donc aucune optimisation server-side n'est appliquée.
 | `d2b7951` (PR #74) | v2.33.1 | Itérations post go-live – correction « 1 ENSM, pas 4 », ajout antenne LPM Bastia, image hero plein-écran, timeline carrière accélérée (capitaine de ferry à 30 ans), affinage copy |
 | `ebc2257` | – | Upload du fichier image (`img1_engine.jpg` du kit campagne) |
 | `a831329` | – | Renommage `img1_engine.jpg` → `ecoles-de-la-mer-hero.jpg` (mise au standard du chemin attendu par le CMS) |
+| `78c56c2` (session 42) | – | Itérations contenu/UX : titre quiz « 2 voies, la mer », ENSM body Parcoursup + 3 voies (monovalent pont 3 ans / monovalent machine 3 ans / polyvalent 5 ans), footer 100 % d'emploi LPM/ENSM, ENSM cards rebadgées « Site du Havre / Marseille / Nantes / Saint-Malo » avec URLs unifiées vers supmaritime.fr, simulateur de carrière étendu jusqu'à 55 ans avec étape « Retraite ENIM », nouveau filtre famille (pont/machine/service/polyvalent) sur la carte, quiz CTA « Voir les écoles près de chez moi » qui pousse `?family=<famille>#schools-map` via `router.push` + scroll automatique avec `startTransition`, final CTA « Embarque » avec background image éditable via section CMS `final-cta-bg-image` |
+| `1e27f2d` (session 42) | – | Création du dossier éditorial `docs/CAMPAGNE-ECOLES-DE-LA-MER.md` (366 lignes initiales, 7 sections + annexe) |
+| session 43 | v2.34.0 | Tests unitaires `src/data/__tests__/career-salary.test.ts` (10 tests : structure CAREER_PATHS + `getStepAtAge` sur les 4 parcours aux âges 17, 22, 30, 38, 55, 60 + clamps inférieur/supérieur). Décision modélisation Bastia tranchée (1 marqueur LPM, pas de 17ᵉ marqueur ENSM dédié – cf. § 7.4). Audit live des 12 URLs LPM reporté (sandbox sans réseau, runbook ajouté en § 4.1). Runbook nettoyage CMS prod ajouté en § 7.8. Bump `package.json` v2.33.1 → v2.34.0 |
