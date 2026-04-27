@@ -115,6 +115,29 @@ export async function createJob(job: Partial<Job>): Promise<Job | null> {
   return newJob;
 }
 
+/** Patch arbitrary fields of an existing job */
+export async function updateJob(id: string, partial: Partial<Job>): Promise<boolean> {
+  if (isApiMode()) {
+    try {
+      const res = await apiFetch<{ success?: boolean }>(`/api/jobs/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(partial),
+      });
+      return !!res.success;
+    } catch { return false; }
+  }
+
+  // localStorage mode — admin-created offers live in admin offers
+  const adminOffers = getLocalAdminOffers();
+  const adminIdx = adminOffers.findIndex((j) => j.id === id);
+  if (adminIdx >= 0) {
+    adminOffers[adminIdx] = { ...adminOffers[adminIdx], ...partial };
+    setLocalAdminOffers(adminOffers);
+    return true;
+  }
+  return false;
+}
+
 /** Toggle publish status of a job */
 export async function toggleJobPublished(id: string): Promise<boolean> {
   if (isApiMode()) {
