@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const MIN_AGE = 17;
-const MAX_AGE = 45;
+const MAX_AGE = 55;
 
 const PATH_TINT: Record<CareerPathKey, string> = {
   pont: "bg-[var(--gaspe-teal-600)] text-white",
@@ -45,7 +45,7 @@ export function CareerSimulator() {
           Simulateur de carrière
         </p>
         <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-2">
-          À 17 ans tu commences. À 30 ans tu commandes.
+          À 17 ans tu commences. À 30 ans tu commandes. À 55 ans tu choisis.
         </h2>
         <p className="text-white/70 mb-8">
           Choisis ton parcours, fais glisser le curseur, vois ton avenir.
@@ -89,7 +89,9 @@ export function CareerSimulator() {
               </p>
               <p className="font-heading text-4xl sm:text-5xl font-bold text-[var(--gaspe-teal-400)]">
                 {step.salaryNet === 0
-                  ? "Étude"
+                  ? step.role.toLowerCase().includes("retraite")
+                    ? "Retraite"
+                    : "Étude"
                   : `${step.salaryNet.toLocaleString("fr-FR")} €`}
               </p>
             </div>

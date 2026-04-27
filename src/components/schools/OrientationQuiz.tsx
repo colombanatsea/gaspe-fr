@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { QUIZ_QUESTIONS } from "@/data/quiz-questions";
 import {
   scoreQuiz,
@@ -25,10 +26,18 @@ interface Props {
 }
 
 export function OrientationQuiz({ mapAnchorId = "schools-map" }: Props) {
+  const router = useRouter();
   const [step, setStep] = useState<"intro" | "running" | "result">("intro");
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [currentIdx, setCurrentIdx] = useState(0);
   const [result, setResult] = useState<QuizResult | null>(null);
+
+  // Navigue vers la carte avec un filtre famille présélectionné. Soft routing
+  // pour ne pas recharger la page (le hook useEffect côté EcolesDeLaMerContent
+  // lit `?family=…` et applique le filtre + scrolle vers #schools-map).
+  function handleSeeSchools(family: string) {
+    router.push(`?family=${family}#${mapAnchorId}`, { scroll: false });
+  }
 
   const total = QUIZ_QUESTIONS.length;
   const current = QUIZ_QUESTIONS[currentIdx];
@@ -207,8 +216,9 @@ export function OrientationQuiz({ mapAnchorId = "schools-map" }: Props) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href={`#${mapAnchorId}`}
+            <button
+              type="button"
+              onClick={() => handleSeeSchools(result.dominant)}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-white px-6 py-3 font-heading font-semibold text-sm hover:bg-primary-hover transition-all shadow-teal-soft hover:shadow-teal"
             >
               Voir les écoles près de chez moi
@@ -225,7 +235,7 @@ export function OrientationQuiz({ mapAnchorId = "schools-map" }: Props) {
                   d="M19 14l-7 7m0 0l-7-7m7 7V3"
                 />
               </svg>
-            </a>
+            </button>
             <button
               onClick={handleRetry}
               className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary text-primary px-6 py-3 font-heading font-semibold text-sm hover:bg-surface-teal transition-colors"

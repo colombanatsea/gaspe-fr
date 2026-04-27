@@ -73,6 +73,13 @@ export const PATH_PONT: CareerStep[] = [
     context: "Capitaine confirmé, responsable d'une ligne ou formateur dans un LPM / ENSM.",
     family: "pont",
   },
+  {
+    age: 55,
+    role: "Retraite ENIM",
+    salaryNet: 0,
+    context: "Régime spécial des marins (ENIM). Liquidation possible dès 55 ans avec 25 années de services maritimes (code des pensions de retraite des marins).",
+    family: "pont",
+  },
 ];
 
 /**
@@ -122,6 +129,13 @@ export const PATH_MACHINE: CareerStep[] = [
     context: "Chef mécanicien confirmé, ou poste à terre dans la flotte (DPA, technique armateur).",
     family: "machine",
   },
+  {
+    age: 55,
+    role: "Retraite ENIM",
+    salaryNet: 0,
+    context: "Régime spécial des marins (ENIM). Liquidation possible dès 55 ans avec 25 années de services maritimes (code des pensions de retraite des marins).",
+    family: "machine",
+  },
 ];
 
 /**
@@ -161,6 +175,13 @@ export const PATH_SERVICE: CareerStep[] = [
     role: "Directeur hôtelier / armement",
     salaryNet: 4000,
     context: "Direction hôtelière flotte ou poste à terre dans une compagnie maritime.",
+    family: "service",
+  },
+  {
+    age: 55,
+    role: "Retraite ENIM",
+    salaryNet: 0,
+    context: "Régime spécial des marins (ENIM). Liquidation possible dès 55 ans avec 25 années de services maritimes (code des pensions de retraite des marins).",
     family: "service",
   },
 ];
@@ -209,6 +230,13 @@ export const PATH_OFFICIER: CareerStep[] = [
     role: "Direction technique / DPA armateur",
     salaryNet: 6500,
     context: "Direction Personne d'Astreinte (ISM), direction technique flotte, ou capitaine senior.",
+    family: "polyvalent",
+  },
+  {
+    age: 55,
+    role: "Retraite ENIM",
+    salaryNet: 0,
+    context: "Régime spécial des marins (ENIM). Liquidation possible dès 55 ans avec 25 années de services maritimes (code des pensions de retraite des marins). Carrière souvent prolongée à terre.",
     family: "polyvalent",
   },
 ];

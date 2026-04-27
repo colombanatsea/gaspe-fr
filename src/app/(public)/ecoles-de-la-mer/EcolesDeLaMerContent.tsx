@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   SCHOOLS,
   SCHOOL_COUNTS,
   LEVEL_LABELS,
+  FAMILY_LABELS,
   type School,
+  type SchoolFamily,
   type SchoolKind,
   type SchoolLevel,
 } from "@/data/schools";
@@ -57,6 +60,22 @@ const LEVEL_FILTERS: { id: SchoolLevel | "all"; label: string }[] = [
   { id: "bac_pro", label: "Bac pro" },
   { id: "bts", label: "BTS" },
   { id: "officier", label: "Officier" },
+];
+
+const FAMILY_FILTERS: { id: SchoolFamily | "all"; label: string }[] = [
+  { id: "all", label: "Toutes familles" },
+  { id: "pont", label: FAMILY_LABELS.pont },
+  { id: "machine", label: FAMILY_LABELS.machine },
+  { id: "service", label: FAMILY_LABELS.service },
+  { id: "polyvalent", label: FAMILY_LABELS.polyvalent },
+];
+
+/** Familles valides – garde-fou contre les query params arbitraires. */
+const VALID_FAMILIES: ReadonlyArray<SchoolFamily> = [
+  "pont",
+  "machine",
+  "service",
+  "polyvalent",
 ];
 
 export function EcolesDeLaMerContent() {
@@ -115,7 +134,7 @@ export function EcolesDeLaMerContent() {
   const narrativeEnsmBody = useCmsContent(
     PAGE_ID,
     "narrative-ensm-body",
-    "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia – soit 5 lieux pour devenir officier de la marine marchande, brevet pont + machine. Concours post-bac.",
+    "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia, soit 5 lieux pour devenir officier de la marine marchande. Sélection sur Parcoursup. Trois voies : monovalent pont (3 ans), monovalent machine (3 ans) ou polyvalent pont + machine (5 ans, ingénieur).",
   );
 
   const mapIntro = useCmsContent(
@@ -134,10 +153,37 @@ export function EcolesDeLaMerContent() {
     "final-cta-subtitle",
     "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout dans l'hexagone et les outremer.",
   );
+  // Image de fond du final CTA. Pattern miroir du hero : Image plein-cadre
+  // + overlay foreground pour garder le texte lisible. Modifiable en CMS.
+  const finalCtaBgImage = useCmsContent(
+    PAGE_ID,
+    "final-cta-bg-image",
+    "/campagne/embarque-passerelle.jpg",
+  );
 
   /* ---- Filters ---- */
   const [kindFilter, setKindFilter] = useState<SchoolKind | "all">("all");
   const [levelFilter, setLevelFilter] = useState<SchoolLevel | "all">("all");
+  const [familyFilter, setFamilyFilter] = useState<SchoolFamily | "all">(
+    "all",
+  );
+
+  // Lecture du query param `?family=pont|machine|service|polyvalent` posé
+  // par le quiz d'orientation. On scrolle vers la carte automatiquement
+  // pour amener l'utilisateur à la liste filtrée.
+  const searchParams = useSearchParams();
+  const hasAutoScrolled = useRef(false);
+  useEffect(() => {
+    const fam = searchParams?.get("family");
+    if (fam && (VALID_FAMILIES as readonly string[]).includes(fam)) {
+      startTransition(() => setFamilyFilter(fam as SchoolFamily));
+      if (!hasAutoScrolled.current) {
+        hasAutoScrolled.current = true;
+        const target = document.getElementById("schools-map");
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [searchParams]);
 
   const filteredSchools: School[] = useMemo(() => {
     return SCHOOLS.filter((school) => {
@@ -147,9 +193,14 @@ export function EcolesDeLaMerContent() {
         !school.formations.some((f) => f.level === levelFilter)
       )
         return false;
+      if (
+        familyFilter !== "all" &&
+        !school.formations.some((f) => f.family.includes(familyFilter))
+      )
+        return false;
       return true;
     });
-  }, [kindFilter, levelFilter]);
+  }, [kindFilter, levelFilter, familyFilter]);
 
   return (
     <div ref={ref} className="bg-background">
@@ -288,13 +339,13 @@ export function EcolesDeLaMerContent() {
       </section>
 
       {/* ============================================================ */}
-      {/*  NARRATIVE 2 voies, 1 mer                                      */}
+      {/*  NARRATIVE 2 voies, la mer                                     */}
       {/* ============================================================ */}
       <section className="bg-surface py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <p className="font-heading text-xs font-semibold uppercase tracking-[0.25em] text-[var(--gaspe-teal-600)] mb-3">
-              2 voies, 1 mer
+              2 voies, la mer
             </p>
             <h2 className="font-heading text-3xl sm:text-5xl font-bold text-foreground">
               Tu choisis ton chemin.
@@ -396,33 +447,51 @@ export function EcolesDeLaMerContent() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-            <div className="flex flex-wrap gap-2">
-              {KIND_FILTERS.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setKindFilter(f.id)}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-xs font-heading font-semibold transition-colors",
-                    kindFilter === f.id
-                      ? "bg-primary text-white"
-                      : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground hover:border-primary",
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-wrap gap-2">
+                {KIND_FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setKindFilter(f.id)}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-xs font-heading font-semibold transition-colors",
+                      kindFilter === f.id
+                        ? "bg-primary text-white"
+                        : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground hover:border-primary",
+                    )}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 sm:ml-auto">
+                {LEVEL_FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setLevelFilter(f.id)}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-xs font-heading font-semibold transition-colors",
+                      levelFilter === f.id
+                        ? "bg-foreground text-white"
+                        : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground hover:border-foreground",
+                    )}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 sm:ml-auto">
-              {LEVEL_FILTERS.map((f) => (
+            <div className="flex flex-wrap gap-2">
+              {FAMILY_FILTERS.map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => setLevelFilter(f.id)}
+                  onClick={() => setFamilyFilter(f.id)}
                   className={cn(
                     "rounded-full px-4 py-2 text-xs font-heading font-semibold transition-colors",
-                    levelFilter === f.id
-                      ? "bg-foreground text-white"
-                      : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground hover:border-foreground",
+                    familyFilter === f.id
+                      ? "bg-[var(--gaspe-teal-700)] text-white"
+                      : "bg-white border border-[var(--gaspe-neutral-200)] text-foreground hover:border-[var(--gaspe-teal-700)]",
                   )}
                 >
                   {f.label}
@@ -511,11 +580,27 @@ export function EcolesDeLaMerContent() {
       {/* ============================================================ */}
       {/*  FINAL CTA                                                     */}
       {/* ============================================================ */}
-      <section className="relative bg-foreground text-white overflow-hidden">
-        <div className="absolute inset-0 gaspe-gradient opacity-10 pointer-events-none" />
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-start)] opacity-25 blur-3xl pointer-events-none" />
+      <section className="relative bg-foreground text-white overflow-hidden isolate">
+        {/* Background image (capitaine sur passerelle, kit campagne).
+            Pattern miroir du hero : objet positionné centre-droit pour
+            laisser le texte lisible à gauche/centre, overlay foreground 80%. */}
+        {finalCtaBgImage && (
+          <div className="absolute inset-0 z-0" aria-hidden="true">
+            <Image
+              src={finalCtaBgImage}
+              alt=""
+              fill
+              unoptimized
+              sizes="100vw"
+              className="object-cover object-[70%_30%] sm:object-[right_center] opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/80 to-foreground/30" />
+          </div>
+        )}
+        <div className="absolute inset-0 gaspe-gradient opacity-10 pointer-events-none z-10" />
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-start)] opacity-25 blur-3xl pointer-events-none z-10" />
 
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
+        <div className="relative z-20 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
           <p className="font-heading text-xs font-bold uppercase tracking-[0.3em] text-[var(--gaspe-teal-400)] mb-4">
             Embarque
           </p>
@@ -545,8 +630,8 @@ export function EcolesDeLaMerContent() {
             </svg>
           </Link>
           <p className="mt-6 text-xs text-white/50">
-            100% des sortants des LPM trouvent un emploi maritime dans les
-            6&nbsp;mois.
+            100% des sortants des LPM et de l&apos;ENSM trouvent un emploi
+            maritime dans les 6&nbsp;mois.
           </p>
         </div>
       </section>

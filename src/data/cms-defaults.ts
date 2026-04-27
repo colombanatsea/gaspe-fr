@@ -302,12 +302,13 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
       "12 lycées professionnels maritimes en France. Tu y entres après la 3e, tu sors avec un bac pro et un job à la clé. Alternance possible : tu apprends et tu touches une indemnité.",
     "narrative-ensm-title": "Après le bac : 1 école nationale supérieure",
     "narrative-ensm-body":
-      "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia – soit 5 lieux pour devenir officier de la marine marchande, brevet pont + machine. Concours post-bac.",
+      "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia, soit 5 lieux pour devenir officier de la marine marchande. Sélection sur Parcoursup. Trois voies : monovalent pont (3 ans), monovalent machine (3 ans) ou polyvalent pont + machine (5 ans, ingénieur).",
     "map-intro":
       "12 LPM + 1 ENSM (5 sites incluant l'antenne Bastia). Trouve celui le plus proche de chez toi.",
     "final-cta-title": "À la sortie, tu choisis ton bureau.",
     "final-cta-subtitle":
       "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout dans l'hexagone et les outremer.",
+    "final-cta-bg-image": "/campagne/embarque-passerelle.jpg",
   },
 
   // Charte newsletter – éditée via /admin/newsletter/charte, injectée dans le
