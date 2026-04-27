@@ -417,8 +417,8 @@ const TECHS: TechDef[] = [
   { id: "routage",   l: "Routage marée/courant (IA)",    gL: .08, gM: .15, gH: .20, ox: 5,  retro: "1-2 mois",  n: "Bacs de Seine −17%",  cat: "Efficacité",       trl: 8 },
   { id: "velique",   l: "Propulsion vélique",            gL: .05, gM: .10, gH: .20, ox: 10, retro: "3-6 mois",  n: "Routes favorables",   cat: "Renouvelable",     trl: 8, adv: true },
   { id: "h2pac",     l: "Pile à combustible H₂",        gL: .80, gM: .90, gH: .95, ox: 50, retro: "12+ mois",  n: "TRL 7-8",             cat: "Hydrogène",        trl: 7, adv: true },
-  { id: "biofuel",   l: "Conversion biocarburant (HVO/FAME)", gL: 0, gM: 0, gH: 0, ox: 5, retro: "1-4 sem.", n: "Drop-in · reduction CO2 via le mix carburant",      cat: "Biocarburant",     trl: 9 },
-  { id: "biofuel_b30",l: "Blend B30 (30% bio)",           gL: 0, gM: 0, gH: 0, ox: 0,  retro: "Immediat",  n: "Sans modif · reduction CO2 via le mix carburant",    cat: "Biocarburant",     trl: 9 },
+  { id: "biofuel",   l: "Conversion biocarburant (HVO/FAME)", gL: 0, gM: 0, gH: 0, ox: 5, retro: "1-4 sem.", n: "Drop-in · réduction CO₂ via le mix carburant",      cat: "Biocarburant",     trl: 9 },
+  { id: "biofuel_b30",l: "Blend B30 (30 % bio)",           gL: 0, gM: 0, gH: 0, ox: 0,  retro: "Immédiat",  n: "Sans modif · réduction CO₂ via le mix carburant",    cat: "Biocarburant",     trl: 9 },
   { id: "dualfuel",  l: "Conversion dual-fuel (GNL/bio)", gL: .03, gM: .05, gH: .10, ox: 30, retro: "3-6 mois",  n: "GNL/bio-GNL · gain Otto cycle",       cat: "Carburant alt.",   trl: 9 },
 ];
 
@@ -557,7 +557,7 @@ function dimBiofuel(v: Vessel, techs: TechsMap | undefined, fuelMix: FuelMix): B
     filterUpgrade = Math.round(1 + pP * 0.002);
     monitoring = 2;
     certification = 3;
-    notes.push("B30 : sans modification moteur, filtration renforcee (ISO 8217:2024)");
+    notes.push("B30 : sans modification moteur, filtration renforcée (ISO 8217:2024)");
   }
 
   if (hasDual) {
@@ -603,29 +603,29 @@ const CASE_DB: CaseRef[] = [
   { id:"shiftr", n:"SHIFTR (Norled)", co:"NO", yr:2026, vt:["navette"], tr:["full_elec"], loa:0, batt:0, rot:0, nm:0, retro:true,
     co2:-3000, nox:0, s:"Business Norway 2024; Norled; DNV", d:"Swap batterie autonome. Retrofit Oslofjord : −1 M litres diesel, −3 000 tCO₂/an." },
   { id:"candela_p12", n:"Candela P-12 Shuttle", co:"SE", yr:2024, vt:["navette"], tr:["full_elec"], loa:12, batt:180, rot:0, nm:9, retro:false,
-    co2:-100, nox:0, s:"Candela Technology 2024; Stockholm SL", d:"Hydroptere electrique 30 pax, 30 nds. 80% moins de consommation vs ferry classique.", url:"https://candela.com/p-12-shuttle/" },
+    co2:-100, nox:0, s:"Candela Technology 2024; Stockholm SL", d:"Hydroptère électrique 30 pax, 30 nds. 80 % moins de consommation vs ferry classique.", url:"https://candela.com/p-12-shuttle/" },
   { id:"at1_auckland", n:"AT1 (EV Maritime)", co:"NZ", yr:2025, vt:["navette"], tr:["full_elec"], loa:24, batt:1075, rot:0, nm:10, retro:false,
     co2:-300, nox:0, s:"EV Maritime 2025; Auckland Transport", d:"200 pax, 25 nds, coque carbone. 1 075 kWh Freudenberg, 4x Danfoss 300 kW.", url:"https://www.evmaritime.co.nz" },
   { id:"hull096", n:"Hull 096 (Buquebus/Incat)", co:"UY", yr:2025, vt:["ferry"], tr:["full_elec"], loa:130, batt:40000, rot:0, nm:30, retro:false,
-    co2:-10000, nox:0, s:"Incat 2025; IEEE Spectrum jan. 2026", d:"Plus grand navire electrique au monde. 130m, 2 100 pax, 225 veh., 40 MWh, 8 waterjets.", url:"https://spectrum.ieee.org/electric-boat-battery-ship-ferry" },
+    co2:-10000, nox:0, s:"Incat 2025; IEEE Spectrum jan. 2026", d:"Plus grand navire électrique au monde. 130 m, 2 100 pax, 225 véh., 40 MWh, 8 waterjets.", url:"https://spectrum.ieee.org/electric-boat-battery-ship-ferry" },
   { id:"wsf_hybrid", n:"Washington State Ferries", co:"US", yr:2025, vt:["ferry","bac"], tr:["hybride"], loa:100, batt:0, rot:0, nm:0, retro:true,
-    co2:-5000, nox:0, s:"WSDOT 2025; ABB Marine & Ports", d:"Programme 16 ferries hybrides d'ici 2040. Retrofit Jumbo Mark II (160 vehicules). ABB propulsion.", url:"https://wsdot.wa.gov/construction-planning/major-projects/ferry-system-electrification" },
-  { id:"sf_bay", n:"SF Bay Ferry (electrique)", co:"US", yr:2025, vt:["navette"], tr:["full_elec"], loa:30, batt:0, rot:0, nm:0, retro:false,
-    co2:-500, nox:0, s:"Wartsila mai 2025; All American Marine", d:"3 ferries rapides full-electriques, 24 nds, 30m. Propulsion Wartsila. Premiers du genre aux USA.", url:"https://www.wartsila.com/media/news/28-05-2025-wartsila-to-supply-the-electric-propulsion-system-for-usa-s-first-battery-electric-zero-emission-high-speed-passenger-ferries-3590753" },
+    co2:-5000, nox:0, s:"WSDOT 2025; ABB Marine & Ports", d:"Programme 16 ferries hybrides d'ici 2040. Retrofit Jumbo Mark II (160 véhicules). ABB propulsion.", url:"https://wsdot.wa.gov/construction-planning/major-projects/ferry-system-electrification" },
+  { id:"sf_bay", n:"SF Bay Ferry (électrique)", co:"US", yr:2025, vt:["navette"], tr:["full_elec"], loa:30, batt:0, rot:0, nm:0, retro:false,
+    co2:-500, nox:0, s:"Wartsila mai 2025; All American Marine", d:"3 ferries rapides full-électriques, 24 nds, 30 m. Propulsion Wartsila. Premiers du genre aux USA.", url:"https://www.wartsila.com/media/news/28-05-2025-wartsila-to-supply-the-electric-propulsion-system-for-usa-s-first-battery-electric-zero-emission-high-speed-passenger-ferries-3590753" },
   { id:"stmalo", n:"Saint-Malo (Brittany Ferries)", co:"FR", yr:2025, vt:["ferry"], tr:["hybride"], loa:170, batt:0, rot:0, nm:0, retro:false,
-    co2:-2000, nox:0, s:"Brittany Ferries 2024; Stena RoRo", d:"Hybride GNL/batterie, 1 400 pax. Premier ferry hybride transmanche francais.", url:"https://www.brittany-ferries.fr" },
-  { id:"te_ferries", n:"Etude T&E electrification ferries EU", co:"EU", yr:2025, vt:["bac","ferry","navette"], tr:["full_elec","hybride"], loa:0, batt:0, rot:0, nm:0, retro:false,
-    co2:0, nox:0, s:"Transport & Environment, mars 2026 (peer-reviewed)", d:"20% des ferries EU rentables en electrique des 2025. 52% en 2035. France : 11% eligible.", url:"https://www.transportenvironment.org/articles/full-charge-ahead-investigating-the-potential-to-electrify-europes-ferries" },
+    co2:-2000, nox:0, s:"Brittany Ferries 2024; Stena RoRo", d:"Hybride GNL/batterie, 1 400 pax. Premier ferry hybride transmanche français.", url:"https://www.brittany-ferries.fr" },
+  { id:"te_ferries", n:"Étude T&E électrification ferries EU", co:"EU", yr:2025, vt:["bac","ferry","navette"], tr:["full_elec","hybride"], loa:0, batt:0, rot:0, nm:0, retro:false,
+    co2:0, nox:0, s:"Transport & Environment, mars 2026 (peer-reviewed)", d:"20 % des ferries EU rentables en électrique dès 2025. 52 % en 2035. France : 11 % éligible.", url:"https://www.transportenvironment.org/articles/full-charge-ahead-investigating-the-potential-to-electrify-europes-ferries" },
   { id:"irish_hvo", n:"Irish Ferries Dublin Swift (HVO)", co:"IE", yr:2024, vt:["ferry","vedette"], tr:["biofuel"], loa:86, batt:0, rot:0, nm:0, retro:false,
-    co2:-3000, nox:0, s:"Irish Times 2024; Circle K Ireland", d:"Catamaran rapide, premier navire Irish Ferries au HVO100. Reduction 80-90% CO2 sans modification moteur.", url:"https://www.irishferries.com" },
+    co2:-3000, nox:0, s:"Irish Times 2024; Circle K Ireland", d:"Catamaran rapide, premier navire Irish Ferries au HVO100. Réduction 80-90 % CO₂ sans modification moteur.", url:"https://www.irishferries.com" },
   { id:"norden_b100", n:"Norden B100 Singapore", co:"DK", yr:2024, vt:["fret"], tr:["biofuel"], loa:180, batt:0, rot:0, nm:0, retro:false,
-    co2:-5000, nox:0, s:"NORDEN/BHP 2024; Bunkerspot", d:"Premier bunkering B100 complet a Singapour (mai 2024). Drop-in sur vraquier existant, zero retrofit.", url:"https://www.norden.com" },
+    co2:-5000, nox:0, s:"NORDEN/BHP 2024; Bunkerspot", d:"Premier bunkering B100 complet à Singapour (mai 2024). Drop-in sur vraquier existant, zéro retrofit.", url:"https://www.norden.com" },
   { id:"hgk_hvo", n:"HGK Shipping HVO fluvial", co:"DE", yr:2024, vt:["fret","bac"], tr:["biofuel"], loa:110, batt:0, rot:0, nm:0, retro:false,
-    co2:-2000, nox:0, s:"HGK Shipping 2024; Biofuels International", d:"Plus grand armement fluvial europeen. Flotte au HVO100. Reduction 90% GES sans retrofit.", url:"https://www.hgk-shipping.de" },
+    co2:-2000, nox:0, s:"HGK Shipping 2024; Biofuels International", d:"Plus grand armement fluvial européen. Flotte au HVO100. Réduction 90 % GES sans retrofit.", url:"https://www.hgk-shipping.de" },
   { id:"biofuel_express", n:"Biofuel Express (ports nordiques)", co:"DK", yr:2025, vt:["bac","ferry","navette","fret"], tr:["biofuel","biofuel_b30"], loa:0, batt:0, rot:0, nm:0, retro:false,
-    co2:0, nox:0, s:"Biofuel Express / BlackCoral Energy 2025", d:"Avitaillement HVO100 et B100 dans les ports du Danemark, sud Norvege, Suede et nord Allemagne.", url:"https://www.biofuel-express.com" },
-  { id:"dnv_biofuel_wp", n:"Etude DNV biocarburants maritimes", co:"INT", yr:2025, vt:["bac","ferry","navette","fret","vedette"], tr:["biofuel","biofuel_b30"], loa:0, batt:0, rot:0, nm:0, retro:false,
-    co2:0, nox:0, s:"DNV White Paper 2025; Interviews armateurs", d:"1.6 Mt biocarburants maritimes en 2024 (Singapour + Rotterdam). B24/B30 a +30-60% vs VLSFO. Drop-in = zero retrofit.", url:"https://www.dnv.com/expert-story/maritime-impact/maximizing-the-potential-of-biofuels-in-shipping/" },
+    co2:0, nox:0, s:"Biofuel Express / BlackCoral Energy 2025", d:"Avitaillement HVO100 et B100 dans les ports du Danemark, sud Norvège, Suède et nord Allemagne.", url:"https://www.biofuel-express.com" },
+  { id:"dnv_biofuel_wp", n:"Étude DNV biocarburants maritimes", co:"INT", yr:2025, vt:["bac","ferry","navette","fret","vedette"], tr:["biofuel","biofuel_b30"], loa:0, batt:0, rot:0, nm:0, retro:false,
+    co2:0, nox:0, s:"DNV White Paper 2025; Interviews armateurs", d:"1,6 Mt biocarburants maritimes en 2024 (Singapour + Rotterdam). B24/B30 à +30-60 % vs VLSFO. Drop-in = zéro retrofit.", url:"https://www.dnv.com/expert-story/maritime-impact/maximizing-the-potential-of-biofuels-in-shipping/" },
 ];
 
 function matchCases(proj: Project | null): CaseRefScored[] {
@@ -1460,11 +1460,11 @@ export default function AdemeSimulator() {
                     { v: "dsp", l: "DSP (delegation de service public)" },
                     { v: "sp", l: "Service public (regie, marche public)" },
                     { v: "agrement", l: "Agrement ou convention d'exploitation" },
-                    { v: "prive", l: "100% prive (pas de SP/DSP)" },
+                    { v: "prive", l: "100 % privé (pas de SP/DSP)" },
                   ]}
-                  h="Le cadre d'exploitation peut influencer l'argumentaire du dossier (captivite tarifaire, obligation de continuite, visibilite pour le contribuable)." />
+                  h="Le cadre d'exploitation peut influencer l'argumentaire du dossier (captivité tarifaire, obligation de continuité, visibilité pour le contribuable)." />
                 {(proj.v.serviceType || "dsp") !== "prive" && (
-                  <In l="Duree residuelle du contrat/agrement" v={proj.v.dspR} onChange={v => uV("dspR", v)} u="ans"
+                  <In l="Durée résiduelle du contrat/agrément" v={proj.v.dspR} onChange={v => uV("dspR", v)} u="ans"
                     h="Nombre d'annees restantes sur le contrat en cours. Si renouvellement imminent, indiquer 0." />
                 )}
               </div>
@@ -1668,7 +1668,7 @@ export default function AdemeSimulator() {
                     {c.sc > 0 && <span className="px-1.5 py-0.5 rounded font-bold" style={{ background: c.sc > 60 ? GR : c.sc > 30 ? T : "#ccc", color: "white", fontSize: 9 }}>{c.sc}%</span>}
                   </div>
                   <p style={{ color: compact ? "#aaa" : "#555" }}>{compact ? c.d.slice(0, 90) + "..." : c.d}</p>
-                  {!compact && c.co2 < 0 && <p className="mt-1" style={{ color: GR }}>Impact : {Math.abs(c.co2)} tCO₂/an evitees</p>}
+                  {!compact && c.co2 < 0 && <p className="mt-1" style={{ color: GR }}>Impact : {Math.abs(c.co2)} tCO₂/an évitées</p>}
                   {!compact && <p className="mt-1" style={{ color: "#999" }}>Source : {c.s}</p>}
                   {c.url && <a href={c.url} target="_blank" rel="noopener" className="text-xs font-bold" style={{ color: T }}>Voir le projet →</a>}
                 </div>
@@ -1983,7 +1983,7 @@ export default function AdemeSimulator() {
             {/* Estimations budget (dynamiques selon technologie) */}
             {batt && batt.kWh > 0 && (Object.entries(proj.trajs?.[1]?.fuelMix || {}).some(([k, v]) => ["elec", "h2"].includes(k) && v > 0)) && (
               <div className="p-3 rounded-lg mb-4 text-xs" style={{ background: T + "10", border: "1px solid " + T + "30" }}>
-                <p className="font-bold mb-1" style={{ color: T }}>Estimations projet electrique (modifiables)</p>
+                <p className="font-bold mb-1" style={{ color: T }}>Estimations projet électrique (modifiables)</p>
                 <p>Batteries : ~{fK(batt.costBatt)} ({batt.kWh} kWh x 450 EUR/kWh, Corvus 2024)</p>
                 <p>Chargeur : ~{fK(batt.costCharger)} ({batt.cP} kW x 200 EUR/kW, ABB Marine 2022)</p>
                 <p>Raccordement quai : ~{fK(batt.gridConnect)} (estimation GASPE selon puissance)</p>
@@ -2167,43 +2167,43 @@ export default function AdemeSimulator() {
 
 
             {res && res.length >= 2 && (
-              <Cd title="📐 Analyse de sensibilite (3 scenarios)">
+              <Cd title="📐 Analyse de sensibilité (3 scénarios)">
                 <p className="text-xs mb-2" style={{ color: "#888" }}>
-                  Robustesse du projet selon les hypotheses (exigence CdC p.28). Les gains technologiques varient de -30% (degrade) a +max (favorable).
+                  Robustesse du projet selon les hypothèses (exigence CdC p. 28). Les gains technologiques varient de −30 % (dégradé) à +max (favorable).
                 </p>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="p-3 rounded-lg" style={{ background: AC + "10" }}>
-                    <div className="text-xs font-bold mb-1" style={{ color: AC }}>Degrade (-30%)</div>
+                    <div className="text-xs font-bold mb-1" style={{ color: AC }}>Dégradé (−30 %)</div>
                     <div className="text-sm font-bold">{fK(res[1].deg.ccv)}</div>
                     <div className="text-xs" style={{ color: "#999" }}>CCV</div>
                     <div className="text-sm font-bold mt-1">{fmt(Math.round(res[1].deg.co2))} t</div>
-                    <div className="text-xs" style={{ color: "#999" }}>CO2 cumule</div>
+                    <div className="text-xs" style={{ color: "#999" }}>CO₂ cumulé</div>
                   </div>
                   <div className="p-3 rounded-lg" style={{ background: T + "10", border: "2px solid " + T }}>
                     <div className="text-xs font-bold mb-1" style={{ color: T }}>Central (base)</div>
                     <div className="text-sm font-bold">{fK(res[1].base.ccv)}</div>
                     <div className="text-xs" style={{ color: "#999" }}>CCV</div>
                     <div className="text-sm font-bold mt-1">{fmt(Math.round(res[1].base.co2))} t</div>
-                    <div className="text-xs" style={{ color: "#999" }}>CO2 cumule</div>
+                    <div className="text-xs" style={{ color: "#999" }}>CO₂ cumulé</div>
                   </div>
                   <div className="p-3 rounded-lg" style={{ background: GR + "10" }}>
                     <div className="text-xs font-bold mb-1" style={{ color: GR }}>Favorable (max)</div>
                     <div className="text-sm font-bold">{fK(res[1].fav.ccv)}</div>
                     <div className="text-xs" style={{ color: "#999" }}>CCV</div>
                     <div className="text-sm font-bold mt-1">{fmt(Math.round(res[1].fav.co2))} t</div>
-                    <div className="text-xs" style={{ color: "#999" }}>CO2 cumule</div>
+                    <div className="text-xs" style={{ color: "#999" }}>CO₂ cumulé</div>
                   </div>
                 </div>
-                <p className="text-xs mt-2" style={{ color: "#999" }}>Source : 3 scenarios CCV (base, gains -30%, gains max). Degradation moteur fossile +1,5%/an (MAN Energy Solutions 2023).</p>
+                <p className="text-xs mt-2" style={{ color: "#999" }}>Source : 3 scénarios CCV (base, gains −30 %, gains max). Dégradation moteur fossile +1,5 %/an (MAN Energy Solutions 2023).</p>
               </Cd>
             )}
 
             {/* Module incitativité */}
             {res && scoring && aide && (
-              <Cd title="📈 Incitativite de l'aide" accent={T}>
+              <Cd title="📈 Incitativité de l'aide" accent={T}>
                 <p className="text-xs mb-3" style={{ color: "#888" }}>
-                  Demonstration que le soutien public est necessaire a la realisation du projet (CdC p.29).
-                  Comparaison du TRI avant impots avec et sans aide ADEME.
+                  Démonstration que le soutien public est nécessaire à la réalisation du projet (CdC p. 29).
+                  Comparaison du TRI avant impôts avec et sans aide ADEME.
                 </p>
                 {(() => {
                   // Cash-flows avec aide
@@ -2226,21 +2226,21 @@ export default function AdemeSimulator() {
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div className="p-3 rounded-lg text-center" style={{ background: "#FFF3E0" }}>
                           <p className="text-xs font-bold" style={{ color: "#E65100" }}>TRI sans aide</p>
-                          <p className="text-lg font-bold" style={{ color: "#E65100" }}>{triSans !== null ? triSans.toFixed(1) + "%" : "Negatif"}</p>
+                          <p className="text-lg font-bold" style={{ color: "#E65100" }}>{triSans !== null ? triSans.toFixed(1) + " %" : "Négatif"}</p>
                         </div>
                         <div className="p-3 rounded-lg text-center" style={{ background: LB }}>
                           <p className="text-xs font-bold" style={{ color: T }}>TRI avec aide ADEME</p>
-                          <p className="text-lg font-bold" style={{ color: T }}>{triAvec !== null ? triAvec.toFixed(1) + "%" : "Negatif"}</p>
+                          <p className="text-lg font-bold" style={{ color: T }}>{triAvec !== null ? triAvec.toFixed(1) + " %" : "Négatif"}</p>
                         </div>
                       </div>
                       <div className="p-3 rounded-lg text-xs" style={{ background: incitant ? GR + "10" : AC + "10", border: "1px solid " + (incitant ? GR : AC) }}>
                         <p className="font-bold" style={{ color: incitant ? GR : AC }}>
-                          {incitant ? "✓ Effet incitatif demontré" : "⚠ Effet incitatif à argumenter"}
+                          {incitant ? "✓ Effet incitatif démontré" : "⚠ Effet incitatif à argumenter"}
                         </p>
                         <p style={{ color: "#555" }}>
                           {incitant
-                            ? "Sans aide, le TRI est insuffisant (" + (triSans !== null ? triSans.toFixed(1) + "%" : "negatif") + ") pour justifier l'investissement. L'aide ADEME (" + fK(aideMontant) + ") rend le projet viable (TRI " + (triAvec !== null ? triAvec.toFixed(1) + "%" : "-") + ")."
-                            : "Le TRI sans aide (" + (triSans !== null ? triSans.toFixed(1) + "%" : "-") + ") est deja positif. Il faudra argumenter les contraintes specifiques (captivite avitaillement, DSP, delais reglementaires) pour demontrer la necessite de l'aide."}
+                            ? "Sans aide, le TRI est insuffisant (" + (triSans !== null ? triSans.toFixed(1) + " %" : "négatif") + ") pour justifier l'investissement. L'aide ADEME (" + fK(aideMontant) + ") rend le projet viable (TRI " + (triAvec !== null ? triAvec.toFixed(1) + " %" : "-") + ")."
+                            : "Le TRI sans aide (" + (triSans !== null ? triSans.toFixed(1) + " %" : "-") + ") est déjà positif. Il faudra argumenter les contraintes spécifiques (captivité avitaillement, DSP, délais réglementaires) pour démontrer la nécessité de l'aide."}
                         </p>
                       </div>
                     </div>
@@ -2288,23 +2288,23 @@ export default function AdemeSimulator() {
             {/* Checklist pièces */}
             <Cd title="✅ Checklist des pièces à joindre">
               {([
-                ["Annexe 1 · Presentation projet (pre-depot)", true, null],
-                ["Annexe 2 · Fiche laureat", false, "https://agirpourlatransition.ademe.fr"],
-                ["Annexe 3.a · Descriptif detaille du projet", true, null],
+                ["Annexe 1 · Présentation projet (pré-dépôt)", true, null],
+                ["Annexe 2 · Fiche lauréat", false, "https://agirpourlatransition.ademe.fr"],
+                ["Annexe 3.a · Descriptif détaillé du projet", true, null],
                 ["Annexe 3.b · Descriptif du porteur", false, null],
-                ["Annexe 4 · Base de donnees des couts", true, null],
+                ["Annexe 4 · Base de données des coûts", true, null],
                 ["Annexe 5 · Grille d'impacts + Empreinte projet", true, "https://base-empreinte.ademe.fr/empreinte-projet"],
-                ["Annexe 6 · Elements financiers (TRI, plan financement)", false, null],
-                ["Annexe 7 · Attestation sante financiere", false, null],
+                ["Annexe 6 · Éléments financiers (TRI, plan financement)", false, null],
+                ["Annexe 7 · Attestation santé financière", false, null],
                 ["KBIS de moins de 3 mois", false, "https://www.infogreffe.fr/documents-officiels/demande-kbis.html"],
-                ["3 dernieres liasses fiscales", false, "https://www.impots.gouv.fr/professionnel"],
+                ["3 dernières liasses fiscales", false, "https://www.impots.gouv.fr/professionnel"],
                 ["Devis / lettres d'intention fournisseurs", false, null],
                 ["Contrat d'avitaillement ou LOI (si carburant alternatif)", false, null],
               ] as [string, boolean, string | null][]).map(([label, auto, url], i) => (
                 <div key={i} className="flex items-center gap-2 text-xs py-1">
                   <span>{auto ? "✅" : "⬜"}</span>
                   <span style={{ color: auto ? GR : "#666" }}>{label}</span>
-                  {auto && <span className="text-xs px-1 rounded" style={{ background: GR + "20", color: GR, fontSize: 9 }}>Pre-rempli</span>}
+                  {auto && <span className="text-xs px-1 rounded" style={{ background: GR + "20", color: GR, fontSize: 9 }}>Pré-rempli</span>}
                   {url && <a href={url} target="_blank" rel="noopener" style={{ color: T, fontSize: 10, marginLeft: 4 }}>Obtenir →</a>}
                 </div>
               ))}
@@ -2417,43 +2417,43 @@ export default function AdemeSimulator() {
                 '<div class="hdr">' +
                 '<div><img class="hdr-logo" src="' + GASPE_LOGO + '" style="mix-blend-mode:multiply" />' +
                 '<p class="hdr-title">Groupement des Armateurs de Services Publics Maritimes de Passages d\'Eau</p></div>' +
-                '<div class="hdr-right">Pre-dossier AAP ADEME 2026<br>Decarbonation maritime<br>' + dateStr + '</div>' +
+                '<div class="hdr-right">Pré-dossier AAP ADEME 2026<br>Décarbonation maritime<br>' + dateStr + '</div>' +
                 '</div>' +
 
-                '<h1>Pre-dossier : ' + navName + '</h1>' +
+                '<h1>Pré-dossier : ' + navName + '</h1>' +
 
-                // 1. Fiche synthese
-                '<h2>1. Fiche de synthese</h2>' +
+                // 1. Fiche synthèse
+                '<h2>1. Fiche de synthèse</h2>' +
                 '<table><tr><th>Navire</th><td>' + navName + '</td><th>Type</th><td>' + (vt?.l || '-') + '</td></tr>' +
                 '<tr><th>LOA</th><td>' + proj.v.loa + ' m</td><th>Jauge</th><td>' + proj.v.gt + ' GT</td></tr>' +
-                '<tr><th>Puissance</th><td>' + proj.v.pP + ' kW</td><th>Classification</th><td>' + (cls === 'emissionNulle' ? 'Emission nulle' : cls === 'propre' ? 'Navire propre' : 'Efficacite amelioree') + '</td></tr>' +
-                '<tr><th>Taille entreprise</th><td>' + proj.v.entSize + '</td><th>Region</th><td>' + (REGIONS.find(r=>r.id===proj.v.region)?.l || '-') + '</td></tr>' +
-                '<tr><th>Cadre exploitation</th><td>' + (({"dsp":"DSP","sp":"Service public","agrement":"Agrement","prive":"Prive"} as Record<string, string>)[proj.v.serviceType || "dsp"] || "DSP") + '</td>' + (Object.entries(proj.trajs?.[1]?.fuelMix || {}).some(([k, v]) => ["elec", "h2"].includes(k) && v > 0) ? '<th>Mode recharge</th><td>' + (proj.v.chargeMode === "overnight" ? "Nuit uniquement" : "Au quai (opportunity)") + '</td>' : '<th></th><td></td>') + '</tr></table>' +
+                '<tr><th>Puissance</th><td>' + proj.v.pP + ' kW</td><th>Classification</th><td>' + (cls === 'emissionNulle' ? 'Émission nulle' : cls === 'propre' ? 'Navire propre' : 'Efficacité améliorée') + '</td></tr>' +
+                '<tr><th>Taille entreprise</th><td>' + proj.v.entSize + '</td><th>Région</th><td>' + (REGIONS.find(r=>r.id===proj.v.region)?.l || '-') + '</td></tr>' +
+                '<tr><th>Cadre exploitation</th><td>' + (({"dsp":"DSP","sp":"Service public","agrement":"Agrément","prive":"Privé"} as Record<string, string>)[proj.v.serviceType || "dsp"] || "DSP") + '</td>' + (Object.entries(proj.trajs?.[1]?.fuelMix || {}).some(([k, v]) => ["elec", "h2"].includes(k) && v > 0) ? '<th>Mode recharge</th><td>' + (proj.v.chargeMode === "overnight" ? "Nuit uniquement" : "Au quai (opportunity)") + '</td>' : '<th></th><td></td>') + '</tr></table>' +
 
                 // 2. Projet
-                '<h2>2. Projet de decarbonation</h2>' +
+                '<h2>2. Projet de décarbonation</h2>' +
                 '<p><b>Technologies :</b> ' + (techList || '-') + '</p>' +
-                '<p><b>Mix energetique cible :</b> ' + (mixStr || '-') + '</p>' +
+                '<p><b>Mix énergétique cible :</b> ' + (mixStr || '-') + '</p>' +
 
                 // 3. Contrefactuel
-                '<h2>3. Scenario contrefactuel</h2>' +
-                '<p><b>Type :</b> ' + ({"maintien":"Maintien du navire existant","newbuild_fossile":"Construction neuve fossile","reporté":"Investissement reporte","aucun":"Pas de contrefactuel"}[proj.contrefactuel?.type] || '-') + '</p>' +
-                '<p><b>Surcout eligible :</b> ' + fK(surcout) + '</p>' +
+                '<h2>3. Scénario contrefactuel</h2>' +
+                '<p><b>Type :</b> ' + ({"maintien":"Maintien du navire existant","newbuild_fossile":"Construction neuve fossile","reporté":"Investissement reporté","aucun":"Pas de contrefactuel"}[proj.contrefactuel?.type] || '-') + '</p>' +
+                '<p><b>Surcoût éligible :</b> ' + fK(surcout) + '</p>' +
 
                 // 4. Gains
-                '<h2>4. Gains environnementaux (periode : 5 ans)</h2>' +
-                (scoring ? '<table><tr><th>CO2 evite</th><td>' + fmt(scoring.co2Evite) + ' t</td><th>Gain relatif</th><td>' + scoring.gainPct + '%</td></tr><tr><th>Ratio aide/tCO2</th><td>' + scoring.ratioEuroParTonne + ' EUR/tCO2</td><th></th><td></td></tr></table>' : '') +
+                '<h2>4. Gains environnementaux (période : 5 ans)</h2>' +
+                (scoring ? '<table><tr><th>CO₂ évité</th><td>' + fmt(scoring.co2Evite) + ' t</td><th>Gain relatif</th><td>' + scoring.gainPct + ' %</td></tr><tr><th>Ratio aide/tCO₂</th><td>' + scoring.ratioEuroParTonne + ' €/tCO₂</td><th></th><td></td></tr></table>' : '') +
 
                 // 5. Budget
-                '<h2>5. Budget previsionnel</h2>' +
-                '<table><tr><th>Poste de depense</th><th style="text-align:right">Montant (k EUR)</th></tr>' +
+                '<h2>5. Budget prévisionnel</h2>' +
+                '<table><tr><th>Poste de dépense</th><th style="text-align:right">Montant (k€)</th></tr>' +
                 (proj.budget||[]).filter(b=>b.montant>0).map(b => { const cat = ADEME_EXPENSE_CATS.find(c=>c.id===b.id); return '<tr><td>'+(cat?.l||b.id)+'</td><td style="text-align:right">'+fmt(b.montant)+'</td></tr>'; }).join('') +
                 '<tr style="font-weight:bold;background:#EAF4F7"><td>Total</td><td style="text-align:right">' + fmt((proj.budget||[]).reduce((s,b)=>s+(b.montant||0),0)) + '</td></tr></table>' +
 
                 // 6. Aide
-                '<h2>6. Aide estimee</h2>' +
-                '<table><tr><th>Taux applicable</th><td>' + aide.taux + '%</td><th>Aide estimee</th><td><b>' + fK(aide.aide) + '</b></td></tr>' +
-                '<tr><th>Ratio</th><td>' + (scoring?.ratioEuroParTonne || '-') + ' EUR/tCO2</td><th>Regime</th><td>' + aide.regime + '</td></tr></table>' +
+                '<h2>6. Aide estimée</h2>' +
+                '<table><tr><th>Taux applicable</th><td>' + aide.taux + ' %</td><th>Aide estimée</th><td><b>' + fK(aide.aide) + '</b></td></tr>' +
+                '<tr><th>Ratio</th><td>' + (scoring?.ratioEuroParTonne || '-') + ' €/tCO₂</td><th>Régime</th><td>' + aide.regime + '</td></tr></table>' +
 
                 // Annexes
                 '<div style="page-break-before:always"></div>' +
@@ -2469,28 +2469,28 @@ export default function AdemeSimulator() {
                   return s;
                 }).join('') +
 
-                '<h2>Annexe 2 : Note methodologique GES</h2>' +
-                '<table><tr><th>Parametre</th><th>Valeur</th><th>Source</th></tr>' +
-                '<tr><td>Facteur emission MDO</td><td>3,206 kgCO2/kg</td><td>IMO MEPC.1/Circ.684</td></tr>' +
-                '<tr><td>Densite MDO</td><td>0,85 kg/L</td><td>ISO 8217:2017, grade DMB</td></tr>' +
-                '<tr><td>Degradation moteur</td><td>+1,5%/an</td><td>MAN Energy Solutions 2023</td></tr>' +
-                '<tr><td>Periode reference</td><td>5 ans</td><td>CdC ADEME 2026, thematique 1</td></tr>' +
-                '<tr><td>Batteries kWh</td><td>450 EUR/kWh installe</td><td>Corvus Orca ESS 2024</td></tr>' +
+                '<h2>Annexe 2 : Note méthodologique GES</h2>' +
+                '<table><tr><th>Paramètre</th><th>Valeur</th><th>Source</th></tr>' +
+                '<tr><td>Facteur émission MDO</td><td>3,206 kgCO₂/kg</td><td>IMO MEPC.1/Circ.684</td></tr>' +
+                '<tr><td>Densité MDO</td><td>0,85 kg/L</td><td>ISO 8217:2017, grade DMB</td></tr>' +
+                '<tr><td>Dégradation moteur</td><td>+1,5 %/an</td><td>MAN Energy Solutions 2023</td></tr>' +
+                '<tr><td>Période référence</td><td>5 ans</td><td>CdC ADEME 2026, thématique 1</td></tr>' +
+                '<tr><td>Batteries kWh</td><td>450 €/kWh installé</td><td>Corvus Orca ESS 2024</td></tr>' +
                 '</table>' +
 
-                '<h2>Annexe 3 : Ancrage territorial et souverainete</h2>' +
-                '<p>Ce projet correspond a une transition souveraine, ancree localement : les prestataires techniques sont francais, le service rendu est un service public visible au quotidien par le contribuable, et les retombees economiques beneficient directement au territoire. La compagnie est captive en matiere d\'avitaillement (desserte locale, port secondaire non equipe en combustible alternatif).</p>' +
+                '<h2>Annexe 3 : Ancrage territorial et souveraineté</h2>' +
+                '<p>Ce projet correspond à une transition souveraine, ancrée localement : les prestataires techniques sont français, le service rendu est un service public visible au quotidien par le contribuable, et les retombées économiques bénéficient directement au territoire. La compagnie est captive en matière d\'avitaillement (desserte locale, port secondaire non équipé en combustible alternatif).</p>' +
 
-                '<h2>Annexe 4 : Aides publiques sollicitees</h2>' +
-                '<table><tr><th>Dispositif</th><th style="text-align:right">Montant (k EUR)</th></tr>' +
+                '<h2>Annexe 4 : Aides publiques sollicitées</h2>' +
+                '<table><tr><th>Dispositif</th><th style="text-align:right">Montant (k€)</th></tr>' +
                 '<tr><td>ADEME AAP 2026</td><td style="text-align:right">' + fK(aide.aide) + '</td></tr>' +
                 ((proj.autresAides ?? 0) > 0 ? '<tr><td>' + (proj.autresAidesDetail || 'Autres aides') + '</td><td style="text-align:right">' + fK(proj.autresAides ?? 0) + '</td></tr>' : '') +
-                '<tr style="font-weight:bold;background:#EAF4F7"><td>Total aides sollicitees</td><td style="text-align:right">' + fK(aide.aide + (proj.autresAides || 0)) + '</td></tr></table>' +
+                '<tr style="font-weight:bold;background:#EAF4F7"><td>Total aides sollicitées</td><td style="text-align:right">' + fK(aide.aide + (proj.autresAides || 0)) + '</td></tr></table>' +
 
                 // Footer fixe
                 '<div class="ftr">' +
-                '<div style="display:flex;align-items:center"><img class="ftr-a" src="' + GASPE_A_COULEUR + '" /> Localement ancrees. Socialement engagees.</div>' +
-                '<div class="ftr-right">Simulateur AAP ADEME 2026 v1.8<br>Document interne - Reproduction interdite<br>' + dateStr + '</div>' +
+                '<div style="display:flex;align-items:center"><img class="ftr-a" src="' + GASPE_A_COULEUR + '" /> Localement ancrées. Socialement engagées.</div>' +
+                '<div class="ftr-right">Simulateur AAP ADEME 2026 v1.8<br>Document interne – Reproduction interdite<br>' + dateStr + '</div>' +
                 '</div>' +
 
                 '</body></html>';
@@ -2502,7 +2502,7 @@ export default function AdemeSimulator() {
                 if (w) { w.onload = () => { setTimeout(() => w.print(), 300); }; }
               }}
                 className="px-6 py-2.5 rounded-xl text-white font-bold text-sm" style={{ background: PU }}>
-                🖨️ Exporter pre-dossier PDF (format A4)
+                🖨️ Exporter pré-dossier PDF (format A4)
               </button>
             </div>
 

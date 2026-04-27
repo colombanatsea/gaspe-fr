@@ -36,7 +36,7 @@ export const PATH_PONT: CareerStep[] = [
     age: 17,
     role: "Élève LPM (alternance)",
     salaryNet: 850,
-    context: "Bac pro CGEM, alternance armateur, indemnité d'apprentissage 43% du SMIC + repas + uniforme.",
+    context: "Bac pro CGEM, alternance armateur, indemnité d'apprentissage 43 % du SMIC + repas + uniforme.",
     family: "pont",
   },
   {

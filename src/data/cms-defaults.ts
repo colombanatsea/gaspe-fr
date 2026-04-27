@@ -235,12 +235,12 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "simulator-disclaimer": "Simulateur hébergé par GASPE · Données indicatives, ne se substituent pas à un conseil professionnel",
     "technologies-title": "Technologies de décarbonation",
     "technologies-items": JSON.stringify([
-      { name: "Électrification complète", gain: "95%", trl: "TRL 9", desc: "Propulsion 100 % électrique sur batteries LFP" },
-      { name: "Hybridation diesel-électrique", gain: "25%", trl: "TRL 9", desc: "Combinaison diesel et batteries pour les pics de puissance" },
-      { name: "HVO / FAME (biocarburant)", gain: "85%", trl: "TRL 9", desc: "Carburants biosourcés en drop-in ou conversion" },
-      { name: "Pile à combustible H₂", gain: "90%", trl: "TRL 7", desc: "Hydrogène vert pour les navires hauturiers" },
-      { name: "Propulsion vélique", gain: "10%", trl: "TRL 8", desc: "Assistance vélique sur les traversées longues" },
-      { name: "Routage IA", gain: "15%", trl: "TRL 8", desc: "Optimisation marée et courant par intelligence artificielle" },
+      { name: "Électrification complète", gain: "95 %", trl: "TRL 9", desc: "Propulsion 100 % électrique sur batteries LFP" },
+      { name: "Hybridation diesel-électrique", gain: "25 %", trl: "TRL 9", desc: "Combinaison diesel et batteries pour les pics de puissance" },
+      { name: "HVO / FAME (biocarburant)", gain: "85 %", trl: "TRL 9", desc: "Carburants biosourcés en drop-in ou conversion" },
+      { name: "Pile à combustible H₂", gain: "90 %", trl: "TRL 7", desc: "Hydrogène vert pour les navires hauturiers" },
+      { name: "Propulsion vélique", gain: "10 %", trl: "TRL 8", desc: "Assistance vélique sur les traversées longues" },
+      { name: "Routage IA", gain: "15 %", trl: "TRL 8", desc: "Optimisation marée et courant par intelligence artificielle" },
     ]),
   },
 
@@ -289,7 +289,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
   "ecoles-de-la-mer": {
     "page-header-title": "Les écoles de la mer",
     "page-header-description":
-      "Tu pilotes. Tu répares. Tu navigues. 100% d'emploi à la sortie. Découvre les LPM et l'ENSM.",
+      "Tu pilotes. Tu répares. Tu navigues. 100 % d'emploi à la sortie. Découvre les LPM et l'ENSM.",
     "hero-bg-image": "/campagne/ecoles-de-la-mer-hero.jpg",
     "hero-eyebrow": "Les écoles de la mer",
     "hero-title": "Ton bureau ? Il tangue. Et il paie.",

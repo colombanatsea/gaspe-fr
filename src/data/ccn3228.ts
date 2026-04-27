@@ -472,22 +472,22 @@ export const SALARY_GRID_NAO_2026: SalaryGridEntry[] = [
   { fonction: "Matelots, Matelots Légers", salaireMensuel: 1847.80, tauxHoraire: 12.18, tauxHS: 15.23, primeFinAnnee: 1847.80 },
 ];
 
-/** Notes réglementaires NAO 2026 */
+/** Notes réglementaires NAO 2026 (Annexe 1 CCN 3228, barème au 01/01/2026) */
 export const SALARY_NOTES = [
-  "Taux horaire basé sur 151,67 heures/mois (35 h × 52/12).",
+  "Base 1 607 heures annuelles. Taux horaire basé sur 151,67 heures/mois (35 h × 52/12).",
   "Heures supplémentaires majorées à 25 % (article L5544-6 Code des transports).",
   "Prime de fin d'année égale au salaire de base mensuel, au prorata du temps de présence cumulé (minimum 6 mois sur l'année civile). Arrêts maladie et ATM pris en compte dans le prorata.",
-  "Prime d'ancienneté : 0,3 % du salaire de base par année d'ancienneté dans l'entreprise.",
+  "Prime d'ancienneté : 0,3 % du salaire de base par année d'ancienneté dans l'entreprise (depuis l'application de la CCN 3228).",
   "Les salaires forfaitaires ENIM servant de base aux cotisations sont distincts des salaires réels. Catégories ENIM indiquées à titre de correspondance.",
   "Grille applicable aux navires armés au cabotage national et navigation côtière uniquement. Ne couvre pas le commerce au long cours.",
 ];
 
-/** Indemnités et frais NAO 2026 */
+/** Indemnités et frais NAO 2026 (Annexe 1 CCN 3228, barème au 01/01/2026) */
 export const INDEMNITES_NAO_2026 = {
-  nourritureJournaliere: 19.48,
-  nourritureDeplacement: 22.01,
-  logementParJour: 15.10,
-  fraisDiversParJour: 15.10,
+  nourritureJournaliere: 19.33,
+  nourritureDeplacement: 21.84,
+  logementParJour: 14.98,
+  fraisDiversParJour: 14.98,
 };
 
 /** Legacy – kept for backward compatibility with simulator */

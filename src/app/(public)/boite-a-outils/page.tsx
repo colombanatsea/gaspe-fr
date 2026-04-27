@@ -39,6 +39,13 @@ const fmt = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 
+const fmt2 = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 const fmtPct = (n: number) => `${n.toFixed(2).replace(".", ",")} %`;
 
 const CATEGORIES: ServiceCategory[] = ["pont", "machine", "services"];
@@ -162,16 +169,16 @@ function GrillesSalariales() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground tabular-nums font-semibold">
-                    {fmt.format(entry.salaireMensuel)}
+                    {fmt2.format(entry.salaireMensuel)}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                    {fmt.format(entry.tauxHoraire)}
+                    {fmt2.format(entry.tauxHoraire)}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                    {fmt.format(entry.tauxHS)}
+                    {fmt2.format(entry.tauxHS)}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground-muted tabular-nums">
-                    {fmt.format(entry.primeFinAnnee)}
+                    {fmt2.format(entry.primeFinAnnee)}
                   </td>
                 </tr>
               ))}
@@ -180,29 +187,32 @@ function GrillesSalariales() {
         </div>
       </div>
 
-      {/* Indemnites */}
+      {/* Indemnités */}
       <div className="reveal mb-8">
         <h3 className="font-heading text-base font-bold text-foreground mb-3">
-          Indemnites et frais
+          Indemnités et frais
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-border-light bg-background p-4">
-            <p className="text-sm text-foreground-muted">Indemnite journaliere de nourriture</p>
-            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.nourritureJournaliere)}</p>
+            <p className="text-sm text-foreground-muted">Indemnité journalière de nourriture</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt2.format(INDEMNITES_NAO_2026.nourritureJournaliere)}</p>
           </div>
           <div className="rounded-xl border border-border-light bg-background p-4">
-            <p className="text-sm text-foreground-muted">Nourriture en deplacement</p>
-            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.nourritureDeplacement)}</p>
+            <p className="text-sm text-foreground-muted">Nourriture en déplacement</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt2.format(INDEMNITES_NAO_2026.nourritureDeplacement)}</p>
           </div>
           <div className="rounded-xl border border-border-light bg-background p-4">
             <p className="text-sm text-foreground-muted">Logement par jour</p>
-            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.logementParJour)}</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt2.format(INDEMNITES_NAO_2026.logementParJour)}</p>
           </div>
           <div className="rounded-xl border border-border-light bg-background p-4">
             <p className="text-sm text-foreground-muted">Frais divers par jour</p>
-            <p className="text-lg font-bold font-heading text-foreground">{fmt.format(INDEMNITES_NAO_2026.fraisDiversParJour)}</p>
+            <p className="text-lg font-bold font-heading text-foreground">{fmt2.format(INDEMNITES_NAO_2026.fraisDiversParJour)}</p>
           </div>
         </div>
+        <p className="mt-3 text-xs text-foreground-muted italic">
+          Source : Annexe 1 à la CCN 3228, barème au 01/01/2026 (base 1 607 heures annuelles).
+        </p>
       </div>
 
       {/* Notes */}
@@ -479,15 +489,15 @@ function SimulateurSalaire() {
             Plancher légal de rémunération (CCN 3228, avenant NAO 2026). Le salaire effectivement versé peut être supérieur.
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <ResultCard label="Brut mensuel minimum" value={fmt.format(result.gross)} highlight />
-            <ResultCard label="Cotisations salarié" value={`- ${fmt.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
-            <ResultCard label="Net minimum estimé" value={fmt.format(result.estimatedNet)} highlight />
-            <ResultCard label="Brut annuel minimum" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt.format(result.annualPremium)} de prime`} />
+            <ResultCard label="Brut mensuel minimum" value={fmt2.format(result.gross)} highlight />
+            <ResultCard label="Cotisations salarié" value={`- ${fmt2.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
+            <ResultCard label="Net minimum estimé" value={fmt2.format(result.estimatedNet)} highlight />
+            <ResultCard label="Brut annuel minimum" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt2.format(result.annualPremium)} de prime`} />
           </div>
           <div className="grid gap-4 sm:grid-cols-3 mt-4">
-            <ResultCard label="Taux horaire minimum" value={fmt.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois" />
-            <ResultCard label="Taux HS (25 %)" value={fmt.format(result.tauxHS)} />
-            <ResultCard label="Net horaire minimum" value={fmt.format(result.hourlyNet)} />
+            <ResultCard label="Taux horaire minimum" value={fmt2.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois (1 607 h/an)" />
+            <ResultCard label="Taux HS (25 %)" value={fmt2.format(result.tauxHS)} />
+            <ResultCard label="Net horaire minimum" value={fmt2.format(result.hourlyNet)} />
           </div>
           {entry?.enim && (
             <p className="mt-3 text-xs text-foreground-muted text-center">

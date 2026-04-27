@@ -218,7 +218,7 @@ src/
 │   ├── newsletter/          # Newsletter v2 : types, render.ts, drafts-store.ts
 │   ├── profile-completeness.ts # **session 38** – calcul score 6 sections + gating annuaire flotte
 │   ├── cms-revision-diff.ts  # CMS versioning – diff sections (session 33b)
-│   └── __tests__/         # Unit tests (254 tests, 24 files)
+│   └── __tests__/         # Unit tests (272 tests, 26 files)
 ├── types/index.ts         # Centralized type re-exports
 └── test/setup.ts          # Vitest test setup
 workers/
@@ -343,7 +343,7 @@ workers/
 | `organization_vessels` | **Flotte détaillée par compagnie adhérente** – 29 colonnes (identité : name/imo/type/flag/image_url ; caractéristiques numériques indexables : year_built/length_m/beam_m/gross_tonnage/passenger_capacity/vehicle_capacity/freight_capacity/cruise_speed/rotations_per_year ; champs libres du tableur : crew_size/power_kw/consumption/renewal_*/owner/shipyard*/propulsion*/fuel_type/alt_fuel_tests/shore_power/hull_treatment/emission_reduction ; **`crew_by_brevet TEXT` JSON depuis session 38**). FK organizations(id) ON DELETE CASCADE. PUT remplace atomiquement la flotte d'une compagnie ; autorisation admin OU `users.organization_id === org.id`. Seed éditorial statique dans `src/data/fleet-seed.ts` (**111 navires, 26 compagnies** depuis session 37 + Jalilo) sert de fallback tant que la table est vide. (session 35, étendu sessions 36-38) |
 
 ## Testing
-- **Unit tests**: Vitest – 254 tests, 24 spec files (session 38 : +5 tests profile-completeness)
+- **Unit tests**: Vitest – 272 tests, 26 spec files (session 43 : +10 tests `career-salary`)
 - **E2E tests**: Playwright – 11 spec files
 - **Config**: `vitest.config.ts`, `playwright.config.ts`
 

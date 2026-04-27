@@ -595,10 +595,10 @@ export default {
         return handleSetMySuppleant(request, env, corsHeaders);
       }
 
-      return json({ error: "Not found" }, corsHeaders, 404);
+      return json({ error: "Ressource introuvable" }, corsHeaders, 404);
     } catch (err) {
       console.error("Worker error:", err);
-      return json({ error: "Internal server error" }, corsHeaders, 500);
+      return json({ error: "Erreur serveur interne" }, corsHeaders, 500);
     }
   },
 };
@@ -2828,10 +2828,10 @@ async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record
 async function handleMediaRaw(env: Env, corsHeaders: Record<string, string>, r2Key: string) {
   // Seules les clés sous "media/" sont exposées publiquement (le reste R2 est privé).
   if (!r2Key.startsWith("media/") || r2Key.includes("..")) {
-    return new Response("Not found", { status: 404, headers: corsHeaders });
+    return new Response("Ressource introuvable", { status: 404, headers: corsHeaders });
   }
   const object = await env.UPLOADS.get(r2Key);
-  if (!object) return new Response("Not found", { status: 404, headers: corsHeaders });
+  if (!object) return new Response("Ressource introuvable", { status: 404, headers: corsHeaders });
 
   const headers = new Headers(corsHeaders);
   object.writeHttpMetadata(headers);
