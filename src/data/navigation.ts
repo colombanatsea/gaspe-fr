@@ -4,6 +4,7 @@ export const mainNavigation: NavItem[] = [
   { label: "Notre Groupement", href: "/notre-groupement" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
+  { label: "Écoles de la mer", href: "/ecoles-de-la-mer" },
   {
     label: "Nos Compagnies Recrutent",
     href: "/nos-compagnies-recrutent",
@@ -29,6 +30,7 @@ export const footerNavigation = {
     { label: "Boîte à outils CCN 3228", href: "/boite-a-outils" },
     { label: "Transition Ecologique", href: "/transition-ecologique" },
     { label: "Formations", href: "/formations" },
+    { label: "Écoles de la mer", href: "/ecoles-de-la-mer" },
     { label: "SSGM & Médecins", href: "/ssgm" },
     { label: "Agenda", href: "/agenda" },
   ],

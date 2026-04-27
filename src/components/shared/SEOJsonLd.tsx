@@ -250,6 +250,62 @@ export function ArticleJsonLd({
   );
 }
 
+/**
+ * EducationalOrganization schema – pour les écoles maritimes (LPM + ENSM)
+ * affichées sur /ecoles-de-la-mer. Boost SEO « lycée maritime [ville] » et
+ * « ENSM admission » via knowledge graph + rich snippets.
+ */
+export function EducationalOrganizationJsonLd({
+  name,
+  url,
+  city,
+  postalCode,
+  region,
+  lat,
+  lng,
+  kind,
+}: {
+  name: string;
+  url: string;
+  city: string;
+  postalCode: string;
+  region: string;
+  lat: number;
+  lng: number;
+  kind: "lpm" | "ensm";
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type":
+          kind === "ensm"
+            ? ["CollegeOrUniversity", "EducationalOrganization"]
+            : ["HighSchool", "EducationalOrganization"],
+        name,
+        url,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: city,
+          postalCode,
+          addressRegion: region,
+          addressCountry: "FR",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: lat,
+          longitude: lng,
+        },
+        memberOf: {
+          "@type": "Organization",
+          name: "GASPE",
+          url: "https://www.gaspe.fr",
+        },
+      }}
+    />
+  );
+}
+
 /** Event schema – for agenda pages */
 export function EventJsonLd({
   name,
