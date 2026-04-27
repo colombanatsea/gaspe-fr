@@ -270,14 +270,14 @@ export default function SSGMPage() {
         {/* Sources */}
         <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Direction des Affaires Maritimes (DAM) – decret n. 2015-1575 du 3 decembre 2015</li>
-            <li>Code des transports, articles L5521-1 a L5521-4</li>
+            <li>Direction des Affaires Maritimes (DAM) – décret n° 2015-1575 du 3 décembre 2015</li>
+            <li>Code des transports, articles L5521-1 à L5521-4</li>
             <li>Convention STCW (OMI), Section A-I/9</li>
-            <li>Convention du Travail Maritime (MLC 2006), Regle 1.2</li>
-            <li>Annuaire des services deconcentres de l&apos;Etat en mer</li>
+            <li>Convention du Travail Maritime (MLC 2006), Règle 1.2</li>
+            <li>Annuaire des services déconcentrés de l&apos;État en mer</li>
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">
-            Coordonnees et horaires indicatifs. Contactez le centre SSGM concerne.
+            Coordonnées et horaires indicatifs. Contactez le centre SSGM concerné.
           </p>
         </CollapsibleSources>
 

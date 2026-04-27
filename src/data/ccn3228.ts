@@ -458,31 +458,31 @@ export const CLASSIFICATION_LEVELS: ClassificationLevel[] = [
 
 // --- Grilles salariales NAO 2026 ------------------------------------
 // Source : Avenant salarial CCN 3228, NAO 2026
-// Navires armes au Cabotage National et Navigation cotiere
+// Navires armés au Cabotage National et Navigation côtière
 
 export const SALARY_GRID_NAO_2026: SalaryGridEntry[] = [
-  { fonction: "Capitaines et Chefs Mecaniciens > 3000 UMS", enim: "16e categorie", salaireMensuel: 3512.71, tauxHoraire: 23.16, tauxHS: 28.95, primeFinAnnee: 3512.71 },
-  { fonction: "Capitaines et Chefs Mecaniciens > 500 UMS < 3000 UMS", enim: "15e categorie", salaireMensuel: 3028.20, tauxHoraire: 19.97, tauxHS: 24.96, primeFinAnnee: 3028.20 },
-  { fonction: "Capitaines / Chefs Mecaniciens > 200 UMS", enim: "12e categorie", salaireMensuel: 2702.96, tauxHoraire: 17.82, tauxHS: 22.28, primeFinAnnee: 2702.96 },
-  { fonction: "Capitaines et Chefs Mecaniciens < 200 UMS", enim: "12e categorie", salaireMensuel: 2609.69, tauxHoraire: 17.21, tauxHS: 21.51, primeFinAnnee: 2609.69 },
+  { fonction: "Capitaines et Chefs Mécaniciens > 3000 UMS", enim: "16ᵉ catégorie", salaireMensuel: 3512.71, tauxHoraire: 23.16, tauxHS: 28.95, primeFinAnnee: 3512.71 },
+  { fonction: "Capitaines et Chefs Mécaniciens > 500 UMS < 3000 UMS", enim: "15ᵉ catégorie", salaireMensuel: 3028.20, tauxHoraire: 19.97, tauxHS: 24.96, primeFinAnnee: 3028.20 },
+  { fonction: "Capitaines / Chefs Mécaniciens > 200 UMS", enim: "12ᵉ catégorie", salaireMensuel: 2702.96, tauxHoraire: 17.82, tauxHS: 22.28, primeFinAnnee: 2702.96 },
+  { fonction: "Capitaines et Chefs Mécaniciens < 200 UMS", enim: "12ᵉ catégorie", salaireMensuel: 2609.69, tauxHoraire: 17.21, tauxHS: 21.51, primeFinAnnee: 2609.69 },
   { fonction: "Patrons de vedettes < 50 UMS", salaireMensuel: 2064.53, tauxHoraire: 13.61, tauxHS: 17.01, primeFinAnnee: 2064.53 },
-  { fonction: "Maitres pont et machine", salaireMensuel: 2001.95, tauxHoraire: 13.20, tauxHS: 16.50, primeFinAnnee: 2001.95 },
-  { fonction: "Mecaniciens, Ouvriers mecaniciens, Timoniers", salaireMensuel: 1923.61, tauxHoraire: 12.68, tauxHS: 15.85, primeFinAnnee: 1923.61 },
-  { fonction: "Matelots Qualifies, Graisseurs", salaireMensuel: 1868.98, tauxHoraire: 12.32, tauxHS: 15.40, primeFinAnnee: 1868.98 },
-  { fonction: "Matelots, Matelots Legers", salaireMensuel: 1847.80, tauxHoraire: 12.18, tauxHS: 15.23, primeFinAnnee: 1847.80 },
+  { fonction: "Maîtres pont et machine", salaireMensuel: 2001.95, tauxHoraire: 13.20, tauxHS: 16.50, primeFinAnnee: 2001.95 },
+  { fonction: "Mécaniciens, Ouvriers mécaniciens, Timoniers", salaireMensuel: 1923.61, tauxHoraire: 12.68, tauxHS: 15.85, primeFinAnnee: 1923.61 },
+  { fonction: "Matelots Qualifiés, Graisseurs", salaireMensuel: 1868.98, tauxHoraire: 12.32, tauxHS: 15.40, primeFinAnnee: 1868.98 },
+  { fonction: "Matelots, Matelots Légers", salaireMensuel: 1847.80, tauxHoraire: 12.18, tauxHS: 15.23, primeFinAnnee: 1847.80 },
 ];
 
-/** Notes reglementaires NAO 2026 */
+/** Notes réglementaires NAO 2026 */
 export const SALARY_NOTES = [
-  "Taux horaire base sur 151,67 heures/mois (35h x 52/12).",
-  "Heures supplementaires majorees a 25 % (article L5544-6 Code des transports).",
-  "Prime de fin d'annee egale au salaire de base mensuel, au prorata du temps de presence cumule (minimum 6 mois sur l'annee civile). Arrets maladie et ATM pris en compte dans le prorata.",
-  "Prime d'anciennete : 0,3 % du salaire de base par annee d'anciennete dans l'entreprise.",
-  "Les salaires forfaitaires ENIM servant de base aux cotisations sont distincts des salaires reels. Categories ENIM indiquees a titre de correspondance.",
-  "Grille applicable aux navires armes au cabotage national et navigation cotiere uniquement. Ne couvre pas le commerce au long cours.",
+  "Taux horaire basé sur 151,67 heures/mois (35 h × 52/12).",
+  "Heures supplémentaires majorées à 25 % (article L5544-6 Code des transports).",
+  "Prime de fin d'année égale au salaire de base mensuel, au prorata du temps de présence cumulé (minimum 6 mois sur l'année civile). Arrêts maladie et ATM pris en compte dans le prorata.",
+  "Prime d'ancienneté : 0,3 % du salaire de base par année d'ancienneté dans l'entreprise.",
+  "Les salaires forfaitaires ENIM servant de base aux cotisations sont distincts des salaires réels. Catégories ENIM indiquées à titre de correspondance.",
+  "Grille applicable aux navires armés au cabotage national et navigation côtière uniquement. Ne couvre pas le commerce au long cours.",
 ];
 
-/** Indemnites et frais NAO 2026 */
+/** Indemnités et frais NAO 2026 */
 export const INDEMNITES_NAO_2026 = {
   nourritureJournaliere: 19.48,
   nourritureDeplacement: 22.01,
@@ -505,12 +505,12 @@ export const SALARY_GRID: SalaryEntry[] = SALARY_GRID_NAO_2026.map((entry, i) =>
 
 export const ENIM_RATES: ENIMRate[] = [
   { label: "Pension de vieillesse (CRM)", employerRate: 11.15, employeeRate: 7.85 },
-  { label: "Maladie, maternite, invalidite", employerRate: 12.50, employeeRate: 0.0 },
+  { label: "Maladie, maternité, invalidité", employerRate: 12.50, employeeRate: 0.0 },
   { label: "Accidents du travail / maladies pro.", employerRate: 2.40, employeeRate: 0.0 },
   { label: "Allocations familiales", employerRate: 5.25, employeeRate: 0.0 },
   { label: "CSG (assiette : 98,25 % du brut)", employerRate: 0.0, employeeRate: 9.2 },
   { label: "CRDS (assiette : 98,25 % du brut)", employerRate: 0.0, employeeRate: 0.5 },
-  { label: "Prevoyance CCN 3228 (65/35)", employerRate: 1.30, employeeRate: 0.70 },
+  { label: "Prévoyance CCN 3228 (65/35)", employerRate: 1.30, employeeRate: 0.70 },
 ];
 
 /** Taux simplifié pour le simulateur (approximation) */
@@ -528,48 +528,48 @@ export const ENIM_TOTAL_EMPLOYEE_RATE = ENIM_RATES.reduce(
 // Source : CCN 3228 (articles 30 a 38), Code des transports Livre V titre V
 export const LEAVE_RULES: LeaveRule[] = [
   {
-    type: "Conges payes",
+    type: "Congés payés",
     description:
-      "Droit annuel aux conges payes pour le personnel navigant maritime",
+      "Droit annuel aux congés payés pour le personnel navigant maritime",
     duration: "3 jours ouvrables / mois (36 j/an)",
     details:
-      "Le personnel navigant beneficie de 3 jours ouvrables de conge par mois de travail effectif (article 32 CCN 3228), soit 36 jours ouvrables pour une annee complete. Majoration d'un jour ouvrable supplementaire par tranche de 5 ans d'anciennete dans l'entreprise. Ce droit est superieur au minimum legal de 2,5 j/mois du Code du travail.",
+      "Le personnel navigant bénéficie de 3 jours ouvrables de congé par mois de travail effectif (article 32 CCN 3228), soit 36 jours ouvrables pour une année complète. Majoration d'un jour ouvrable supplémentaire par tranche de 5 ans d'ancienneté dans l'entreprise. Ce droit est supérieur au minimum légal de 2,5 j/mois du Code du travail.",
   },
   {
     type: "Repos compensateur d'embarquement",
     description:
-      "Repos accorde en compensation de la disponibilite permanente a bord",
+      "Repos accordé en compensation de la disponibilité permanente à bord",
     duration: "Selon rythme d'alternance et accord d'entreprise",
     details:
-      "Le navigant embarque beneficie d'un repos compensateur calcule en fonction du temps de travail effectif a bord et du rythme d'alternance defini par accord d'entreprise. Les rythmes courants sont 1 semaine / 1 semaine, 2 semaines / 2 semaines ou 15 jours / 15 jours selon les lignes. Ce repos est distinct des conges payes.",
+      "Le navigant embarqué bénéficie d'un repos compensateur calculé en fonction du temps de travail effectif à bord et du rythme d'alternance défini par accord d'entreprise. Les rythmes courants sont 1 semaine / 1 semaine, 2 semaines / 2 semaines ou 15 jours / 15 jours selon les lignes. Ce repos est distinct des congés payés.",
   },
   {
-    type: "Jours feries",
-    description: "Compensation des jours feries travailles a bord",
-    duration: "11 jours feries / an",
+    type: "Jours fériés",
+    description: "Compensation des jours fériés travaillés à bord",
+    duration: "11 jours fériés / an",
     details:
-      "Les jours feries travailles a bord donnent droit a une majoration de salaire de 100 % ou a un repos compensateur equivalent, au choix de l'employeur. Le 1er mai travaille est systematiquement majore a 100 % (article L3133-6 Code du travail).",
+      "Les jours fériés travaillés à bord donnent droit à une majoration de salaire de 100 % ou à un repos compensateur équivalent, au choix de l'employeur. Le 1ᵉʳ mai travaillé est systématiquement majoré à 100 % (article L3133-6 Code du travail).",
   },
   {
-    type: "Conge maternite / paternite",
-    description: "Conges lies a la naissance ou l'adoption",
-    duration: "16 sem. (maternite) / 28 jours (paternite)",
+    type: "Congé maternité / paternité",
+    description: "Congés liés à la naissance ou à l'adoption",
+    duration: "16 sem. (maternité) / 28 jours (paternité)",
     details:
-      "Conge maternite de droit commun (16 semaines 1er/2e enfant, 26 semaines a partir du 3e). Conge paternite : 25 jours calendaires + 3 jours naissance = 28 jours. L'ENIM assure le versement des indemnites journalieres (regime special gens de mer).",
+      "Congé maternité de droit commun (16 semaines 1ᵉʳ/2ᵉ enfant, 26 semaines à partir du 3ᵉ). Congé paternité : 25 jours calendaires + 3 jours naissance = 28 jours. L'ENIM assure le versement des indemnités journalières (régime spécial gens de mer).",
   },
   {
-    type: "Conge enfant malade",
-    description: "Absence autorisee pour soigner un enfant malade",
+    type: "Congé enfant malade",
+    description: "Absence autorisée pour soigner un enfant malade",
     duration: "3 jours / an (5 si enfant < 1 an ou 3+ enfants)",
     details:
-      "Droit commun Code du travail (L1225-61). Non remunere sauf dispositions plus favorables de l'accord d'entreprise.",
+      "Droit commun Code du travail (L1225-61). Non rémunéré sauf dispositions plus favorables de l'accord d'entreprise.",
   },
   {
-    type: "Conges pour evenements familiaux",
-    description: "Absences autorisees pour evenements de la vie personnelle",
-    duration: "1 a 5 jours selon l'evenement",
+    type: "Congés pour événements familiaux",
+    description: "Absences autorisées pour événements de la vie personnelle",
+    duration: "1 à 5 jours selon l'événement",
     details:
-      "Mariage du salarie : 5 jours. Mariage d'un enfant : 2 jours. Naissance/adoption : 3 jours. Deces du conjoint : 5 jours. Deces parent/beau-parent : 3 jours. Deces frere/soeur : 3 jours. Demenagement : 1 jour (une fois par an). Annonce handicap enfant : 5 jours.",
+      "Mariage du salarié : 5 jours. Mariage d'un enfant : 2 jours. Naissance/adoption : 3 jours. Décès du conjoint : 5 jours. Décès parent/beau-parent : 3 jours. Décès frère/sœur : 3 jours. Déménagement : 1 jour (une fois par an). Annonce handicap enfant : 5 jours.",
   },
 ];
 

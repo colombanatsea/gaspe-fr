@@ -129,7 +129,7 @@ function GrillesSalariales() {
           Grille salariale NAO 2026
         </h3>
         <p className="text-sm text-foreground-muted mb-4">
-          Navires armes au Cabotage National et Navigation cotiere (UMS / tonnage du navire arme)
+          Navires armés au Cabotage National et Navigation côtière (UMS / tonnage du navire armé)
         </p>
         <div className="overflow-x-auto rounded-xl border border-border-light">
           <table className="w-full text-sm">
@@ -148,7 +148,7 @@ function GrillesSalariales() {
                   Taux HS (25 %)
                 </th>
                 <th className="px-4 py-3 font-heading font-semibold text-foreground text-right whitespace-nowrap">
-                  Prime fin d&apos;annee
+                  Prime fin d&apos;année
                 </th>
               </tr>
             </thead>
@@ -207,7 +207,7 @@ function GrillesSalariales() {
 
       {/* Notes */}
       <div className="reveal rounded-xl bg-surface-teal p-5">
-        <h4 className="font-heading text-sm font-semibold text-foreground mb-2">Notes reglementaires</h4>
+        <h4 className="font-heading text-sm font-semibold text-foreground mb-2">Notes réglementaires</h4>
         <ol className="space-y-2 text-xs text-foreground-muted leading-relaxed list-decimal list-inside">
           {SALARY_NOTES.map((note, i) => (
             <li key={i}>{note}</li>
@@ -282,11 +282,11 @@ function RegimeENIM() {
           Qu&apos;est-ce que l&apos;ENIM ?
         </h3>
         <p className="text-sm text-foreground-muted leading-relaxed">
-          L&apos;Etablissement National des Invalides de la Marine (ENIM), devenu la Caisse des Gens de Mer,
-          est le regime de securite sociale specifique aux marins professionnels. Il couvre la maladie,
-          la maternite, l&apos;invalidite, les accidents du travail et la retraite (via la Caisse de Retraite des Marins, CRM).
-          Les cotisations sont assises sur les salaires forfaitaires ENIM, distincts des salaires reels.
-          Le taux AT/MP varie par entreprise selon la sinistralite.
+          L&apos;Établissement National des Invalides de la Marine (ENIM), devenu la Caisse des Gens de Mer,
+          est le régime de sécurité sociale spécifique aux marins professionnels. Il couvre la maladie,
+          la maternité, l&apos;invalidité, les accidents du travail et la retraite (via la Caisse de Retraite des Marins, CRM).
+          Les cotisations sont assises sur les salaires forfaitaires ENIM, distincts des salaires réels.
+          Le taux AT/MP varie par entreprise selon la sinistralité.
         </p>
       </div>
 

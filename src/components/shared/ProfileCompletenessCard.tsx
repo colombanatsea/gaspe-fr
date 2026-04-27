@@ -23,7 +23,7 @@ export function ProfileCompletenessCard({ result, showSections = true }: Props) 
   const { total, missingPct, sections, isComplete } = result;
 
   const headlineMessage = isComplete
-    ? "🎉 Profil complet — vous pouvez consulter les flottes des autres adhérents."
+    ? "🎉 Profil complet – vous pouvez consulter les flottes des autres adhérents."
     : missingPct <= 10
       ? `Plus que ${missingPct}% pour profiter des données partagées des autres adhérents.`
       : missingPct <= 30

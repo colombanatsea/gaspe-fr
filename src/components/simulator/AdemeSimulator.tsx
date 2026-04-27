@@ -509,9 +509,9 @@ const DNSH_AXES: DnshAxis[] = [
   { id: "attenuation",    l: "Atténuation du changement climatique",         icon: "🌡️", auto: true,  template: "Le projet réduit les émissions de {co2} tCO₂/an (−{pctCo2}% vs référence), contribuant directement à l'objectif OMI de −20% en 2030." },
   { id: "adaptation",     l: "Adaptation au changement climatique",          icon: "🌊", auto: false, template: "Les équipements installés sont conçus pour fonctionner dans les conditions climatiques projetées (hausse du niveau marin, tempêtes plus fréquentes). Durée de vie de conception ≥ 15 ans." },
   { id: "eau",            l: "Utilisation durable de l'eau et ressources marines", icon: "💧", auto: false, template: "Le navire respecte la Convention BWM (gestion des eaux de ballast). Aucun rejet polluant additionnel. Peintures antifouling conformes Convention AFS 2001." },
-  { id: "circulaire",     l: "Économie circulaire",                          icon: "♻️", auto: false, template: "Les equipements installes sont concus pour etre recycles en fin de vie. Filiere de recyclage identifiee (batteries : SNAM/Eramet 95% ; composants moteur : filieres metallurgiques certifiees)." },
+  { id: "circulaire",     l: "Économie circulaire",                          icon: "♻️", auto: false, template: "Les équipements installés sont conçus pour être recyclés en fin de vie. Filière de recyclage identifiée (batteries : SNAM/Eramet 95 % ; composants moteur : filières métallurgiques certifiées)." },
   { id: "pollution",      l: "Prévention et réduction de la pollution",      icon: "🏭", auto: true,  template: "Réduction de {sox} t SOx/an, {nox} t NOx/an et {pm} t PM/an par rapport au scénario de référence." },
-  { id: "biodiversite",   l: "Protection de la biodiversité",                icon: "🐟", auto: false, template: "Le projet reduit les nuisances sur la faune marine : reduction du bruit sous-marin (objectif < 160 dB re 1 uPa RMS, ref. DNV Silent Class) et/ou reduction des emissions polluantes en zone cotiere. Antifouling sans biocides toxiques." },
+  { id: "biodiversite",   l: "Protection de la biodiversité",                icon: "🐟", auto: false, template: "Le projet réduit les nuisances sur la faune marine : réduction du bruit sous-marin (objectif < 160 dB re 1 µPa RMS, réf. DNV Silent Class) et/ou réduction des émissions polluantes en zone côtière. Antifouling sans biocides toxiques." },
 ];
 
 
@@ -566,7 +566,7 @@ function dimBiofuel(v: Vessel, techs: TechsMap | undefined, fuelMix: FuelMix): B
     tankInstall = Math.round(gt * 0.15);  // Reservoirs GNL
     safety = Math.round(20 + gt * 0.02);  // Systemes securite
     certification = Math.round(15 + gt * 0.015);
-    notes.push("Dual-fuel : conversion moteur, reservoirs, securite (estimation GASPE)");
+    notes.push("Dual-fuel : conversion moteur, réservoirs, sécurité (estimation GASPE)");
   }
 
   const totalEquip = tankClean + filterUpgrade + sealReplace + fuelHeating + monitoring + engineConv + tankInstall + safety;
@@ -1627,23 +1627,23 @@ export default function AdemeSimulator() {
               </Cd>
             )}
 
-            <Cd title="Investissements previsionnels (estimation)">
+            <Cd title="Investissements prévisionnels (estimation)">
               <div className="grid grid-cols-2 gap-3">
                 <In l="Coque / structure" v={proj.trajs?.[1]?.iC || 0}
                   onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iC: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h="Adaptation coque, renforcements structurels" />
-                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Systeme energetique (batteries, H2)" : bioEstim ? "Equipements conversion carburant" : "Systeme energetique"}
+                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Système énergétique (batteries, H₂)" : bioEstim ? "Équipements conversion carburant" : "Système énergétique"}
                   v={proj.trajs?.[1]?.iE || (batt && batt.kWh > 0 ? batt.costBatt : bioEstim ? bioEstim.totalEquip : 0)}
                   onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iE: Number(v) }; return { ...p, trajs: ts }; })}
                   u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Batteries, piles H2, convertisseurs" : "Cuves, filtres, joints, chauffage carburant, conversion moteur"} />
-                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Infrastructure charge" : bioEstim?.hasDual ? "Reservoirs GNL" : "Avitaillement / logistique"}
+                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Infrastructure charge" : bioEstim?.hasDual ? "Réservoirs GNL" : "Avitaillement / logistique"}
                   v={proj.trajs?.[1]?.iI || (batt && batt.kWh > 0 ? batt.costCharger : bioEstim?.tankInstall || 0)}
                   onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], iI: Number(v) }; return { ...p, trajs: ts }; })}
-                  u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Bornes, cables, transformateurs" : "Logistique avitaillement, stockage, reservoirs"} />
-                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement reseau" : "Certification / essais"}
+                  u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Bornes, câbles, transformateurs" : "Logistique avitaillement, stockage, réservoirs"} />
+                <In l={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement réseau" : "Certification / essais"}
                   v={proj.trajs?.[1]?.gridCost || (batt && batt.kWh > 0 ? batt.gridConnect : bioEstim?.certification || 0)}
                   onChange={v => upd(p => { const ts = [...p.trajs]; ts[1] = { ...ts[1], gridCost: Number(v) }; return { ...p, trajs: ts }; })}
-                  u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement ENEDIS / reseau" : "Bureau Veritas, DNV, essais moteur, certification ISO"} />
+                  u="k€" h={(Object.keys(proj.trajs?.[1]?.fuelMix || {}).some(k => ['elec','h2'].includes(k) && proj.trajs[1].fuelMix[k] > 0)) ? "Raccordement ENEDIS / réseau" : "Bureau Veritas, DNV, essais moteur, certification ISO"} />
               </div>
               {res && res[1] && (
                 <div className="mt-2 text-xs font-bold" style={{ color: D }}>

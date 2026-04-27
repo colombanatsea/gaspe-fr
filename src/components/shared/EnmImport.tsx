@@ -83,7 +83,7 @@ export function EnmImport() {
           <div>
             <h2 className="font-heading text-xl font-semibold text-foreground">Portail du marin (ENM)</h2>
             <p className="text-xs text-green-600">
-              Donnees importees &mdash; N° marin {user.enmMarinId}
+              Données importées &ndash; N° marin {user.enmMarinId}
               &middot; {(user.seaService ?? []).filter((s) => s.source === "enm_csv").length} lignes de service
               &middot; {(user.structuredCertifications ?? []).length} titres
               {user.medicalAptitude?.decision && <> &middot; {user.medicalAptitude.decision}</>}
@@ -91,7 +91,7 @@ export function EnmImport() {
           </div>
         </div>
         <Button variant="secondary" onClick={() => setWizardStep(1)}>
-          Reimporter mes donnees
+          Réimporter mes données
         </Button>
       </section>
     );
@@ -108,7 +108,7 @@ export function EnmImport() {
         </div>
         <div>
           <h2 className="font-heading text-xl font-semibold text-foreground">Importer depuis le Portail du marin</h2>
-          <p className="text-xs text-foreground-muted">4 etapes simples pour recuperer vos donnees ENM</p>
+          <p className="text-xs text-foreground-muted">4 étapes simples pour récupérer vos données ENM</p>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export function EnmImport() {
             <div>
               <p className="font-heading text-lg font-semibold text-foreground">Connectez-vous au portail ENM</p>
               <p className="text-sm text-foreground-muted mt-1 max-w-md mx-auto">
-                L&apos;Espace Numerique Maritime utilise FranceConnect. Cliquez ci-dessous pour vous connecter, puis revenez ici.
+                L&apos;Espace Numérique Maritime utilise FranceConnect. Cliquez ci-dessous pour vous connecter, puis revenez ici.
               </p>
             </div>
             <a
@@ -153,7 +153,7 @@ export function EnmImport() {
                 onClick={() => setWizardStep(2)}
                 className="text-sm text-primary font-medium hover:underline"
               >
-                Je suis connecte, etape suivante &rarr;
+                Je suis connecté, étape suivante &rarr;
               </button>
             </div>
           </div>
@@ -203,7 +203,7 @@ export function EnmImport() {
                       onClick={() => setCopiedPages((prev) => new Set([...prev, page.id]))}
                       className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${isCopied ? "bg-green-200 text-green-800" : "bg-[var(--gaspe-teal-600)] text-white hover:bg-[var(--gaspe-teal-700)]"}`}
                     >
-                      {isCopied ? "Copie !" : "J'ai copie"}
+                      {isCopied ? "Copié !" : "J'ai copié"}
                     </button>
                   </div>
                 </div>
@@ -214,7 +214,7 @@ export function EnmImport() {
           <div className="flex items-center justify-between mt-6">
             <button onClick={() => setWizardStep(1)} className="text-sm text-foreground-muted hover:underline">&larr; Retour</button>
             <Button onClick={() => setWizardStep(3)}>
-              Etape suivante : coller
+              Étape suivante : coller
               <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -226,7 +226,7 @@ export function EnmImport() {
       {/* ══════ STEP 3: Paste ══════ */}
       {wizardStep === 3 && (
         <Card>
-          <CardTitle className="mb-4">Collez vos donnees ENM</CardTitle>
+          <CardTitle className="mb-4">Collez vos données ENM</CardTitle>
           <p className="text-sm text-foreground-muted mb-3">
             Faites <kbd className="rounded bg-[var(--gaspe-neutral-200)] px-1.5 py-0.5 text-xs font-mono">Ctrl+V</kbd> dans le champ ci-dessous. Vous pouvez coller les 3 pages d&apos;un coup.
           </p>
@@ -234,7 +234,7 @@ export function EnmImport() {
           <textarea
             value={pastedText}
             onChange={(e) => setPastedText(e.target.value)}
-            placeholder="Collez ici le contenu copie depuis vos pages ENM..."
+            placeholder="Collez ici le contenu copié depuis vos pages ENM…"
             rows={8}
             autoFocus
             className="w-full rounded-xl border border-border-light bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
@@ -243,7 +243,7 @@ export function EnmImport() {
           {/* Live detection feedback */}
           {pastedText.trim() && (
             <div className="mt-3 rounded-lg bg-surface p-3 flex flex-wrap gap-3">
-              <span className="text-xs text-foreground-muted">Detecte :</span>
+              <span className="text-xs text-foreground-muted">Détecté :</span>
               <Badge variant={preview?.seaService.length ? "teal" : "neutral"}>
                 {preview?.seaService.length ?? 0} ligne{(preview?.seaService.length ?? 0) > 1 ? "s" : ""} de service
               </Badge>
@@ -260,7 +260,7 @@ export function EnmImport() {
           <div className="flex items-center justify-between mt-4">
             <button onClick={() => setWizardStep(2)} className="text-sm text-foreground-muted hover:underline">&larr; Retour</button>
             <Button onClick={handleAnalyze} disabled={detectedCount === 0}>
-              Analyser ({detectedCount} element{detectedCount > 1 ? "s" : ""})
+              Analyser ({detectedCount} élément{detectedCount > 1 ? "s" : ""})
               <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -274,7 +274,7 @@ export function EnmImport() {
         <div className="space-y-4">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle>Verification des donnees</CardTitle>
+              <CardTitle>Vérification des données</CardTitle>
               {data.enmMarinId && <Badge variant="teal">N° marin {data.enmMarinId}</Badge>}
             </div>
 
@@ -289,7 +289,7 @@ export function EnmImport() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-surface text-left">
-                        <th className="px-3 py-2 font-medium text-foreground-muted">Periode</th>
+                        <th className="px-3 py-2 font-medium text-foreground-muted">Période</th>
                         <th className="px-3 py-2 font-medium text-foreground-muted">Navire</th>
                         <th className="px-3 py-2 font-medium text-foreground-muted">Fonction</th>
                         <th className="px-3 py-2 font-medium text-foreground-muted">Cat.</th>
@@ -310,7 +310,7 @@ export function EnmImport() {
                   </table>
                 </div>
               ) : (
-                <p className="text-xs text-foreground-muted italic">Aucune ligne de service detectee. Avez-vous copie la page &laquo; Lignes de service &raquo; ?</p>
+                <p className="text-xs text-foreground-muted italic">Aucune ligne de service détectée. Avez-vous copié la page &laquo; Lignes de service &raquo; ?</p>
               )}
             </div>
 
@@ -335,7 +335,7 @@ export function EnmImport() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-foreground-muted italic">Aucun titre detecte. Avez-vous copie la page &laquo; Mes titres &raquo; ?</p>
+                <p className="text-xs text-foreground-muted italic">Aucun titre détecté. Avez-vous copié la page &laquo; Mes titres &raquo; ?</p>
               )}
             </div>
 
@@ -343,20 +343,20 @@ export function EnmImport() {
             <div>
               <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                 <StepIcon id="heart" />
-                Aptitude medicale
+                Aptitude médicale
               </h4>
               {data.medical.decision ? (
                 <div className="rounded-lg border border-border-light p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Badge variant={data.medical.expiryDate && new Date(data.medical.expiryDate) < new Date() ? "neutral" : "green"}>
-                      {data.medical.expiryDate && new Date(data.medical.expiryDate) < new Date() ? "Expiree" : "Valide"}
+                      {data.medical.expiryDate && new Date(data.medical.expiryDate) < new Date() ? "Expirée" : "Valide"}
                     </Badge>
                     <span className="text-sm text-foreground">{data.medical.decision}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs text-foreground-muted">
-                    {data.medical.lastVisitDate && <p>Derniere visite : {new Date(data.medical.lastVisitDate).toLocaleDateString("fr-FR")}</p>}
-                    {data.medical.expiryDate && <p>Validite : {new Date(data.medical.expiryDate).toLocaleDateString("fr-FR")}</p>}
-                    {data.medical.duration && <p>Duree : {data.medical.duration}</p>}
+                    {data.medical.lastVisitDate && <p>Dernière visite : {new Date(data.medical.lastVisitDate).toLocaleDateString("fr-FR")}</p>}
+                    {data.medical.expiryDate && <p>Validité : {new Date(data.medical.expiryDate).toLocaleDateString("fr-FR")}</p>}
+                    {data.medical.duration && <p>Durée : {data.medical.duration}</p>}
                   </div>
                   {data.medical.restrictions.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -367,7 +367,7 @@ export function EnmImport() {
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-foreground-muted italic">Aucune donnee medicale detectee. Avez-vous copie la page &laquo; Aptitude medicale &raquo; ?</p>
+                <p className="text-xs text-foreground-muted italic">Aucune donnée médicale détectée. Avez-vous copié la page &laquo; Aptitude médicale &raquo; ?</p>
               )}
             </div>
           </Card>

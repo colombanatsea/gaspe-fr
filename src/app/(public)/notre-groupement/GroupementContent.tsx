@@ -255,7 +255,7 @@ export function GroupementContent() {
                     </div>
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
                       <p className="font-heading text-2xl font-bold">1 494</p>
-                      <p className="text-xs text-white/70">Marins francais</p>
+                      <p className="text-xs text-white/70">Marins français</p>
                     </div>
                   </div>
                 </div>
@@ -369,7 +369,7 @@ export function GroupementContent() {
       <section className="mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-8 sm:pt-12">
         <CollapsibleSources>
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Statuts du GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondee en 1951</li>
+            <li>Statuts du GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d&apos;Eau, association loi 1901 fondée en 1951</li>
             <li>Donnees compagnies adherentes : declarations des membres au secretariat du GASPE (effectifs, flotte, territoires desservis)</li>
             <li>Composition du Bureau : election lors de l&apos;Assemblee Generale du GASPE</li>
             <li>Chiffres cles (compagnies, collaborateurs, navires, passagers) : consolidation annuelle GASPE – Donnees 2025</li>

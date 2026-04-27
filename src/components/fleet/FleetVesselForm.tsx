@@ -280,7 +280,7 @@ function CrewByBrevetEditor({
         )}
       </legend>
       <p className="text-xs text-foreground-muted -mt-2">
-        Renseignez le nombre de marins détenteurs de chaque brevet à bord. Inutile de remplir les cases à 0 — laissez vide. Survolez un libellé pour voir le détail réglementaire.
+        Renseignez le nombre de marins détenteurs de chaque brevet à bord. Inutile de remplir les cases à 0 – laissez vide. Survolez un libellé pour voir le détail réglementaire.
       </p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3">
         {categories.map((cat) => {

@@ -143,7 +143,7 @@ export default function AnnuaireFlottePage() {
         <div className="mb-8">
           <h1 className="font-heading text-2xl font-bold text-foreground mb-2">Annuaire flotte cross-compagnies</h1>
           <p className="text-foreground-muted">
-            Cette section est réservée aux adhérents ayant complété leur profil à 100%. C&apos;est une condition de réciprocité — pour consulter les données des autres, il faut partager les vôtres.
+            Cette section est réservée aux adhérents ayant complété leur profil à 100 %. C&apos;est une condition de réciprocité : pour consulter les données des autres, il faut partager les vôtres.
           </p>
         </div>
 

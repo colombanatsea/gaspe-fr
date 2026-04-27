@@ -614,7 +614,7 @@ function SuppleantSection() {
             onChange={(e) => setSelected(e.target.value)}
             className="w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none"
           >
-            <option value="">— Aucun suppléant —</option>
+            <option value="">– Aucun suppléant –</option>
             {info.candidates.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
           </select>
           <div className="flex items-center gap-3">
