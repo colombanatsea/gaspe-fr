@@ -103,7 +103,7 @@ export function AdminSidebar() {
           <button
             onClick={() => setCollapsed(true)}
             aria-label="Réduire la barre latérale"
-            className="rounded-lg p-1.5 text-[var(--gaspe-neutral-500)] hover:bg-white/5 hover:text-white transition-colors"
+            className="rounded-lg p-1.5 text-[var(--gaspe-neutral-400)] hover:bg-white/5 hover:text-white transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -128,7 +128,7 @@ export function AdminSidebar() {
         {visibleSections(user).map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--gaspe-neutral-500)]">
+              <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--gaspe-neutral-400)]">
                 {section.title}
               </p>
             )}
@@ -177,13 +177,13 @@ export function AdminSidebar() {
         {!collapsed && user && (
           <div className="mb-3 px-3">
             <p className="text-xs font-semibold text-white truncate">{user.name}</p>
-            <p className="text-[10px] text-[var(--gaspe-neutral-500)] truncate">{user.email}</p>
+            <p className="text-[10px] text-[var(--gaspe-neutral-400)] truncate">{user.email}</p>
           </div>
         )}
         <button
           onClick={() => { logout(); router.push("/connexion"); }}
           className={cn(
-            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gaspe-neutral-500)] hover:bg-red-500/10 hover:text-red-400 transition-colors",
+            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gaspe-neutral-400)] hover:bg-red-500/10 hover:text-red-400 transition-colors",
             collapsed && "justify-center px-2",
           )}
         >
@@ -195,7 +195,7 @@ export function AdminSidebar() {
           <Link
             href="/"
             target="_blank"
-            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2 text-xs text-[var(--gaspe-neutral-500)] hover:text-[var(--gaspe-teal-400)] transition-colors"
+            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2 text-xs text-[var(--gaspe-neutral-400)] hover:text-[var(--gaspe-teal-400)] transition-colors"
           >
             <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />

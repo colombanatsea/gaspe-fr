@@ -528,12 +528,14 @@ export default function AdminAdherentsPage() {
         <input
           type="text"
           placeholder="Rechercher (nom, ville, contact…)"
+          aria-label="Rechercher un adhérent par nom, ville ou contact"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="lg:col-span-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm text-foreground placeholder:text-foreground-muted/60 focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
         />
 
         <select
+          aria-label="Filtrer par catégorie d'adhérent"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
           className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
@@ -544,6 +546,7 @@ export default function AdminAdherentsPage() {
         </select>
 
         <select
+          aria-label="Filtrer par collège ACF"
           value={collegeFilter}
           onChange={(e) => setCollegeFilter(e.target.value as CollegeFilter)}
           className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
@@ -555,6 +558,7 @@ export default function AdminAdherentsPage() {
         </select>
 
         <select
+          aria-label="Filtrer par soumission CCN 3228"
           value={social3228Filter}
           onChange={(e) => setSocial3228Filter(e.target.value as Social3228Filter)}
           className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
@@ -565,6 +569,7 @@ export default function AdminAdherentsPage() {
         </select>
 
         <select
+          aria-label="Filtrer par statut d'archivage"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
@@ -575,6 +580,7 @@ export default function AdminAdherentsPage() {
         </select>
 
         <select
+          aria-label="Filtrer par état de cotisation"
           value={membershipFilter}
           onChange={(e) => setMembershipFilter(e.target.value as MembershipFilter)}
           className="lg:col-start-6 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
@@ -659,7 +665,7 @@ function StatCard({
     <div className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-4">
       <p className={`font-heading text-2xl font-bold ${accentColor}`}>{value}</p>
       <p className="text-xs text-foreground-muted">{label}</p>
-      {hint && <p className="text-[10px] text-foreground-muted/70">{hint}</p>}
+      {hint && <p className="text-[10px] text-foreground-muted">{hint}</p>}
     </div>
   );
 }
@@ -857,25 +863,20 @@ function SortHeader({
   onSort: (key: SortKey) => void;
 }) {
   const active = sortKey === k;
-  const ariaSort: "ascending" | "descending" | "none" = active
-    ? sortDir === "asc"
-      ? "ascending"
-      : "descending"
-    : "none";
+  const direction = active ? (sortDir === "asc" ? "croissant" : "décroissant") : null;
   return (
-    <span role="columnheader" aria-sort={ariaSort} className="contents">
-      <button
-        type="button"
-        onClick={() => onSort(k)}
-        className={`group inline-flex items-center gap-1 text-left uppercase tracking-wider transition-colors hover:text-foreground ${active ? "text-foreground" : "text-foreground-muted"}`}
-        title={`Trier par ${label.toLowerCase()}`}
-      >
-        <span>{label}</span>
-        <span className={`text-[10px] leading-none ${active ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-          {active ? (sortDir === "asc" ? "▲" : "▼") : "▲"}
-        </span>
-      </button>
-    </span>
+    <button
+      type="button"
+      onClick={() => onSort(k)}
+      aria-pressed={active}
+      aria-label={`Trier par ${label.toLowerCase()}${direction ? ` (actuellement ${direction})` : ""}`}
+      className={`group inline-flex items-center gap-1 text-left uppercase tracking-wider transition-colors hover:text-foreground ${active ? "text-foreground" : "text-foreground-muted"}`}
+    >
+      <span>{label}</span>
+      <span aria-hidden="true" className={`text-[10px] leading-none ${active ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+        {active ? (sortDir === "asc" ? "▲" : "▼") : "▲"}
+      </span>
+    </button>
   );
 }
 
@@ -1171,7 +1172,7 @@ function EditModal({
                 </select>
               </Field2>
               <Field2 label="Soumis CCN 3228">
-                <label className="flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm">
+                <span className="flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm">
                   <input
                     type="checkbox"
                     checked={form.social3228}
@@ -1179,7 +1180,7 @@ function EditModal({
                     className="h-4 w-4 accent-[var(--gaspe-teal-600)]"
                   />
                   <span>Vote NAO et mandats sociaux</span>
-                </label>
+                </span>
               </Field2>
               <Field2 label="Cotisation">
                 <select
@@ -1296,9 +1297,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Field2({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="mb-1.5 block text-sm font-semibold text-foreground">{label}</label>
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-semibold text-foreground">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

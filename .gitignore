@@ -28,5 +28,9 @@ gaspe-local.db
 # claude
 .claude/
 
+# playwright
+test-results/
+playwright-report/
+
 # snapshots auto-générés (référence dev, pas du source)
 scripts/_canonical-fleet-seed.snapshot.sql
