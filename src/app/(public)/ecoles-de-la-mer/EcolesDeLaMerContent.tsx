@@ -103,7 +103,7 @@ export function EcolesDeLaMerContent() {
   const heroSubtitle = useCmsContent(
     PAGE_ID,
     "hero-subtitle",
-    "100% d'emploi à la sortie. Tu pilotes. Tu répares. Tu navigues. Dès 14 ans.",
+    "Insertion professionnelle élevée à la sortie. Tu pilotes. Tu répares. Tu navigues. Dès 14 ans.",
   );
   const heroCtaPrimary = useCmsContent(
     PAGE_ID,
@@ -290,7 +290,7 @@ export function EcolesDeLaMerContent() {
           {/* Key stats row */}
           <div className="reveal stagger-4 mt-14 grid grid-cols-3 gap-3 sm:gap-6 max-w-3xl">
             {[
-              { value: "100%", label: "d'emploi à la sortie" },
+              { value: "Forte", label: "insertion professionnelle" },
               {
                 value: SCHOOL_COUNTS.lpm.toString(),
                 label: "lycées maritimes (dès 14 ans)",
@@ -630,8 +630,8 @@ export function EcolesDeLaMerContent() {
             </svg>
           </Link>
           <p className="mt-6 text-xs text-white/50">
-            100% des sortants des LPM et de l&apos;ENSM trouvent un emploi
-            maritime dans les 6&nbsp;mois.
+            La filière maritime française recrute : embarquements rapides après
+            le diplôme, brevets reconnus à l&apos;international.
           </p>
         </div>
       </section>

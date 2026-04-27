@@ -36,24 +36,27 @@ export function NewsletterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-sm gap-2">
+      <label htmlFor="newsletter-email" className="sr-only">
+        Adresse email pour la newsletter
+      </label>
       <input
+        id="newsletter-email"
         type="email"
         autoComplete="email"
         value={email}
         onChange={(e) => { setEmail(e.target.value); setStatus("idle"); }}
         placeholder="votre@email.fr"
-        className={`flex-1 rounded-xl bg-white/10 border px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none transition-colors ${
+        className={`flex-1 rounded-xl bg-white/10 border px-4 py-3 text-sm text-white placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gaspe-teal-400)] focus-visible:ring-offset-1 transition-colors ${
           status === "error" ? "border-red-400" : "border-white/10 focus:border-[var(--gaspe-teal-400)]"
         }`}
-        aria-label="Adresse email pour la newsletter"
         disabled={status === "submitting"}
       />
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="shrink-0 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-500)] transition-colors disabled:opacity-50"
+        className="shrink-0 rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-500)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 transition-colors active:scale-95 disabled:opacity-50 disabled:active:scale-100"
       >
-        {status === "submitting" ? "..." : "S'inscrire"}
+        {status === "submitting" ? "…" : "S'inscrire"}
       </button>
     </form>
   );

@@ -270,11 +270,50 @@ export default function SSGMPage() {
         {/* Sources */}
         <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
-            <li>Direction des Affaires Maritimes (DAM) – décret n° 2015-1575 du 3 décembre 2015</li>
-            <li>Code des transports, articles L5521-1 à L5521-4</li>
-            <li>Convention STCW (OMI), Section A-I/9</li>
-            <li>Convention du Travail Maritime (MLC 2006), Règle 1.2</li>
-            <li>Annuaire des services déconcentrés de l&apos;État en mer</li>
+            <li>
+              Direction des Affaires Maritimes (DAM) –{" "}
+              <a
+                href="https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000031563234"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted hover:text-foreground"
+              >
+                décret n° 2015-1575 du 3 décembre 2015
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000023086525/LEGISCTA000025007268/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted hover:text-foreground"
+              >
+                Code des transports, articles L5521-1 à L5521-4
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.imo.org/fr/About/Conventions/Pages/International-Convention-on-Standards-of-Training,-Certification-and-Watchkeeping-for-Seafarers-(STCW).aspx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted hover:text-foreground"
+              >
+                Convention STCW (OMI), Section A-I/9
+              </a>
+              {" "}— STCW 1978, amendements 2010 (en vigueur 01/01/2012)
+            </li>
+            <li>
+              <a
+                href="https://www.ilo.org/dyn/normlex/fr/f?p=NORMLEXPUB:91:0::NO::P91_INSTRUMENT_ID:312331"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted hover:text-foreground"
+              >
+                Convention du Travail Maritime (MLC 2006), Règle 1.2
+              </a>
+              {" "}— ratifiée par la France le 28/02/2013, en vigueur 20/08/2013
+            </li>
+            <li>Annuaire des services déconcentrés de l&apos;État en mer (préfectures maritimes)</li>
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">
             Coordonnées et horaires indicatifs. Contactez le centre SSGM concerné.

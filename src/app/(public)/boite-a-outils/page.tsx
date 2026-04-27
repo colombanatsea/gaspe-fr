@@ -783,7 +783,20 @@ export default function BoiteAOutilsPage() {
         <CollapsibleSources className="reveal mt-12">
           <ul className="space-y-2 text-xs text-foreground-muted leading-relaxed">
             {SALARY_SOURCES.map((src, i) => (
-              <li key={i}>{src}</li>
+              <li key={i}>
+                {src.url ? (
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-dotted hover:text-foreground"
+                  >
+                    {src.label}
+                  </a>
+                ) : (
+                  src.label
+                )}
+              </li>
             ))}
           </ul>
           <p className="mt-3 text-xs text-foreground-muted italic">

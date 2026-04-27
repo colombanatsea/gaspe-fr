@@ -64,6 +64,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={cn(
                 "rounded-md px-3 py-3 text-sm font-medium transition-colors",
                 item.highlight
@@ -89,6 +90,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={cn(
                 "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 pathname === item.href

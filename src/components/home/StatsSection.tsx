@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
@@ -59,6 +59,15 @@ function AnimatedNumber({ target, suffix, isInt }: { target: number; suffix: str
   const started = useRef(false);
 
   useEffect(() => {
+    // Respect prefers-reduced-motion : afficher la valeur cible sans animation.
+    const prefersReduced = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      startTransition(() => setCount(target));
+      started.current = true;
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {

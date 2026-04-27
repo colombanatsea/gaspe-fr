@@ -81,7 +81,7 @@
   --color-primary-decorative: var(--gaspe-teal-400);
   --color-secondary: var(--gaspe-blue-600);
   --color-foreground: var(--gaspe-neutral-900);
-  --color-foreground-muted: var(--gaspe-neutral-600);
+  --color-foreground-muted: var(--gaspe-neutral-700);
   --color-background: #FFFFFF;
   --color-surface: var(--gaspe-neutral-100);
   --color-surface-teal: var(--gaspe-teal-50);
@@ -142,7 +142,7 @@
   --color-primary-decorative: var(--gaspe-teal-500);
   --color-secondary: var(--gaspe-blue-400);
   --color-foreground: #F0EDED;
-  --color-foreground-muted: #9E9893;
+  --color-foreground-muted: #C4BDB5;
   --color-background: #1A1918;
   --color-surface: #242322;
   --color-surface-teal: #0B3E44;
@@ -249,6 +249,35 @@ body {
 .gaspe-encart {
   background: var(--gaspe-teal-50);
   border-left: 3px solid var(--gaspe-teal-600);
+}
+
+/* ── Smooth scroll global (#anchors, scroll-into-view) ── */
+html { scroll-behavior: smooth; }
+
+/* ── Respect prefers-reduced-motion (WCAG 2.1 AAA) ──
+   Coupe les animations pour les utilisateurs avec sensibilité
+   vestibulaire / migraines / troubles de l'équilibre.
+   .reveal et .reveal-scale gardent leur état "révélé" pour
+   ne pas masquer le contenu. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-scale,
+  .reveal-left,
+  .reveal-right {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
 }
 
 /* ── Scroll Reveal Animations ── */

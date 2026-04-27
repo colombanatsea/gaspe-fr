@@ -637,15 +637,36 @@ export const SALARY_DISCLAIMER =
  * Références pour la crédibilité et la traçabilité juridique des grilles.
  * Citées dans la section Sources au bas des pages.
  */
-export const SALARY_SOURCES = [
-  "Avenant salarial NAO 2026 à la CCN 3228 – Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
-  "Texte de la CCN 3228 sur Legifrance – Journal officiel (après arrêté d'extension du ministère du Travail)",
-  "Article L2253-1 du Code du travail : articulation entre accords de branche étendus et accords d'entreprise (principe de faveur pour les salaires minima hiérarchiques)",
-  "Code des transports, Livre V, titre V – Gens de mer (durée du travail maritime, heures supplémentaires)",
-  "Barèmes ENIM 2025/2026 – Caisse des gens de mer (salaires forfaitaires d'assiette des cotisations, distincts des salaires réels)",
+export const SALARY_SOURCES: Array<{ label: string; url?: string }> = [
+  {
+    label:
+      "Avenant salarial NAO 2026 à la CCN 3228 – Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
+    url: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000048819127",
+  },
+  {
+    label:
+      "Texte de la CCN 3228 sur Legifrance – Journal officiel (après arrêté d'extension du ministère du Travail)",
+    url: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000048819127",
+  },
+  {
+    label:
+      "Article L2253-1 du Code du travail : articulation entre accords de branche étendus et accords d'entreprise (principe de faveur pour les salaires minima hiérarchiques)",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000035613481/",
+  },
+  {
+    label:
+      "Code des transports, Livre V, titre V – Gens de mer (durée du travail maritime, heures supplémentaires)",
+    url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000023086525/LEGISCTA000025007268/",
+  },
+  {
+    label:
+      "Barèmes ENIM 2025/2026 – Caisse des gens de mer (salaires forfaitaires d'assiette des cotisations, distincts des salaires réels)",
+    url: "https://www.enim.eu/",
+  },
 ];
 
-export const LAST_UPDATED = "Janvier 2026";
+/** Date de dernière mise à jour des grilles, indemnités et taux ENIM affichés sur /boite-a-outils. */
+export const LAST_UPDATED = "Avril 2026";
 
 export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   pont: "Pont",

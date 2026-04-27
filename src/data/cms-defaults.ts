@@ -289,12 +289,12 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
   "ecoles-de-la-mer": {
     "page-header-title": "Les écoles de la mer",
     "page-header-description":
-      "Tu pilotes. Tu répares. Tu navigues. 100 % d'emploi à la sortie. Découvre les LPM et l'ENSM.",
+      "Tu pilotes. Tu répares. Tu navigues. Insertion professionnelle élevée à la sortie. Découvre les LPM et l'ENSM.",
     "hero-bg-image": "/campagne/ecoles-de-la-mer-hero.jpg",
     "hero-eyebrow": "Les écoles de la mer",
     "hero-title": "Ton bureau ? Il tangue. Et il paie.",
     "hero-subtitle":
-      "100% d'emploi à la sortie. Tu pilotes. Tu répares. Tu navigues. Dès 14 ans.",
+      "Insertion professionnelle élevée à la sortie. Tu pilotes. Tu répares. Tu navigues. Dès 14 ans.",
     "hero-cta-primary": "Faire le quiz",
     "hero-cta-secondary": "Trouver mon école",
     "narrative-lpm-title": "Dès 14 ans : les 12 LPM",

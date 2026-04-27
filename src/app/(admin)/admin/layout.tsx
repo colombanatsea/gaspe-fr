@@ -24,7 +24,7 @@ export default function AdminLayout({
       <AdminMobileNav open={mobileOpen} onClose={handleClose} />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto bg-surface">
+      <main id="main-content" className="flex-1 overflow-y-auto bg-surface">
         {/* Mobile top bar */}
         <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--gaspe-neutral-200)] bg-white px-4 py-3 lg:hidden">
           <button
