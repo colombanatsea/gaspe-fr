@@ -31,6 +31,23 @@ Image servie en `unoptimized` (compatible static export Cloudflare Pages).
 **Recommandé** : compresser le JPEG en amont (qualité 75-80, max 1920×1080
 ou 2400×1600 selon le crop) pour limiter le poids du hero (< 250 KB idéal).
 
+État actuel (session 43) :
+- `ecoles-de-la-mer-hero.jpg` : **222 KB** (1400×1980, qualité 80, mozjpeg
+  progressive, recompressé depuis 492 KB → −54 %)
+- `embarque-passerelle.jpg` : **179 KB** (1400×1980, qualité 80, mozjpeg
+  progressive, recompressé depuis 468 KB → −61 %)
+
+Procédure de recompression in-tree (sharp est déjà dans les deps) :
+```bash
+node -e "
+const sharp=require('sharp'),fs=require('fs');
+(async()=>{for(const f of['ecoles-de-la-mer-hero.jpg','embarque-passerelle.jpg']){
+  const buf=await sharp('public/campagne/'+f).jpeg({quality:80,mozjpeg:true,progressive:true}).toBuffer();
+  fs.writeFileSync('public/campagne/'+f,buf);
+  console.log(f,fs.statSync('public/campagne/'+f).size);
+}})();"
+```
+
 ## Crédits
 
 Crédits photographiques à fournir par le studio créatif de la campagne.

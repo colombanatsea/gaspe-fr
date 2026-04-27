@@ -419,18 +419,18 @@ export function getSchoolsByFamily(family: SchoolFamily): School[] {
  *  Saint-Malo) + 1 antenne récente au LPM Bastia = **5 lieux** où devenir
  *  officier de la marine marchande. L'ENSM reste **une seule école**.
  */
+const _LPM = SCHOOLS.filter((s) => s.kind === "lpm");
+const _ENSM = SCHOOLS.filter((s) => s.kind === "ensm");
+const _LPM_WITH_OFFICIER = _LPM.filter((s) =>
+  s.formations.some((f) => f.level === "officier"),
+);
+
 export const SCHOOL_COUNTS = {
-  lpm: SCHOOLS.filter((s) => s.kind === "lpm").length,
-  ensm: SCHOOLS.filter((s) => s.kind === "ensm").length,
-  ensmSites:
-    SCHOOLS.filter((s) => s.kind === "ensm").length +
-    SCHOOLS.filter(
-      (s) =>
-        s.kind === "lpm" &&
-        s.formations.some((f) => f.level === "officier"),
-    ).length,
+  lpm: _LPM.length,
+  ensm: _ENSM.length,
+  ensmSites: _ENSM.length + _LPM_WITH_OFFICIER.length,
   total: SCHOOLS.length,
-};
+} as const;
 
 /** Libellés lisibles pour les filtres. */
 export const LEVEL_LABELS: Record<SchoolLevel, string> = {

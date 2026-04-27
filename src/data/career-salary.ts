@@ -1,7 +1,8 @@
 /**
- * Jalons indicatifs de carrière maritime — utilisés par le simulateur de la
+ * Jalons indicatifs de carrière maritime – utilisés par le simulateur de la
  * page /ecoles-de-la-mer pour montrer la progression métier + salaire entre
- * 17 et 45 ans.
+ * 17 et 55 ans (étape « Retraite ENIM » à 55 ans – code des pensions de
+ * retraite des marins, 25 années de services maritimes).
  *
  * Sources :
  *  - Grille classification CCN 3228 (cf. src/data/ccn3228.ts) – salaires nets
