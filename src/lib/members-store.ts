@@ -106,6 +106,18 @@ export function saveMembers(members: StoredMember[]) {
   setLocalMembers(members);
 }
 
+/** Ajoute un nouvel adhérent (mode demo uniquement).
+ *  En mode API, la création passe par un re-seed `members.ts` + redéploy
+ *  Cloudflare (cf. CLAUDE.md "Members store"). */
+export function addMember(member: StoredMember): void {
+  const list = getLocalMembers();
+  if (list.some((m) => m.slug === member.slug)) {
+    throw new Error(`Un adhérent avec le slug "${member.slug}" existe déjà.`);
+  }
+  list.push({ ...member, archived: member.archived ?? false });
+  setLocalMembers(list);
+}
+
 /** Update a single member (API mode: PATCH organization). */
 export async function updateMember(slug: string, updates: Partial<StoredMember>): Promise<boolean> {
   if (isApiMode()) {
