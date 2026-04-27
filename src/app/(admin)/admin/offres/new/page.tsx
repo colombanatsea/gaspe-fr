@@ -10,7 +10,7 @@ import { members } from "@/data/members";
 import { slugify } from "@/lib/utils";
 import { ZONE_LABELS, START_DATE_OPTIONS } from "@/data/jobs";
 import type { Job, Zone } from "@/data/jobs";
-import { createJob } from "@/lib/jobs-store";
+import { createJob, publishToHydros, updateJob } from "@/lib/jobs-store";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance", "Autres"];
@@ -94,7 +94,47 @@ export default function AdminNewOffrePage() {
       published: true,
     };
 
-    await createJob(newJob);
+    const created = await createJob(newJob);
+    const finalJob = created ?? newJob;
+
+    // Publication automatique Hydros Alumni si l'offre est publiée (côté admin :
+    // toujours `published: true`, l'admin n'a pas de bouton brouillon ici).
+    // Silencieux : un échec côté Worker (secrets manquants, mapping AlumnForce
+    // hors ligne…) ne bloque pas le retour vers la liste. Mise à jour différée
+    // de hydrosOfferUrl/Id en arrière-plan via PATCH.
+    //
+    // Choix `companyDescription` : l'admin publie pour le compte d'une compagnie
+    // tiers et n'a pas de description "naturelle" à fournir. On regarde la fiche
+    // adhérent (members.ts) par nom de compagnie. Si la compagnie n'est pas dans
+    // la liste (cas "Autre…"), buildHydrosPayload retombe sur un libellé générique.
+    if (finalJob.published) {
+      const member = members.find((m) => m.name === finalJob.company);
+      void publishToHydros({
+        title: finalJob.title,
+        description: finalJob.description,
+        profile: finalJob.profile,
+        conditions: finalJob.conditions,
+        company: finalJob.company,
+        companyDescription: member?.description,
+        location: finalJob.location,
+        contractType: finalJob.contractType,
+        category: finalJob.category,
+        startDate: finalJob.startDate,
+        reference: finalJob.reference,
+        contactEmail: finalJob.contactEmail,
+        contactPhone: finalJob.contactPhone,
+        applicationUrl: finalJob.applicationUrl,
+        handiAccessible: finalJob.handiAccessible,
+      }).then((result) => {
+        if (result.success && result.hydrosOfferUrl) {
+          void updateJob(finalJob.id, {
+            hydrosOfferUrl: result.hydrosOfferUrl,
+            hydrosOfferId: result.hydrosOfferId,
+          });
+        }
+      });
+    }
+
     router.push("/admin/offres");
   }
 
