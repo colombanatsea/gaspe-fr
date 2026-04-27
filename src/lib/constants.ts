@@ -24,6 +24,10 @@ export const SITE_KEYWORDS = [
   "bacs passagers",
   "CCN 3228",
   "GASPE",
+  "marin de commerce",
+  "lycée maritime",
+  "école nationale supérieure maritime",
+  "formation maritime jeune",
 ];
 export const SITE_URL = "https://www.gaspe.fr";
 

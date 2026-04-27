@@ -172,6 +172,22 @@ export const DEFAULT_PAGE_META: Record<
     keywords: ["STCW", "brevet capitaine 200", "formation maritime France", "CFBS"],
     path: "/formations",
   },
+  "ecoles-de-la-mer": {
+    title: "Les écoles de la mer – Devenir marin de commerce",
+    description:
+      "Tu pilotes. Tu répares. Tu navigues. 100% d'emploi à la sortie. Les 12 lycées professionnels maritimes (LPM) et les 4 sites de l'ENSM forment dès 14 ans aux métiers de marin de commerce.",
+    keywords: [
+      "lycée maritime",
+      "écoles de la mer",
+      "devenir marin de commerce",
+      "ENSM admission",
+      "LPM formation maritime",
+      "officier marine marchande",
+      "100% emploi maritime",
+      "carrière maritime jeune",
+    ],
+    path: "/ecoles-de-la-mer",
+  },
   ssgm: {
     title: "SSGM & Médecins agréés – Visites médicales gens de mer",
     description:
