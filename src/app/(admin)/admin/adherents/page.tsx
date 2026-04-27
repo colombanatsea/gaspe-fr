@@ -26,6 +26,7 @@ import { CollegeBadge } from "@/components/shared/CollegeBadge";
 import type { Organization, MembershipStatus, User } from "@/lib/auth/types";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 import {
+  addMember,
   getStoredMembers,
   saveMembers,
   toggleMemberArchived,
@@ -58,6 +59,41 @@ type CollegeFilter = "all" | "A" | "B" | "C";
 type Social3228Filter = "all" | "yes" | "no";
 type MembershipFilter = "all" | MembershipStatus;
 type ViewMode = "expanded" | "compact";
+type SortKey = "name" | "city" | "region" | "category" | "college" | "social3228" | "membershipStatus" | "contacts";
+type SortDir = "asc" | "desc";
+
+const MEMBERSHIP_ORDER: Record<MembershipStatus, number> = { paid: 0, pending: 1, due: 2 };
+
+function escapeCsv(val: string): string {
+  if (val.includes(";") || val.includes('"') || val.includes("\n") || val.includes("\r")) {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
+  return val;
+}
+
+function compareRows(a: OrgRow, b: OrgRow, key: SortKey): number {
+  switch (key) {
+    case "name":
+      return a.name.localeCompare(b.name, "fr");
+    case "city":
+      return (a.city ?? "").localeCompare(b.city ?? "", "fr");
+    case "region":
+      return (a.region ?? "").localeCompare(b.region ?? "", "fr");
+    case "category":
+      return (a.category ?? "").localeCompare(b.category ?? "", "fr");
+    case "college":
+      return (a.college ?? "Z").localeCompare(b.college ?? "Z");
+    case "social3228":
+      return Number(b.social3228 === true) - Number(a.social3228 === true);
+    case "membershipStatus": {
+      const av = a.membershipStatus ? MEMBERSHIP_ORDER[a.membershipStatus] : 99;
+      const bv = b.membershipStatus ? MEMBERSHIP_ORDER[b.membershipStatus] : 99;
+      return av - bv;
+    }
+    case "contacts":
+      return a.contacts.length - b.contacts.length;
+  }
+}
 
 export default function AdminAdherentsPage() {
   const { user, getAllUsers } = useAuth();
@@ -76,7 +112,20 @@ export default function AdminAdherentsPage() {
 
   // ── Modal state ──
   const [editing, setEditing] = useState<OrgRow | null>(null);
+  const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ── Sort (vue Tableau) ──
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  function toggleSort(next: SortKey) {
+    if (sortKey === next) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(next);
+      setSortDir("asc");
+    }
+  }
 
   /** Tente l'API d'abord (sole source pour college/social3228/membershipStatus
    *  côté admin) ; retombe sur le store localStorage sinon. */
@@ -147,8 +196,18 @@ export default function AdminAdherentsPage() {
     void fetchData();
   }, [user, router, fetchData]);
 
+  const sorted = useMemo(() => {
+    if (view !== "compact") return rows;
+    const copy = [...rows];
+    copy.sort((a, b) => {
+      const cmp = compareRows(a, b, sortKey);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [rows, sortKey, sortDir, view]);
+
   const filtered = useMemo(() => {
-    return rows.filter((org) => {
+    return sorted.filter((org) => {
       // Statut archivé — l'API renvoie `archived: boolean` quand include_archived=1
       const isArchived = (org as Organization & { archived?: boolean }).archived === true;
       if (statusFilter === "active" && isArchived) return false;
@@ -173,7 +232,7 @@ export default function AdminAdherentsPage() {
       }
       return true;
     });
-  }, [rows, statusFilter, categoryFilter, collegeFilter, social3228Filter, membershipFilter, search]);
+  }, [sorted, statusFilter, categoryFilter, collegeFilter, social3228Filter, membershipFilter, search]);
 
   // Stats : on compte sur l'ensemble actif (non-archivé) pour les chiffres clés
   const activeRows = rows.filter((r) => !(r as Organization & { archived?: boolean }).archived);
@@ -268,6 +327,99 @@ export default function AdminAdherentsPage() {
     }
   }
 
+  /** Crée un nouvel adhérent en mode demo uniquement (members-store).
+   *  En mode API, la création passe par seed members.ts + redéploy. */
+  function handleCreate(form: EditFormState) {
+    if (isApiMode()) {
+      alert(
+        "Création non disponible en mode prod. Ajouter un adhérent passe par " +
+          "src/data/members.ts (puis re-seed D1 + redéploy).",
+      );
+      return;
+    }
+    setSaving(true);
+    try {
+      const member: StoredMember = {
+        name: form.name,
+        slug: form.slug,
+        city: form.city,
+        region: form.region,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        territory: form.territory,
+        category: form.category,
+        college: form.college,
+        social3228: form.social3228,
+        email: form.email || undefined,
+        phone: form.phone || undefined,
+        address: form.address || undefined,
+        websiteUrl: form.websiteUrl || undefined,
+        logoUrl: form.logoUrl || undefined,
+        description: form.description || undefined,
+        employeeCount: form.employeeCount,
+        shipCount: form.shipCount,
+        membershipStatus: form.membershipStatus,
+        archived: false,
+      };
+      try {
+        addMember(member);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Échec de la création.");
+        return;
+      }
+      setCreating(false);
+      void fetchData();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  /** Export CSV de la liste filtrée (FR Excel : ; + UTF-8 BOM). */
+  function handleExportCsv() {
+    const headers = [
+      "Nom", "Slug", "Ville", "Région", "Territoire", "Catégorie",
+      "Collège", "CCN 3228", "Cotisation", "Statut",
+      "Email", "Téléphone", "Adresse", "Site web",
+      "Effectifs", "Navires",
+      "Contacts (nb)", "Responsable", "Email responsable",
+    ];
+    const lines = filtered.map((org) => {
+      const archived = (org as Organization & { archived?: boolean }).archived === true;
+      const primary = org.contacts.find((c) => c.isPrimary);
+      const cells = [
+        org.name,
+        org.slug,
+        org.city ?? "",
+        org.region ?? "",
+        org.territory === "dom-tom" ? "Outre-mer" : "Hexagone",
+        org.category ?? "",
+        org.college ?? "",
+        org.social3228 === true ? "oui" : "non",
+        org.membershipStatus ?? "",
+        archived ? "archivé" : "actif",
+        org.email ?? "",
+        org.phone ?? "",
+        org.address ?? "",
+        org.websiteUrl ?? "",
+        org.employeeCount?.toString() ?? "",
+        org.shipCount?.toString() ?? "",
+        org.contacts.length.toString(),
+        primary?.name ?? "",
+        primary?.email ?? "",
+      ];
+      return cells.map(escapeCsv).join(";");
+    });
+    const csv = "﻿" + headers.join(";") + "\n" + lines.join("\n") + "\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `adherents-acf-${stamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   /** Archive/désarchive via PATCH API (mode prod) ou via store local (demo). */
   async function handleToggleArchive(org: OrgRow) {
     const isArchived = (org as Organization & { archived?: boolean }).archived === true;
@@ -307,28 +459,56 @@ export default function AdminAdherentsPage() {
           </p>
         </div>
 
-        {/* Toggle vue */}
-        <div className="inline-flex rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Export CSV */}
           <button
-            onClick={() => setView("expanded")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-              view === "expanded"
-                ? "bg-[var(--gaspe-teal-600)] text-white"
-                : "text-foreground-muted hover:text-foreground"
-            }`}
+            onClick={handleExportCsv}
+            disabled={loading || filtered.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-xs font-semibold text-foreground transition-colors hover:border-[var(--gaspe-teal-200)] hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)] disabled:pointer-events-none disabled:opacity-50"
+            title="Télécharger la liste filtrée au format CSV (Excel FR)"
           >
-            Détaillée
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export CSV
           </button>
-          <button
-            onClick={() => setView("compact")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-              view === "compact"
-                ? "bg-[var(--gaspe-teal-600)] text-white"
-                : "text-foreground-muted hover:text-foreground"
-            }`}
-          >
-            Tableau
-          </button>
+
+          {/* Ajouter (demo only) */}
+          {!isApiMode() && (
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--gaspe-teal-600)] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[var(--gaspe-teal-700)]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Ajouter un adhérent
+            </button>
+          )}
+
+          {/* Toggle vue */}
+          <div className="inline-flex rounded-xl border border-[var(--gaspe-neutral-200)] bg-white p-1">
+            <button
+              onClick={() => setView("expanded")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                view === "expanded"
+                  ? "bg-[var(--gaspe-teal-600)] text-white"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              Détaillée
+            </button>
+            <button
+              onClick={() => setView("compact")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                view === "compact"
+                  ? "bg-[var(--gaspe-teal-600)] text-white"
+                  : "text-foreground-muted hover:text-foreground"
+              }`}
+            >
+              Tableau
+            </button>
+          </div>
         </div>
       </div>
 
@@ -424,6 +604,9 @@ export default function AdminAdherentsPage() {
       ) : (
         <CompactTable
           rows={filtered}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={toggleSort}
           onArchive={handleToggleArchive}
           onEdit={(org) => setEditing(org)}
         />
@@ -431,10 +614,21 @@ export default function AdminAdherentsPage() {
 
       {editing && (
         <EditModal
+          mode="edit"
           org={editing}
           saving={saving}
           onClose={() => setEditing(null)}
           onSave={handleSave}
+        />
+      )}
+
+      {creating && (
+        <EditModal
+          mode="create"
+          org={null}
+          saving={saving}
+          onClose={() => setCreating(false)}
+          onSave={handleCreate}
         />
       )}
     </div>
@@ -648,27 +842,70 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+/* ───── En-tête triable (vue compacte) ───── */
+function SortHeader({
+  label,
+  k,
+  sortKey,
+  sortDir,
+  onSort,
+}: {
+  label: string;
+  k: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
+}) {
+  const active = sortKey === k;
+  const ariaSort: "ascending" | "descending" | "none" = active
+    ? sortDir === "asc"
+      ? "ascending"
+      : "descending"
+    : "none";
+  return (
+    <span role="columnheader" aria-sort={ariaSort} className="contents">
+      <button
+        type="button"
+        onClick={() => onSort(k)}
+        className={`group inline-flex items-center gap-1 text-left uppercase tracking-wider transition-colors hover:text-foreground ${active ? "text-foreground" : "text-foreground-muted"}`}
+        title={`Trier par ${label.toLowerCase()}`}
+      >
+        <span>{label}</span>
+        <span className={`text-[10px] leading-none ${active ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+          {active ? (sortDir === "asc" ? "▲" : "▼") : "▲"}
+        </span>
+      </button>
+    </span>
+  );
+}
+
 /* ───── Vue compacte (tableau) ───── */
 function CompactTable({
   rows,
+  sortKey,
+  sortDir,
+  onSort,
   onArchive,
   onEdit,
 }: {
   rows: OrgRow[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
   onArchive: (org: OrgRow) => void;
   onEdit: (org: OrgRow) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white">
       <div className="hidden grid-cols-[1.4fr_120px_140px_90px_70px_70px_140px_90px_140px] gap-3 border-b border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] px-5 py-3 text-xs font-semibold uppercase tracking-wider text-foreground-muted lg:grid">
-        <span>Compagnie</span>
-        <span>Ville</span>
-        <span>Région</span>
-        <span>Catégorie</span>
-        <span>Coll.</span>
-        <span>3228</span>
-        <span>Cotisation</span>
-        <span>Contacts</span>
+        <SortHeader label="Compagnie" k="name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Ville" k="city" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Région" k="region" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Catégorie" k="category" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Coll." k="college" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="3228" k="social3228" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Cotisation" k="membershipStatus" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        <SortHeader label="Contacts" k="contacts" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
         <span className="text-right">Actions</span>
       </div>
 
@@ -798,19 +1035,46 @@ function orgToForm(org: Organization & { archived?: boolean }): EditFormState {
   };
 }
 
+const EMPTY_FORM: EditFormState = {
+  name: "",
+  slug: "",
+  city: "",
+  region: "",
+  latitude: 0,
+  longitude: 0,
+  territory: "metropole",
+  category: "titulaire",
+  email: "",
+  phone: "",
+  address: "",
+  websiteUrl: "",
+  logoUrl: "",
+  description: "",
+  employeeCount: undefined,
+  shipCount: undefined,
+  membershipStatus: undefined,
+  college: undefined,
+  social3228: false,
+};
+
 function EditModal({
+  mode,
   org,
   saving,
   onClose,
   onSave,
 }: {
-  org: OrgRow;
+  mode: "edit" | "create";
+  org: OrgRow | null;
   saving: boolean;
   onClose: () => void;
   onSave: (form: EditFormState) => void;
 }) {
-  const [form, setForm] = useState<EditFormState>(() => orgToForm(org));
+  const [form, setForm] = useState<EditFormState>(() => (org ? orgToForm(org) : EMPTY_FORM));
+  // En mode "create" tout est éditable même en API mode (l'admin n'a pas
+  // d'autre option côté demo, et l'API ne supporte pas la création).
   const apiMode = isApiMode();
+  const fieldsLocked = mode === "edit" && apiMode;
 
   function update<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -824,11 +1088,15 @@ function EditModal({
       <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white shadow-xl">
         <div className="flex items-center justify-between rounded-t-2xl border-b border-[var(--gaspe-neutral-200)] bg-white px-6 py-4">
           <div>
-            <h2 className="font-heading text-lg font-bold text-foreground">Modifier {org.name}</h2>
+            <h2 className="font-heading text-lg font-bold text-foreground">
+              {mode === "create" ? "Nouvel adhérent" : `Modifier ${org?.name ?? ""}`}
+            </h2>
             <p className="text-xs text-foreground-muted">
-              {apiMode
-                ? "Mode prod – les champs seed (nom, ville, coordonnées, catégorie) sont en lecture seule."
-                : "Mode démo – tous les champs sont éditables (persistance localStorage)."}
+              {mode === "create"
+                ? "Mode démo – l'adhérent est ajouté localement (localStorage). En prod : ajouter dans src/data/members.ts puis re-seed D1."
+                : apiMode
+                  ? "Mode prod – les champs seed (nom, ville, coordonnées, catégorie) sont en lecture seule."
+                  : "Mode démo – tous les champs sont éditables (persistance localStorage)."}
             </p>
           </div>
           <button
@@ -846,38 +1114,38 @@ function EditModal({
           <Section title="Identité (seed)">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field2 label="Nom">
-                <input className={inputClass} value={form.name} disabled={apiMode}
+                <input className={inputClass} value={form.name} disabled={fieldsLocked}
                   onChange={(e) => update("name", e.target.value)} />
               </Field2>
               <Field2 label="Slug">
-                <input className={inputClass} value={form.slug} disabled={apiMode}
+                <input className={inputClass} value={form.slug} disabled={fieldsLocked}
                   onChange={(e) => update("slug", e.target.value)} />
               </Field2>
               <Field2 label="Ville">
-                <input className={inputClass} value={form.city} disabled={apiMode}
+                <input className={inputClass} value={form.city} disabled={fieldsLocked}
                   onChange={(e) => update("city", e.target.value)} />
               </Field2>
               <Field2 label="Région">
-                <input className={inputClass} value={form.region} disabled={apiMode}
+                <input className={inputClass} value={form.region} disabled={fieldsLocked}
                   onChange={(e) => update("region", e.target.value)} />
               </Field2>
               <Field2 label="Latitude">
-                <input type="number" step="any" className={inputClass} value={form.latitude} disabled={apiMode}
+                <input type="number" step="any" className={inputClass} value={form.latitude} disabled={fieldsLocked}
                   onChange={(e) => update("latitude", parseFloat(e.target.value) || 0)} />
               </Field2>
               <Field2 label="Longitude">
-                <input type="number" step="any" className={inputClass} value={form.longitude} disabled={apiMode}
+                <input type="number" step="any" className={inputClass} value={form.longitude} disabled={fieldsLocked}
                   onChange={(e) => update("longitude", parseFloat(e.target.value) || 0)} />
               </Field2>
               <Field2 label="Territoire">
-                <select className={inputClass} value={form.territory} disabled={apiMode}
+                <select className={inputClass} value={form.territory} disabled={fieldsLocked}
                   onChange={(e) => update("territory", e.target.value as "metropole" | "dom-tom")}>
                   <option value="metropole">Hexagone</option>
                   <option value="dom-tom">Outre-mer</option>
                 </select>
               </Field2>
               <Field2 label="Catégorie">
-                <select className={inputClass} value={form.category} disabled={apiMode}
+                <select className={inputClass} value={form.category} disabled={fieldsLocked}
                   onChange={(e) => update("category", e.target.value as "titulaire" | "associe")}>
                   <option value="titulaire">Titulaire</option>
                   <option value="associe">Associé</option>
