@@ -1,10 +1,13 @@
 import type { NavItem } from "@/types";
 
+// Note : « Écoles de la mer » est intentionnellement absente du header — la
+// page est destinée aux jeunes scannant un QR code sur les affiches de la
+// campagne, pas à un visiteur du site naviguant depuis l'accueil. Conservée
+// dans le footer pour le SEO et l'accessibilité directe.
 export const mainNavigation: NavItem[] = [
   { label: "Notre Groupement", href: "/notre-groupement" },
   { label: "Positions", href: "/positions" },
   { label: "Documents", href: "/documents" },
-  { label: "Écoles de la mer", href: "/ecoles-de-la-mer" },
   {
     label: "Nos Compagnies Recrutent",
     href: "/nos-compagnies-recrutent",

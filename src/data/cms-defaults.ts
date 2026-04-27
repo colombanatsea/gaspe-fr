@@ -290,23 +290,24 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "page-header-title": "Les écoles de la mer",
     "page-header-description":
       "Tu pilotes. Tu répares. Tu navigues. 100% d'emploi à la sortie. Découvre les LPM et l'ENSM.",
+    "hero-bg-image": "/campagne/ecoles-de-la-mer-hero.jpg",
     "hero-eyebrow": "Les écoles de la mer",
     "hero-title": "Ton bureau ? Il tangue. Et il paie.",
     "hero-subtitle":
       "100% d'emploi à la sortie. Tu pilotes. Tu répares. Tu navigues. Dès 14 ans.",
     "hero-cta-primary": "Faire le quiz",
     "hero-cta-secondary": "Trouver mon école",
-    "narrative-lpm-title": "Dès 14 ans : les LPM",
+    "narrative-lpm-title": "Dès 14 ans : les 12 LPM",
     "narrative-lpm-body":
       "12 lycées professionnels maritimes en France. Tu y entres après la 3e, tu sors avec un bac pro et un job à la clé. Alternance possible : tu apprends et tu touches une indemnité.",
-    "narrative-ensm-title": "Après le bac : l'ENSM",
+    "narrative-ensm-title": "Après le bac : 1 école nationale supérieure",
     "narrative-ensm-body":
-      "École Nationale Supérieure Maritime – 4 sites en France (Le Havre, Marseille, Nantes, Saint-Malo). Concours post-bac. Tu sors officier de la marine marchande, brevet pont + machine.",
+      "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia – soit 5 lieux pour devenir officier de la marine marchande, brevet pont + machine. Concours post-bac.",
     "map-intro":
-      "12 lycées + 4 sites ENSM. Trouve celui le plus proche de chez toi.",
+      "12 LPM + 1 ENSM (5 sites incluant l'antenne Bastia). Trouve celui le plus proche de chez toi.",
     "final-cta-title": "À la sortie, tu choisis ton bureau.",
     "final-cta-subtitle":
-      "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout en France.",
+      "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout dans l'hexagone et les outremer.",
   },
 
   // Charte newsletter – éditée via /admin/newsletter/charte, injectée dans le

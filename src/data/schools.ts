@@ -158,8 +158,9 @@ export const SCHOOLS: School[] = [
     lat: 42.7028,
     lng: 9.4500,
     website: "https://lyc-maritime-bastia.web.ac-corse.fr/",
-    description: "Le seul LPM de Méditerranée à former aux métiers du transport de passagers entre Corse et continent.",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM],
+    description:
+      "Le seul site maritime de Méditerranée à former aux métiers du transport de passagers entre Corse et continent. L'ENSM y a installé une antenne : tu peux y faire toute ta scolarité, du CAP au brevet d'officier, sans quitter Bastia.",
+    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, ENSM_OFFICIER_CHEF],
   },
   {
     id: "lpm-boulogne",
@@ -412,10 +413,22 @@ export function getSchoolsByFamily(family: SchoolFamily): School[] {
   );
 }
 
-/** Compteur global utilisé sur la landing (« 12 lycées + 4 sites ENSM »). */
+/** Compteur global utilisé sur la landing.
+ *
+ * `ensmSites` : 4 sites historiques de l'ENSM (Le Havre, Marseille, Nantes,
+ *  Saint-Malo) + 1 antenne récente au LPM Bastia = **5 lieux** où devenir
+ *  officier de la marine marchande. L'ENSM reste **une seule école**.
+ */
 export const SCHOOL_COUNTS = {
   lpm: SCHOOLS.filter((s) => s.kind === "lpm").length,
   ensm: SCHOOLS.filter((s) => s.kind === "ensm").length,
+  ensmSites:
+    SCHOOLS.filter((s) => s.kind === "ensm").length +
+    SCHOOLS.filter(
+      (s) =>
+        s.kind === "lpm" &&
+        s.formations.some((f) => f.level === "officier"),
+    ).length,
   total: SCHOOLS.length,
 };
 

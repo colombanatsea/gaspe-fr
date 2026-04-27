@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import {
   SCHOOLS,
   SCHOOL_COUNTS,
@@ -62,6 +63,14 @@ export function EcolesDeLaMerContent() {
   const ref = useScrollReveal();
 
   /* ---- CMS-driven copies (with fallback aligned on poster tone) ---- */
+  // Image de fond du hero. Le fichier doit être déposé dans
+  // `public/campagne/ecoles-de-la-mer-hero.jpg` (ou un autre chemin défini
+  // ici). Si absent, l'overlay foncé reste lisible (404 silencieux).
+  const heroBgImage = useCmsContent(
+    PAGE_ID,
+    "hero-bg-image",
+    "/campagne/ecoles-de-la-mer-hero.jpg",
+  );
   const heroEyebrow = useCmsContent(
     PAGE_ID,
     "hero-eyebrow",
@@ -91,7 +100,7 @@ export function EcolesDeLaMerContent() {
   const narrativeLpmTitle = useCmsContent(
     PAGE_ID,
     "narrative-lpm-title",
-    "Dès 14 ans : les LPM",
+    "Dès 14 ans : les 12 LPM",
   );
   const narrativeLpmBody = useCmsContent(
     PAGE_ID,
@@ -101,18 +110,18 @@ export function EcolesDeLaMerContent() {
   const narrativeEnsmTitle = useCmsContent(
     PAGE_ID,
     "narrative-ensm-title",
-    "Après le bac : l'ENSM",
+    "Après le bac : 1 école nationale supérieure",
   );
   const narrativeEnsmBody = useCmsContent(
     PAGE_ID,
     "narrative-ensm-body",
-    "École Nationale Supérieure Maritime — 4 sites en France (Le Havre, Marseille, Nantes, Saint-Malo). Concours post-bac. Tu sors officier de la marine marchande, brevet pont + machine.",
+    "L'École Nationale Supérieure Maritime (ENSM) est unique. Elle est répartie sur 4 sites historiques (Le Havre, Marseille, Nantes, Saint-Malo) et a installé une antenne au LPM Bastia – soit 5 lieux pour devenir officier de la marine marchande, brevet pont + machine. Concours post-bac.",
   );
 
   const mapIntro = useCmsContent(
     PAGE_ID,
     "map-intro",
-    "12 lycées + 4 sites ENSM. Trouve celui le plus proche de chez toi.",
+    "12 LPM + 1 ENSM (5 sites incluant l'antenne Bastia). Trouve celui le plus proche de chez toi.",
   );
 
   const finalCtaTitle = useCmsContent(
@@ -123,7 +132,7 @@ export function EcolesDeLaMerContent() {
   const finalCtaSubtitle = useCmsContent(
     PAGE_ID,
     "final-cta-subtitle",
-    "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout en France.",
+    "{compagnies} compagnies maritimes adhérentes du GASPE recrutent partout dans l'hexagone et les outremer.",
   );
 
   /* ---- Filters ---- */
@@ -147,12 +156,34 @@ export function EcolesDeLaMerContent() {
       {/* ============================================================ */}
       {/*  HERO                                                          */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-foreground text-white">
-        {/* Decorative orbs (gradient signature ACF horizon) */}
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-start)] opacity-25 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-end)] opacity-25 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden bg-foreground text-white isolate">
+        {/* Background image (campagne ACF). Le fichier réel est déposé dans
+            public/campagne/. En cas d'absence, l'overlay foncé garde le
+            hero lisible. Aspect portrait : objet positionné à droite sur
+            desktop, centré sur mobile. */}
+        {heroBgImage && (
+          <div className="absolute inset-0 z-0" aria-hidden="true">
+            <Image
+              src={heroBgImage}
+              alt=""
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              className="object-cover object-[60%_30%] sm:object-[right_center] opacity-90"
+            />
+            {/* Overlay : foreground 95% à gauche, transparent à droite (desktop) ;
+                opaque uniforme sur mobile pour conserver la lisibilité du texte. */}
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/85 sm:via-foreground/70 to-foreground/30 sm:to-foreground/20" />
+            <div className="absolute inset-0 bg-foreground/20 sm:hidden" />
+          </div>
+        )}
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
+        {/* Decorative orbs (gradient signature ACF horizon) */}
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-start)] opacity-25 blur-3xl pointer-events-none z-0" />
+        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-[var(--gaspe-gradient-end)] opacity-25 blur-3xl pointer-events-none z-0" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
           <p className="reveal font-heading text-xs font-bold uppercase tracking-[0.3em] text-[var(--gaspe-teal-400)] mb-6">
             {heroEyebrow}
           </p>
@@ -211,11 +242,11 @@ export function EcolesDeLaMerContent() {
               { value: "100%", label: "d'emploi à la sortie" },
               {
                 value: SCHOOL_COUNTS.lpm.toString(),
-                label: "lycées maritimes",
+                label: "lycées maritimes (dès 14 ans)",
               },
               {
-                value: "14 ans",
-                label: "âge minimum d'entrée",
+                value: "1",
+                label: `école nationale supérieure (${SCHOOL_COUNTS.ensmSites} sites)`,
               },
             ].map((stat) => (
               <div
@@ -355,7 +386,11 @@ export function EcolesDeLaMerContent() {
               Trouver mon école
             </p>
             <h2 className="font-heading text-3xl sm:text-5xl font-bold text-foreground">
-              {SCHOOL_COUNTS.lpm} LPM + {SCHOOL_COUNTS.ensm} sites ENSM
+              {SCHOOL_COUNTS.lpm} LPM + 1 ENSM
+              <span className="block text-base sm:text-lg font-normal text-foreground-muted mt-2">
+                ({SCHOOL_COUNTS.ensmSites} sites pour devenir officier, dont
+                l&apos;antenne récente au LPM Bastia)
+              </span>
             </h2>
             <p className="mt-3 text-foreground-muted">{mapIntro}</p>
           </div>
@@ -396,11 +431,27 @@ export function EcolesDeLaMerContent() {
             </div>
           </div>
 
-          {/* Result count + map */}
+          {/* Result count + map. Phrasé conditionnel : ENSM est UNE école
+              avec plusieurs sites (jamais "4 écoles"). */}
           <p className="text-xs text-foreground-muted mb-3">
-            {filteredSchools.length} école
-            {filteredSchools.length > 1 ? "s" : ""} affichée
-            {filteredSchools.length > 1 ? "s" : ""}
+            {(() => {
+              const lpmCount = filteredSchools.filter(
+                (s) => s.kind === "lpm",
+              ).length;
+              const ensmCount = filteredSchools.filter(
+                (s) => s.kind === "ensm",
+              ).length;
+              if (kindFilter === "ensm") {
+                return `1 école nationale supérieure – ${ensmCount} site${ensmCount > 1 ? "s" : ""} affiché${ensmCount > 1 ? "s" : ""}`;
+              }
+              if (kindFilter === "lpm") {
+                return `${lpmCount} lycée${lpmCount > 1 ? "s" : ""} professionnel${lpmCount > 1 ? "s" : ""} maritime${lpmCount > 1 ? "s" : ""} affiché${lpmCount > 1 ? "s" : ""}`;
+              }
+              if (levelFilter === "officier") {
+                return `${filteredSchools.length} lieu${filteredSchools.length > 1 ? "x" : ""} pour devenir officier`;
+              }
+              return `${lpmCount} LPM + ${ensmCount} site${ensmCount > 1 ? "s" : ""} ENSM affiché${filteredSchools.length > 1 ? "s" : ""}`;
+            })()}
           </p>
           <SchoolMap schools={filteredSchools} className="h-[480px]" />
 

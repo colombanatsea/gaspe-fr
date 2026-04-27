@@ -45,7 +45,7 @@ export function CareerSimulator() {
           Simulateur de carrière
         </p>
         <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-2">
-          À 17 ans tu commences. À 45 ans tu commandes.
+          À 17 ans tu commences. À 30 ans tu commandes.
         </h2>
         <p className="text-white/70 mb-8">
           Choisis ton parcours, fais glisser le curseur, vois ton avenir.

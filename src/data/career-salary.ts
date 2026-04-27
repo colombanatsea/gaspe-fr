@@ -27,6 +27,8 @@ export interface CareerStep {
 
 /**
  * Parcours « Pont » type — du LPM au capitaine de ferry côtier.
+ * La progression maritime est rapide : on peut commander un petit navire
+ * à 22 ans (capitaine 200) et un ferry à 30 ans (capitaine 500 + nav).
  */
 export const PATH_PONT: CareerStep[] = [
   {
@@ -44,28 +46,28 @@ export const PATH_PONT: CareerStep[] = [
     family: "pont",
   },
   {
-    age: 23,
+    age: 22,
     role: "Lieutenant – Capitaine 200",
     salaryNet: 2600,
-    context: "Brevet capitaine 200 obtenu après navigation + STCW. Quart passerelle, navigation côtière.",
+    context: "Brevet capitaine 200 obtenu après navigation + STCW. Quart passerelle, navigation côtière. Tu commandes déjà des petits navires.",
     family: "pont",
   },
   {
-    age: 30,
+    age: 26,
     role: "Second capitaine – Capitaine 500",
     salaryNet: 3400,
     context: "Brevet capitaine 500. Responsable manœuvres, sécurité passagers, équipage.",
     family: "pont",
   },
   {
-    age: 38,
+    age: 30,
     role: "Capitaine de ferry",
     salaryNet: 4400,
     context: "Commandement d'un navire à passagers. Responsable du navire, de l'équipage et des passagers.",
     family: "pont",
   },
   {
-    age: 45,
+    age: 38,
     role: "Capitaine senior / formateur",
     salaryNet: 5200,
     context: "Capitaine confirmé, responsable d'une ligne ou formateur dans un LPM / ENSM.",
@@ -75,6 +77,7 @@ export const PATH_PONT: CareerStep[] = [
 
 /**
  * Parcours « Machine » type — du LPM au chef mécanicien.
+ * Tu peux être chef mécanicien à 30 ans avec un brevet 3000 kW + navigation.
  */
 export const PATH_MACHINE: CareerStep[] = [
   {
@@ -92,28 +95,28 @@ export const PATH_MACHINE: CareerStep[] = [
     family: "machine",
   },
   {
-    age: 24,
+    age: 22,
     role: "Officier mécanicien – 750 kW",
     salaryNet: 2700,
     context: "Brevet mécanicien 750 kW. Quart machine, maintenance corrective, gestion énergie.",
     family: "machine",
   },
   {
-    age: 31,
+    age: 27,
     role: "Second mécanicien – 3000 kW",
     salaryNet: 3500,
     context: "Brevet mécanicien 3000 kW. Coordination équipe machine, gestion combustible et environnement.",
     family: "machine",
   },
   {
-    age: 38,
+    age: 30,
     role: "Chef mécanicien",
     salaryNet: 4500,
     context: "Responsable de la propulsion, de l'énergie et de la maintenance du navire.",
     family: "machine",
   },
   {
-    age: 45,
+    age: 38,
     role: "Chef mécanicien senior / armement",
     salaryNet: 5400,
     context: "Chef mécanicien confirmé, ou poste à terre dans la flotte (DPA, technique armateur).",
@@ -140,21 +143,21 @@ export const PATH_SERVICE: CareerStep[] = [
     family: "service",
   },
   {
-    age: 26,
+    age: 24,
     role: "Chef de cuisine de bord",
     salaryNet: 2400,
     context: "Cuisine pour 200 à 1500 passagers, gestion stock, normes HACCP marine.",
     family: "service",
   },
   {
-    age: 35,
+    age: 30,
     role: "Commissaire / chef hôtelier",
     salaryNet: 3200,
     context: "Responsable hôtellerie complète d'un ferry : restauration, cabines, billetterie, paie équipage.",
     family: "service",
   },
   {
-    age: 45,
+    age: 40,
     role: "Directeur hôtelier / armement",
     salaryNet: 4000,
     context: "Direction hôtelière flotte ou poste à terre dans une compagnie maritime.",
@@ -181,28 +184,28 @@ export const PATH_OFFICIER: CareerStep[] = [
     family: "polyvalent",
   },
   {
-    age: 24,
+    age: 23,
     role: "Officier polyvalent – sortie ENSM",
     salaryNet: 3200,
     context: "Diplôme IOMM (Ingénieur Officier de la Marine Marchande). Brevet pont + machine.",
     family: "polyvalent",
   },
   {
-    age: 30,
+    age: 26,
     role: "Second capitaine ou second mécanicien",
     salaryNet: 4200,
     context: "Évolution rapide grâce au double brevet. Possibilité haute mer ou côtier.",
     family: "polyvalent",
   },
   {
-    age: 40,
+    age: 30,
     role: "Capitaine ou chef mécanicien",
     salaryNet: 5500,
     context: "Commandement navire passagers ou cargo. Carrière internationale possible.",
     family: "polyvalent",
   },
   {
-    age: 45,
+    age: 38,
     role: "Direction technique / DPA armateur",
     salaryNet: 6500,
     context: "Direction Personne d'Astreinte (ISM), direction technique flotte, ou capitaine senior.",
