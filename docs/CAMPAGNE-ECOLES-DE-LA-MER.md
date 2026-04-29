@@ -163,7 +163,7 @@ parfois BTS (PMN, MASEN selon site).
 | 1 | LPM Bastia | Bastia | Corse | 20200 | [lyc-maritime-bastia.web.ac-corse.fr](https://lyc-maritime-bastia.web.ac-corse.fr/) |
 | 2 | LPM Boulogne | Le Portel | Hauts-de-France | 62480 | [lyceemaritime-boulogne.fr](https://www.lyceemaritime-boulogne.fr/) |
 | 3 | LPM Cherbourg | Cherbourg-en-Cotentin | Normandie | 50100 | [lyceemaritime-cherbourg.fr](https://lyceemaritime-cherbourg.fr/) |
-| 4 | LPM Ciboure (Pierre-Loti) | Ciboure | Nouvelle-Aquitaine | 64500 | [lyceemaritime-ciboure.fr](https://lyceemaritime-ciboure.fr/) |
+| 4 | LPM Ciboure (Pierre-Loti) | Ciboure | Nouvelle-Aquitaine | 64500 | [lycee-maritime-ciboure.fr](https://lycee-maritime-ciboure.fr) |
 | 5 | LPM Étel | Étel | Bretagne | 56410 | [lpmetel.fr](https://www.lpmetel.fr/) |
 | 6 | LPM Fécamp (Anita-Conti) | Fécamp | Normandie | 76400 | [lpm-anitaconti.fr](https://lpm-anitaconti.fr/) |
 | 7 | LPM La Rochelle | La Rochelle | Nouvelle-Aquitaine | 17000 | [lyceemaritime-larochelle.fr](https://lyceemaritime-larochelle.fr/) |
@@ -180,7 +180,7 @@ sessions 42 et 43 où l'audit a été reporté). Procédure :
 for url in "https://lyc-maritime-bastia.web.ac-corse.fr/" \
            "https://www.lyceemaritime-boulogne.fr/" \
            "https://lyceemaritime-cherbourg.fr/" \
-           "https://lyceemaritime-ciboure.fr/" \
+           "https://lycee-maritime-ciboure.fr" \
            "https://www.lpmetel.fr/" \
            "https://lpm-anitaconti.fr/" \
            "https://lyceemaritime-larochelle.fr/" \

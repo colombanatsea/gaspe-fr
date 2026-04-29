@@ -201,8 +201,8 @@ export const SCHOOLS: School[] = [
     postalCode: "64500",
     lat: 43.3819,
     lng: -1.6594,
-    website: "https://lyceemaritime-ciboure.fr/",
-    description: "Sur la côte basque, formations pêche et commerce, internat possible.",
+    website: "https://lycee-maritime-ciboure.fr",
+    description: "Sur la côte basque, formations pêche et commerce, option Voile sur le Bac pro CGEM, internat possible. Recrutement à partir de 15 ans.",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM],
   },
   {
