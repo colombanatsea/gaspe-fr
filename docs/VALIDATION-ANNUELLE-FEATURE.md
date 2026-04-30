@@ -698,14 +698,95 @@ de gouvernance.
 
 ---
 
-**Auteur** : Sessions 45-49 (claude/annual-data-validation-XqYQe)
+## 13. Attestation imprimable / PDF (session 50)
+
+### 13.1 Vision
+
+Permettre à l'admin (ou à un staff `manage_validations`) de générer une
+**attestation officielle** d'une compagnie pour une année donnée, avec
+le snapshot complet des données validées. Le rendu est volontairement
+sobre, signable, archivable.
+
+Approche choisie : **route imprimable** + `window.print()`. Pas de lib
+externe (jsPDF, pdf-lib, @react-pdf), pas d'endpoint Worker dédié. Le
+navigateur fait le rendu PDF natif via la boîte de dialogue
+d'impression. Avantage : 0 dépendance ajoutée, le résultat est
+exactement aligné sur ce que voit l'utilisateur (WYSIWYG).
+
+### 13.2 Implémentation
+
+Nouvelle route `/admin/campagnes/attestation?slug=X&year=YYYY` (query
+param car static export Next.js).
+
+- `page.tsx` : Suspense + `useSearchParams` → délègue à `AttestationClient`.
+- Validation des params (slug non vide, year nombre fini > 0). Sinon
+  message d'erreur explicite.
+
+`AttestationClient` :
+
+1. Auth gate `isStaffOrAdmin(user)` (cohérent avec `/admin/campagnes`).
+2. Fetch `listValidationsForOrg(slug)` au mount.
+3. Filtre l'historique sur `targetYear === year`, déduplique par
+   `(itemType, itemId)` en gardant la première (la plus récente, car
+   l'API trie par DESC).
+4. Tri : profil en haut, puis navires alphabétiquement.
+5. Rendu printable :
+   - **Header** : pictogramme/ligne ACF + titre
+     « Attestation de validation annuelle des données » + année.
+   - **Bloc compagnie** : nom + slug.
+   - **Bloc items** : une carte par item avec nom + date de
+     validation + `(inchangé)` si applicable + tableau 2 colonnes
+     (libellé FR / valeur formatée par `formatDiffValue()`).
+   - **Footer** : date génération + nombre d'items + mention « source
+     `validation_history` (D1, snapshots immuables) ».
+6. Toolbar (cachée à l'impression) : bouton retour + bouton « Télécharger
+   l'attestation (PDF) » qui appelle `window.print()`.
+
+### 13.3 CSS impression
+
+Inline `<style jsx global>` :
+
+- `@media print` : background blanc, couleur foreground forcée à `#222221`.
+- Cache `aside, nav, header[class*="admin"], .admin-sidebar` pour purger
+  le chrome admin (sidebar + topnav).
+- `@page { size: A4; margin: 1.5cm; }` pour cadrer en A4.
+- `print:break-inside-avoid` sur chaque carte item pour éviter de couper
+  un navire au milieu d'une page.
+- `print:hidden` sur la toolbar (Tailwind built-in).
+
+### 13.4 Intégration dashboard
+
+Dans `/admin/campagnes/detail?id=X`, la colonne « Diff Y-o-Y » contient
+maintenant aussi un lien **« Attestation »** quand `row.fullyValidated`
+est vrai (la compagnie a tout validé pour `targetYear`). Le lien ouvre
+la route attestation dans un nouvel onglet (`target="_blank"
+rel="noopener noreferrer"`).
+
+### 13.5 Limitations connues
+
+- Le PDF est **généré côté navigateur** : la mise en page peut varier
+  légèrement entre Chrome / Firefox / Safari. Pour un rendu strictement
+  identique sur tous les navigateurs, il faudrait un endpoint Worker
+  qui utilise une lib (jsPDF / pdf-lib / Puppeteer) — surcoût bundle +
+  lambda execution time. Trade-off accepté pour la v1.
+- Pas de signature électronique. La traçabilité reste via l'historique
+  D1 immuable (snapshot_json + validated_at + validated_by_user_id).
+- Pas de QR code de vérification. Possible évolution future si demande.
+
+---
+
+**Auteur** : Sessions 45-50 (claude/annual-data-validation-XqYQe)
 **Migrations livrées** : 0027, 0028, 0029
 **Endpoints livrés** : 6 (campaigns CRUD + dashboard + history + submit)
 **Helpers purs** : 8 fonctions (7 session 45 + `diffSnapshots` session 47),
 **61 tests unitaires** (47 session 45 + 14 session 47)
-**Frontend** : sessions 46-47 (banner adhérent, page validation, admin
-campagnes, dashboard, modal diff Y-o-Y, tab démo)
+**Frontend** : sessions 46-47, 50 (banner adhérent, page validation,
+admin campagnes, dashboard, modal diff Y-o-Y, tab démo, attestation
+imprimable)
 **Notifications email** : session 49 (J+0 ouverture campagne, best-effort
 via `notifyCampaignOpened` côté Worker, no-op silencieux si BREVO_API_KEY
 absent)
+**Attestation PDF** : session 50 (route imprimable
+`/admin/campagnes/attestation?slug=X&year=YYYY`, rendu via
+`window.print()` + CSS `@media print`, pas de lib externe)
 **RBAC** : session 48 (permission staff dédiée `manage_validations`)

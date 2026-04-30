@@ -287,6 +287,20 @@ export default function CampaignDashboardClient({ id }: { id: number }) {
                   >
                     Voir le diff
                   </button>
+                  {row.fullyValidated && (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/admin/campagnes/attestation?slug=${encodeURIComponent(row.slug)}&year=${campaign.targetYear}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+                        aria-label={`Telecharger l'attestation ${campaign.targetYear} de ${row.organizationName}`}
+                      >
+                        Attestation
+                      </Link>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
