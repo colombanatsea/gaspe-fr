@@ -265,46 +265,159 @@ fallback sans campagne ouverte.
 
 ---
 
-## 6. Flux frontend (session 46+)
+## 6. Flux frontend (livré sessions 46-47)
 
-### 6.1 Banner adhérent
+### 6.1 Banner adhérent dynamique
 
-Sur `/espace-adherent` (dashboard), si une campagne est `open` ET que l'org
-a au moins 1 item non validé pour `target_year` → afficher une bannière en
-haut de page :
-- État `due-soon` (J-14 avant `target_date`) → couleur orange
-- État `overdue` (après `target_date`) → couleur rouge
-- État `open` (avant J-14) → couleur teal neutre
+`src/components/validation/ValidationCampaignBanner.tsx` est intégré dans
+le dashboard `/espace-adherent` sous le bandeau suppléant. Au mount, le
+composant :
 
-CTA : « Valider mes données 2027 » → `/espace-adherent/validation`.
+1. Appelle `listCampaigns()` → récupère la campagne courante (`status='open'`).
+2. Si aucune campagne ouverte → renvoie `null` (silencieux).
+3. Sinon, appelle `listValidationsForOrg(slug)` + `getFleet(slug)` en
+   parallèle.
+4. Calcule `hasPending` : profil non validé pour `targetYear` OU au moins
+   1 navire non validé.
+5. Si tout est validé → renvoie `null`.
+6. Sinon, calcule l'urgence via `deriveUrgency()` (réplique côté front
+   du helper Worker testé) et affiche le bandeau coloré :
+   - `open` (> J-14 avant `target_date`) → teal neutre, label « Validation
+     annuelle ouverte ».
+   - `due-soon` (≤ J-14) → warm orange, label « Deadline approche ».
+   - `overdue` (> `target_date`) → rouge, label « Validation en retard ».
+
+CTA principal : `Link` vers `/espace-adherent/validation` avec `aria-label`
+explicite. Date de deadline formatée en français (`toLocaleDateString("fr-FR")`).
+
+Mode démo : silencieux (le store `validation-store.ts` retombe sur des
+listes vides quand `isApiMode()` est false).
+
+Helper exposé : `<ValidationCampaignBannerForUser companyName={user.company} />`
+qui résout le slug via `members.find(m => m.name === companyName)` puis
+délègue au composant principal. Évite de demander aux pages d'appel de
+faire la résolution slug.
 
 ### 6.2 Page `/espace-adherent/validation`
 
-- Récupère `GET /api/organizations/:slug/validations` pour pré-remplir l'état.
-- Affiche : 1 carte « Profil organisation » + N cartes « Navire X ».
-- Chaque carte propose deux boutons :
-  - « Inchangé depuis l'an dernier » → soumet `unchanged: true` sans data
-  - « Modifier » → ouvre éditeur inline (réutilise `<FleetVesselForm>` pour
-    les navires, formulaire profil pour l'org)
-- Bouton final « Tout valider d'un coup » : envoie tous les items `unchanged`
-  en une seule requête POST.
+`src/app/(public)/espace-adherent/validation/page.tsx`. Au mount :
 
-### 6.3 Page admin `/admin/campagnes`
+- `Promise.all` sur `listCampaigns()` + `listValidationsForOrg(slug)` +
+  `getFleet(slug)` (catch silencieux pour la flotte si vide).
+- Calcule `targetYear` = `current?.targetYear ?? new Date().getUTCFullYear()`
+  (autorise validation hors campagne).
+- Calcule `profileAlreadyValidated` et `validatedVesselIds` à partir de
+  l'historique reçu.
 
-- Liste toutes les campagnes (carte par campagne avec status, target_year,
-  target_date, opened_at).
-- Bouton « Nouvelle campagne » → modal avec target_year + target_date.
-- Bouton « Ouvrir » sur draft → bascule status='open'.
-- Bouton « Clôturer » sur open → bascule status='closed'.
-- Bouton « Voir le dashboard » → ouvre `/admin/campagnes/:id`.
+Rendu :
 
-### 6.4 Dashboard admin `/admin/campagnes/:id`
+- **Bandeau campagne** (haut de page) : statut campagne ouverte + deadline,
+  ou message « validation hors campagne » si pas de campagne ouverte.
+- **Bandeau progression** : compteur d'items à traiter / en attente d'envoi,
+  avec bouton « Tout marquer Inchangé » qui marque tous les `pending` →
+  `unchanged` en un clic.
+- **Carte profil organisation** : affiche email/phone/address/effectifs/navires.
+  Si déjà validé pour `targetYear` → badge vert « Déjà validé ». Sinon,
+  deux boutons :
+  - « Inchangé » → toggle `mode: "unchanged"` (pas de payload `data`).
+  - « Modifier » → ouvre `<ProfileEditForm>` inline (sub-form local au
+    fichier, 8 inputs mappés sur le snapshot profil + données User
+    courantes pour email/phone/address car `Member` ne les expose pas).
+- **Cartes navires** : une par navire de la flotte. Boutons identiques.
+  « Modifier » ouvre `<FleetVesselForm>` (composant existant, 28 champs
+  + `<CrewByBrevetEditor>`).
+- **Bandeau sticky en bas** (`sticky bottom-4 z-10`) : compteur d'items
+  prêts à envoyer + bouton submit « Valider N item(s) » disabled si 0.
 
-- Tableau (compagnie, profil, navires, dernière activité, mailto)
-- Bouton « Relancer retardataires » → génère mailto BCC avec les emails des
-  titulaires des orgs `vesselsValidated < vesselsTotal OR profileValidated=false`.
-- Vue alternative « Y-o-Y diff » : compare snapshot 2026 vs snapshot 2027 sur
-  les 8 champs profil et les 30 colonnes navire.
+Submit : appelle `submitValidations(slug, items)` avec un payload
+`ValidationSubmitItem[]`. Sur succès, refetch l'historique pour mettre à
+jour les badges « déjà validé », reset le state local des cartes,
+affiche un message confirmation `{validated} item(s) validé(s) pour {targetYear}`.
+
+Empty states explicites : pas de mode API, compagnie inconnue, pas de
+flotte. Lien `/espace-adherent/flotte` proposé pour ajouter des navires.
+
+### 6.3 Page `/admin/campagnes`
+
+`src/app/(admin)/admin/campagnes/page.tsx`. Liste toutes les campagnes
+récupérées via `listCampaigns()`. Permission staff requise :
+`manage_validations` (session 48).
+
+**Carte par campagne** :
+
+- Title : « Campagne {targetYear} ».
+- Badge urgence : `deriveUrgency()` → `Brouillon` / `Ouverte` / `Deadline
+  proche` / `En retard` / `Cloturée`.
+- Métadonnées : deadline, date d'ouverture, date de clôture si applicable.
+- Notes éditoriales en italique si présentes.
+- Boutons d'action contextuels :
+  - `draft` → « Ouvrir » (PATCH `status='open'`, side effect `opened_at=now()`).
+  - `open` → « Clôturer » (PATCH `status='closed'`, side effect `closed_at=now()`).
+  - `open` ou `closed` → « Tableau de bord » (lien vers
+    `/admin/campagnes/detail?id=X`).
+- Tous les changements de statut passent par `confirm()` (irréversibles
+  côté audit).
+
+**Formulaire « Nouvelle campagne »** (toggle `showForm`) :
+
+- `targetYear` (number, défaut année courante UTC, range 2020-2100).
+- `targetDate` (date HTML5, défaut `${currentYear}-03-31`).
+- `notes` (textarea optionnelle).
+- Checkbox « Ouvrir immédiatement » (sinon créée en `draft`, défaut `true`).
+
+Mode démo : bandeau d'avertissement « la création / mise à jour ne sont
+pas persistées ». Empty state explicite si aucune campagne n'existe encore.
+
+AdminSidebar : item « Campagnes validation » (icône `ClipboardCheckIcon`)
+sous la section Organisation, gardé par `manage_validations`.
+
+### 6.4 Dashboard `/admin/campagnes/detail?id=X`
+
+Route en query param car static export Next.js ne supporte pas
+`dynamicParams=true` (pattern aligné sur `/espace-adherent/votes/detail`).
+
+`Suspense` wrapper + `useSearchParams()` → `<CampaignDashboardClient id={id} />`.
+
+Au mount, `getCampaignDashboard(id)` → réponse `CampaignDashboard` avec :
+- `campaign` (la campagne complète)
+- `summary` : `orgsTotal`, `orgsFullyValidated`, `vesselsValidated`,
+  `vesselsTotal`
+- `rows[]` : un par compagnie active
+
+**Header** : statut campagne + deadline. Bouton « Relancer N retardataires »
+(visible si au moins 1 retardataire a un email titulaire connu) →
+`mailto:` BCC pré-rempli avec :
+- Sujet : `Validation annuelle ACF {targetYear} - relance`
+- Body : explication + lien direct `https://gaspe-fr.pages.dev/espace-adherent/validation`
+- Liste BCC dédupliquée des emails titulaires des orgs `!fullyValidated`.
+
+**4 summary cards** colorées (teal / warm / blue / neutral) avec valeur
++ libellé + sous-titre.
+
+**Filtres** : 3 chips (`Toutes` / `En attente` / `Validées`) avec
+compteurs dynamiques.
+
+**Tableau** (5 colonnes : Compagnie / Profil / Navires / État / Contact /
+Diff Y-o-Y) :
+- En-têtes triables (compagnie / navires / état) avec `aria-pressed` +
+  `aria-label` français.
+- Cellule navires : compteur `validés/total` + barre de progression teal.
+- Lien nom compagnie → fiche publique `/nos-adherents/[slug]`.
+- Email titulaire → mailto direct.
+- Bouton « Voir le diff » par ligne → ouvre `<SnapshotDiffModal>`
+  (session 47, voir § 11).
+
+Empty state si aucune compagnie ne matche le filtre courant.
+
+### 6.5 Tab démo `/decouvrir-espace-adherent`
+
+Onglet `validation` avec :
+- Bandeau campagne ouverte 2027 (mocked).
+- Barre de progression (4 items fictifs : 1 profil validé + 1 navire
+  validé + 2 navires pending).
+- Cartes par item avec boutons disabled (cohérent avec le pattern
+  démo non-interactive du reste de la page).
+- CTA adhésion en bas.
 
 ---
 
@@ -357,17 +470,33 @@ CTA : « Valider mes données 2027 » → `/espace-adherent/validation`.
 
 ## 9. Évolutions futures envisagées
 
+**Livré depuis la rédaction initiale** :
+- ✅ Permission staff dédiée `manage_validations` (session 48).
+- ✅ Diff Y-o-Y entre snapshots N et N-1 (session 47, cf. § 11).
+- ✅ Notifications email Brevo `J+0 ouverture campagne` (session 49,
+  cf. § 12) — scaffolding posé, déclenché côté Worker au PATCH
+  `status: draft → open`. Best-effort, no-op silencieux si
+  `BREVO_API_KEY` absent.
+
+**Backlog restant** :
+
+- **Notifications email J-14 / J+0 deadline / J+14 relance manuelle** :
+  nécessitent un déclencheur cron (Cloudflare Workers Cron Triggers) car
+  ce sont des envois différés sans action utilisateur. La détection se
+  fait par scan quotidien des campagnes `open` avec `target_date` dans
+  la fenêtre +/- 14 jours. Hors scope court terme.
 - **Override admin** : champ `override_admin INTEGER DEFAULT 0` sur
   `validation_history` pour distinguer les validations faites par l'admin
   GASPE pour le compte d'un adhérent absent.
-- **Notifications email** : déclencher un email Brevo à J+0 ouverture campagne,
-  J-14 deadline, J+0 deadline, J+14 relance manuelle.
-- **Export PDF** du snapshot annuel par compagnie (« attestation de validation
-  annuelle ACF 2027 »).
-- **Validation partielle d'un item** : actuellement un navire est validé en
-  bloc ; dans le futur on pourrait valider section par section (capacités,
-  équipage, environnement) si le besoin émerge.
-- **Webhook externe** : notifier ADF/UMA quand le quorum NAO est validé.
+- **Export PDF** du snapshot annuel par compagnie (« attestation de
+  validation annuelle ACF 2027 »). Nécessite une lib (jsPDF / pdf-lib /
+  @react-pdf) côté front ou un endpoint Worker dédié qui génère le PDF
+  serveur-side.
+- **Validation partielle d'un item** : actuellement un navire est validé
+  en bloc ; dans le futur on pourrait valider section par section
+  (capacités, équipage, environnement) si le besoin émerge.
+- **Webhook externe** : notifier ADF/UMA quand le quorum NAO est
+  validé (compagnies sous CCN 3228 toutes en `fullyValidated`).
 
 ---
 
@@ -501,10 +630,82 @@ JSON.stringify`, sinon `String(value)`.
 
 ---
 
-**Auteur** : Sessions 45-47 (claude/annual-data-validation-XqYQe)
+## 12. Notification email J+0 ouverture campagne (session 49)
+
+### 12.1 Vision
+
+Quand l'admin ACF passe une campagne de `draft` à `open` (ou la crée
+directement avec `status='open'`), tous les **titulaires actifs** des
+compagnies adhérentes reçoivent un email transactionnel les informant
+de l'ouverture, avec :
+
+- Année cible (`target_year`)
+- Deadline molle si renseignée
+- Notes éditoriales si renseignées
+- CTA direct vers `/espace-adherent/validation`
+
+L'envoi est **best-effort** : un échec Brevo (rate-limit, secret
+manquant, destinataire bounced) ne fait pas échouer le PATCH /
+POST campaign. Les erreurs sont loggées via `console.error`.
+
+### 12.2 Implémentation
+
+`workers/api.ts` expose un helper privé `notifyCampaignOpened(env, campaign)`
+appelé depuis :
+
+- `handleCreateCampaign` quand `row.status === "open"` (création directe
+  via la checkbox « Ouvrir immédiatement »).
+- `handleUpdateCampaign` quand `row.status === "open"` ET
+  `existing.status !== "open"` (transition draft → open).
+
+Le helper :
+
+1. Vérifie `env.BREVO_API_KEY` → no-op silencieux si absent (dev local
+   ou prod sans secret configuré).
+2. Requête D1 : tous les `users` avec `is_primary=1`, `archived=0`,
+   `email IS NOT NULL`, joints aux `organizations` actives (`archived=0`).
+3. Pour chaque destinataire, appelle `https://api.brevo.com/v3/smtp/email`
+   séquentiellement (rate-limit safety, < 30 destinataires en pratique).
+4. Compte `sent` / `skipped` et logge le bilan.
+
+### 12.3 Template HTML
+
+`renderCampaignOpenedEmailHtml(params)` génère un email transactionnel
+charté ACF (gradient teal, header avec logo texte + baseline, CTA
+proéminent, footer institutionnel). Sanitization des champs dynamiques
+(`userName`, `orgName`, `targetDateStr`, `notes`) via le helper
+`sanitize()` existant.
+
+Sender : `ACF (ex-GASPE) <ne-pas-repondre@gaspe.fr>`.
+Sujet : `Validation annuelle {targetYear} ouverte – ACF`.
+
+### 12.4 Audience
+
+Volontairement large : toutes les compagnies actives (pas de filtre
+`college` ou `social3228` comme pour les votes). Justification : la
+validation annuelle concerne le profil + la flotte qui sont déclarés
+par toutes les compagnies adhérentes, indépendamment de leur audience
+de gouvernance.
+
+### 12.5 Reste à faire (non livré session 49)
+
+- **J-14 deadline** et **J+0 deadline** : nécessitent un Cloudflare
+  Workers Cron Trigger pour scanner quotidiennement les campagnes `open`
+  avec `target_date` dans la fenêtre. Hors scope court terme.
+- **J+14 relance manuelle** : déjà disponible côté UI via le bouton
+  « Relancer N retardataires » du dashboard (mailto BCC), pas besoin
+  d'automatisation supplémentaire.
+
+---
+
+**Auteur** : Sessions 45-49 (claude/annual-data-validation-XqYQe)
 **Migrations livrées** : 0027, 0028, 0029
 **Endpoints livrés** : 6 (campaigns CRUD + dashboard + history + submit)
 **Helpers purs** : 8 fonctions (7 session 45 + `diffSnapshots` session 47),
 **61 tests unitaires** (47 session 45 + 14 session 47)
 **Frontend** : sessions 46-47 (banner adhérent, page validation, admin
 campagnes, dashboard, modal diff Y-o-Y, tab démo)
+**Notifications email** : session 49 (J+0 ouverture campagne, best-effort
+via `notifyCampaignOpened` côté Worker, no-op silencieux si BREVO_API_KEY
+absent)
+**RBAC** : session 48 (permission staff dédiée `manage_validations`)

@@ -4559,6 +4559,15 @@ async function handleCreateCampaign(request: Request, env: Env, corsHeaders: Rec
     "SELECT * FROM fleet_validation_campaigns WHERE target_year = ?"
   ).bind(targetYear).first<DbCampaign>();
 
+  // Side effect : creation directe en 'open' -> notifier les titulaires.
+  if (row && row.status === "open") {
+    try {
+      await notifyCampaignOpened(env, row);
+    } catch (err) {
+      console.error("[validation] notifyCampaignOpened failed:", err);
+    }
+  }
+
   return json({ success: true, campaign: row ? toFrontendCampaign(row) : null }, corsHeaders);
 }
 
@@ -4620,6 +4629,19 @@ async function handleUpdateCampaign(
   const row = await env.DB.prepare(
     "SELECT * FROM fleet_validation_campaigns WHERE id = ?"
   ).bind(campaignId).first<DbCampaign>();
+
+  // Side effect : si la campagne vient de basculer en 'open', notifier les
+  // titulaires actifs par email Brevo (best-effort, no-op si pas de secrets).
+  const justOpened = row && row.status === "open" && existing.status !== "open";
+  if (justOpened && row) {
+    // ctx.waitUntil indisponible dans cette signature → on attend mais on
+    // capture toute exception pour ne pas faire echouer le PATCH.
+    try {
+      await notifyCampaignOpened(env, row);
+    } catch (err) {
+      console.error("[validation] notifyCampaignOpened failed:", err);
+    }
+  }
 
   return json({ success: true, campaign: row ? toFrontendCampaign(row) : null }, corsHeaders);
 }
@@ -4948,4 +4970,154 @@ async function handleSubmitValidations(
     targetYear,
     campaignId: campaignId ?? undefined,
   }, corsHeaders);
+}
+
+/**
+ * Best-effort : envoie un email Brevo a chaque titulaire actif (is_primary=1)
+ * pour annoncer l'ouverture d'une campagne de validation. Silencieux si
+ * `BREVO_API_KEY` absent. Les erreurs reseau / Brevo ne font pas echouer le
+ * caller (campaign update / create).
+ *
+ * Audience : tous les titulaires des organisations actives (archived = 0).
+ * Le scope est volontairement large (pas de filtre college / 3228) car la
+ * validation annuelle concerne TOUTES les compagnies adherentes.
+ *
+ * Format : email transactionnel charte GASPE (logo, gradient, CTA teal),
+ * lien direct vers /espace-adherent/validation, mention de la deadline si
+ * presente.
+ */
+async function notifyCampaignOpened(
+  env: Env,
+  campaign: DbCampaign,
+): Promise<{ sent: number; skipped: number }> {
+  if (!env.BREVO_API_KEY) {
+    console.log("[validation] BREVO_API_KEY absent, notifyCampaignOpened skipped");
+    return { sent: 0, skipped: 0 };
+  }
+
+  // Recupere les titulaires actifs avec leur organisation
+  const { results } = await env.DB.prepare(
+    `SELECT u.id AS user_id, u.email, u.name,
+            o.id AS org_id, o.name AS org_name, o.slug AS org_slug
+     FROM users u
+     JOIN organizations o ON o.id = u.organization_id
+     WHERE u.is_primary = 1
+       AND u.archived = 0
+       AND o.archived = 0
+       AND u.email IS NOT NULL
+       AND u.email != ''`,
+  ).all<{
+    user_id: string;
+    email: string;
+    name: string;
+    org_id: string;
+    org_name: string;
+    org_slug: string;
+  }>();
+  const recipients = results ?? [];
+  if (recipients.length === 0) {
+    console.log("[validation] notifyCampaignOpened : aucun destinataire eligible");
+    return { sent: 0, skipped: 0 };
+  }
+
+  const targetDateStr = campaign.target_date
+    ? new Date(campaign.target_date).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
+  const subject = `Validation annuelle ${campaign.target_year} ouverte – ACF`;
+
+  let sent = 0;
+  let skipped = 0;
+  // Sequentiel pour limiter le risque de rate-limit Brevo (100 req/sec).
+  // En pratique, < 30 destinataires donc cout negligeable.
+  for (const r of recipients) {
+    const htmlContent = renderCampaignOpenedEmailHtml({
+      userName: r.name,
+      orgName: r.org_name,
+      targetYear: campaign.target_year,
+      targetDateStr,
+      notes: campaign.notes,
+    });
+    try {
+      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          sender: { name: "ACF (ex-GASPE)", email: "ne-pas-repondre@gaspe.fr" },
+          to: [{ email: r.email, name: r.name }],
+          subject,
+          htmlContent,
+        }),
+      });
+      if (resp.ok) sent += 1;
+      else {
+        skipped += 1;
+        console.warn(`[validation] Brevo a refuse ${r.email} : ${resp.status}`);
+      }
+    } catch (err) {
+      skipped += 1;
+      console.error(`[validation] echec envoi a ${r.email} :`, err);
+    }
+  }
+  console.log(`[validation] notifyCampaignOpened : ${sent} envoyes, ${skipped} echoues`);
+  return { sent, skipped };
+}
+
+/**
+ * Genere le HTML inline du mail "Validation annuelle ouverte". Charte GASPE
+ * (logo + gradient teal + CTA). Sanitization des champs dynamiques via
+ * `sanitize()` (helper existant en haut du fichier).
+ */
+function renderCampaignOpenedEmailHtml(params: {
+  userName: string;
+  orgName: string;
+  targetYear: number;
+  targetDateStr: string | null;
+  notes: string | null;
+}): string {
+  const ctaUrl = `${SITE_URL}/espace-adherent/validation`;
+  const deadlineLine = params.targetDateStr
+    ? `<p style="margin:0 0 12px;color:#222221;font-size:15px;">Deadline indicative : <strong>${sanitize(params.targetDateStr)}</strong>.</p>`
+    : "";
+  const notesLine = params.notes
+    ? `<p style="margin:0 0 12px;color:#555;font-size:14px;font-style:italic;">${sanitize(params.notes)}</p>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">ACF (ex-GASPE)</h1>
+      <p style="margin:4px 0 0;color:#B2DFE3;font-size:13px;">Localement ancres. Socialement engages.</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Validation annuelle ${params.targetYear} ouverte</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(params.userName)},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">
+        La campagne de validation annuelle <strong>${params.targetYear}</strong> vient d'etre ouverte par l'administration ACF. En tant que titulaire de la compagnie <strong>${sanitize(params.orgName)}</strong>, il vous est demande de confirmer ou de mettre a jour les donnees de votre profil et de votre flotte.
+      </p>
+      ${deadlineLine}
+      ${notesLine}
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">
+        Le processus est rapide : pour chaque element (profil + chaque navire), vous pouvez cocher « Inchange depuis l'an dernier » ou modifier les valeurs. La validation se fait en un seul clic.
+      </p>
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${ctaUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;font-weight:600;">Valider mes donnees ${params.targetYear}</a>
+      </div>
+      <p style="margin:0 0 8px;color:#777;font-size:12px;">Vous pouvez aussi acceder directement a votre espace adherent puis cliquer sur la banniere « Validation annuelle ».</p>
+      <p style="margin:0;color:#777;font-size:12px;">Une question ? Repondez a cet email ou contactez l'equipe ACF.</p>
+    </div>
+    <div style="background:#F5F3F0;padding:16px 32px;text-align:center;color:#777;font-size:11px;">
+      ACF - Armateurs Cotiers Francais (ex-GASPE) - <a href="https://gaspe-fr.pages.dev" style="color:#1B7E8A;text-decoration:none;">gaspe-fr.pages.dev</a>
+    </div>
+  </div>
+</body></html>`;
 }
