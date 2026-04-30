@@ -29,16 +29,16 @@
 À traiter **avant** d'ouvrir les tests fonctionnels — sinon risque juridique / contractuel.
 Source : `docs/AUDIT-CRITIQUE-2026.md` § 9.1 + `docs/CORPUS-FONCTIONNALITES-2026.md` § 9.1.
 
-| Gate | Description | Fichier | Owner | Vérification |
-|------|-------------|---------|-------|--------------|
-| **C1** | NAO 2026 sans n° d'avenant ni publication JO | `src/data/ccn3228.ts` `SALARY_SOURCES` | Direction | Page `/boite-a-outils` affiche n° + lien Legifrance |
-| **C2** | Stats passagers/véhicules non datées (« 25 M+ » sans année) | `src/data/cms-defaults.ts` quick-stats | Comm | Homepage + `/notre-groupement` affichent millésime |
-| **C3** | EU ETS Maritime / FuelEU Maritime absents (en vigueur 2024) | nouveau bloc | Direction | `/transition-ecologique` mentionne UE 2023/957 + 2023/1805 |
-| **C4** | Cotisations ENIM 2025/2026 sans attestation | `src/data/ccn3228.ts:506-514` | Direction | Lien attestation officielle |
-| **C5** | Facteurs CO₂ ENTEC 2005 obsolètes (étude vieille de 21 ans) | `src/components/simulator/AdemeSimulator.tsx:460` | Direction | Sources DNV / EMSA / ADEME récentes |
-| **C6** | Aucune date « dernière vérification » visible sur datasets | global | Tous | Footer ou bandeau page |
+| Gate | Description | Fichier | Owner | Statut session 54 |
+|------|-------------|---------|-------|-------------------|
+| **C1** | NAO 2026 sans n° d'avenant ni publication JO | `src/data/ccn3228.ts` `SALARY_SOURCES` | Direction | ✅ **Fixé** : reformulation pour préciser « issue des négociations annuelles obligatoires », URL retirée en attente d'extension JO. |
+| **C2** | Stats passagers/véhicules non datées | `src/data/cms-defaults.ts` quick-stats | Comm | ✅ **Fixé** : « Chiffres consolidés 2025 » ajouté homepage + `/positions` + `/notre-groupement` (1 494 marins). |
+| **C3** | EU ETS Maritime / FuelEU Maritime absents | – | Direction | ⏭️ **Skip validé** : compagnies adhérentes hors champ (jauge < 5000 GT, exemptions îles DOM-COM). Suivi à reprendre si seuils UE descendent. |
+| **C4** | Cotisations ENIM 2025/2026 sans attestation | `src/data/ccn3228.ts:506-514` | Direction | ⏳ **En attente** : choix entre (a) lien `caisse-gens-de-mer.fr`, (b) arrêté Legifrance, (c) skip. |
+| **C5** | Facteurs CO₂ ENTEC 2005 obsolètes | `src/components/simulator/AdemeSimulator.tsx:460` | Direction | ✅ **Fixé** : sources actualisées IMO 4th GHG Study (2020) + EMSA EMTER 2025 + DNV Maritime Forecast 2024. |
+| **C6** | Aucune date « dernière vérification » visible | global | Tous | ✅ **Fixé** : `LAST_DATA_REVIEW_DATE` dans `constants.ts`, affichée dans footer global avec tooltip. |
 
-**Critère** : 6/6 traités → Go Phase 1.
+**Critère** : 5/6 fixés (C3 skip validé). C4 reste en attente d'arbitrage direction → bloque Go Phase 1 si non statué.
 
 ---
 

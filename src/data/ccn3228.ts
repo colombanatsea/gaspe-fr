@@ -631,7 +631,7 @@ export const BRANCH_AGREEMENTS: BranchAgreement[] = [
  * sur salaire forfaitaire – elles ne fixent pas la rémunération.
  */
 export const SALARY_DISCLAIMER =
-  "Minima conventionnels – ces montants bruts constituent le plancher légal de rémunération fixé par l'avenant salarial à la CCN 3228 (IDCC 3228). Le salaire effectivement versé peut être supérieur. Dernière mise à jour : janvier 2026.";
+  "Minima conventionnels – ces montants bruts constituent le plancher de rémunération issu des négociations annuelles obligatoires (NAO) 2026 de la branche CCN 3228 (IDCC 3228), en vigueur au 1er janvier 2026. Le salaire effectivement versé peut être supérieur. Une extension par arrêté ministériel publié au Journal officiel est susceptible d'intervenir ultérieurement. Dernière mise à jour : janvier 2026.";
 
 /**
  * Références pour la crédibilité et la traçabilité juridique des grilles.
@@ -640,12 +640,14 @@ export const SALARY_DISCLAIMER =
 export const SALARY_SOURCES: Array<{ label: string; url?: string }> = [
   {
     label:
-      "Avenant salarial NAO 2026 à la CCN 3228 – Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers (IDCC 3228)",
-    url: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000048819127",
+      "Grille salariale NAO 2026 – Issue des négociations annuelles obligatoires de la branche CCN 3228 (IDCC 3228, personnel navigant des entreprises de transport et services maritimes de passagers). Barème en vigueur au 1er janvier 2026, en attente d'éventuelle extension par arrêté du ministère du Travail.",
+    // URL omise volontairement : le PV des NAO n'est pas systématiquement
+    // publié à l'instant T. À renseigner dès publication de l'arrêté
+    // d'extension au Journal officiel.
   },
   {
     label:
-      "Texte de la CCN 3228 sur Legifrance – Journal officiel (après arrêté d'extension du ministère du Travail)",
+      "Texte intégral de la CCN 3228 sur Legifrance – Convention collective nationale du personnel navigant des entreprises de transport et services maritimes de passagers",
     url: "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000048819127",
   },
   {

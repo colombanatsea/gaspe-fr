@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { footerNavigation } from "@/data/navigation";
-import { SITE_NAME, SITE_FULL_NAME, SITE_TAGLINE, SITE_VERSION } from "@/lib/constants";
+import { SITE_NAME, SITE_FULL_NAME, SITE_TAGLINE, SITE_VERSION, LAST_DATA_REVIEW_LABEL } from "@/lib/constants";
 import { NewsletterForm } from "@/components/shared/NewsletterForm";
 import { GaspeLogoWhite } from "@/components/shared/GaspeLogo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -173,7 +173,11 @@ export function Footer() {
         <div className="border-t border-white/10">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-xs text-[var(--gaspe-neutral-500)]">
-              &copy; {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés. <span className="ml-2 text-[var(--gaspe-neutral-600)]">v{SITE_VERSION}</span>
+              &copy; {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés.{" "}
+              <span className="ml-2 text-[var(--gaspe-neutral-600)]">v{SITE_VERSION}</span>
+              <span className="ml-2 text-[var(--gaspe-neutral-600)]" title="Date de la dernière vérification éditoriale des chiffres et sources institutionnelles affichés sur le site.">
+                · Données vérifiées le {LAST_DATA_REVIEW_LABEL}
+              </span>
             </p>
             <div className="flex items-center gap-6">
               {footerNavigation.legal.map((item) => (

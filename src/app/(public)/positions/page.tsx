@@ -217,7 +217,8 @@ export default function PositionsPage() {
                   {memberStats.compagnies} compagnies maritimes côtières
                   françaises assurant les liaisons de service public sur
                   l&apos;hexagone et en outre-mer. 1&nbsp;494 marins français,{" "}
-                  {memberStats.totalShips} navires, 25 M+ de passagers par an.
+                  {memberStats.totalShips} navires, 25 M+ de passagers par an
+                  (chiffres consolidés 2025).
                 </p>
 
                 <p className="text-sm text-foreground-muted mb-6">

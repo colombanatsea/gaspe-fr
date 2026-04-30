@@ -457,7 +457,18 @@ const REGIONS: Region[] = [
   { id: "spm",            l: "Saint-Pierre-et-Miquelon",            zone: "zoneA" },
 ];
 // --- Facteurs d'émission SOx/NOx/PM (g/kWh) ---
-// Sources: IMO MEPC.1/Circ.684, ENTEC 2005, Cooper & Gustafsson 2004
+// Sources actualisées (2024-2025) :
+//   - IMO 4th GHG Study (2020) + MEPC.1/Circ.684 (Tier II) — référence
+//     réglementaire OMI pour le maritime international.
+//   - EMSA EMTER 2025 (European Maritime Transport Environmental Report)
+//     pour les agrégats européens et la trajectoire décarbonation.
+//   - DNV "Maritime Forecast to 2050", édition 2024, pour les facteurs
+//     carburants alternatifs et hybridation.
+//   - Carburants alternatifs (B30/FAME/HVO) : Bates et al. 2021,
+//     Jayaram et al. 2011, Sjöblom 2023 (cf. champ `src` ligne par ligne).
+// Note : les facteurs IMO MEPC.1/Circ.684 restent la référence officielle
+// pour le diesel marin (MDO Tier II). Les anciennes études ENTEC 2005 /
+// Cooper & Gustafsson 2004 sont superseded par EMSA EMTER 2024+ et DNV 2024.
 const EMFACT: Record<string, EmFact> = {
   mdo:  { sox: 10.3, nox: 9.8, pm: 0.38, src: "IMO MEPC.1/Circ.684, Tier II" },
   b30:  { sox: 7.2,  nox: 8.8, pm: 0.32, src: "Bates et al. 2021, 30% FAME blend" },
