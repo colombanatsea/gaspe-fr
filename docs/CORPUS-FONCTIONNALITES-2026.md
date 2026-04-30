@@ -442,4 +442,192 @@ Exécutés via `npm run test:e2e` (port 3001 pour ne pas collisionner avec le de
 
 ---
 
-*Suite dans le commit 3 : §9 TODO consolidé (4 priorités), §10 ADR (10 décisions), §11 Glossaire.*
+## 9. TODO consolidé (4 priorités)
+
+Cross-référence de `docs/AUDIT-CRITIQUE-2026.md` (sessions 44 + 45) + backlog `docs/VALIDATION-ANNUELLE-FEATURE.md` § 9 + TODO épars dans CLAUDE.md.
+
+### 9.1 🔴 P1 — Bloquant légal/contractuel (sous 2 semaines)
+
+| # | Item | Fichier | Effort | Risque si non traité |
+|---|------|---------|:-:|----------------------|
+| C1 | NAO 2026 sans n° d'avenant ni publication JO | `src/data/ccn3228.ts` SALARY_SOURCES | XS | Doute juridique sur la grille affichée |
+| C2 | Stats passagers/véhicules sans millésime (« 25 M+ passagers » sans année) | `src/data/cms-defaults.ts` quick-stats | S | Risque DGCCRF (publicité trompeuse) |
+| C3 | EU ETS Maritime / FuelEU Maritime absents (en vigueur 2024) | nouveau contenu | M | Site obsolète sur la transition réglementaire UE |
+| C4 | Cotisations ENIM 2025/2026 sans attestation | `src/data/ccn3228.ts:506-514` | XS | Crédibilité institutionnelle |
+| C5 | Facteurs CO₂ ENTEC 2005 obsolètes (étude vieille de 21 ans) dans AdemeSimulator | `src/components/simulator/AdemeSimulator.tsx:460` | M | Données environnementales caduques |
+| C6 | Aucune date « dernière vérification » visible sur les datasets institutionnels | global | S | Pas de traçabilité = crédibilité nulle |
+
+### 9.2 🟠 P2 — Hautes (sous 1 mois)
+
+**Maritime / réglementaire**
+- Distinction UMS / GT non clarifiée (CCN UMS, flotte GT) — ajouter glossaire / tooltip `/boite-a-outils`
+- PSL / OST continuité territoriale DOM-COM non mentionné (Blue Lines, Karu'Ferry, SPM, STM concernés)
+- Positionnement GASPE vs Armateurs de France / CMAF ambigu — ajouter ligne `/notre-groupement`
+- Régime suppléant / titulaire non documenté dans classifications CCN (concept réel : embarquement alterné, salaire proratisé)
+
+**Sources et factuel**
+- Coordonnées « indicatives » sur LPM/ENSM — auditer `src/data/schools.ts` contre adresses officielles DAM
+- Audit live des 12 URLs LPM bloqué par sandbox (runbook `docs/CAMPAGNE-ECOLES-DE-LA-MER.md` § 4.1)
+- Sources DNV / BNEF / Corvus dans AdemeSimulator non liées
+- 35 cas de référence dans `CASE_DB` (Norled, WSF…) sans URL traçable
+- « Depuis 1951 » sans renvoi statuts ou JO
+
+**UX / UI / a11y**
+- Modals admin sans gestion `Escape` ni focus trap (`CmsRevisionsModal`, `EditModal`/adherents, `StaffPermissionsModal`, `MediaLibrary`, `SnapshotDiffModal`)
+- Hero gradient overlay : texte blanc sous 4.5:1 sur zones claires de la vidéo
+- Tap targets mobile : CookieConsent boutons < 44 px sur petits écrans
+- Pas de breadcrumbs sur `/nos-adherents/[slug]`, `/espace-adherent/votes/detail`, `/espace-candidat/mes-candidatures/[id]`, `/admin/campagnes/detail`, `/admin/campagnes/attestation`
+- Empty states pauvres : `/admin/comptes`, `/espace-adherent/flotte` (avant ajout)
+- Bouton CTA hover : pas de feedback `active:scale-95` ni `transition-all` partout
+- `aria-label` manquants sur certaines icônes décoratives (devraient être `aria-hidden="true"`)
+
+**Code**
+- `workers/api.ts` monolithique (5400+ lignes, 76 endpoints, pas de séparation par domaine) — splitter en `workers/handlers/{auth,orgs,cms,jobs,votes,newsletter,media,fleet,medical,validation}/`
+- Pages admin > 1000 lignes : `adherents/page.tsx` (1305), `comptes/page.tsx` (446), `offres/new/page.tsx` (436)
+- `AdemeSimulator.tsx` 2566 lignes — extraire calc dans `src/lib/ademe-sim.ts`
+- `localStorage` patterns non standardisés (20+ variations) — créer `useSafeLocalStorage<T>(key, schema, initialValue)` avec validation Zod + hydration guard
+- Validation Zod côté client absente sur formulaires admin (offres, flotte, formations, comptes)
+- `apiFetch<T>` sous-utilisé : nombreux callsites sans contrôle `Array.isArray(res.X)` (runtime crashes possibles)
+- Endpoints sans pagination : `/api/organizations`, `/api/jobs`, `/api/auth/users` — ajouter `?limit&offset`
+- `target="_blank"` sans `rel="noopener noreferrer"` dans ~7 fichiers (Footer en a) — créer `<ExternalLink>`
+
+### 9.3 🟡 P3 — Moyennes (sous 1 trimestre)
+
+**Validation annuelle (backlog non-bloquant)**
+- Override admin (champ `override_admin INTEGER` sur `validation_history` pour distinguer validations faites par admin pour le compte d'un adhérent absent)
+- Validation partielle d'un item (par section : capacités, équipage, environnement)
+- Webhook externe ADF/UMA quand quorum NAO atteint (compagnies CCN 3228 toutes en `fullyValidated`)
+
+**Maritime (audit)**
+- Timeline CCN 3228 — avenants historiques absente (jalons 2025 prévoyance, 2026 NAO +2,8 %)
+- Adhérents : descriptions / shipCount / logos non vérifiés
+- Bureau GASPE : LinkedIn hrefs non vérifiés, dates de mandat non précisées
+- STCW édition : préciser « 1978 + Amendments 2010 (en vigueur 01/01/2012) »
+- Formations : champ `verified_by` + `verified_date` à ajouter
+
+**UX / Design system**
+- Spacing scale non formalisé (`py-12/16/20/24` sans règle) — documenter + ESLint custom rule
+- Typography scale informelle — créer `.h1 .h2 .h3 .body-lg .label`
+- Select native non-customisable en dark mode — migrer vers Radix `Select`
+- Skeleton/shimmer absent pendant chargement async
+- Scroll progress indicator sur homepage (long-form)
+- Tooltips abréviations (STCW, IMO, MLC, ENIM, ENM, CCN 3228) — composant `<Abbr>` ou Radix Tooltip
+- Easter egg / signature de marque (0 polish/delight)
+- Dark mode flash au reload — utiliser `next-themes` + script inline `<head>`
+
+**Code**
+- Composants sans `displayName` (50+) — ESLint rule `react/display-name`
+- `dangerouslySetInnerHTML` sanitize basique (regex) — documenter migration DOMPurify si user-generated
+- Test coverage Worker : handlers seulement testés en intégration — créer `worker.test.ts` avec mock D1
+- `useCmsContent` appelé 210+ fois — memoization possible
+- Cleanup `useEffect` `CookieConsent` (script CF reste dans le DOM si consent révoqué)
+- Régex sanitize-html — commentaire « tested for ReDoS safety » ou DOMPurify
+- Chaînes i18n hard-codées (français) — préparer i18n future via `next-intl` ou `react-intl`
+
+### 9.4 🟢 P4 — Backlog ouvert
+
+- Liens Legifrance manquants (arrêté du 26 juillet 2013, etc.)
+- `lang="en"` sur acronymes anglais (STCW, IMO)
+- Refactor 4 SVG `mixBlendMode: screen` dans AdemeSimulator vers `<Image>`
+- Convertir Recharts → Chart.js si bundle size devient critique (Recharts 100 KB)
+- Easter egg signature (double-click logo, raccourci clavier)
+- Smoke tests prod validation annuelle (sandbox-bloqué, runbook prêt dans `scripts/smoke-test-validation.sh`)
+
+### 9.5 Quick wins (≤ 1 h chacun, à grouper)
+
+| Item | Effort | Section |
+|------|:-:|---------|
+| C4 lien attestation ENIM | XS | P1 |
+| C2 millésime stats | S | P1 |
+| C1 n° avenant CCN | XS | P1 |
+| Glossaire UMS/GT | XS | P2 |
+| Positionnement GASPE vs ADF | XS | P2 |
+| `target="_blank"` rel | S | P2 |
+| Composants `displayName` | S | P3 |
+| `lang="en"` acronymes | XS | P4 |
+
+---
+
+## 10. Architecture decisions (10 ADR)
+
+Format ADR léger : un titre + une justification one-line. Pour le détail, voir CLAUDE.md « Known limitations » + sessions correspondantes.
+
+| # | Décision | Rationale | Trade-off accepté |
+|---|----------|-----------|-------------------|
+| ADR-001 | Static export Next.js + CF Worker (pas de SSR) | CDN edge gratuit, déploiement simple | Pas de revalidation à la demande, pas d'API routes Next.js |
+| ADR-002 | D1 (SQLite Cloudflare) plutôt que Postgres | Co-localisé Worker, gratuit, pas de cold start | Pas de transactions cross-table complexes, pas de full-text search |
+| ADR-003 | Dual-mode stores (localStorage demo + D1 prod) | Permet `npm run dev` sans Worker, démo sandbox | Code de pont à maintenir (1 store / domaine, ~8 stores) |
+| ADR-004 | Cache projeté `last_validated_year` sur `organizations` + `organization_vessels` plutôt que JOIN history | Lecture O(1) pour banner + dashboard (chemin chaud) | Duplication info, source de vérité reste `validation_history` |
+| ADR-005 | Em-dash `—` interdit, en-dash `–` autorisé (style éditorial) | Cohérence typographique GASPE | Discipline manuelle, pas d'ESLint rule (TODO) |
+| ADR-006 | Worker monolithique (5400 lignes) | Pas de surcoût bundle Cloudflare, navigation IDE simple | Refacto en `workers/handlers/{domain}/` reportée (P2 audit) |
+| ADR-007 | RBAC staff par 11 permissions explicites plutôt que rôles plats | Granularité fine, master admin bypasse tout | Schema permissions à versionner si évolution |
+| ADR-008 | PDF attestation via `window.print()` (zéro dépendance) | 0 lib ajoutée, WYSIWYG avec l'écran | Mise en page peut varier entre navigateurs |
+| ADR-009 | Cron Cloudflare Workers (`scheduled()`) plutôt que GitHub Actions cron | Co-localisé avec D1, pas de roundtrip réseau | Logs visibles uniquement dans dashboard CF Workers |
+| ADR-010 | Pas de Zod côté front (validation API uniquement) | Bundle plus léger, validation autoritaire serveur | UX d'erreur sub-optimale (TODO P2) |
+
+**Choix orthogonaux à noter** :
+- Tailwind v4 (CSS-first config), pas de SCSS / styled-components
+- Vitest pour unit, Playwright pour e2e (pas de Jest, pas de Cypress)
+- Pas de monorepo ni Turborepo (un seul package `gaspe-fr`)
+- Pas d'ORM côté Worker (SQL brut via `env.DB.prepare()`)
+
+---
+
+## 11. Glossaire
+
+### 11.1 Maritime / réglementaire
+
+| Acronyme | Signification | Source |
+|----------|---------------|--------|
+| **ACF** | Armateurs Côtiers Français (rebrand GASPE prévu nov. 2026) | Statuts en cours |
+| **GASPE** | Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau | 1951 |
+| **CCN 3228** | Convention Collective Nationale du transport maritime (passages d'eau) | Legifrance KALICONT000044528097 |
+| **ENIM** | Établissement National des Invalides de la Marine (régime social marins) | caisse-gens-de-mer.fr |
+| **STCW** | Standards of Training, Certification and Watchkeeping (1978 + Amendments 2010) | Convention OMI |
+| **MLC 2006** | Maritime Labour Convention (ratifiée France 28/02/2013) | OIT |
+| **IMO / OMI** | International Maritime Organization | imo.org |
+| **UMS** | Universal Measurement System (jauge des navires, CCN 3228) | OMI |
+| **GT** | Gross Tonnage (équivalent UMS, terme IMO) | OMI |
+| **PSL / OST** | Plan de Service Local / Obligations de Service Public (continuité territoriale DOM-COM) | – |
+| **ADF** | Armateurs de France (autre fédération patronale) | armateursdefrance.org |
+| **CMAF** | Comité des Armateurs de Mer (autre fédération) | – |
+| **ENSM** | École Nationale Supérieure Maritime (Le Havre, Marseille, Nantes, Saint-Malo) | supmaritime.fr |
+| **LPM** | Lycée Professionnel Maritime (12 sites, formation initiale matelot) | DAM |
+| **DAM** | Direction des Affaires Maritimes (ministère) | dam.developpement-durable.gouv.fr |
+| **ENM** | Espace Numérique Maritime (Portail du marin) | enm.mes-services.mer.gouv.fr |
+| **IDCC** | Identifiant De Convention Collective (CCN 3228 = IDCC 2935) | Legifrance |
+| **JO** | Journal Officiel | journal-officiel.gouv.fr |
+| **NAO** | Négociation Annuelle Obligatoire (salaires) | Code du travail |
+| **AG / AGE** | Assemblée Générale / Assemblée Générale Extraordinaire | Statuts associations |
+| **EU ETS Maritime** | EU Emissions Trading System étendu au maritime depuis 2024 | Règlement UE 2023/957 |
+| **FuelEU Maritime** | Règlement intensité carbone carburants maritimes | Règlement UE 2023/1805 |
+| **MARPOL** | International Convention for the Prevention of Pollution from Ships | OMI |
+| **SOLAS** | Safety Of Life At Sea | OMI |
+| **IGF Code** | International Code of Safety for Ships using Gases or other Low-flashpoint Fuels | OMI |
+| **SSGM** | Service de Santé des Gens de Mer (visites aptitude) | DAM |
+
+### 11.2 Tech
+
+| Acronyme | Signification |
+|----------|---------------|
+| **D1** | Cloudflare D1 — SQLite serverless edge |
+| **R2** | Cloudflare R2 — object storage S3-compatible |
+| **KV** | Cloudflare Workers KV — key-value store (non utilisé ici) |
+| **JWT** | JSON Web Token (HMAC-SHA256, 7 jours expiry) |
+| **PBKDF2** | Password-Based Key Derivation Function 2 (100k iterations, Web Crypto API) |
+| **RBAC** | Role-Based Access Control (11 permissions staff + master admin bypass) |
+| **CSP** | Content Security Policy (`public/_headers`) |
+| **CORS** | Cross-Origin Resource Sharing (restreint à `gaspe-fr.pages.dev`, `gaspe.fr`, `localhost`) |
+| **SSG** | Static Site Generation (Next.js `output: 'export'`) |
+| **SPA** | Single Page Application (hydration client-side après SSG) |
+| **OG** | Open Graph (meta tags partage social) |
+| **JSON-LD** | JSON for Linked Data (structured data Schema.org) |
+| **RSS** | Really Simple Syndication (`/feed.xml` 2.0, force-static) |
+| **dual-mode store** | Pattern GASPE : helper async qui appelle l'API si `NEXT_PUBLIC_API_URL` est set, sinon retombe sur localStorage |
+
+---
+
+**Auteur** : Session 53 (claude/annual-data-validation-XqYQe)
+**Sources consolidées** : `CLAUDE.md`, `docs/AUDIT-CRITIQUE-2026.md`, `docs/VALIDATION-ANNUELLE-FEATURE.md`, `docs/CMS-SPEC.md`, `docs/NEWSLETTER-SPEC.md`, `docs/SEO-GUIDE.md`, scan `workers/api.ts` + `workers/migrations/` + `src/app/`
+**Méthode** : 3 commits atomiques (b535176 §1-§4, b2b69e4 §5-§8, ce-commit §9-§11) après échec d'une approche en un seul shot (timeouts répétés du modèle sur les longues réponses)
+**Audit cross-source** : 100 % des features documentées dans CLAUDE.md ont été retrouvées dans le code (audit positif). Toutes les sessions 1-52 traçables.
