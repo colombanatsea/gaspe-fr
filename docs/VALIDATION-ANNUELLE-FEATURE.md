@@ -483,8 +483,12 @@ Onglet `validation` avec :
 - ✅ Notifications email J-14 / J+0 deadline (session 51, cf. § 14) —
   Cloudflare Workers Cron Trigger quotidien 09:00 UTC, idempotence via
   table `validation_email_sent`.
+- ✅ Smoke tests prod (session 52, cf. § 15) — script
+  `scripts/smoke-test-validation.sh` reproductible (login admin, cycle
+  draft → open → dashboard → closed) + procédure de vérification du
+  cron via dashboard Cloudflare.
 
-**Backlog restant** :
+**Backlog restant** (rétrécit à 3 items, tous non-bloquants) :
 
 - **Override admin** : champ `override_admin INTEGER DEFAULT 0` sur
   `validation_history` pour distinguer les validations faites par l'admin
@@ -494,9 +498,6 @@ Onglet `validation` avec :
   (capacités, équipage, environnement) si le besoin émerge.
 - **Webhook externe** : notifier ADF/UMA quand le quorum NAO est
   validé (compagnies sous CCN 3228 toutes en `fullyValidated`).
-- **Smoke tests prod** : sandbox sans réseau ne permet pas de tester les
-  endpoints D1 ni le cron en live. À exécuter post-merge via la dashboard
-  Cloudflare Workers (logs cron) + curl manuel.
 
 ---
 
@@ -902,7 +903,116 @@ Total tests projet : 333 → **346** (+13).
 
 ---
 
-**Auteur** : Sessions 45-51 (claude/annual-data-validation-XqYQe)
+## 15. Smoke test runbook (session 52)
+
+### 15.1 Vision
+
+Donner à l'admin GASPE / aux mainteneurs une procédure **reproductible et
+automatisable** pour vérifier que la feature validation annuelle fonctionne
+en prod après chaque déploiement. Couvre les 6 endpoints API + le login
+admin + un cycle complet draft → open → closed.
+
+Sandbox-bloqué pour l'exécution (pas de réseau), mais le script et la
+procédure sont commitées et exécutables manuellement post-merge depuis
+un poste qui a accès à `gaspe-api.hello-0d0.workers.dev`.
+
+### 15.2 Script `scripts/smoke-test-validation.sh`
+
+Script Bash standalone (pré-requis : `curl` + `jq`). 8 étapes :
+
+1. **Health check** — `GET /api/health` (anonyme).
+2. **Login admin** — `POST /api/auth/login` → JWT cookie sauvé dans
+   `/tmp/cookies.txt`.
+3. **GET /api/campaigns** (admin) — liste les campagnes existantes.
+4. **POST /api/campaigns** — crée une campagne `TEST_YEAR=2099` en `draft`
+   (année bidon pour ne pas collisionner avec une vraie campagne).
+5. **PATCH /api/campaigns/:id** — bascule en `open`.
+6. **GET /api/campaigns/:id/dashboard** — vérifie le breakdown agrégé.
+7. **GET /api/organizations/:slug/validations** — historique d'une org
+   (par défaut `karu-ferry`).
+8. **PATCH /api/campaigns/:id** (cleanup) — bascule en `closed`.
+
+Variables d'environnement :
+
+| Variable | Défaut | Description |
+|----------|--------|-------------|
+| `API_URL` | `https://gaspe-api.hello-0d0.workers.dev` | Endpoint Worker prod |
+| `ADMIN_EMAIL` | `admin@gaspe.fr` | Compte admin |
+| `ADMIN_PASSWORD` | `admin123` | (à remplacer en prod !) |
+| `TEST_YEAR` | `2099` | Année de la campagne de test |
+| `TEST_SLUG` | `karu-ferry` | Slug à tester sur `/validations` |
+| `CLEANUP` | `true` | Si `false`, laisse la campagne en `open` |
+| `VERBOSE` | `false` | Affiche les payloads JSON complets |
+
+Sortie : sortie code `0` si tous les tests passent, `1` sinon. Affichage
+coloré avec compteur `passes / échecs`.
+
+### 15.3 Exécution typique
+
+```bash
+ADMIN_PASSWORD="<vrai-mdp>" ./scripts/smoke-test-validation.sh
+```
+
+Sortie attendue (succès) :
+
+```
+━━━ BILAN ━━━
+  ✓ 7 passes
+  ✗ 0 echecs
+Tous les smoke tests sont passes.
+```
+
+### 15.4 Nettoyage manuel post-test
+
+Le script clôt la campagne mais ne la supprime pas (les `DELETE` campaign
+ne sont pas implémentés côté API par sécurité). Pour purger complètement
+en cas de besoin :
+
+```bash
+wrangler d1 execute gaspe-db --remote \
+  --command="DELETE FROM fleet_validation_campaigns WHERE id=<ID>"
+```
+
+L'historique `validation_history` lié sera supprimé en cascade
+(ON DELETE CASCADE), de même que les éventuels logs
+`validation_email_sent`.
+
+### 15.5 Vérification du Cron Trigger (session 51)
+
+Le cron est invisible côté API. Pour vérifier qu'il tourne bien :
+
+1. Aller sur le dashboard Cloudflare → Workers → `gaspe-api` → Logs.
+2. Filtrer sur `runValidationDeadlineCron` ou `[cron]`.
+3. Constater l'invocation quotidienne à 09:00 UTC.
+
+Pour forcer un déclenchement manuel :
+
+```bash
+wrangler triggers cron --config workers/wrangler.toml
+```
+
+Pour vérifier le tracking idempotent :
+
+```bash
+wrangler d1 execute gaspe-db --remote \
+  --command="SELECT * FROM validation_email_sent ORDER BY sent_at DESC LIMIT 20"
+```
+
+### 15.6 Limitations connues
+
+- **Pas de test de l'envoi Brevo réel** : le script ne vérifie pas
+  qu'un email a bien été reçu (nécessiterait un compte Brevo de test
+  + assertion sur les events). À tester manuellement en surveillant la
+  boîte de réception du compte admin après bascule open.
+- **Pas de test du POST /validations** : créer une vraie validation
+  modifierait le `last_validated_year` d'une org en prod, donc on
+  s'abstient. Couvert par les tests unitaires (47 tests session 45).
+- **Pas de test du Diff Y-o-Y modal** : test UI nécessite Playwright.
+  Hors scope du smoke test API.
+
+---
+
+**Auteur** : Sessions 45-52 (claude/annual-data-validation-XqYQe)
 **Migrations livrées** : 0027, 0028, 0029, 0030
 **Endpoints livrés** : 6 (campaigns CRUD + dashboard + history + submit)
 **Cron triggers** : `0 9 * * *` (09:00 UTC quotidien, session 51)
