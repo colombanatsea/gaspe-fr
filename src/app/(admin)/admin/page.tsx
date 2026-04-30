@@ -118,6 +118,7 @@ export default function AdminDashboardPage() {
         <Link
           href="/"
           target="_blank"
+          rel="noopener noreferrer"
           className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-4 py-2.5 text-sm font-medium text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)] transition-colors"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

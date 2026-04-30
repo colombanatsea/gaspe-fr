@@ -196,6 +196,7 @@ export function AdminSidebar() {
           <Link
             href="/"
             target="_blank"
+            rel="noopener noreferrer"
             className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2 text-xs text-[var(--gaspe-neutral-400)] hover:text-[var(--gaspe-teal-400)] transition-colors"
           >
             <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
