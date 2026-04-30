@@ -48,6 +48,7 @@ const navSections: NavSection[] = [
       { label: "Messages", href: "/admin/messages", icon: MailIcon, permission: "manage_messages" },
       { label: "Newsletter", href: "/admin/newsletter", icon: MailIcon, permission: "manage_newsletter" },
       { label: "Votes", href: "/admin/votes", icon: VoteIcon, permission: "manage_votes" },
+      { label: "Campagnes validation", href: "/admin/campagnes", icon: ClipboardCheckIcon, permission: "manage_organizations" },
     ],
   },
   {
@@ -332,6 +333,16 @@ function VoteIcon({ className }: { className?: string }) {
       <path d="M9 12l2 2 4-4" />
       <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.22.45 4.56 1.24" />
       <path d="M21 5l-9 9" />
+    </svg>
+  );
+}
+
+function ClipboardCheckIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <path d="m9 14 2 2 4-4" />
     </svg>
   );
 }
