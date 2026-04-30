@@ -8,6 +8,7 @@ import {
   buildVesselSnapshot,
   parseValidationItems,
   summarizeOrgForDashboard,
+  diffSnapshots,
   ValidationInputError,
 } from "../validation-helpers";
 
@@ -475,5 +476,130 @@ describe("summarizeOrgForDashboard", () => {
     expect(summary.organizationId).toBe("org-1");
     expect(summary.slug).toBe("karu-ferry");
     expect(summary.titulaireEmail).toBe("info@karu.fr");
+  });
+});
+
+describe("diffSnapshots", () => {
+  it("returns no entries when snapshots are identical (default options)", () => {
+    const a = { email: "info@karu.fr", phone: "0590" };
+    expect(diffSnapshots(a, a)).toEqual([]);
+  });
+
+  it("returns unchanged entries when includeUnchanged is true", () => {
+    const a = { email: "info@karu.fr", phone: "0590" };
+    const result = diffSnapshots(a, a, { includeUnchanged: true });
+    expect(result).toHaveLength(2);
+    expect(result.every((e) => e.status === "unchanged")).toBe(true);
+  });
+
+  it("detects modified field", () => {
+    const result = diffSnapshots(
+      { email: "old@karu.fr", phone: "0590" },
+      { email: "new@karu.fr", phone: "0590" },
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ field: "email", status: "modified" });
+  });
+
+  it("detects added field (null -> value)", () => {
+    const result = diffSnapshots({ email: null }, { email: "info@karu.fr" });
+    expect(result[0]).toMatchObject({ field: "email", status: "added" });
+  });
+
+  it("detects removed field (value -> null)", () => {
+    const result = diffSnapshots({ email: "info@karu.fr" }, { email: null });
+    expect(result[0]).toMatchObject({ field: "email", status: "removed" });
+  });
+
+  it("treats null and undefined symmetrically as 'unchanged'", () => {
+    expect(
+      diffSnapshots({ email: null }, { email: undefined }),
+    ).toEqual([]);
+    expect(
+      diffSnapshots({ email: undefined }, { email: null }),
+    ).toEqual([]);
+  });
+
+  it("compares nested objects (crewByBrevet) structurally", () => {
+    expect(
+      diffSnapshots(
+        { crewByBrevet: { captain_500: 1, deckhand: 2 } },
+        { crewByBrevet: { captain_500: 1, deckhand: 2 } },
+      ),
+    ).toEqual([]);
+    expect(
+      diffSnapshots(
+        { crewByBrevet: { captain_500: 1 } },
+        { crewByBrevet: { captain_500: 2 } },
+      )[0],
+    ).toMatchObject({ field: "crewByBrevet", status: "modified" });
+  });
+
+  it("ignores key order in nested objects (sorted before stringify)", () => {
+    expect(
+      diffSnapshots(
+        { crewByBrevet: { a: 1, b: 2 } },
+        { crewByBrevet: { b: 2, a: 1 } },
+      ),
+    ).toEqual([]);
+  });
+
+  it("excludes 'id' by default", () => {
+    expect(
+      diffSnapshots({ id: "v-1", name: "Karu" }, { id: "v-2", name: "Karu" }),
+    ).toEqual([]);
+  });
+
+  it("respects custom excludeFields", () => {
+    const result = diffSnapshots(
+      { id: "v-1", name: "Old", imo: "111" },
+      { id: "v-1", name: "New", imo: "222" },
+      { excludeFields: ["id", "imo"] },
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].field).toBe("name");
+  });
+
+  it("sorts result : modified > added > removed > unchanged then alpha", () => {
+    const result = diffSnapshots(
+      { z: "old", added_field: null, will_remove: "x", a: "same" },
+      { z: "new", added_field: "v", will_remove: null, a: "same" },
+      { includeUnchanged: true },
+    );
+    expect(result.map((e) => e.status)).toEqual([
+      "modified",
+      "added",
+      "removed",
+      "unchanged",
+    ]);
+  });
+
+  it("sorts alphabetically within same status", () => {
+    const result = diffSnapshots(
+      { zoo: "a", apple: "a", mango: "a" },
+      { zoo: "b", apple: "b", mango: "b" },
+    );
+    expect(result.map((e) => e.field)).toEqual(["apple", "mango", "zoo"]);
+  });
+
+  it("handles null inputs gracefully", () => {
+    expect(diffSnapshots(null, null)).toEqual([]);
+    expect(diffSnapshots(null, { email: "x" })[0]).toMatchObject({
+      field: "email",
+      status: "added",
+    });
+    expect(diffSnapshots({ email: "x" }, null)[0]).toMatchObject({
+      field: "email",
+      status: "removed",
+    });
+  });
+
+  it("includes 'before' and 'after' raw values in entries", () => {
+    const result = diffSnapshots(
+      { passengerCapacity: 220 },
+      { passengerCapacity: 280 },
+    );
+    expect(result[0].before).toBe(220);
+    expect(result[0].after).toBe(280);
   });
 });

@@ -324,3 +324,96 @@ export function summarizeOrgForDashboard(
     titulaireEmail: row.titulaireEmail,
   };
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Diff Y-o-Y entre deux snapshots (session 47)
+// ────────────────────────────────────────────────────────────────────────────
+
+export type DiffStatus = "added" | "removed" | "modified" | "unchanged";
+
+export interface DiffEntry {
+  field: string;
+  before: unknown;
+  after: unknown;
+  status: DiffStatus;
+}
+
+export interface DiffOptions {
+  /** Inclure les champs unchanged dans le resultat. Defaut : false. */
+  includeUnchanged?: boolean;
+  /** Champs a ignorer (ex. identifiants stables). Defaut : ["id"]. */
+  excludeFields?: readonly string[];
+}
+
+const DEFAULT_EXCLUDE: readonly string[] = ["id"];
+
+/** Comparaison structurelle defensive (gere null, types, objets/arrays). */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || a === undefined) return b === null || b === undefined;
+  if (b === null || b === undefined) return false;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== "object") return false;
+  // Stringify ordre-deterministe pour les objets simples (snapshots).
+  // OK pour nos snapshots qui sont des Records<string, primitives ou Record<string, number>>.
+  return JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b));
+}
+
+function sortKeys(value: unknown): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(sortKeys);
+  return Object.keys(value as Record<string, unknown>)
+    .sort()
+    .reduce<Record<string, unknown>>((acc, k) => {
+      acc[k] = sortKeys((value as Record<string, unknown>)[k]);
+      return acc;
+    }, {});
+}
+
+/**
+ * Compare deux snapshots cote-a-cote (typiquement annee N vs N-1) et renvoie
+ * la liste des champs qui ont change. Tri : modified > added > removed >
+ * unchanged, puis ordre alphabetique. `null` ou `undefined` cote `before`
+ * = "added" ; cote `after` = "removed" ; sinon equality structurelle.
+ */
+export function diffSnapshots(
+  before: Record<string, unknown> | null | undefined,
+  after: Record<string, unknown> | null | undefined,
+  options: DiffOptions = {},
+): DiffEntry[] {
+  const beforeObj = before ?? {};
+  const afterObj = after ?? {};
+  const exclude = new Set(options.excludeFields ?? DEFAULT_EXCLUDE);
+  const allFields = new Set([
+    ...Object.keys(beforeObj),
+    ...Object.keys(afterObj),
+  ]);
+  const result: DiffEntry[] = [];
+  for (const field of allFields) {
+    if (exclude.has(field)) continue;
+    const b = beforeObj[field] ?? null;
+    const a = afterObj[field] ?? null;
+    let status: DiffStatus;
+    if (b === null && a === null) status = "unchanged";
+    else if (b === null && a !== null) status = "added";
+    else if (b !== null && a === null) status = "removed";
+    else if (deepEqual(b, a)) status = "unchanged";
+    else status = "modified";
+
+    if (status === "unchanged" && !options.includeUnchanged) continue;
+    result.push({ field, before: b, after: a, status });
+  }
+  const order: Record<DiffStatus, number> = {
+    modified: 0,
+    added: 1,
+    removed: 2,
+    unchanged: 3,
+  };
+  result.sort((x, y) => {
+    if (order[x.status] !== order[y.status]) {
+      return order[x.status] - order[y.status];
+    }
+    return x.field.localeCompare(y.field);
+  });
+  return result;
+}

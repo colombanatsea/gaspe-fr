@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 import { getCampaignDashboard } from "@/lib/validation-store";
+import { SnapshotDiffModal } from "@/components/validation/SnapshotDiffModal";
 import type { CampaignDashboard } from "@/types/validation";
 
 type SortKey = "name" | "vessels" | "fully";
@@ -22,6 +23,7 @@ export default function CampaignDashboardClient({ id }: { id: number }) {
   const [filter, setFilter] = useState<"all" | "pending" | "fully">("all");
   const [sortKey, setSortKey] = useState<SortKey>("fully");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [diffOrg, setDiffOrg] = useState<{ slug: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) {
@@ -199,12 +201,15 @@ export default function CampaignDashboardClient({ id }: { id: number }) {
               <th className="px-3 py-2 text-left font-heading text-xs uppercase tracking-wider">
                 Contact
               </th>
+              <th className="px-3 py-2 text-left font-heading text-xs uppercase tracking-wider">
+                Diff Y-o-Y
+              </th>
             </tr>
           </thead>
           <tbody>
             {filteredRows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-sm text-foreground-muted">
+                <td colSpan={6} className="px-3 py-6 text-center text-sm text-foreground-muted">
                   Aucune compagnie pour ce filtre.
                 </td>
               </tr>
@@ -271,11 +276,32 @@ export default function CampaignDashboardClient({ id }: { id: number }) {
                     <span className="text-xs text-foreground-muted">—</span>
                   )}
                 </td>
+                <td className="px-3 py-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDiffOrg({ slug: row.slug, name: row.organizationName })
+                    }
+                    className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+                    aria-label={`Voir le diff ${campaign.targetYear - 1} -> ${campaign.targetYear} de ${row.organizationName}`}
+                  >
+                    Voir le diff
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
+
+      {diffOrg && (
+        <SnapshotDiffModal
+          slug={diffOrg.slug}
+          organizationName={diffOrg.name}
+          targetYear={campaign.targetYear}
+          onClose={() => setDiffOrg(null)}
+        />
+      )}
     </div>
   );
 }
