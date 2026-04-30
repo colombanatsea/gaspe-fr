@@ -331,7 +331,16 @@ function RegimeENIM() {
       <p className="mt-4 text-xs text-foreground-muted">
         Taux indicatifs, bareme ENIM 2025/2026. Taux AT/MP : moyenne de branche, varie selon l&apos;entreprise.
         CSG et CRDS assises sur 98,25 % du brut. La CRM (retraite) remplace AGIRC-ARRCO pour les gens de mer.
-        Source : Caisse des Gens de Mer, decret 2023-1329.
+        Pour les taux officiels à jour, consulter le site de l&apos;{" "}
+        <a
+          href="https://www.enim.eu/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--gaspe-teal-600)] underline-offset-2 hover:underline decoration-dotted"
+        >
+          ENIM (enim.eu)
+        </a>
+        . Source : Caisse des Gens de Mer, decret 2023-1329.
       </p>
     </div>
   );
