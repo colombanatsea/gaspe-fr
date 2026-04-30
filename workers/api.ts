@@ -65,6 +65,8 @@ import {
   buildVesselSnapshot,
   parseValidationItems,
   resolveTargetYear,
+  shouldNotifyDueSoon,
+  shouldNotifyOverdue,
   ValidationInputError,
   type ValidationCampaignRow,
   type ValidationRequestItem,
@@ -295,6 +297,22 @@ function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean 
 // ═══════════════════════════════════════════════════════════
 
 export default {
+  /**
+   * Cron trigger handler (session 51). Configure dans wrangler.toml :
+   * `[triggers] crons = ["0 9 * * *"]`. Scan quotidien des campagnes ouvertes
+   * pour declencher les emails J-14 / J+0 deadline. Idempotent via la table
+   * validation_email_sent.
+   */
+  async scheduled(
+    _event: ScheduledEvent,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    ctx.waitUntil(runValidationDeadlineCron(env).catch((err) => {
+      console.error("[cron] runValidationDeadlineCron failed:", err);
+    }));
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -4995,6 +5013,14 @@ async function notifyCampaignOpened(
     return { sent: 0, skipped: 0 };
   }
 
+  // Idempotence (session 51) : si l'email d'ouverture a deja ete envoye pour
+  // cette campagne, on no-op. Permet a un PATCH draft->open->draft->open de
+  // ne pas spammer les titulaires.
+  if (await alreadySent(env, campaign.id, "opened")) {
+    console.log(`[validation] notifyCampaignOpened deja envoye pour ${campaign.id}`);
+    return { sent: 0, skipped: 0 };
+  }
+
   // Recupere les titulaires actifs avec leur organisation
   const { results } = await env.DB.prepare(
     `SELECT u.id AS user_id, u.email, u.name,
@@ -5068,6 +5094,7 @@ async function notifyCampaignOpened(
     }
   }
   console.log(`[validation] notifyCampaignOpened : ${sent} envoyes, ${skipped} echoues`);
+  await logEmailSent(env, campaign.id, "opened", sent, skipped);
   return { sent, skipped };
 }
 
@@ -5120,4 +5147,324 @@ function renderCampaignOpenedEmailHtml(params: {
     </div>
   </div>
 </body></html>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Cron deadline notifications – J-14 / J+0 (session 51)
+//  Declenche par scheduled() via Cloudflare Workers Cron Trigger.
+//  Idempotent via la table validation_email_sent (UNIQUE par
+//  campaign_id + notification_type, migration 0030).
+// ═══════════════════════════════════════════════════════════
+
+async function ensureEmailSentTable(env: Env): Promise<void> {
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS validation_email_sent (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      notification_type TEXT NOT NULL,
+      sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+      recipients_count INTEGER NOT NULL DEFAULT 0,
+      recipients_skipped INTEGER NOT NULL DEFAULT 0,
+      UNIQUE(campaign_id, notification_type)
+    )`).run();
+  } catch { /* tables peut exister deja */ }
+}
+
+/**
+ * Vrai si l'email correspondant a deja ete envoye pour cette campagne et
+ * ce type de notification (idempotence cross-runs).
+ */
+async function alreadySent(
+  env: Env,
+  campaignId: number,
+  type: "opened" | "due_soon" | "overdue",
+): Promise<boolean> {
+  await ensureEmailSentTable(env);
+  const row = await env.DB.prepare(
+    "SELECT id FROM validation_email_sent WHERE campaign_id = ? AND notification_type = ?",
+  ).bind(campaignId, type).first<{ id: number }>();
+  return !!row;
+}
+
+async function logEmailSent(
+  env: Env,
+  campaignId: number,
+  type: "opened" | "due_soon" | "overdue",
+  sent: number,
+  skipped: number,
+): Promise<void> {
+  try {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO validation_email_sent
+       (campaign_id, notification_type, recipients_count, recipients_skipped)
+       VALUES (?, ?, ?, ?)`,
+    ).bind(campaignId, type, sent, skipped).run();
+  } catch (err) {
+    console.error("[cron] logEmailSent failed:", err);
+  }
+}
+
+/**
+ * Recupere les organisations qui n'ont pas encore tout valide pour une annee
+ * cible, avec leur titulaire actif (is_primary=1, archived=0, email non null).
+ * Utilise par les helpers notifyCampaignDueSoon / notifyCampaignOverdue pour
+ * cibler les retardataires uniquement.
+ */
+async function getNonValidatedRecipients(
+  env: Env,
+  targetYear: number,
+): Promise<Array<{
+  email: string;
+  name: string;
+  org_name: string;
+  org_slug: string;
+}>> {
+  // Une org est "non fully validated" si :
+  // - profil non valide pour targetYear (organizations.last_validated_year < targetYear OU NULL)
+  // - OU au moins 1 navire non valide pour targetYear
+  // On capture toutes les orgs et on filtre ensuite via les snapshots.
+  const { results } = await env.DB.prepare(
+    `SELECT u.email, u.name, o.id AS org_id, o.name AS org_name, o.slug AS org_slug,
+            o.last_validated_year AS profile_year
+     FROM users u
+     JOIN organizations o ON o.id = u.organization_id
+     WHERE u.is_primary = 1
+       AND u.archived = 0
+       AND o.archived = 0
+       AND u.email IS NOT NULL
+       AND u.email != ''`,
+  ).all<{
+    email: string;
+    name: string;
+    org_id: string;
+    org_name: string;
+    org_slug: string;
+    profile_year: number | null;
+  }>();
+  const orgs = results ?? [];
+  if (orgs.length === 0) return [];
+
+  // Pour chaque org, verifier si tous ses navires ont last_validated_year >= targetYear
+  const orgIds = orgs.map((o) => o.org_id);
+  const placeholders = orgIds.map(() => "?").join(",");
+  const { results: vesselRows } = await env.DB.prepare(
+    `SELECT organization_id, last_validated_year
+     FROM organization_vessels
+     WHERE organization_id IN (${placeholders})`,
+  ).bind(...orgIds).all<{
+    organization_id: string;
+    last_validated_year: number | null;
+  }>();
+  const vesselsByOrg = new Map<string, Array<{ last_validated_year: number | null }>>();
+  for (const v of vesselRows ?? []) {
+    const arr = vesselsByOrg.get(v.organization_id) ?? [];
+    arr.push({ last_validated_year: v.last_validated_year });
+    vesselsByOrg.set(v.organization_id, arr);
+  }
+
+  return orgs
+    .filter((o) => {
+      const profileOk = (o.profile_year ?? 0) >= targetYear;
+      const vessels = vesselsByOrg.get(o.org_id) ?? [];
+      const allVesselsOk = vessels.every((v) => (v.last_validated_year ?? 0) >= targetYear);
+      return !profileOk || !allVesselsOk;
+    })
+    .map(({ email, name, org_name, org_slug }) => ({ email, name, org_name, org_slug }));
+}
+
+/**
+ * Envoi des emails J-14 deadline approche aux retardataires d'une campagne.
+ * Idempotent : no-op si deja envoye pour cette campagne. Best-effort sur Brevo.
+ */
+async function notifyCampaignDueSoon(env: Env, campaign: DbCampaign): Promise<void> {
+  if (!env.BREVO_API_KEY) return;
+  if (await alreadySent(env, campaign.id, "due_soon")) {
+    console.log(`[cron] due_soon deja envoye pour campagne ${campaign.id}`);
+    return;
+  }
+  const recipients = await getNonValidatedRecipients(env, campaign.target_year);
+  if (recipients.length === 0) {
+    console.log(`[cron] due_soon : aucun retardataire pour campagne ${campaign.id}`);
+    await logEmailSent(env, campaign.id, "due_soon", 0, 0);
+    return;
+  }
+  const targetDateStr = campaign.target_date
+    ? new Date(campaign.target_date).toLocaleDateString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+      })
+    : null;
+  const subject = `Validation annuelle ${campaign.target_year} – deadline approche`;
+  let sent = 0;
+  let skipped = 0;
+  for (const r of recipients) {
+    const html = renderCampaignDeadlineEmailHtml({
+      kind: "due_soon",
+      userName: r.name,
+      orgName: r.org_name,
+      targetYear: campaign.target_year,
+      targetDateStr,
+    });
+    try {
+      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          sender: { name: "ACF (ex-GASPE)", email: "ne-pas-repondre@gaspe.fr" },
+          to: [{ email: r.email, name: r.name }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+      if (resp.ok) sent += 1;
+      else { skipped += 1; console.warn(`[cron] due_soon Brevo refus ${r.email} : ${resp.status}`); }
+    } catch (err) {
+      skipped += 1;
+      console.error(`[cron] due_soon echec envoi a ${r.email}:`, err);
+    }
+  }
+  console.log(`[cron] due_soon campagne ${campaign.id} : ${sent} envoyes, ${skipped} echoues`);
+  await logEmailSent(env, campaign.id, "due_soon", sent, skipped);
+}
+
+/**
+ * Envoi des emails J+0 deadline atteinte aux retardataires (apres deadline,
+ * dans la fenetre de tolerance graceDays definie cote shouldNotifyOverdue).
+ */
+async function notifyCampaignOverdue(env: Env, campaign: DbCampaign): Promise<void> {
+  if (!env.BREVO_API_KEY) return;
+  if (await alreadySent(env, campaign.id, "overdue")) {
+    console.log(`[cron] overdue deja envoye pour campagne ${campaign.id}`);
+    return;
+  }
+  const recipients = await getNonValidatedRecipients(env, campaign.target_year);
+  if (recipients.length === 0) {
+    await logEmailSent(env, campaign.id, "overdue", 0, 0);
+    return;
+  }
+  const targetDateStr = campaign.target_date
+    ? new Date(campaign.target_date).toLocaleDateString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+      })
+    : null;
+  const subject = `Validation annuelle ${campaign.target_year} – deadline atteinte`;
+  let sent = 0;
+  let skipped = 0;
+  for (const r of recipients) {
+    const html = renderCampaignDeadlineEmailHtml({
+      kind: "overdue",
+      userName: r.name,
+      orgName: r.org_name,
+      targetYear: campaign.target_year,
+      targetDateStr,
+    });
+    try {
+      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          sender: { name: "ACF (ex-GASPE)", email: "ne-pas-repondre@gaspe.fr" },
+          to: [{ email: r.email, name: r.name }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+      if (resp.ok) sent += 1;
+      else { skipped += 1; console.warn(`[cron] overdue Brevo refus ${r.email} : ${resp.status}`); }
+    } catch (err) {
+      skipped += 1;
+      console.error(`[cron] overdue echec envoi a ${r.email}:`, err);
+    }
+  }
+  console.log(`[cron] overdue campagne ${campaign.id} : ${sent} envoyes, ${skipped} echoues`);
+  await logEmailSent(env, campaign.id, "overdue", sent, skipped);
+}
+
+/**
+ * Template HTML pour les emails deadline (due_soon / overdue). Charte ACF
+ * (gradient teal pour due_soon, rouge soutenu pour overdue), sanitization
+ * via le helper `sanitize()` existant.
+ */
+function renderCampaignDeadlineEmailHtml(params: {
+  kind: "due_soon" | "overdue";
+  userName: string;
+  orgName: string;
+  targetYear: number;
+  targetDateStr: string | null;
+}): string {
+  const ctaUrl = `${SITE_URL}/espace-adherent/validation`;
+  const isOverdue = params.kind === "overdue";
+  const headerColor = isOverdue ? "#B91C1C" : "#1B7E8A";
+  const headerBaseline = isOverdue ? "Action requise rapidement" : "Localement ancres. Socialement engages.";
+  const title = isOverdue
+    ? `Validation annuelle ${params.targetYear} : deadline atteinte`
+    : `Validation annuelle ${params.targetYear} : deadline approche`;
+  const intro = isOverdue
+    ? `La date limite indicative pour valider vos donnees ${params.targetYear} (${params.targetDateStr ?? "?"}) est passee. Votre compagnie <strong>${sanitize(params.orgName)}</strong> n'a pas encore confirme l'integralite de son profil et de sa flotte.`
+    : `La date limite indicative pour la validation annuelle ${params.targetYear} approche${params.targetDateStr ? ` (<strong>${sanitize(params.targetDateStr)}</strong>)` : ""}. Votre compagnie <strong>${sanitize(params.orgName)}</strong> n'a pas encore tout confirme.`;
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:${headerColor};padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">ACF (ex-GASPE)</h1>
+      <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">${headerBaseline}</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">${title}</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(params.userName)},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">${intro}</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">
+        Le processus est rapide : pour chaque element (profil + chaque navire), vous pouvez cocher « Inchange depuis l'an dernier » ou modifier les valeurs. La validation se fait en un seul clic.
+      </p>
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${ctaUrl}" style="display:inline-block;background:${headerColor};color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;font-weight:600;">Valider mes donnees ${params.targetYear}</a>
+      </div>
+      <p style="margin:0 0 8px;color:#777;font-size:12px;">Vous pouvez aussi acceder directement a votre espace adherent puis cliquer sur la banniere « Validation annuelle ».</p>
+      <p style="margin:0;color:#777;font-size:12px;">Une question ? Repondez a cet email ou contactez l'equipe ACF.</p>
+    </div>
+    <div style="background:#F5F3F0;padding:16px 32px;text-align:center;color:#777;font-size:11px;">
+      ACF - Armateurs Cotiers Francais (ex-GASPE) - <a href="https://gaspe-fr.pages.dev" style="color:${headerColor};text-decoration:none;">gaspe-fr.pages.dev</a>
+    </div>
+  </div>
+</body></html>`;
+}
+
+/**
+ * Entry point du cron quotidien (scheduled). Scan toutes les campagnes en
+ * status='open', pour chaque on calcule shouldNotifyDueSoon / shouldNotifyOverdue
+ * et on declenche l'email approprie. Idempotence garantie par la table
+ * validation_email_sent (UNIQUE par campagne + type).
+ */
+async function runValidationDeadlineCron(env: Env): Promise<void> {
+  await ensureValidationTables(env);
+  await ensureEmailSentTable(env);
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM fleet_validation_campaigns WHERE status = 'open'",
+  ).all<DbCampaign>();
+  const openCampaigns = results ?? [];
+  console.log(`[cron] ${openCampaigns.length} campagne(s) ouverte(s) a scanner`);
+  const nowMs = Date.now();
+  for (const c of openCampaigns) {
+    const cell: Pick<ValidationCampaignRow, "status" | "target_date"> = {
+      status: c.status,
+      target_date: c.target_date,
+    };
+    if (shouldNotifyOverdue(cell, nowMs)) {
+      await notifyCampaignOverdue(env, c).catch((err) => {
+        console.error(`[cron] notifyCampaignOverdue ${c.id} failed:`, err);
+      });
+    } else if (shouldNotifyDueSoon(cell, nowMs)) {
+      await notifyCampaignDueSoon(env, c).catch((err) => {
+        console.error(`[cron] notifyCampaignDueSoon ${c.id} failed:`, err);
+      });
+    }
+  }
 }

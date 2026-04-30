@@ -26,5 +26,14 @@ CONTACT_EMAIL = "contact@gaspe.fr"
 # JWT_SECRET – set via: npx wrangler secret put JWT_SECRET --config workers/wrangler.toml
 # BREVO_API_KEY – set via: npx wrangler secret put BREVO_API_KEY --config workers/wrangler.toml
 
+# Cron triggers (session 51) – validation annuelle deadline emails J-14 / J+0
+# Scan quotidien à 09:00 UTC (10:00 Paris été, 11:00 Paris hiver).
+# Scan ouvert : si une campagne `open` a sa target_date dans la fenêtre
+# [-14j, 0j] OU [0j, +1j], envoie un email aux titulaires non encore validés.
+# Idempotent via la table validation_email_sent (UNIQUE par campaign_id +
+# notification_type).
+[triggers]
+crons = ["0 9 * * *"]
+
 # D1 migrations applied via: wrangler d1 execute gaspe-db --file workers/migrations/XXXX.sql
 # Or via deploy-worker.yml CI workflow

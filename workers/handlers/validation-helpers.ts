@@ -417,3 +417,53 @@ export function diffSnapshots(
   });
   return result;
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Cron triggers : decision a envoyer un email J-14 / J+0 (session 51)
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Vrai si on doit envoyer un email "deadline approche" pour une campagne
+ * ouverte aujourd'hui : `target_date - dueSoonDays <= now < target_date`.
+ *
+ * Le cron tourne quotidiennement → la fenetre est large (jusqu'au jour J).
+ * L'idempotence est assuree cote Worker via la table validation_email_sent
+ * (UNIQUE (campaign_id, notification_type)).
+ *
+ * `nowMs` injectable pour tests deterministes.
+ */
+export function shouldNotifyDueSoon(
+  campaign: Pick<ValidationCampaignRow, "status" | "target_date">,
+  nowMs: number = Date.now(),
+  dueSoonDays: number = 14,
+): boolean {
+  if (campaign.status !== "open") return false;
+  if (!campaign.target_date) return false;
+  const targetMs = new Date(campaign.target_date).getTime();
+  if (Number.isNaN(targetMs)) return false;
+  // Apres la deadline -> c'est plus du due-soon, c'est de l'overdue
+  if (nowMs > targetMs) return false;
+  const dueSoonThreshold = targetMs - dueSoonDays * 86_400_000;
+  return nowMs >= dueSoonThreshold;
+}
+
+/**
+ * Vrai si on doit envoyer un email "deadline atteinte" : la deadline est
+ * passee de moins de `graceDays` jours (fenetre de tolerance pour le cron
+ * qui tourne 1 fois par jour). Au-dela, on considere que le rappel a deja
+ * ete envoye et on ne spam pas.
+ *
+ * `nowMs` injectable pour tests deterministes.
+ */
+export function shouldNotifyOverdue(
+  campaign: Pick<ValidationCampaignRow, "status" | "target_date">,
+  nowMs: number = Date.now(),
+  graceDays: number = 1,
+): boolean {
+  if (campaign.status !== "open") return false;
+  if (!campaign.target_date) return false;
+  const targetMs = new Date(campaign.target_date).getTime();
+  if (Number.isNaN(targetMs)) return false;
+  if (nowMs < targetMs) return false; // pas encore depasse
+  return nowMs <= targetMs + graceDays * 86_400_000;
+}

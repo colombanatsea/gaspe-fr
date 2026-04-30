@@ -9,6 +9,8 @@ import {
   parseValidationItems,
   summarizeOrgForDashboard,
   diffSnapshots,
+  shouldNotifyDueSoon,
+  shouldNotifyOverdue,
   ValidationInputError,
 } from "../validation-helpers";
 
@@ -601,5 +603,104 @@ describe("diffSnapshots", () => {
     );
     expect(result[0].before).toBe(220);
     expect(result[0].after).toBe(280);
+  });
+});
+
+describe("shouldNotifyDueSoon", () => {
+  const oneDayMs = 86_400_000;
+  const target = "2027-03-31T23:59:59Z";
+  const targetMs = new Date(target).getTime();
+
+  it("false if status is not open", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "draft", target_date: target }, targetMs - 5 * oneDayMs),
+    ).toBe(false);
+    expect(
+      shouldNotifyDueSoon({ status: "closed", target_date: target }, targetMs - 5 * oneDayMs),
+    ).toBe(false);
+  });
+
+  it("false if target_date is null or malformed", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: null }, Date.now()),
+    ).toBe(false);
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: "pas-une-date" }, Date.now()),
+    ).toBe(false);
+  });
+
+  it("false before the dueSoonDays window", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: target }, targetMs - 30 * oneDayMs),
+    ).toBe(false);
+  });
+
+  it("true at the exact threshold (J-14)", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: target }, targetMs - 14 * oneDayMs),
+    ).toBe(true);
+  });
+
+  it("true within the window", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: target }, targetMs - 5 * oneDayMs),
+    ).toBe(true);
+  });
+
+  it("false after the deadline (handed off to overdue)", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: target }, targetMs + oneDayMs),
+    ).toBe(false);
+  });
+
+  it("respects custom dueSoonDays", () => {
+    expect(
+      shouldNotifyDueSoon({ status: "open", target_date: target }, targetMs - 28 * oneDayMs, 30),
+    ).toBe(true);
+  });
+});
+
+describe("shouldNotifyOverdue", () => {
+  const oneDayMs = 86_400_000;
+  const target = "2027-03-31T23:59:59Z";
+  const targetMs = new Date(target).getTime();
+
+  it("false if status is not open", () => {
+    expect(
+      shouldNotifyOverdue({ status: "closed", target_date: target }, targetMs + oneDayMs),
+    ).toBe(false);
+  });
+
+  it("false if target_date is null", () => {
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: null }, Date.now()),
+    ).toBe(false);
+  });
+
+  it("false before the deadline", () => {
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: target }, targetMs - oneDayMs),
+    ).toBe(false);
+  });
+
+  it("true within the grace window after deadline (J+0 to J+1)", () => {
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: target }, targetMs + 0.5 * oneDayMs),
+    ).toBe(true);
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: target }, targetMs + oneDayMs),
+    ).toBe(true);
+  });
+
+  it("false beyond the grace window (no spam)", () => {
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: target }, targetMs + 2 * oneDayMs),
+    ).toBe(false);
+  });
+
+  it("respects custom graceDays", () => {
+    expect(
+      shouldNotifyOverdue({ status: "open", target_date: target }, targetMs + 6 * oneDayMs, 7),
+    ).toBe(true);
   });
 });

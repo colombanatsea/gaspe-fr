@@ -477,26 +477,26 @@ Onglet `validation` avec :
   cf. § 12) — scaffolding posé, déclenché côté Worker au PATCH
   `status: draft → open`. Best-effort, no-op silencieux si
   `BREVO_API_KEY` absent.
+- ✅ Attestation imprimable / PDF par compagnie + année (session 50,
+  cf. § 13) — route `/admin/campagnes/attestation`, `window.print()`
+  natif, zéro dépendance ajoutée.
+- ✅ Notifications email J-14 / J+0 deadline (session 51, cf. § 14) —
+  Cloudflare Workers Cron Trigger quotidien 09:00 UTC, idempotence via
+  table `validation_email_sent`.
 
 **Backlog restant** :
 
-- **Notifications email J-14 / J+0 deadline / J+14 relance manuelle** :
-  nécessitent un déclencheur cron (Cloudflare Workers Cron Triggers) car
-  ce sont des envois différés sans action utilisateur. La détection se
-  fait par scan quotidien des campagnes `open` avec `target_date` dans
-  la fenêtre +/- 14 jours. Hors scope court terme.
 - **Override admin** : champ `override_admin INTEGER DEFAULT 0` sur
   `validation_history` pour distinguer les validations faites par l'admin
   GASPE pour le compte d'un adhérent absent.
-- **Export PDF** du snapshot annuel par compagnie (« attestation de
-  validation annuelle ACF 2027 »). Nécessite une lib (jsPDF / pdf-lib /
-  @react-pdf) côté front ou un endpoint Worker dédié qui génère le PDF
-  serveur-side.
 - **Validation partielle d'un item** : actuellement un navire est validé
   en bloc ; dans le futur on pourrait valider section par section
   (capacités, équipage, environnement) si le besoin émerge.
 - **Webhook externe** : notifier ADF/UMA quand le quorum NAO est
   validé (compagnies sous CCN 3228 toutes en `fullyValidated`).
+- **Smoke tests prod** : sandbox sans réseau ne permet pas de tester les
+  endpoints D1 ni le cron en live. À exécuter post-merge via la dashboard
+  Cloudflare Workers (logs cron) + curl manuel.
 
 ---
 
@@ -775,17 +775,146 @@ rel="noopener noreferrer"`).
 
 ---
 
-**Auteur** : Sessions 45-50 (claude/annual-data-validation-XqYQe)
-**Migrations livrées** : 0027, 0028, 0029
+## 14. Notifications email J-14 / J+0 deadline (session 51)
+
+### 14.1 Vision
+
+Compléter la notification J+0 ouverture (session 49) par deux relances
+automatiques pour les compagnies qui n'ont pas encore tout validé :
+
+- **J-14 deadline approche** : envoi quand `now ≥ target_date - 14 jours`
+  ET `now < target_date`. Bandeau email teal, ton informatif.
+- **J+0 deadline atteinte** : envoi quand `now ≥ target_date` ET
+  `now ≤ target_date + 1 jour` (fenêtre de tolérance pour le cron qui
+  tourne 1× par jour). Bandeau email rouge, ton plus pressant.
+
+Audience : titulaires (`is_primary=1`) des compagnies non `fullyValidated`
+pour `target_year`. Pas de filtre collège / 3228 (cohérent avec la
+notification d'ouverture).
+
+### 14.2 Cloudflare Workers Cron Trigger
+
+Configuré dans `workers/wrangler.toml` :
+
+```toml
+[triggers]
+crons = ["0 9 * * *"]
+```
+
+Tournant à **09:00 UTC** quotidien (10:00 Paris été, 11:00 hiver).
+
+Export `scheduled(event, env, ctx)` dans `workers/api.ts` qui appelle
+`runValidationDeadlineCron(env)` via `ctx.waitUntil(...)` (fire-and-forget
+avec capture d'erreurs).
+
+### 14.3 Logique du cron
+
+```
+runValidationDeadlineCron(env):
+  for each campaign in WHERE status='open':
+    if shouldNotifyOverdue(campaign, now):    notifyCampaignOverdue(env, c)
+    elif shouldNotifyDueSoon(campaign, now):  notifyCampaignDueSoon(env, c)
+```
+
+Les helpers purs `shouldNotifyDueSoon` et `shouldNotifyOverdue` sont
+testés (13 tests vitest dans
+`workers/handlers/__tests__/validation-helpers.test.ts`) et acceptent
+`nowMs` injectable + paramètres configurables (`dueSoonDays`, `graceDays`).
+
+### 14.4 Idempotence : table `validation_email_sent`
+
+Migration `0030_validation_email_sent.sql` :
+
+```sql
+CREATE TABLE validation_email_sent (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES fleet_validation_campaigns(id) ON DELETE CASCADE,
+  notification_type TEXT NOT NULL CHECK (notification_type IN ('opened', 'due_soon', 'overdue')),
+  sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+  recipients_count INTEGER NOT NULL DEFAULT 0,
+  recipients_skipped INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(campaign_id, notification_type)
+);
+```
+
+**Garantie** : un type de notification (`opened` / `due_soon` /
+`overdue`) ne peut être envoyé qu'**une seule fois** par campagne, même
+si :
+
+- Le cron tourne plusieurs fois dans la même journée (re-run manuel).
+- L'admin fait `draft → open → draft → open` (ne re-déclenche pas
+  l'email d'ouverture).
+- Le cron est relancé après un crash partiel.
+
+Helper `alreadySent(env, campaignId, type) → boolean` consulté avant
+chaque envoi. `logEmailSent(env, campaignId, type, sent, skipped)` écrit
+le compteur (`INSERT OR IGNORE` pour double-sécurité).
+
+### 14.5 Templates HTML
+
+`renderCampaignDeadlineEmailHtml(params)` factorise les deux templates
+(due_soon + overdue) avec couleur d'en-tête conditionnelle :
+
+- `due_soon` : header teal `#1B7E8A`, baseline « Localement ancrés.
+  Socialement engagés. »
+- `overdue` : header rouge `#B91C1C`, baseline « Action requise
+  rapidement »
+
+Sanitization des champs dynamiques via `sanitize()` existant. CTA
+proéminent vers `/espace-adherent/validation` (couleur du header).
+
+### 14.6 Sélection des retardataires
+
+`getNonValidatedRecipients(env, targetYear)` :
+
+1. Toutes les orgs actives + leurs titulaires (is_primary, archived=0,
+   email non null).
+2. Pour chaque org, charge les `last_validated_year` de ses navires.
+3. Filtre : org est retardataire ssi profil non validé pour `targetYear`
+   OR au moins 1 navire non validé.
+4. Renvoie la liste { email, name, org_name, org_slug } des titulaires
+   à relancer.
+
+### 14.7 Tests sandbox
+
+13 tests vitest dans `workers/handlers/__tests__/validation-helpers.test.ts` :
+
+- `shouldNotifyDueSoon` : status non-open, target_date null/malformé,
+  avant la fenêtre, exactement à J-14, dans la fenêtre, après deadline,
+  custom dueSoonDays.
+- `shouldNotifyOverdue` : status non-open, target_date null, avant
+  deadline, dans la fenêtre [J+0, J+1], au-delà (no spam), custom
+  graceDays.
+
+Total tests projet : 333 → **346** (+13).
+
+### 14.8 Limitations connues
+
+- **Pas de retry** : si Brevo refuse (rate-limit, API down), l'email
+  est compté comme `skipped` et n'est pas re-tenté. Trade-off accepté
+  car le cron tourne quotidiennement et la fenêtre `due_soon` est
+  large (14 jours).
+- **Pas de personnalisation par org** : le template est identique pour
+  toutes les compagnies. Évolution future possible si demande.
+- **Sandbox-blocked** : impossible de tester en local (pas de cron
+  scheduler accessible en dev). Les tests vitest couvrent les helpers
+  purs, le reste sera vérifié post-merge en prod via les logs Worker.
+
+---
+
+**Auteur** : Sessions 45-51 (claude/annual-data-validation-XqYQe)
+**Migrations livrées** : 0027, 0028, 0029, 0030
 **Endpoints livrés** : 6 (campaigns CRUD + dashboard + history + submit)
-**Helpers purs** : 8 fonctions (7 session 45 + `diffSnapshots` session 47),
-**61 tests unitaires** (47 session 45 + 14 session 47)
+**Cron triggers** : `0 9 * * *` (09:00 UTC quotidien, session 51)
+**Helpers purs** : 10 fonctions (7 session 45 + `diffSnapshots` session 47
++ `shouldNotifyDueSoon` + `shouldNotifyOverdue` session 51),
+**74 tests unitaires** (47 session 45 + 14 session 47 + 13 session 51)
 **Frontend** : sessions 46-47, 50 (banner adhérent, page validation,
 admin campagnes, dashboard, modal diff Y-o-Y, tab démo, attestation
 imprimable)
-**Notifications email** : session 49 (J+0 ouverture campagne, best-effort
-via `notifyCampaignOpened` côté Worker, no-op silencieux si BREVO_API_KEY
-absent)
+**Notifications email** : session 49 (J+0 ouverture campagne) + session 51
+(J-14 deadline approche + J+0 deadline atteinte via Cron Trigger
+quotidien 09:00 UTC, idempotence via table `validation_email_sent`)
 **Attestation PDF** : session 50 (route imprimable
 `/admin/campagnes/attestation?slug=X&year=YYYY`, rendu via
 `window.print()` + CSS `@media print`, pas de lib externe)
