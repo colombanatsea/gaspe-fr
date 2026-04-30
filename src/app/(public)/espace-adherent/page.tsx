@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProfileCompletenessCard } from "@/components/shared/ProfileCompletenessCard";
+import { ValidationCampaignBannerForUser } from "@/components/validation/ValidationCampaignBanner";
 import { computeProfileCompleteness } from "@/lib/profile-completeness";
 import { getFleet } from "@/lib/fleet-store";
 import { getMySuppleant } from "@/lib/votes-store";
@@ -254,6 +255,9 @@ export default function EspaceAdherentPage() {
           <p className="text-sm text-foreground-muted">Candidatures reçues</p>
         </div>
       </div>
+
+      {/* Banner validation annuelle (si campagne ouverte + items en attente) */}
+      <ValidationCampaignBannerForUser companyName={user.company} />
 
       {/* Warning suppléant manquant (pour le titulaire uniquement) */}
       {isPrimary && <SuppleantWarning />}
