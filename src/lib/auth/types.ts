@@ -18,6 +18,7 @@ export type StaffPermission =
   | "manage_newsletter"      // Newsletter (drafts + envoi)
   | "manage_votes"           // Votes (création + clôture + résultats)
   | "manage_organizations"   // Organisations + cotisations + membres
+  | "manage_validations"     // Campagnes validation annuelle + diff Y-o-Y
   | "manage_messages"        // Messages de contact
   | "manage_agenda";         // Agenda / événements
 
@@ -30,6 +31,7 @@ export const STAFF_PERMISSION_LABELS: Record<StaffPermission, string> = {
   manage_newsletter: "Newsletter (drafts + envoi)",
   manage_votes: "Votes (création + résultats)",
   manage_organizations: "Organisations, cotisations & membres",
+  manage_validations: "Campagnes validation annuelle",
   manage_messages: "Messages de contact",
   manage_agenda: "Agenda & événements",
 };

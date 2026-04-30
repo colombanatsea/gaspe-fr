@@ -4488,7 +4488,7 @@ async function canActOnOrg(
   orgId: string,
 ): Promise<boolean> {
   if (payload.role === "admin") return true;
-  // Staff avec permission manage_organizations passe aussi
+  // Staff avec permission manage_validations OU manage_organizations passe aussi
   if (payload.role === "staff") {
     try {
       const row = await env.DB.prepare("SELECT staff_permissions FROM users WHERE id = ?")
@@ -4496,7 +4496,7 @@ async function canActOnOrg(
       if (row?.staff_permissions) {
         try {
           const perms = JSON.parse(row.staff_permissions);
-          if (Array.isArray(perms) && perms.includes("manage_organizations")) return true;
+          if (Array.isArray(perms) && (perms.includes("manage_validations") || perms.includes("manage_organizations"))) return true;
         } catch { /* ignore */ }
       }
     } catch { /* ignore */ }
@@ -4508,9 +4508,9 @@ async function canActOnOrg(
   return user?.organization_id === orgId;
 }
 
-// ── GET /api/campaigns – admin/staff(orgs) : liste + courante ──
+// ── GET /api/campaigns – admin/staff(validations) : liste + courante ──
 async function handleListCampaigns(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_organizations");
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_validations");
   if ("error" in auth) return auth.error;
 
   await ensureValidationTables(env);
@@ -4522,9 +4522,9 @@ async function handleListCampaigns(request: Request, env: Env, corsHeaders: Reco
   return json({ campaigns, current }, corsHeaders);
 }
 
-// ── POST /api/campaigns – admin/staff(orgs) : cree une campagne ──
+// ── POST /api/campaigns – admin/staff(validations) : cree une campagne ──
 async function handleCreateCampaign(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_organizations");
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_validations");
   if ("error" in auth) return auth.error;
 
   await ensureValidationTables(env);
@@ -4566,7 +4566,7 @@ async function handleCreateCampaign(request: Request, env: Env, corsHeaders: Rec
 async function handleUpdateCampaign(
   request: Request, env: Env, corsHeaders: Record<string, string>, campaignId: number,
 ) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_organizations");
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_validations");
   if ("error" in auth) return auth.error;
 
   await ensureValidationTables(env);
@@ -4628,7 +4628,7 @@ async function handleUpdateCampaign(
 async function handleCampaignDashboard(
   request: Request, env: Env, corsHeaders: Record<string, string>, campaignId: number,
 ) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_organizations");
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_validations");
   if ("error" in auth) return auth.error;
 
   await ensureValidationTables(env);

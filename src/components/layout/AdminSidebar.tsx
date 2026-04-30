@@ -48,7 +48,7 @@ const navSections: NavSection[] = [
       { label: "Messages", href: "/admin/messages", icon: MailIcon, permission: "manage_messages" },
       { label: "Newsletter", href: "/admin/newsletter", icon: MailIcon, permission: "manage_newsletter" },
       { label: "Votes", href: "/admin/votes", icon: VoteIcon, permission: "manage_votes" },
-      { label: "Campagnes validation", href: "/admin/campagnes", icon: ClipboardCheckIcon, permission: "manage_organizations" },
+      { label: "Campagnes validation", href: "/admin/campagnes", icon: ClipboardCheckIcon, permission: "manage_validations" },
     ],
   },
   {

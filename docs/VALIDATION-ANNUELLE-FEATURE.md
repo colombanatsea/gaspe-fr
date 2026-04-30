@@ -152,16 +152,18 @@ et statistiques pluriannuelles.
 
 | Action | Master admin | Staff (perm dédiée) | Adhérent (org X) | Adhérent (org Y) | Candidat |
 |--------|:---:|:---:|:---:|:---:|:---:|
-| Lister campagnes | ✓ | `manage_organizations` | ✗ | ✗ | ✗ |
-| Créer/PATCH campagne | ✓ | `manage_organizations` | ✗ | ✗ | ✗ |
-| Voir dashboard campagne | ✓ | `manage_organizations` | ✗ | ✗ | ✗ |
-| Lire historique org X | ✓ | `manage_organizations` | ✓ (orgX) | ✗ | ✗ |
-| Valider items org X | ✓ | `manage_organizations` (override) | ✓ (orgX, tout user) | ✗ | ✗ |
+| Lister campagnes | ✓ | `manage_validations` | ✗ | ✗ | ✗ |
+| Créer/PATCH campagne | ✓ | `manage_validations` | ✗ | ✗ | ✗ |
+| Voir dashboard campagne | ✓ | `manage_validations` | ✗ | ✗ | ✗ |
+| Lire historique org X | ✓ | `manage_validations` ou `manage_organizations` | ✓ (orgX) | ✗ | ✗ |
+| Valider items org X | ✓ | `manage_validations` ou `manage_organizations` (override) | ✓ (orgX, tout user) | ✗ | ✗ |
 
-**Note staff** : la permission `manage_organizations` (lot 9 session 39)
-englobe toutes les actions admin sur orgs et flottes. On la réutilise plutôt
-que d'inventer `manage_validations`. Si besoin de finesse plus tard, ajouter
-`manage_validations` en migration future.
+**Note staff** : la permission dédiée `manage_validations` (session 47) couvre
+toute la gestion des campagnes (CRUD + dashboard) et la validation cross-org.
+La permission plus large `manage_organizations` (session 39, lot 9 RBAC) est
+toujours acceptée pour `canActOnOrg` (rétro-compatibilité : un staff qui peut
+PATCH une organisation peut aussi soumettre une validation pour son compte).
+Master admin bypasse toutes les permissions.
 
 **Note adhérent** : tout utilisateur lié à `organizations.id` peut valider,
 pas uniquement le titulaire. Justification : la validation est déclarative et
@@ -404,8 +406,105 @@ l'atomicité.
 
 ---
 
-**Auteur** : Session 45 (claude/annual-data-validation-XqYQe)
+## 11. Diff Y-o-Y (session 47)
+
+### 11.1 Vision
+
+L'admin doit pouvoir **comparer rapidement** les données déclarées d'une
+compagnie d'une année sur l'autre. Comme chaque validation enregistre un
+`snapshot_json` immuable dans `validation_history`, il suffit de :
+
+1. Récupérer la dernière validation de l'année cible `N` pour chaque item
+2. Récupérer la dernière validation de l'année `N-1` pour le même item
+3. Comparer champ par champ → liste des modifications
+
+Aucun nouveau endpoint ni nouvelle table : la lecture passe par
+`GET /api/organizations/:slug/validations` (déjà existant), et tout le calcul
+de diff est purement client-side / pur.
+
+### 11.2 Helper pur `diffSnapshots`
+
+Ajouté à `workers/handlers/validation-helpers.ts` (et dupliqué côté front
+dans `src/lib/validation-diff.ts` car `workers/` est exclu du tsconfig front,
+ce qui empêche un import direct cross-tree).
+
+```ts
+diffSnapshots(
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+  options?: { includeUnchanged?: boolean; excludeFields?: readonly string[] }
+): DiffEntry[]
+```
+
+**Règles** :
+- `null` ou `undefined` traités symétriquement (`before` et `after` `null` →
+  `unchanged`, ne crée pas de bruit).
+- Comparaison structurelle des objets via `JSON.stringify(sortKeys(...))` →
+  l'ordre des clés du JSON est ignoré (utile pour `crewByBrevet`).
+- `excludeFields` par défaut : `["id"]` (l'identifiant ne change jamais).
+- Tri canonique : `modified` > `added` > `removed` > `unchanged`, puis
+  ordre alphabétique du nom de champ.
+
+**Tests** (14 dans `workers/handlers/__tests__/validation-helpers.test.ts`,
+soit **333 tests verts** au total) :
+
+- snapshots identiques (avec et sans `includeUnchanged`)
+- modifié / ajouté (null→value) / retiré (value→null)
+- `null` vs `undefined` symétriques
+- nested object (`crewByBrevet`) : équivalence et différence
+- ordre des clés JSON ignoré
+- `excludeFields` custom
+- tri canonique multi-statuts + alphabétique
+- inputs `null` gracieux
+- conservation des valeurs brutes `before` / `after`
+
+### 11.3 Composant `<SnapshotDiffModal>`
+
+`src/components/validation/SnapshotDiffModal.tsx` — overlay z-50 plein écran.
+
+**Props** :
+```ts
+{ slug: string; organizationName: string; targetYear: number; onClose: () => void }
+```
+
+**Comportement** :
+- Au mount, fetch `listValidationsForOrg(slug)` (endpoint existant).
+- Filtre les entrées sur `targetYear` et `targetYear - 1`.
+- Paire les items par `(itemType, itemId)` → un par profil + un par navire.
+- Pour chaque paire : `diffSnapshots(before, after)` → liste des changements.
+- Rendu en cartes : tableau 4 colonnes (Champ / N-1 / N / État) avec badges
+  status colorés (`warm` modifié, `green` ajouté, `neutral` retiré).
+- Tri profil > navires alphabétique.
+- Empty states explicites : « pas de validation N-1 » (nouvel item),
+  « pas de validation N » (item retiré), « aucun changement » (badge vert).
+- Fermeture : touche Échap, click backdrop, bouton « Fermer ». A11y :
+  `role="dialog"`, `aria-modal="true"`, `aria-labelledby`.
+
+### 11.4 Intégration
+
+Sur `/admin/campagnes/detail?id=X`, le tableau dashboard contient une
+colonne supplémentaire **« Diff Y-o-Y »** avec un bouton « Voir le diff »
+par ligne. State local `diffOrg` contrôle l'ouverture du modal.
+
+`aria-label` français explicite par bouton :
+`"Voir le diff <N-1> -> <N> de <organizationName>"`.
+
+### 11.5 Dictionnaire de libellés FR
+
+`src/lib/validation-diff.ts` exporte `FIELD_LABELS_FR` qui mappe les noms
+techniques (`email`, `phone`, `passengerCapacity`, `crewByBrevet`...) à
+leurs libellés français pour l'affichage. 15 entrées au total.
+
+Le helper `formatDiffValue(value)` rend une valeur de snapshot en chaîne
+lisible : `null/undefined → "—"`, `boolean → "Oui"/"Non"`, `object →
+JSON.stringify`, sinon `String(value)`.
+
+---
+
+**Auteur** : Sessions 45-47 (claude/annual-data-validation-XqYQe)
 **Migrations livrées** : 0027, 0028, 0029
 **Endpoints livrés** : 6 (campaigns CRUD + dashboard + history + submit)
-**Helpers purs** : 7 fonctions, ~30 tests unitaires
-**Frontend** : reporté en sessions 46+
+**Helpers purs** : 8 fonctions (7 session 45 + `diffSnapshots` session 47),
+**61 tests unitaires** (47 session 45 + 14 session 47)
+**Frontend** : sessions 46-47 (banner adhérent, page validation, admin
+campagnes, dashboard, modal diff Y-o-Y, tab démo)
