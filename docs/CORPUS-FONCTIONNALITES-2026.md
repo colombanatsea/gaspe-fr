@@ -321,4 +321,125 @@ Admin GASPE
 
 ---
 
-*Suite dans le commit 2 : §5 Features par domaine, §6 Endpoints Worker (76), §7 Schéma D1 (24 tables).*
+## 5. Fonctionnalités par domaine
+
+Format compact : pour chaque domaine, le statut, les sessions de livraison, les fichiers clés. Le détail granulaire vit dans `CLAUDE.md` (sections « Architecture », « Worker API », « Database ») et dans les specs dédiées (`docs/CMS-SPEC.md`, `docs/NEWSLETTER-SPEC.md`, `docs/VALIDATION-ANNUELLE-FEATURE.md`).
+
+Légende : ✅ livré / 🟡 partiel / 🔴 todo
+
+| # | Domaine | Statut | Sessions | Routes / Composants clés | Stores / lib | Tables D1 |
+|---|---------|:--:|----------|--------------------------|--------------|-----------|
+| 1 | **Auth + RBAC staff** (admin / adherent / candidat / staff, 11 permissions) | ✅ | 1-10, 20, 39 | `/connexion`, `/inscription/*`, `/admin/comptes`, `AdminSidebar` | `lib/auth/` (AuthContext, ApiAuthStore, permissions.ts) | users, auth, sessions, password_reset_tokens, invitations |
+| 2 | **Site institutionnel** (homepage, notre-groupement, presse, agenda, contact, mentions, CGU) | ✅ | 1-15, 26-29 | `/`, `/notre-groupement`, `/presse`, `/agenda`, `/contact` + 4 pages légales | `cms-store`, `use-cms` | cms_pages, contact_messages |
+| 3 | **Espace adhérent** (dashboard + 14 sous-pages) | ✅ | 20, 23-25, 35, 38, 46-47 | `/espace-adherent` + `/profil`/`/equipe`/`/flotte`/`/annuaire-flotte`/`/votes`/`/validation`/`/visites-medicales`/`/preferences`/`/documents`/`/formations`/`/offres`/`/annuaire` | `members-store`, `fleet-store`, `votes-store`, `validation-store`, `medical-store`, `documents-store` | organizations, organization_vessels, votes, vote_responses, validation_history, medical_visits, newsletter_preferences |
+| 4 | **Espace candidat** (profil + ENM import + préférences + formations) | ✅ | 23-25 | `/espace-candidat` (3 pages) | `enm-parser`, jobs matching | users (rôle candidat) |
+| 5 | **Console admin** (16 sections sous AdminSidebar, RBAC granulaire) | ✅ | 5-10, 22, 26-50 | `/admin/*` 26 routes (adherents, organisations, membres, comptes, agenda, documents, flotte, formations, messages, newsletter×4, offres×2, pages, parametres, positions×2, votes, campagnes×3) | `permissions.ts`, `AdminSidebar`, `AdminMobileNav` | – (front uniquement) |
+| 6 | **CMS dual-mode** (18 pages éditables + versioning + diff) | ✅ | 23, 26, 32-33b | `/admin/pages`, `/admin/documents`, `RichTextEditor`, `MediaLibrary`, `CmsRevisionsModal`, `CmsRevisionDiff` | `cms-store`, `use-cms`, `cms-revision-diff` | cms_pages, cms_documents, cms_revisions, media_files |
+| 7 | **Newsletter v1+v2** (10 catégories, drafts, webhook, désinscription) | 🟡 (Brevo prod en attente list IDs) | 20, 26, 28-29 | `/admin/newsletter` (4 pages), `/newsletter/unsubscribe`, `NewsletterForm` | `lib/newsletter/` (drafts-store, render.ts), `lib/email.ts` (8 templates) | newsletter, newsletter_preferences, nl_drafts, nl_sends, nl_events, nl_templates |
+| 8 | **Annuaire adhérents + flotte** (30 orgs, 111 navires, Collèges A/B/C, crew_by_brevet, CSV import) | ✅ | 12-14, 35-38, 41 | `/nos-adherents`, `/nos-adherents/[slug]`, `/admin/adherents`, `/admin/flotte`, `/espace-adherent/flotte`, `/espace-adherent/annuaire-flotte`, `FleetVesselForm`, `CrewByBrevetEditor`, `FleetCsvImporter` | `members-store`, `fleet-store`, `fleet-csv`, `profile-completeness` | organizations, organization_vessels |
+| 9 | **Offres d'emploi** (CRUD admin + adhérent, matching candidat, Hydros publication auto) | ✅ | 7-8, 23, 27, 38 | `/nos-compagnies-recrutent`, `/nos-compagnies-recrutent/[slug]`, `/admin/offres`, `/espace-adherent/offres` | `jobs-store`, `matching`, `hydros-mapping` | jobs |
+| 10 | **Formations** (8 formations, inscription) | ✅ | 16-17 | `/formations`, `/formations/[slug]`, `/admin/formations`, `/espace-adherent/formations`, `/espace-candidat/formations` | localStorage (`gaspe_formations`) | – (localStorage only) |
+| 11 | **CCN 3228 + Boîte à outils** (10 guides employeur, FAQ, salaires NAO 2026, sources Legifrance) | ✅ | 14-15, 19, 28-29 | `/boite-a-outils`, FAQJsonLd | `data/ccn3228.ts` (CCN3228_FAQ + 3 EXTRA), `data/stcw.ts` | – (data statique) |
+| 12 | **SSGM + Visites médicales** (25 centres, 10 médecins, FAQ, suivi marin par adhérent) | ✅ | 17-18, 29 | `/ssgm`, `/espace-adherent/visites-medicales` | `data/ssgm.ts`, `medical-store` | medical_visits |
+| 13 | **Transition écologique + AdemeSimulator** (4 guides, 6 techno, simulateur React 2566 lignes) | ✅ | 16-17, 24 | `/transition-ecologique`, `AdemeSimulator` (lazy + ssr:false) | `components/simulator/` | – (calc local) |
+| 14 | **Système de votes AG/NAO** (5 types, 2 audiences, suppléant, démo) | ✅ | 38 | `/admin/votes`, `/espace-adherent/votes`, `/espace-adherent/votes/detail`, `VoteOptionsEditor`, `DateOptionsPicker`, `DragRanking` | `votes-store` | votes, vote_responses, users.suppleant_user_id |
+| 15 | **Validation annuelle adhérents** (banner, page valid, admin campagnes, dashboard, diff Y-o-Y, attestation PDF, cron J-14/J+0, smoke test) | ✅ | 45-52 | `/espace-adherent/validation`, `/admin/campagnes` (3 routes), `ValidationCampaignBanner`, `SnapshotDiffModal` | `validation-store`, `validation-diff`, `workers/handlers/validation-helpers` | fleet_validation_campaigns, validation_history, validation_email_sent, organizations.last_validated_*, organization_vessels.last_validated_* |
+| 16 | **SEO + RSS + JSON-LD** (12 keywords cibles, 8 types JSON-LD, sitemap dynamique, RSS 2.0) | ✅ | 28-30 | `lib/seo.ts` (DEFAULT_PAGE_META 17 pages), `feed.xml`, `sitemap.ts`, `SEOJsonLd` | `lib/seo.ts`, `lib/constants.ts` (SITE_KEYWORDS) | – |
+| 17 | **Cron triggers** (Cloudflare Workers, validation deadline quotidien 09:00 UTC) | ✅ | 51 | `workers/api.ts:scheduled()`, `runValidationDeadlineCron`, `wrangler.toml [triggers]` | `workers/handlers/validation-helpers` (shouldNotifyDueSoon/Overdue) | validation_email_sent (idempotence) |
+| 18 | **ENM import** (Espace Numérique Maritime, copy-paste parser) | ✅ | 23-25 | `/espace-candidat/profil`, `EnmImport` (wizard 4 étapes) | `enm-parser` | users (champs ENM) |
+
+**18 domaines couverts**, tous ✅ sauf newsletter v2 (🟡 envoi Brevo prod en attente des 10 list IDs).
+
+---
+
+## 6. Endpoints Worker (76)
+
+Le tableau exhaustif des **76 endpoints** vit dans `CLAUDE.md` (section « Worker API – 76 endpoints », lignes ~252-322). Chaque ligne précise méthode, path, auth requise.
+
+Récapitulatif par domaine :
+
+| Domaine | Endpoints | Range CLAUDE.md |
+|---------|:--:|-----------------|
+| Health + media raw | 2 | début |
+| Auth + sessions + reset | 9 | `/api/auth/*` |
+| Email proxy (Brevo) | 1 | `/api/email` |
+| Organizations + invitations | 7 | `/api/organizations*`, `/api/invitations` |
+| Newsletter v1 + v2 + webhook + unsub + subscribers | 11 | `/api/newsletter*`, `/api/preferences` |
+| Contact + Hydros + Upload + ENM | 4 | `/api/contact`, `/api/hydros`, `/api/upload`, `/api/enm` |
+| CMS pages + revisions | 6 | `/api/cms/pages*` |
+| Jobs CRUD | 5 | `/api/jobs*` |
+| Medical visits CRUD | 4 | `/api/medical-visits*` |
+| Media files CRUD | 3 | `/api/media*` |
+| CMS documents CRUD | 5 | `/api/cms/documents*` |
+| Fleet (par org + agrégée) | 3 | `/api/organizations/*/fleet`, `/api/organizations/fleet` |
+| Votes (CRUD + submit + results + close + suppléant) | 9 | `/api/votes*`, `/api/users/me/suppleant` |
+| **Validation campaigns + history (session 45)** | 6 | `/api/campaigns*`, `/api/organizations/*/validations` |
+| Cron scheduled (session 51) | – | `scheduled()` export, pas d'endpoint HTTP |
+
+**Helpers Worker** : `requireAdmin`, `requireStaffPermission(perm)` (RBAC à 11 permissions, session 39+48), `verifyJwt`, `extractToken`, `sanitize`.
+
+**Imports de helpers purs** : `workers/handlers/validation-helpers.ts` (10 fonctions, 74 tests).
+
+---
+
+## 7. Schéma D1 (24 tables, migrations 0001-0030)
+
+Le tableau exhaustif vit dans `CLAUDE.md` (section « Database (D1 – 24 tables… »). Récapitulatif par domaine :
+
+| Domaine | Tables | Migration de naissance |
+|---------|--------|------------------------|
+| Auth + sessions | users, auth, sessions, password_reset_tokens | 0001, 0002 |
+| Newsletter (legacy + v2) | newsletter, newsletter_preferences, nl_drafts, nl_sends, nl_events, nl_templates | 0001, 0003, 0008 |
+| Contact | contact_messages | 0001 |
+| Organizations + invitations | organizations, invitations | 0003, 0004, 0007 (+ 0016 Collèges, 0028 last_validated_*) |
+| CMS | cms_pages, cms_revisions, cms_documents, media_files | 0005, 0010, 0011 |
+| Jobs | jobs | 0005 (+ 0026 created_by) |
+| Medical visits | medical_visits | 0005 |
+| Fleet | organization_vessels | 0012 (+ 0013 seed, 0017 crew_by_brevet, 0028 last_validated_*) |
+| Votes | votes, vote_responses (+ users.suppleant_user_id) | 0018, 0019 |
+| Staff RBAC | – (extension users.staff_permissions JSON) | 0020 |
+| **Validation annuelle** | fleet_validation_campaigns, validation_history, validation_email_sent | 0027, 0029, 0030 |
+
+**Migrations idempotentes de réparation** (session 40, suite drift production) : 0021-0025 (ALTER ADD isolés + repair data).
+
+**État prod** (vérifié 26 avr 2026 post-fix token) : 0001-0025 appliquées. 0026-0030 en attente du prochain merge `main` via `.github/workflows/deploy-worker.yml`.
+
+---
+
+## 8. Tests (346 tests vitest + 11 specs Playwright e2e)
+
+### 8.1 Vitest (unit + integration légère)
+
+346 tests passent, 27 fichiers. Coverage estimée : **helpers purs ~100 %**, UI/integration plus parcellaire (~30 %).
+
+| Domaine | Fichier | Tests |
+|---------|---------|:--:|
+| API client | `src/lib/__tests__/api-client.test.ts` | ~10 |
+| CMS revision diff | `src/lib/__tests__/cms-revision-diff.test.ts` | 18 |
+| CMS store | `src/lib/__tests__/cms-store.test.ts` | ~10 |
+| Documents store | `src/lib/__tests__/documents-store.test.ts` | 10 |
+| ENM parser | `src/lib/__tests__/enm-parser.test.ts` | ~20 |
+| Export CSV | `src/lib/__tests__/export-csv.test.ts` | ~10 |
+| Feed RSS | `src/lib/__tests__/feed-rss.test.ts` | 6 |
+| Geolocation | `src/lib/__tests__/geolocation.test.ts` | ~5 |
+| Hydros mapping | `src/lib/__tests__/hydros-mapping.test.ts` | ~5 |
+| Jobs store | `src/lib/__tests__/jobs-store.test.ts` | ~10 |
+| Newsletter render | `src/lib/__tests__/newsletter-render.test.ts` | 12 |
+| Positions | `src/lib/__tests__/positions.test.ts` | 12 |
+| Profile completeness | `src/lib/__tests__/profile-completeness.test.ts` | 5 |
+| Quiz scoring | `src/lib/__tests__/quiz-scoring.test.ts` | ~12 |
+| Career salary | `src/data/__tests__/career-salary.test.ts` | 10 |
+| **Validation helpers (Worker)** | `workers/handlers/__tests__/validation-helpers.test.ts` | **74** |
+| Autres (sanitize, schemas, matching, members, theme, utils, hydros…) | `src/lib/__tests__/*` | ~107 |
+
+**Total** : 346 verts, 27 fichiers.
+
+### 8.2 Playwright e2e (11 specs)
+
+Listés dans `e2e/`. Couvrent : a11y `/admin/adherents`, admin CRUD, auth flow, candidat flow, ENM, médical, navigation, parcours adhérent.
+
+Exécutés via `npm run test:e2e` (port 3001 pour ne pas collisionner avec le dev server 3000).
+
+---
+
+*Suite dans le commit 3 : §9 TODO consolidé (4 priorités), §10 ADR (10 décisions), §11 Glossaire.*
