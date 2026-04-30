@@ -170,7 +170,7 @@ const statusConfig: Record<string, { label: string; variant: "teal" | "blue" | "
    Demo page sections
    ────────────────────────────────────────────── */
 
-type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "visites" | "votes" | "preferences";
+type DemoTab = "dashboard" | "offres" | "formations" | "documents" | "annuaire" | "equipe" | "visites" | "votes" | "validation" | "preferences";
 
 const TABS: { key: DemoTab; label: string }[] = [
   { key: "dashboard", label: "Tableau de bord" },
@@ -181,6 +181,7 @@ const TABS: { key: DemoTab; label: string }[] = [
   { key: "annuaire", label: "Annuaire" },
   { key: "equipe", label: "Mon équipe" },
   { key: "votes", label: "Votes" },
+  { key: "validation", label: "Validation annuelle" },
   { key: "preferences", label: "Préférences" },
 ];
 
@@ -796,6 +797,7 @@ export default function DecouvrirEspaceAdherentPage() {
         {activeTab === "annuaire" && <AnnuaireTab />}
         {activeTab === "equipe" && <EquipeTab />}
         {activeTab === "votes" && <VotesTab />}
+        {activeTab === "validation" && <ValidationTab />}
         {activeTab === "preferences" && <PreferencesTab />}
       </div>
     </>
@@ -876,6 +878,119 @@ function VotesTab() {
                   {v.response && <> · Votre vote : <span className="font-semibold text-foreground">{v.response}</span></>}
                 </div>
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <AdhesionCTA variant="inline" />
+    </div>
+  );
+}
+
+/* ── Validation annuelle Tab (démo, session 46) ── */
+
+interface DemoValidationItem {
+  type: "profile" | "vessel";
+  name: string;
+  status: "validated" | "pending";
+  detail: string;
+}
+
+const DEMO_VALIDATION_ITEMS: DemoValidationItem[] = [
+  { type: "profile", name: "Profil de la compagnie", status: "validated", detail: "Validé le 12 février 2027 (inchangé)" },
+  { type: "vessel", name: "Karu Express", status: "validated", detail: "Construit 2018 · 220 pax · 28 véh — validé 12 fév 2027" },
+  { type: "vessel", name: "Karu II", status: "pending", detail: "Construit 2010 · 180 pax · 18 véh — en attente" },
+  { type: "vessel", name: "Karu III", status: "pending", detail: "Construit 2015 · 250 pax · 32 véh — en attente" },
+];
+
+function ValidationTab() {
+  const validatedCount = DEMO_VALIDATION_ITEMS.filter((i) => i.status === "validated").length;
+  const pendingCount = DEMO_VALIDATION_ITEMS.length - validatedCount;
+  const pct = Math.round((validatedCount / DEMO_VALIDATION_ITEMS.length) * 100);
+
+  return (
+    <div className="space-y-4">
+      {/* Bandeau campagne ouverte */}
+      <div className="rounded-xl border-2 border-[var(--gaspe-teal-300)] bg-[var(--gaspe-teal-50)] p-5">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 text-[var(--gaspe-teal-700)]" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-heading font-semibold text-foreground">
+              Validation annuelle ouverte – 2027
+            </p>
+            <p className="mt-1 text-sm text-foreground-muted">
+              Confirmez ou mettez à jour les données de votre compagnie pour 2027.
+              Deadline indicative : 31 mars 2027.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progression */}
+      <div className="rounded-xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-200)] p-4">
+        <div className="flex items-baseline justify-between mb-2">
+          <p className="text-sm font-semibold text-foreground">
+            {validatedCount}/{DEMO_VALIDATION_ITEMS.length} items validés
+          </p>
+          <p className="text-xs text-foreground-muted">{pct}%</p>
+        </div>
+        <div className="h-2 bg-[var(--gaspe-neutral-200)] rounded-full overflow-hidden">
+          <div className="h-full bg-[var(--gaspe-teal-500)]" style={{ width: `${pct}%` }} />
+        </div>
+        {pendingCount > 0 && (
+          <p className="mt-2 text-xs text-foreground-muted">
+            {pendingCount} item{pendingCount > 1 ? "s" : ""} encore en attente.
+          </p>
+        )}
+      </div>
+
+      {/* Cartes items */}
+      <div className="space-y-3">
+        {DEMO_VALIDATION_ITEMS.map((item, i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-5 hover:border-[var(--gaspe-teal-200)] transition-colors"
+          >
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <p className="font-heading text-sm font-semibold text-foreground">{item.name}</p>
+                  <Badge variant={item.type === "profile" ? "blue" : "neutral"}>
+                    {item.type === "profile" ? "Profil" : "Navire"}
+                  </Badge>
+                  {item.status === "validated" ? (
+                    <Badge variant="green">✓ Validé 2027</Badge>
+                  ) : (
+                    <Badge variant="warm">À valider</Badge>
+                  )}
+                </div>
+                <p className="text-xs text-foreground-muted mt-1">{item.detail}</p>
+              </div>
+              {item.status === "pending" && (
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg border-2 border-[var(--gaspe-teal-600)] px-3 py-1.5 font-heading text-xs font-semibold text-[var(--gaspe-teal-700)] opacity-50 cursor-not-allowed"
+                  >
+                    Inchangé
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg border-2 border-[var(--gaspe-teal-600)] px-3 py-1.5 font-heading text-xs font-semibold text-[var(--gaspe-teal-700)] opacity-50 cursor-not-allowed"
+                  >
+                    Modifier
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
