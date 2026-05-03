@@ -338,7 +338,7 @@ Légende : ✅ livré / 🟡 partiel / 🔴 todo
 | 7 | **Newsletter v1+v2** (10 catégories, drafts, webhook, désinscription) | 🟡 (Brevo prod en attente list IDs) | 20, 26, 28-29 | `/admin/newsletter` (4 pages), `/newsletter/unsubscribe`, `NewsletterForm` | `lib/newsletter/` (drafts-store, render.ts), `lib/email.ts` (8 templates) | newsletter, newsletter_preferences, nl_drafts, nl_sends, nl_events, nl_templates |
 | 8 | **Annuaire adhérents + flotte** (30 orgs, 111 navires, Collèges A/B/C, crew_by_brevet, CSV import) | ✅ | 12-14, 35-38, 41 | `/nos-adherents`, `/nos-adherents/[slug]`, `/admin/adherents`, `/admin/flotte`, `/espace-adherent/flotte`, `/espace-adherent/annuaire-flotte`, `FleetVesselForm`, `CrewByBrevetEditor`, `FleetCsvImporter` | `members-store`, `fleet-store`, `fleet-csv`, `profile-completeness` | organizations, organization_vessels |
 | 9 | **Offres d'emploi** (CRUD admin + adhérent, matching candidat, Hydros publication auto) | ✅ | 7-8, 23, 27, 38 | `/nos-compagnies-recrutent`, `/nos-compagnies-recrutent/[slug]`, `/admin/offres`, `/espace-adherent/offres` | `jobs-store`, `matching`, `hydros-mapping` | jobs |
-| 10 | **Formations** (8 formations, inscription) | ✅ | 16-17 | `/formations`, `/formations/[slug]`, `/admin/formations`, `/espace-adherent/formations`, `/espace-candidat/formations` | localStorage (`gaspe_formations`) | – (localStorage only) |
+| 10 | **Formations** (8 formations, inscription) | 🔴 **localStorage only — BLOQUANT prod** (cf. `docs/PRODUCTION-SAFETY-2026.md` § B.1, lot G0/P0-1) | 16-17 | `/formations`, `/formations/[slug]`, `/admin/formations`, `/espace-adherent/formations`, `/espace-candidat/formations` | localStorage (`gaspe_formations`) | – (à migrer en D1) |
 | 11 | **CCN 3228 + Boîte à outils** (10 guides employeur, FAQ, salaires NAO 2026, sources Legifrance) | ✅ | 14-15, 19, 28-29 | `/boite-a-outils`, FAQJsonLd | `data/ccn3228.ts` (CCN3228_FAQ + 3 EXTRA), `data/stcw.ts` | – (data statique) |
 | 12 | **SSGM + Visites médicales** (25 centres, 10 médecins, FAQ, suivi marin par adhérent) | ✅ | 17-18, 29 | `/ssgm`, `/espace-adherent/visites-medicales` | `data/ssgm.ts`, `medical-store` | medical_visits |
 | 13 | **Transition écologique + AdemeSimulator** (4 guides, 6 techno, simulateur React 2566 lignes) | ✅ | 16-17, 24 | `/transition-ecologique`, `AdemeSimulator` (lazy + ssr:false) | `components/simulator/` | – (calc local) |
@@ -444,18 +444,30 @@ Exécutés via `npm run test:e2e` (port 3001 pour ne pas collisionner avec le de
 
 ## 9. TODO consolidé (4 priorités)
 
-Cross-référence de `docs/AUDIT-CRITIQUE-2026.md` (sessions 44 + 45) + backlog `docs/VALIDATION-ANNUELLE-FEATURE.md` § 9 + TODO épars dans CLAUDE.md.
+Cross-référence de `docs/AUDIT-CRITIQUE-2026.md` (sessions 44 + 45) + backlog `docs/VALIDATION-ANNUELLE-FEATURE.md` § 9 + `docs/PRODUCTION-SAFETY-2026.md` (session 54) + TODO épars dans CLAUDE.md.
 
-### 9.1 🔴 P1 — Bloquant légal/contractuel (sous 2 semaines)
+### 9.0 🔴 P0 — Sûreté production (BLOQUANT import prod, session 54)
+
+Ces items sont **bloquants pour l'import définitif des données prod** (compagnies, contacts, formations, positions). Détail complet dans `docs/PRODUCTION-SAFETY-2026.md`.
 
 | # | Item | Fichier | Effort | Risque si non traité |
 |---|------|---------|:-:|----------------------|
-| C1 | NAO 2026 sans n° d'avenant ni publication JO | `src/data/ccn3228.ts` SALARY_SOURCES | XS | Doute juridique sur la grille affichée |
-| C2 | Stats passagers/véhicules sans millésime (« 25 M+ passagers » sans année) | `src/data/cms-defaults.ts` quick-stats | S | Risque DGCCRF (publicité trompeuse) |
-| C3 | EU ETS Maritime / FuelEU Maritime absents (en vigueur 2024) | nouveau contenu | M | Site obsolète sur la transition réglementaire UE |
-| C4 | Cotisations ENIM 2025/2026 sans attestation | `src/data/ccn3228.ts:506-514` | XS | Crédibilité institutionnelle |
-| C5 | Facteurs CO₂ ENTEC 2005 obsolètes (étude vieille de 21 ans) dans AdemeSimulator | `src/components/simulator/AdemeSimulator.tsx:460` | M | Données environnementales caduques |
-| C6 | Aucune date « dernière vérification » visible sur les datasets institutionnels | global | S | Pas de traçabilité = crédibilité nulle |
+| P0-1 | **Migrer formations en D1** (table + 5 endpoints + dual-mode store + seed migration) | nouveau code | M (~3h) | 🔴 Données admin perdues au cleanup navigateur, jamais visibles côté candidat/adhérent |
+| P0-2 | **Migrer positions en D1** (table + 5 endpoints + dual-mode store + branchement RSS + sitemap) | nouveau code | M (~3h) | 🔴 Idem + RSS public en empty state, pas de publication possible |
+| P0-3 | **Date limite inscription formations** + état archive | migration 0031 + UI badges | S (~1h) | 🟠 Backlog feature direction |
+| P0-4 | **Date limite candidature offres** + état archive | migration jobs + UI badges | S (~1h) | 🟠 Backlog feature direction |
+| P0-5 | **Découpler workflow `deploy-worker.yml`** : structurelles auto, seed/repair manuelles | `.github/workflows/deploy-worker.yml` | XS (~30 min) | 🔴 Migrations 0016/0025 re-jouées à chaque push main = écrasent les éditions admin (collège, slug) |
+
+### 9.1 🔴 P1 — Bloquant légal/contractuel (sous 2 semaines)
+
+| # | Item | Fichier | Effort | Risque si non traité | Statut session 54 |
+|---|------|---------|:-:|----------------------|-------------------|
+| C1 | NAO 2026 sans n° d'avenant ni publication JO | `src/data/ccn3228.ts` SALARY_SOURCES | XS | Doute juridique sur la grille affichée | ✅ FIXÉ |
+| C2 | Stats passagers/véhicules sans millésime (« 25 M+ passagers » sans année) | `src/data/cms-defaults.ts` quick-stats | S | Risque DGCCRF (publicité trompeuse) | ✅ FIXÉ (chiffres consolidés 2025) |
+| C3 | EU ETS Maritime / FuelEU Maritime absents (en vigueur 2024) | nouveau contenu | M | Site obsolète sur la transition réglementaire UE | ⏭️ SKIP validé (compagnies hors champ) |
+| C4 | Cotisations ENIM 2025/2026 sans attestation | `src/app/(public)/boite-a-outils/page.tsx` | XS | Crédibilité institutionnelle | ✅ FIXÉ (lien `enim.eu`) |
+| C5 | Facteurs CO₂ ENTEC 2005 obsolètes (étude vieille de 21 ans) dans AdemeSimulator | `src/components/simulator/AdemeSimulator.tsx:460` | M | Données environnementales caduques | ✅ FIXÉ (IMO 4th GHG + EMSA EMTER 2025 + DNV 2024) |
+| C6 | Aucune date « dernière vérification » visible sur les datasets institutionnels | global | S | Pas de traçabilité = crédibilité nulle | ✅ FIXÉ (footer + `LAST_DATA_REVIEW_DATE`) |
 
 ### 9.2 🟠 P2 — Hautes (sous 1 mois)
 

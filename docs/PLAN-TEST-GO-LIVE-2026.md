@@ -544,6 +544,8 @@ Exécutable en ≤ 30 min via le script `scripts/smoke-test-prod.sh` (cf. § Ann
 
 ### 🔴 Bloquants (= No-Go si KO)
 
+- ✅ **Lot G0 du rapport `docs/PRODUCTION-SAFETY-2026.md` mergé** (formations + positions migrées en D1)
+- ✅ **Lot G1 du rapport `docs/PRODUCTION-SAFETY-2026.md` mergé** (deadlines formations + jobs, workflow découplé)
 - ✅ Phase 0 : 6/6 gates C1-C6 traités
 - ✅ Phase 1 : 14/14 INF-* verts
 - ✅ Phase 2 : 100 % des tests des domaines D1, D2, D5, D7, D11, D14, D15, D16, D17 (criticité 🔴)
@@ -719,8 +721,10 @@ Tests qui ne peuvent pas être exécutés depuis le sandbox de cette session (pa
 1. **Ce document** : `docs/PLAN-TEST-GO-LIVE-2026.md`
 2. **Script smoke prod** : `scripts/smoke-test-prod.sh` (étendu, couvre Phase 1 + Phase D17 cron)
 3. **Script smoke validation** : `scripts/smoke-test-validation.sh` (existant session 52)
-4. **Rapport audit sandbox** : Annexe A ci-dessus (résultats 30/04/2026)
-5. **Backlog post-launch** : à importer dans GitHub Issues depuis corpus § 9 P2/P3/P4
+4. **Script tests locaux Windows** : `scripts/run-local-tests.ps1` (PowerShell, lint + tsc + vitest + build)
+5. **Rapport audit sandbox** : Annexe A ci-dessus (résultats 30/04/2026)
+6. 🔴 **Rapport sûreté production** : `docs/PRODUCTION-SAFETY-2026.md` — audit immuabilité / persistance / protection des données utilisateur. **À traiter avant l'import prod** : 2 risques bloquants (formations + positions en localStorage) + 3 modérés (migrations re-jouées). Plan d'action chiffré et checklist d'import.
+7. **Backlog post-launch** : à importer dans GitHub Issues depuis corpus § 9 P2/P3/P4 + `docs/PRODUCTION-SAFETY-2026.md` § D.2/D.3
 
 ---
 

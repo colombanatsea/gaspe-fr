@@ -532,6 +532,10 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 - **CF secrets** – Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
 - **Members store** – dual-mode via /api/organizations (archive supported in API mode since v2.12, migration 0007)
 - **ENM import** – copy-paste from portal (FranceConnect auth prevents direct API access)
+- 🔴 **Formations en localStorage uniquement** (pas de table D1, pas d'endpoint API) — BLOQUANT prod, à migrer en D1 avant import définitif. Cf. `docs/PRODUCTION-SAFETY-2026.md` § B.1 + lot G0/P0-1.
+- 🔴 **Positions en localStorage uniquement** (pas de table D1, pas d'endpoint API) — BLOQUANT prod, à migrer en D1 avant import définitif. Cf. `docs/PRODUCTION-SAFETY-2026.md` § B.2 + lot G0/P0-2.
+- 🟠 **Migrations seed `0016_organization_college` + `0025_repair_data` re-jouées à chaque push main** — peut écraser les éditions admin (collège A/B/C, slug TMC, archive Kéolis). Action P0-5 : découpler le workflow `deploy-worker.yml` en 2 phases (structurelles auto + seed/repair manuel).
+- 🟠 **Workflow `deploy-worker.yml` swallow les erreurs inattendues** — un échec réel passe en `::warning::` mais le job reste vert. Action P1-2 : durcir post-launch (table `_migrations_applied` + exit 1 sur erreur non-`duplicate column`).
 
 ## Session history
 | Session | Version | Key deliverables |
