@@ -1,5 +1,22 @@
 name: Deploy Worker
 
+# Phase 1 : déploiement automatique sur push main
+#   - Applique uniquement les migrations STRUCTURELLES de workers/migrations/*.sql
+#     (CREATE TABLE IF NOT EXISTS, ALTER ADD COLUMN, CREATE INDEX IF NOT EXISTS,
+#     INSERT OR IGNORE seed). Toutes idempotentes par construction.
+#   - Déploie le Worker.
+#
+# Phase 2 : exécution manuelle via workflow_dispatch (UI GitHub Actions)
+#   - Bouton « Run workflow » avec input `apply_manual_migrations=true`.
+#   - Applique les migrations de workers/migrations/_manual/*.sql qui peuvent
+#     ÉCRASER des données utilisateur (UPDATE seeds collège A/B/C, archive
+#     Kéolis, repair data slug TMC). À utiliser uniquement après backup et
+#     validation équipe.
+#
+# Cette séparation a été introduite en session 54 (P0-5 du rapport
+# docs/PRODUCTION-SAFETY-2026.md) pour éviter qu'une mise à jour future
+# n'écrase silencieusement les éditions admin via UI une fois en prod.
+
 on:
   push:
     branches: [main]
@@ -7,6 +24,15 @@ on:
       - 'workers/**'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch:
+    inputs:
+      apply_manual_migrations:
+        description: |
+          Appliquer les migrations destructives de workers/migrations/_manual/
+          (UPDATE seed, INSERT OR IGNORE post-launch). À cocher uniquement
+          après backup D1 manuel et validation équipe. Cf.
+          docs/PRODUCTION-SAFETY-2026.md § E.
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -34,12 +60,16 @@ jobs:
         if: steps.check-secrets.outputs.skip != 'true'
         run: npm install -g wrangler
 
-      - name: Apply D1 migrations
+      # ─── Phase 1 : migrations structurelles (auto à chaque push main) ───
+      - name: Apply structural D1 migrations
         if: steps.check-secrets.outputs.skip != 'true'
         run: |
           set +e
           unexpected=0
           for f in workers/migrations/*.sql; do
+            # Skip le dossier _manual/ : ces migrations ne sont jouées que
+            # via workflow_dispatch + input apply_manual_migrations=true.
+            if [[ "$f" == *"/_manual/"* ]]; then continue; fi
             echo "::group::Applying $f"
             output=$(npx wrangler d1 execute gaspe-db --remote --file "$f" --config workers/wrangler.toml --yes 2>&1)
             status=$?
@@ -61,7 +91,44 @@ jobs:
           fi
           # On ne fait PAS échouer le job pour rester rétro-compatible avec les
           # migrations partiellement appliquées en prod (cf. session 40 fix).
-          # À durcir une fois la table _migrations_applied en place.
+          # À durcir une fois la table _migrations_applied en place (P1-1 du
+          # rapport docs/PRODUCTION-SAFETY-2026.md § D.2).
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # ─── Phase 2 : migrations manuelles (UPDATE seed / repair data) ───
+      # Exécutées UNIQUEMENT si workflow_dispatch + apply_manual_migrations=true.
+      # JAMAIS sur push main automatique.
+      - name: Apply manual / destructive D1 migrations
+        if: |
+          steps.check-secrets.outputs.skip != 'true' &&
+          github.event_name == 'workflow_dispatch' &&
+          inputs.apply_manual_migrations == true
+        run: |
+          set +e
+          echo "::warning::Application des migrations destructives de workers/migrations/_manual/ — assurez-vous qu'un backup D1 récent existe."
+          unexpected=0
+          shopt -s nullglob
+          for f in workers/migrations/_manual/*.sql; do
+            echo "::group::[MANUAL] Applying $f"
+            output=$(npx wrangler d1 execute gaspe-db --remote --file "$f" --config workers/wrangler.toml --yes 2>&1)
+            status=$?
+            echo "$output"
+            if [ $status -ne 0 ]; then
+              if echo "$output" | grep -qiE "duplicate column name|already exists"; then
+                echo "::warning::$f: déjà appliquée"
+              else
+                echo "::error::$f: échec inattendu (voir log)"
+                unexpected=$((unexpected + 1))
+              fi
+            fi
+            echo "::endgroup::"
+          done
+          if [ $unexpected -gt 0 ]; then
+            echo "::error::$unexpected migration manuelle a échoué. Investiguez et restaurez le backup si nécessaire."
+            exit 1
+          fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
