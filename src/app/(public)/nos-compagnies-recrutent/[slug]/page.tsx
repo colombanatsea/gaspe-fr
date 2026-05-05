@@ -192,7 +192,26 @@ export default async function JobDetailPage({ params }: PageProps) {
               <h3 className="font-heading text-base font-semibold text-foreground mb-4">
                 Postuler à cette offre
               </h3>
-              {job.applicationUrl ? (
+              {(() => {
+                // P0-4 (session 54) : si la deadline est passée, fiche reste
+                // consultable mais la candidature n'est plus possible.
+                const isClosed = job.applicationDeadline
+                  ? new Date() > new Date(job.applicationDeadline)
+                  : false;
+                if (isClosed) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <p className="font-semibold">Candidatures closes</p>
+                        <p className="mt-1 text-xs">
+                          Date limite : {new Date(job.applicationDeadline!).toLocaleDateString("fr-FR")}.
+                          La fiche reste consultable pour archive.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                return job.applicationUrl ? (
                 <Button href={job.applicationUrl} variant="primary" className="w-full justify-center py-3.5 text-base shadow-sm">
                   <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -206,7 +225,8 @@ export default async function JobDetailPage({ params }: PageProps) {
                   </svg>
                   Postuler par email
                 </Button>
-              )}
+              );
+              })()}
               {(job.contactName || job.contactPhone) && (
                 <div className="mt-4 text-xs text-foreground-muted text-center space-y-0.5">
                   {job.contactName && <p>Contact : {job.contactName}</p>}

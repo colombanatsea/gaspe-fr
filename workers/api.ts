@@ -2504,6 +2504,7 @@ interface DbJob {
   handi_accessible: number; published: number; published_at: string;
   expires_at: string | null; source: string; created_by: string | null;
   hydros_offer_url: string | null; hydros_offer_id: string | null;
+  application_deadline: string | null;
   created_at: string; updated_at: string;
 }
 
@@ -2538,6 +2539,7 @@ function toFrontendJob(row: DbJob) {
     createdBy: row.created_by ?? undefined,
     hydrosOfferUrl: row.hydros_offer_url ?? undefined,
     hydrosOfferId: row.hydros_offer_id ?? undefined,
+    applicationDeadline: row.application_deadline ?? undefined,
   };
 }
 
@@ -2590,8 +2592,8 @@ async function handleJobCreate(request: Request, env: Env, corsHeaders: Record<s
     INSERT INTO jobs (id, slug, title, company, company_slug, location, zone, contract_type, category,
       brevet, description, profile, conditions, contact_email, contact_name, contact_phone,
       application_url, reference, start_date, salary_range, salary_min, handi_accessible,
-      published, published_at, expires_at, source, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      published, published_at, expires_at, application_deadline, source, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, slug, sanitize(title.trim()), sanitize(company.trim()),
     (body.companySlug as string) || company.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -2615,6 +2617,7 @@ async function handleJobCreate(request: Request, env: Env, corsHeaders: Record<s
     body.published !== false ? 1 : 0,
     (body.publishedAt as string) || new Date().toISOString().split("T")[0],
     (body.expiresAt as string) || null,
+    (body.applicationDeadline as string) || null,
     payload.role === "admin" ? "admin" : "adherent",
     payload.sub,
   ).run();
@@ -2647,6 +2650,7 @@ async function handleJobUpdate(request: Request, env: Env, corsHeaders: Record<s
     salaryRange: "salary_range", salaryMin: "salary_min",
     handiAccessible: "handi_accessible", published: "published",
     publishedAt: "published_at", expiresAt: "expires_at",
+    applicationDeadline: "application_deadline",
     hydrosOfferUrl: "hydros_offer_url", hydrosOfferId: "hydros_offer_id",
   };
 
