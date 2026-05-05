@@ -14,9 +14,9 @@ import { getFleet } from "@/lib/fleet-store";
 import { getMySuppleant } from "@/lib/votes-store";
 import { members } from "@/data/members";
 import type { FleetVessel } from "@/types";
+import { listFormations } from "@/lib/formations-store";
 
 const OFFERS_KEY = "gaspe_adherent_offers";
-const FORMATIONS_KEY = "gaspe_formations";
 const DOCUMENTS_KEY = "gaspe_documents";
 
 export default function EspaceAdherentPage() {
@@ -45,14 +45,17 @@ export default function EspaceAdherentPage() {
       const allApplications = myOffers.reduce((acc: number, o: { applications?: number }) => acc + (o.applications ?? 0), 0);
       setApplicationsCount(allApplications);
     } catch { /* empty */ }
-    try {
-      const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
-      setFormationsCount(formations.length);
-      const myRegistrations = formations.filter((f: { registrations?: string[] }) =>
-        f.registrations?.includes(user.id)
-      );
-      setMyFormationsCount(myRegistrations.length);
-    } catch { /* empty */ }
+    listFormations()
+      .then((formations) => {
+        setFormationsCount(formations.length);
+        setMyFormationsCount(
+          formations.filter((f) => f.registrations?.includes(user.id)).length,
+        );
+      })
+      .catch(() => {
+        setFormationsCount(0);
+        setMyFormationsCount(0);
+      });
     try {
       const documents = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? "[]");
       setDocumentsCount(documents.length);
