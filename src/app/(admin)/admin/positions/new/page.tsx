@@ -9,8 +9,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
-
-const POSITIONS_KEY = "gaspe_positions";
+import { createPosition } from "@/lib/positions-store";
 
 const categoryOptions = ["Position", "Communiqué de presse", "Actualité"];
 
@@ -46,31 +45,29 @@ export default function AdminNewPositionPage() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const newPosition = {
-      id: `position-${Date.now()}`,
-      title: form.title,
-      excerpt: form.excerpt,
-      content: form.content,
-      category: form.category,
-      date: form.date,
-      coverImageUrl: form.coverImageUrl,
-      published: form.published,
-      tags: form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    };
-
-    const raw = localStorage.getItem(POSITIONS_KEY);
-    const existing = raw ? JSON.parse(raw) : [];
-    existing.push(newPosition);
-    localStorage.setItem(POSITIONS_KEY, JSON.stringify(existing));
-
-    router.push("/admin/positions");
+    try {
+      await createPosition({
+        title: form.title,
+        excerpt: form.excerpt,
+        content: form.content,
+        category: form.category as "Position" | "Communiqué de presse" | "Actualité",
+        date: form.date,
+        coverImageUrl: form.coverImageUrl,
+        published: form.published,
+        tags: form.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      });
+      router.push("/admin/positions");
+    } catch {
+      setIsSubmitting(false);
+      alert("Erreur lors de la création de la position. Réessayez.");
+    }
   }
 
   const inputClass =
