@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -263,9 +263,9 @@ export default function AdminFormationsPage() {
     if (isApiMode()) {
       apiListFormations()
         .then((list) => setFormations(list as Formation[]))
-        .catch(() => setFormations(getFormations()));
+        .catch(() => startTransition(() => setFormations(getFormations())));
     } else {
-      setFormations(getFormations());
+      startTransition(() => setFormations(getFormations()));
     }
   }, [user]);
 

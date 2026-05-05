@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
@@ -51,9 +51,9 @@ export default function AdminPositionsPage() {
     if (isApiMode()) {
       apiListAllPositions()
         .then((list) => setPositions(list as Position[]))
-        .catch(() => setPositions(getPositions()));
+        .catch(() => startTransition(() => setPositions(getPositions())));
     } else {
-      setPositions(getPositions());
+      startTransition(() => setPositions(getPositions()));
     }
   }, [user]);
 

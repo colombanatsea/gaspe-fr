@@ -18,7 +18,7 @@
  * positions D1 — uniquement le seed `data/positions.ts` au build.
  */
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -44,10 +44,12 @@ function PositionViewInner() {
 
   useEffect(() => {
     if (!slug) {
-      setPosition(null);
+      startTransition(() => setPosition(null));
       return;
     }
-    getPosition(slug).then(setPosition).catch(() => setPosition(null));
+    getPosition(slug)
+      .then((p) => setPosition(p))
+      .catch(() => startTransition(() => setPosition(null)));
   }, [slug]);
 
   if (position === undefined) {
