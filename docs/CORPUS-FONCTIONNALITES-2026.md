@@ -338,7 +338,7 @@ Légende : ✅ livré / 🟡 partiel / 🔴 todo
 | 7 | **Newsletter v1+v2** (10 catégories, drafts, webhook, désinscription) | 🟡 (Brevo prod en attente list IDs) | 20, 26, 28-29 | `/admin/newsletter` (4 pages), `/newsletter/unsubscribe`, `NewsletterForm` | `lib/newsletter/` (drafts-store, render.ts), `lib/email.ts` (8 templates) | newsletter, newsletter_preferences, nl_drafts, nl_sends, nl_events, nl_templates |
 | 8 | **Annuaire adhérents + flotte** (30 orgs, 111 navires, Collèges A/B/C, crew_by_brevet, CSV import) | ✅ | 12-14, 35-38, 41 | `/nos-adherents`, `/nos-adherents/[slug]`, `/admin/adherents`, `/admin/flotte`, `/espace-adherent/flotte`, `/espace-adherent/annuaire-flotte`, `FleetVesselForm`, `CrewByBrevetEditor`, `FleetCsvImporter` | `members-store`, `fleet-store`, `fleet-csv`, `profile-completeness` | organizations, organization_vessels |
 | 9 | **Offres d'emploi** (CRUD admin + adhérent, matching candidat, Hydros publication auto) | ✅ | 7-8, 23, 27, 38 | `/nos-compagnies-recrutent`, `/nos-compagnies-recrutent/[slug]`, `/admin/offres`, `/espace-adherent/offres` | `jobs-store`, `matching`, `hydros-mapping` | jobs |
-| 10 | **Formations** (8 formations, inscription) | 🔴 **localStorage only — BLOQUANT prod** (cf. `docs/PRODUCTION-SAFETY-2026.md` § B.1, lot G0/P0-1) | 16-17 | `/formations`, `/formations/[slug]`, `/admin/formations`, `/espace-adherent/formations`, `/espace-candidat/formations` | localStorage (`gaspe_formations`) | – (à migrer en D1) |
+| 10 | **Formations** (8 formations, inscription, deadline) | ✅ (session 54 — table D1 + 5 endpoints + dual-mode store + deadline P0-3 + badge « Inscriptions closes ») | 16-17, **54** | `/formations`, `/formations/[slug]`, `/admin/formations`, `/espace-adherent/formations`, `/espace-candidat/formations` | `formations-store` (dual-mode) | `formations` (migration 0031) |
 | 11 | **CCN 3228 + Boîte à outils** (10 guides employeur, FAQ, salaires NAO 2026, sources Legifrance) | ✅ | 14-15, 19, 28-29 | `/boite-a-outils`, FAQJsonLd | `data/ccn3228.ts` (CCN3228_FAQ + 3 EXTRA), `data/stcw.ts` | – (data statique) |
 | 12 | **SSGM + Visites médicales** (25 centres, 10 médecins, FAQ, suivi marin par adhérent) | ✅ | 17-18, 29 | `/ssgm`, `/espace-adherent/visites-medicales` | `data/ssgm.ts`, `medical-store` | medical_visits |
 | 13 | **Transition écologique + AdemeSimulator** (4 guides, 6 techno, simulateur React 2566 lignes) | ✅ | 16-17, 24 | `/transition-ecologique`, `AdemeSimulator` (lazy + ssr:false) | `components/simulator/` | – (calc local) |
@@ -452,11 +452,11 @@ Ces items sont **bloquants pour l'import définitif des données prod** (compagn
 
 | # | Item | Fichier | Effort | Risque si non traité |
 |---|------|---------|:-:|----------------------|
-| P0-1 | **Migrer formations en D1** (table + 5 endpoints + dual-mode store + seed migration) | nouveau code | M (~3h) | 🔴 Données admin perdues au cleanup navigateur, jamais visibles côté candidat/adhérent |
-| P0-2 | **Migrer positions en D1** (table + 5 endpoints + dual-mode store + branchement RSS + sitemap) | nouveau code | M (~3h) | 🔴 Idem + RSS public en empty state, pas de publication possible |
-| P0-3 | **Date limite inscription formations** + état archive | migration 0031 + UI badges | S (~1h) | 🟠 Backlog feature direction |
-| P0-4 | **Date limite candidature offres** + état archive | migration jobs + UI badges | S (~1h) | 🟠 Backlog feature direction |
-| P0-5 | **Découpler workflow `deploy-worker.yml`** : structurelles auto, seed/repair manuelles | `.github/workflows/deploy-worker.yml` | XS (~30 min) | 🔴 Migrations 0016/0025 re-jouées à chaque push main = écrasent les éditions admin (collège, slug) |
+| P0-1 | **Migrer formations en D1** (table + 5 endpoints + dual-mode store + seed migration) | nouveau code | M (~3h) | ✅ **LIVRÉ session 54** (commit 9b53edf) |
+| P0-2 | **Migrer positions en D1** (table + 5 endpoints + dual-mode store + branchement RSS + sitemap) | nouveau code | M (~3h) | ✅ **LIVRÉ session 54** (commit 487acbb) — branchement RSS / sitemap reporté en P1 |
+| P0-3 | **Date limite inscription formations** + état archive | migration 0031 + UI badges | S (~1h) | ✅ **LIVRÉ session 54** (commit 9b53edf, inclus avec P0-1) |
+| P0-4 | **Date limite candidature offres** + état archive | migration jobs + UI badges | S (~1h) | ✅ **LIVRÉ session 54** (commit 70a27c1) |
+| P0-5 | **Découpler workflow `deploy-worker.yml`** : structurelles auto, seed/repair manuelles | `.github/workflows/deploy-worker.yml` | XS (~30 min) | ✅ **LIVRÉ session 54** (commit 9519181) — 3 migrations destructives déplacées dans `workers/migrations/_manual/` |
 
 ### 9.1 🔴 P1 — Bloquant légal/contractuel (sous 2 semaines)
 

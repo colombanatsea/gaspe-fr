@@ -136,13 +136,13 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 
 ### D.1 Avant import prod (BLOQUANT)
 
-| # | Action | Effort | Détail |
-|---|--------|:-:|--------|
-| **P0-1** | **Migrer formations → D1** | M (~3h) | Migration 0031 `formations` (id, slug, title, description, duration, price_eur, certification, registration_deadline, is_archived, … 12 colonnes), 5 endpoints CRUD `/api/formations/*` (GET, POST, GET id, PATCH, DELETE), helper `requireStaffPermission('manage_formations')`, store `src/lib/formations-store.ts` dual-mode, seed migration `0032_seed_formations.sql` avec les 8 formations actuelles via `INSERT OR IGNORE`, refactor des 7 fichiers UI pour utiliser le store |
-| **P0-2** | **Migrer positions → D1** | M (~3h) | Migration 0033 `positions` (id, slug, title, content, excerpt, category, published, attachment_url, …), 5 endpoints CRUD `/api/positions/*`, helper `requireStaffPermission('manage_positions')`, store `src/lib/positions-store.ts` dual-mode, refactor `/admin/positions/page.tsx` + `/admin/positions/new` + `/positions/[slug]` (côté public lit toujours `src/data/positions.ts` aujourd'hui — à brancher sur store), refresh `feed.xml` pour fetch D1 au lieu du fichier statique |
-| **P0-3** | **Backlog feature 1 : date limite inscription formations** | S (~1h) | Ajouter `registration_deadline TEXT` à la migration 0031, badge « Inscriptions closes » dans `FormationCard` + désactivation du bouton « S'inscrire » si `registration_deadline < now()`. Page reste consultable, pas de redirection. |
-| **P0-4** | **Backlog feature 2 : date limite candidature offres d'emploi** | S (~1h) | Ajouter `application_deadline TEXT` à la table `jobs` via migration 0034, idem badge + désactivation bouton « Postuler » sur `/nos-compagnies-recrutent/[slug]`. |
-| **P0-5** | **Geler les migrations seed UPDATE après import** | XS (~30 min) | (a) Découper le workflow `deploy-worker.yml` en 2 phases : « Migrations structurelles » (CREATE/ALTER) toujours, « Migrations seed » (INSERT/UPDATE) **uniquement sur invocation manuelle** `workflow_dispatch`. (b) Renommer `0016_organization_college.sql` et `0025_repair_data.sql` avec un suffixe `.applied` ou les déplacer dans `workers/migrations/_archive/` pour les retirer du foreach. |
+| # | Action | Effort | Statut session 54 |
+|---|--------|:-:|-------------------|
+| **P0-1** | **Migrer formations → D1** | M (~3h) | ✅ **LIVRÉ** (commit 9b53edf) : migration 0031 `formations` + 5 endpoints CRUD `/api/formations/*` + helper `requireStaffPermission('manage_formations')` + store `src/lib/formations-store.ts` dual-mode + refactor des 7 fichiers UI. Le seed reste comme fallback éditorial mais l'API D1 prime dès qu'une formation est créée via UI. |
+| **P0-2** | **Migrer positions → D1** | M (~3h) | ✅ **LIVRÉ** (commit 487acbb) : migration 0032 `positions` + 5 endpoints CRUD `/api/positions/*` + store `src/lib/positions-store.ts` dual-mode + refactor `/admin/positions/page.tsx` + `/admin/positions/new` + `/positions/page.tsx` (liste publique). Nouvelle route `/positions/view?slug=X` (Client Component) pour servir les positions D1 dynamiquement, car `/positions/[slug]` est SSG. **Limitation reportée P1** : `feed.xml` et `sitemap.xml` continuent de lister uniquement le seed (positions D1 absentes du RSS). |
+| **P0-3** | **Date limite inscription formations** | S (~1h) | ✅ **LIVRÉ** (commit 9b53edf, inclus avec P0-1) : colonne `registration_deadline TEXT` dans la migration 0031, helper pur `isRegistrationClosed(formation, now)` exporté par le store, champ « Date limite d'inscription » dans le formulaire `/admin/formations/new`, badge « Inscriptions closes » sur les cartes côté `/espace-adherent/formations` et `/espace-candidat/formations` quand la deadline est dépassée. |
+| **P0-4** | **Date limite candidature offres** | S (~1h) | ✅ **LIVRÉ** (commit 70a27c1) : migration 0033 `ALTER TABLE jobs ADD COLUMN application_deadline TEXT`, type `Job.applicationDeadline?: string`, mapper Worker, INSERT/PATCH étendus, champs date dans `/admin/offres/new` + `/espace-adherent/offres`, encart « Candidatures closes » sur la fiche publique `/nos-compagnies-recrutent/[slug]` qui remplace les boutons « Postuler » quand la date est dépassée. |
+| **P0-5** | **Geler les migrations seed UPDATE après import** | XS (~30 min) | ✅ **LIVRÉ** (commit 9519181) : workflow `.github/workflows/deploy-worker.yml` découplé en 2 phases. Phase 1 (auto push main) skip `workers/migrations/_manual/*`. Phase 2 (workflow_dispatch + `apply_manual_migrations=true`) applique les migrations destructives. 3 fichiers déplacés dans `_manual/` : `0014_archive_keolis_bordeaux.sql`, `0016_organization_college.sql`, `0025_repair_data.sql`. README explicatif + checklist d'exécution dans `_manual/README.md`. |
 
 ### D.2 Recommandé (post-launch sous 1 mois)
 
@@ -251,14 +251,14 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 
 ## G. Estimations effort
 
-| Lot | Tâches | Effort cumulé | Bloquant ? |
+| Lot | Tâches | Effort cumulé | Statut session 54 |
 |-----|--------|:-:|:-:|
-| **Lot G0** (formations + positions D1) | P0-1 + P0-2 | ~6h | 🔴 OUI |
-| **Lot G1** (deadlines + workflow safe) | P0-3 + P0-4 + P0-5 | ~3h | 🟠 fortement recommandé |
-| **Lot G2** (durcissement post-launch) | P1-1 + P1-2 + P1-3 + P1-4 | ~6h | 🟡 sous 1 mois |
+| **Lot G0** (formations + positions D1) | P0-1 + P0-2 | ~6h | ✅ **LIVRÉ** (9b53edf, 487acbb) |
+| **Lot G1** (deadlines + workflow safe) | P0-3 + P0-4 + P0-5 | ~3h | ✅ **LIVRÉ** (9b53edf, 70a27c1, 9519181) |
+| **Lot G2** (durcissement post-launch) | P1-1 + P1-2 + P1-3 + P1-4 | ~6h | 🟡 sous 1 mois (backlog) |
 | **Lot G3** (audit, soft-delete, export) | P2-1 → P2-4 | ~12h | 🟢 backlog ouvert |
 
-**Total avant go-live** : G0 + G1 ≈ **~9h** de dev (1 journée focus).
+**Bilan session 54** : G0 + G1 livrés en 5 commits atomiques sur `claude/french-greeting-test-fmBzC` (9b53edf → 9519181). Total ~780+716+91+136 = **~1700 LOC** ajoutées (migrations + handlers Worker + stores dual-mode + UI refactor + workflow + docs). Lint 0/0, tsc 0, vitest 346/346, build 118 pages.
 
 ---
 
