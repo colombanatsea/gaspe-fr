@@ -61,38 +61,92 @@ jobs:
         run: npm install -g wrangler
 
       # ─── Phase 1 : migrations structurelles (auto à chaque push main) ───
+      #
+      # Comportement (durci en session 54, P1-1 + P1-2) :
+      #   1. Vérifie quelles migrations sont déjà inscrites dans la table
+      #      `_migrations_applied` (créée par 0034_migrations_applied.sql).
+      #      Si présente → SKIP, on n'essaie même pas de re-jouer.
+      #   2. Sinon, applique la migration. Si succès, INSERT dans la table.
+      #   3. Si échec inattendu (autre que « duplicate column » des ALTER
+      #      ré-appliquées), exit 1 → bloque le déploiement Worker.
+      #   4. Skip le dossier `_manual/` (cf. phase 2).
+      #
+      # Avant durcissement : le workflow tournait toutes les migrations à
+      # chaque push, comptait sur l'idempotence de chaque statement, et
+      # laissait passer les erreurs réelles en `::warning::` (le job restait
+      # vert même en cas d'échec). Cf. docs/PRODUCTION-SAFETY-2026.md § C.2.
       - name: Apply structural D1 migrations
         if: steps.check-secrets.outputs.skip != 'true'
         run: |
           set +e
           unexpected=0
+          skipped=0
+          applied=0
+
+          # Helper : la migration est-elle déjà inscrite dans _migrations_applied ?
+          # Retourne 0 si oui, 1 sinon (y compris si la table n'existe pas encore).
+          already_applied() {
+            local fname="$1"
+            local out
+            out=$(npx wrangler d1 execute gaspe-db --remote \
+              --command "SELECT 1 FROM _migrations_applied WHERE filename = '$fname' LIMIT 1" \
+              --config workers/wrangler.toml --yes 2>&1)
+            # Tolérant : on cherche une trace de résultat dans la sortie JSON wrangler.
+            echo "$out" | grep -qE '"1"\s*:\s*1' && return 0
+            return 1
+          }
+
+          # Helper : marque une migration comme appliquée.
+          mark_applied() {
+            local fname="$1"
+            npx wrangler d1 execute gaspe-db --remote \
+              --command "INSERT OR IGNORE INTO _migrations_applied (filename) VALUES ('$fname')" \
+              --config workers/wrangler.toml --yes >/dev/null 2>&1 || true
+          }
+
           for f in workers/migrations/*.sql; do
             # Skip le dossier _manual/ : ces migrations ne sont jouées que
             # via workflow_dispatch + input apply_manual_migrations=true.
             if [[ "$f" == *"/_manual/"* ]]; then continue; fi
-            echo "::group::Applying $f"
+
+            fname=$(basename "$f")
+            echo "::group::Migration $fname"
+
+            if already_applied "$fname"; then
+              echo "déjà appliquée (présente dans _migrations_applied) — skip"
+              skipped=$((skipped + 1))
+              echo "::endgroup::"
+              continue
+            fi
+
             output=$(npx wrangler d1 execute gaspe-db --remote --file "$f" --config workers/wrangler.toml --yes 2>&1)
             status=$?
             echo "$output"
-            if [ $status -ne 0 ]; then
-              # ALTER ADD COLUMN ne supporte pas IF NOT EXISTS en SQLite : un re-run
-              # produit "duplicate column name" — c'est attendu et inoffensif.
+            if [ $status -eq 0 ]; then
+              mark_applied "$fname"
+              applied=$((applied + 1))
+              echo "::notice::$fname appliquée avec succès"
+            else
+              # ALTER ADD COLUMN ne supporte pas IF NOT EXISTS en SQLite :
+              # si la migration a déjà été appliquée AVANT que la table
+              # tracker n'existe (avant 0034), le re-run produira « duplicate
+              # column name ». On la marque pour la skip aux prochains runs.
               if echo "$output" | grep -qiE "duplicate column name|already exists"; then
-                echo "::warning::$f: déjà appliquée (colonne existe), suite ignorée pour ce fichier"
+                echo "::warning::$fname : déjà appliquée (colonne existe), suite ignorée"
+                mark_applied "$fname"
               else
-                echo "::error::$f: échec inattendu (voir log ci-dessus)"
+                echo "::error::$fname : échec inattendu (voir log ci-dessus)"
                 unexpected=$((unexpected + 1))
               fi
             fi
             echo "::endgroup::"
           done
+
+          echo "Phase 1 terminée : $applied appliquée(s) maintenant, $skipped déjà appliquée(s), $unexpected échec(s) inattendu(s)"
           if [ $unexpected -gt 0 ]; then
-            echo "::warning::$unexpected migration(s) ont échoué pour une raison inattendue. Vérifier les logs."
+            echo "::error::$unexpected migration(s) ont échoué pour une raison inattendue. Le déploiement Worker est bloqué."
+            exit 1
           fi
-          # On ne fait PAS échouer le job pour rester rétro-compatible avec les
-          # migrations partiellement appliquées en prod (cf. session 40 fix).
-          # À durcir une fois la table _migrations_applied en place (P1-1 du
-          # rapport docs/PRODUCTION-SAFETY-2026.md § D.2).
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

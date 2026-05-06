@@ -523,6 +523,69 @@ All data stores support two backends, auto-switching when `NEXT_PUBLIC_API_URL` 
 
 Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMode()` helper)
 
+## Production safety – protocole release D1
+
+Convention introduite session 54 (P0-5 + P1-1 + P1-2 + P1-4) pour éviter
+qu'une mise à jour future n'écrase silencieusement les éditions admin
+réalisées via UI en prod. Détail complet : `docs/PRODUCTION-SAFETY-2026.md`.
+
+### Règle d'or
+
+Toute migration `UPDATE` ou `DELETE` après go-live se fait **manuellement**,
+après backup et validation équipe. Les migrations idempotentes (CREATE
+TABLE IF NOT EXISTS, ALTER ADD COLUMN, INSERT OR IGNORE) restent automatiques.
+
+### Convention de placement
+
+| Dossier | Sémantique | Exécution |
+|---------|------------|-----------|
+| `workers/migrations/*.sql` | Structurelles + seed initial idempotent | Auto à chaque push main (phase 1 du workflow `deploy-worker.yml`) |
+| `workers/migrations/_manual/*.sql` | Destructives : `UPDATE seed`, `INSERT OR REPLACE`, repair data, archive bulk | Manuel via `workflow_dispatch + apply_manual_migrations=true` (phase 2) |
+
+### Tracking : table `_migrations_applied`
+
+Migration `0034_migrations_applied.sql` créée en session 54 (P1-1). Le
+workflow phase 1 :
+
+1. SELECT `_migrations_applied WHERE filename = ?` avant chaque migration.
+2. Si présente → skip.
+3. Sinon → applique + INSERT (filename, applied_at).
+4. Si erreur inattendue (autre que `duplicate column name`) → exit 1
+   (durcissement P1-2, le job échoue au lieu de passer en `::warning::`).
+
+Bootstrap rétroactif : la migration 0034 inscrit dès le départ toutes les
+migrations 0001-0033 considérées comme déjà appliquées en prod (vérifié
+26 avr 2026, session 40). À l'avenir, chaque nouvelle migration s'inscrit
+elle-même au moment de son exécution réussie.
+
+### Checklist dev pour toute nouvelle migration
+
+- [ ] Type correct : structurelle dans `workers/migrations/` ou destructive dans `_manual/`.
+- [ ] CREATE/ALTER : `IF NOT EXISTS` partout.
+- [ ] INSERT : `OR IGNORE` (jamais d'écrasement silencieux).
+- [ ] UPDATE : `WHERE` strict (préférer `WHERE col IS NULL` ou `WHERE col = 'old_value'` pour ne pas toucher aux données utilisateur).
+- [ ] Documentation en commentaire SQL : pourquoi, quand, qui peut la jouer.
+- [ ] Test en local sur copie D1 avant push main.
+- [ ] Si dans `_manual/` : ajouter une ligne dans `workers/migrations/_manual/README.md` § « Liste des migrations actuellement dans `_manual/` ».
+
+### Procédure release standard
+
+1. PR sur `main` avec migrations structurelles uniquement (CREATE/ALTER/INDEX).
+2. CI verte (lint + tsc + vitest + build).
+3. Merge `main` → `deploy-worker.yml` phase 1 applique les nouvelles
+   migrations + déploie le Worker.
+4. Smoke test prod : `bash scripts/smoke-test-prod.sh`.
+
+### Procédure pour migration destructive
+
+1. Créer le fichier dans `workers/migrations/_manual/`.
+2. Backup D1 explicite : `wrangler d1 export gaspe-db --remote --output backup-$(date -u +%Y%m%d).sql`.
+3. PR + review équipe.
+4. Merge sur `main` (pas d'effet auto, juste le push du fichier).
+5. Aller dans GitHub Actions → Deploy Worker → Run workflow → cocher « Apply manual migrations ».
+6. Smoke test prod immédiat.
+7. Si problème, restore depuis le backup : `wrangler d1 execute gaspe-db --remote --file backup-XXXX.sql`.
+
 ## Known limitations
 - **Domain gaspe.fr** – manual CF Pages DNS config needed (frontend tourne sur gaspe-fr.pages.dev)
 - **ADEME simulator** – ported to native Next.js component (lazy-loaded, ssr: false)
