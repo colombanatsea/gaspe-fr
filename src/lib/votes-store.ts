@@ -77,13 +77,14 @@ export interface CreateVoteInput {
 
 export async function createVote(input: CreateVoteInput): Promise<Vote | null> {
   if (isApiMode()) {
-    try {
-      const res = await apiFetch<{ vote: Vote }>("/api/votes", {
-        method: "POST",
-        body: JSON.stringify(input),
-      });
-      return res.vote;
-    } catch { return null; }
+    // C10 fix : ne plus swallow silencieusement l'erreur API. Si le Worker
+    // renvoie `error`, on propage via throw pour que la UI puisse afficher.
+    const res = await apiFetch<{ vote?: Vote; error?: string }>("/api/votes", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    if (res.error) throw new Error(res.error);
+    return res.vote ?? null;
   }
   const newVote: Vote = {
     id: `vote-${Date.now()}`,

@@ -21,6 +21,7 @@ export default function AdminVotesPage() {
   const [showForm, setShowForm] = useState(false);
   const [activeResults, setActiveResults] = useState<Record<string, VoteResults | null>>({});
   const [openResults, setOpenResults] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -40,10 +41,19 @@ export default function AdminVotesPage() {
   if (!user || !isStaffOrAdmin(user)) return null;
 
   async function handleCreate(input: CreateVoteInput) {
-    const created = await createVote(input);
+    setCreateError(null);
+    let created: Vote | null = null;
+    try {
+      created = await createVote(input);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Erreur inconnue");
+      return;
+    }
     if (created) {
       setShowForm(false);
       await refresh();
+    } else {
+      setCreateError("Le vote n'a pas pu être créé (réponse vide).");
     }
   }
 
@@ -84,6 +94,11 @@ export default function AdminVotesPage() {
       {showForm && (
         <div className="mb-6">
           <CreateVoteForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+          {createError && (
+            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+              {createError}
+            </div>
+          )}
         </div>
       )}
 

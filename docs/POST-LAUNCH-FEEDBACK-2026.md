@@ -45,11 +45,11 @@
 | C7 | Cotisations doivent revenir à `due` automatiquement lors du démarrage d'une nouvelle campagne annuelle | 🟠 | 🟢 (suivi) |
 | C8 | L'admin (= `colomban@gaspe.fr`) doit recevoir un email à chaque demande de création de compte | 🔴 | 🟢 (suivi) |
 | C9 | L'admin maître peut promouvoir d'autres comptes admin (ex `contact@gaspe.fr`) — interface multi-admin | 🟠 | 🟢 (suivi) |
-| C10 | `/admin/votes` : impossible de créer un vote (bug submit ?) | 🔴 | 🟢 (suivi) |
-| C11 | Vote « choix simple » → cocher 1 case (radio button), pas un select | 🟠 | 🟢 (suivi) |
-| C12 | Vote « choix multiple » → cocher plusieurs cases (checkboxes) | 🟠 | 🟢 (suivi) |
-| C13 | Vote « classement » → drag & drop pour réordonner | 🟠 | 🟢 (suivi) |
-| C14 | Vote « date selection » → cocher des dates disponibles (multi-select date picker) | 🟠 | 🟢 (suivi) |
+| C10 | `/admin/votes` : impossible de créer un vote (bug submit ?) | 🔴 | ✅ (session 55) |
+| C11 | Vote « choix simple » → cocher 1 case (radio button), pas un select | 🟠 | ✅ (déjà OK, vérifié session 55) |
+| C12 | Vote « choix multiple » → cocher plusieurs cases (checkboxes) | 🟠 | ✅ (déjà OK, vérifié session 55) |
+| C13 | Vote « classement » → drag & drop pour réordonner | 🟠 | ✅ (déjà OK, vérifié session 55) |
+| C14 | Vote « date selection » → cocher des dates disponibles (multi-select date picker) | 🟠 | ✅ (déjà OK, vérifié session 55) |
 | C15 | `/admin/pages` : aperçu de la page non disponible | 🔴 | 🟢 (suivi) |
 | C16 | `/admin/pages` : accès historique cassé | 🔴 | 🟢 (suivi) |
 | C17 | `/admin/pages` : pas de bouton « Ajouter une nouvelle page » | 🟠 | 🟢 (suivi) |
@@ -194,3 +194,5 @@ Endpoint Worker ajouté : `GET /api/admin/audit-log?limit=N&offset=O&action=X&en
 | **B3** | (cette session) | Badge « Expiré » : ajouté à `JobCard` (listing public `/nos-compagnies-recrutent`) ET au tableau `/admin/offres` (à côté du badge Publié/Brouillon). La fiche détail (P0-4 session 54) avait déjà le bandeau « Candidatures closes ». |
 | **B4** | (cette session) | Card « À propos de la compagnie » sur fiche offre `/nos-compagnies-recrutent/[slug]` : logo + nom + lieu, plus la `member.description` tronquée à 280 caractères, plus le lien « Voir la fiche complète » vers `/nos-adherents/[slug]`. Le lien site web reste affiché si `member.websiteUrl` présent. |
 | **B5 + C3** | (cette session) | Profil adhérent `/espace-adherent/profil` : la page ne persistait que dans `User` (localStorage côté front via AuthContext), jamais sur l'organisation D1. Désormais : 1) charge `Organization` au mount via `ApiAuthStore.fetchOrganization` ; 2) `handleSave` PATCH `/api/organizations/:id` avec description, logo, address, email, phone, employeeCountNavigant, employeeCountSedentaire, annualRevenueEur, revenueConfidential ; 3) inputs ajoutés pour les 3 nouvelles métriques + checkbox confidentiel ; 4) read-mode affiche les 3 indicateurs avec cadenas si confidentiel. Migration `0038_organizations_b5_split_revenue.sql` ajoute les 4 colonnes. Worker `handleUpdateOrganization` étend `allowedFields` + le mapping `toFrontendOrg` pour exposer les nouveaux champs. Type `Organization` (auth/types.ts) étendu en miroir. NB : la fusion `User.companyXxx ↔ Organization.xxx` reste duplicée pour l'instant (déduplication dans une session future) — le profil pousse vers les deux pour cohérence affichage immédiat. |
+| **C10** | (cette session) | Worker `handleCreateVote` + `handleCloseVote` référençaient `auth.payload.sub` jamais déclaré (relique d'avant le refactor `requireStaffPermission`). À l'exécution → ReferenceError → tout submit `/admin/votes` retournait 5xx silencieux. Remplacé par `auth.userId` (cohérent avec le retour de `requireStaffPermission`). Côté front : `createVote` propage l'erreur API via `throw` au lieu de retourner null silencieusement, et `/admin/votes` affiche un encart rouge `createError` sous le formulaire. |
+| **C11–C14** | (audit cette session) | `VoteDetailClient` (espace adhérent) utilise déjà les bons inputs : `<input type="radio">` pour single_choice, `<input type="checkbox">` pour multiple_choice, `<DragRanking>` pour ranking, `<input type="checkbox">` par date pour date_selection. Le bug rapporté venait probablement de C10 (création impossible → impossible de tester côté votant). Les inputs sont OK depuis la session 40. |

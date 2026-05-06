@@ -4254,7 +4254,7 @@ async function handleCreateVote(request: Request, env: Env, corsHeaders: Record<
   await env.DB.prepare(
     `INSERT INTO votes (id, title, description, type, audience, options_json, status, closes_at, created_by)
      VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)`
-  ).bind(id, title, description, type, audience, optionsJson, closesAt, String(auth.payload.sub)).run();
+  ).bind(id, title, description, type, audience, optionsJson, closesAt, auth.userId).run();
 
   const row = await env.DB.prepare("SELECT * FROM votes WHERE id = ?").bind(id).first<DbVote>();
   return json({ success: true, vote: row ? toFrontendVote(row) : null }, corsHeaders);
@@ -4465,7 +4465,7 @@ async function handleCloseVote(request: Request, env: Env, corsHeaders: Record<s
   await ensureVotesTables(env);
   await env.DB.prepare(
     "UPDATE votes SET status = 'closed', closed_at = datetime('now'), closed_by = ? WHERE id = ?"
-  ).bind(String(auth.payload.sub), voteId).run();
+  ).bind(auth.userId, voteId).run();
   return json({ success: true }, corsHeaders);
 }
 
