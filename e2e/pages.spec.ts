@@ -29,11 +29,13 @@ test.describe("Public pages load correctly", () => {
 });
 
 test.describe("Member culture pages (SSG)", () => {
+  // Slugs réels (members.ts session 54). Mis à jour suite à la
+  // refonte session 33d (Kéolis Bordeaux archivé, slugs harmonisés).
   const memberSlugs = [
-    "compagnie-oceane",
-    "manche-iles-express",
-    "corsica-ferries",
     "blue-lines",
+    "breizhgo-ile-darz",
+    "breizhgo-oceane",
+    "compagnie-yeu-continent",
   ];
 
   for (const slug of memberSlugs) {
@@ -45,17 +47,23 @@ test.describe("Member culture pages (SSG)", () => {
 });
 
 test.describe("Job detail pages (SSG)", () => {
+  // Slugs réels (jobs.ts session 33d : 4 offres Karu'Ferry / STEP Group).
   const jobSlugs = [
-    "chef-mecanicien-3000-kw-manche-iles-express",
-    "capitaine-brevet-illimite-gironde",
-    "capitaine-3000-ums-blaye-lamarque",
+    "responsable-technique-flotte-guadeloupe",
+    "chef-mecanicien-3000-kw-guadeloupe",
+    "chef-mecanicien-8000-kw-guadeloupe",
+    "capitaine-500-guadeloupe",
   ];
 
   for (const slug of jobSlugs) {
     test(`/nos-compagnies-recrutent/${slug} loads with sidebar`, async ({ page }) => {
       const response = await page.goto(`/nos-compagnies-recrutent/${slug}`);
       expect(response?.status()).toBe(200);
-      await expect(page.locator("text=Postuler")).toBeVisible();
+      // Soit le bouton « Postuler », soit le badge « Candidatures closes » (P0-4
+      // session 54). On vérifie qu'au moins une de ces deux occurrences est visible.
+      const postuler = page.locator("text=Postuler").first();
+      const closed = page.locator("text=Candidatures closes").first();
+      await expect(postuler.or(closed)).toBeVisible();
     });
   }
 });
@@ -115,16 +123,20 @@ test.describe("Dark mode toggle", () => {
 });
 
 test.describe("Redirect pages", () => {
+  // /actualites et /presse pointent vers du contenu lié aux positions.
+  // Sélecteur strict pour éviter les multi-matches (heading + nav + footer
+  // contiennent tous le mot « Positions »).
   test("/actualites redirects to /positions content", async ({ page }) => {
     const response = await page.goto("/actualites");
     expect(response?.status()).toBe(200);
-    await expect(page.locator("text=Positions")).toBeVisible();
+    // Au moins une mention de Positions doit être visible (heading ou lien).
+    await expect(page.locator("text=Positions").first()).toBeVisible();
   });
 
-  test("/presse redirects to /positions content", async ({ page }) => {
+  test("/presse contient une référence vers /positions", async ({ page }) => {
     const response = await page.goto("/presse");
     expect(response?.status()).toBe(200);
-    await expect(page.locator("text=Positions")).toBeVisible();
+    await expect(page.locator("text=Positions").first()).toBeVisible();
   });
 });
 

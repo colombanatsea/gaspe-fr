@@ -25,9 +25,13 @@ test.describe("Recruitment Platform", () => {
   });
 
   test("job detail page loads", async ({ page }) => {
-    await page.goto("/nos-compagnies-recrutent/chef-mecanicien-3000-kw-manche-iles-express");
+    // Slug réel (jobs.ts session 33d : 4 offres Karu'Ferry / STEP Group).
+    await page.goto("/nos-compagnies-recrutent/chef-mecanicien-3000-kw-guadeloupe");
     await expect(page.locator("h1")).toContainText("Chef Mécanicien");
-    await expect(page.locator("text=Postuler par email")).toBeVisible();
+    // Soit bouton Postuler, soit badge Candidatures closes (P0-4 session 54).
+    const postuler = page.locator("text=Postuler par email").first();
+    const closed = page.locator("text=Candidatures closes").first();
+    await expect(postuler.or(closed)).toBeVisible();
   });
 
   test("text search works", async ({ page }) => {

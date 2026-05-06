@@ -28,6 +28,9 @@ test.describe("Homepage", () => {
     const statsSection = page.locator("text=Le GASPE en chiffres");
     await statsSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(2500);
-    await expect(page.locator("text=1 951")).toBeVisible();
+    // Le compteur affiche soit "1 951" (espace insécable) soit "1 951"
+    // (espace simple) selon le rendu Intl. On accepte les deux variantes
+    // via un sélecteur regex pour éviter la race condition de l'animation.
+    await expect(page.getByText(/1[\s ]?951/).first()).toBeVisible();
   });
 });
