@@ -1,6 +1,6 @@
 // Synchronisé avec package.json à chaque release. Si désynchronisé,
 // `chore(release): bump v2.X.Y` doit toucher package.json + ce fichier.
-export const SITE_VERSION = "2.46.0";
+export const SITE_VERSION = "2.47.0";
 export const SITE_NAME = "GASPE";
 /**
  * Date (ISO) de la dernière vérification éditoriale globale des chiffres et

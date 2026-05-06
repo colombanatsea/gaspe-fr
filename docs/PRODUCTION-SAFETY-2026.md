@@ -153,13 +153,13 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 | **P1-3** | Backup automatisé D1 quotidien via `wrangler d1 export` + R2 retention 30 jours | M | ✅ **LIVRÉ** : nouveau workflow `.github/workflows/backup-d1.yml` (cron `0 3 * * *` UTC quotidien + `workflow_dispatch` manuel). Export → R2 `gaspe-uploads/_backups/d1/d1-backup-YYYY-MM-DD.sql`. Étape `Cleanup local file` `if: always()`. Retention 30j à scripter en cleanup hebdo (backlog mineur, peut se faire via lifecycle rule R2 côté CF). |
 | **P1-4** | Documenter le **protocole release** dans `CLAUDE.md` | XS | ✅ **LIVRÉ** (commit 85ac084) : nouvelle section « Production safety – protocole release D1 » dans `CLAUDE.md` avant § Known limitations. Détaille la règle d'or, la convention de placement (`workers/migrations/` vs `_manual/`), le tracking, la checklist dev pour toute nouvelle migration, et les 2 procédures release standard (structurelle vs destructive avec backup obligatoire). |
 
-### D.3 Backlog ouvert (P2) — partiellement livré G3 session 54
+### D.3 Backlog G3 — entièrement livré session 54+
 
 | # | Action | Statut |
 |---|--------|--------|
-| P2-1 | Versionner les seeds `members.ts` / `fleet-seed.ts` / `ccn3228.ts` avec un hash dans D1 → alerte admin au déploiement si divergence | 🟢 backlog |
-| P2-2 | Soft-delete partout (colonne `archived_at` ou `is_archived`) au lieu de DELETE pour préserver la traçabilité | 🟡 partiel — appliqué sur formations (P0-1) + positions (P0-2) + organizations (0007). Reste : medical_visits, jobs (DELETE actuel), nl_drafts |
-| P2-3 | Audit log D1 (`audit_log` table) pour tracer qui a modifié quoi | 🟢 backlog |
+| P2-1 | Versionner les seeds `members.ts` / `fleet-seed.ts` / `ccn3228.ts` avec un hash dans D1 → alerte admin au déploiement si divergence | ✅ **LIVRÉ** (commit b845bd8) : migration 0037 `seed_hashes` + script `scripts/compute-seed-hashes.ts` (10 seeds suivis : members, fleet-seed, ccn3228, stcw, ssgm, schools, career-salary, formations, positions, cms-defaults) + 2 endpoints admin (GET/POST `/api/admin/seed-hashes`). Workflow : `npx tsx scripts/compute-seed-hashes.ts --post` au release. |
+| P2-2 | Soft-delete partout (colonne `archived_at` ou `is_archived`) au lieu de DELETE pour préserver la traçabilité | ✅ **LIVRÉ** (commits 9b53edf P0-1 formations + 487acbb P0-2 positions + 0007 organizations + 98d60c5 P2-2 suite jobs/medical_visits/nl_drafts). Migration 0036 ajoute `is_archived` aux 3 dernières tables, handlers Worker remplacent DELETE par UPDATE is_archived=1 avec fallback DELETE physique si colonne absente. |
+| P2-3 | Audit log D1 (`audit_log` table) pour tracer qui a modifié quoi | ✅ **LIVRÉ** (commit fdce9b4) : migration 0035 `audit_log` (user/action/entity/before/after/ip/UA) + helper `logAudit()` best-effort + câblage 3 endpoints critiques (`organization.update`, `job.delete`, `formation.delete`, `medical_visit.delete`, `seed_hashes.upsert`). Truncation 1 MB par snapshot. Pas d'UI — interrogeable via SQL `wrangler d1 execute --command "SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50"`. |
 | P2-4 | **Endpoint admin `/api/admin/export-all`** pour export complet D1 (format JSON) à des fins légales | ✅ **LIVRÉ** (commit 73eb6d3 session 54) : GET admin-only, 23 tables exportées, colonnes sensibles filtrées (password_hash, tokens, body emails), `Content-Disposition: attachment` pour download direct |
 
 ---
@@ -256,7 +256,7 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 | **Lot G0** (formations + positions D1) | P0-1 + P0-2 | ~6h | ✅ **LIVRÉ** (9b53edf, 487acbb) |
 | **Lot G1** (deadlines + workflow safe) | P0-3 + P0-4 + P0-5 | ~3h | ✅ **LIVRÉ** (9b53edf, 70a27c1, 9519181) |
 | **Lot G2** (durcissement post-launch) | P1-1 + P1-2 + P1-3 + P1-4 | ~6h | ✅ **LIVRÉ** (85ac084 + ce commit) |
-| **Lot G3** (audit, soft-delete, export) | P2-1 → P2-4 | ~12h | 🟡 partiel : P2-4 livré (commit 73eb6d3, endpoint export-all), P2-2 partiel (formations + positions), reste P2-1 + P2-3 |
+| **Lot G3** (audit, soft-delete, export, hash) | P2-1 → P2-4 | ~12h | ✅ **LIVRÉ** (fdce9b4 + a8e0076 + 98d60c5 + b845bd8 + 73eb6d3) — entièrement bouclé session 54+ |
 
 **Bilan session 54** : G0 + G1 livrés en 5 commits atomiques sur `claude/french-greeting-test-fmBzC` (9b53edf → 9519181). Total ~780+716+91+136 = **~1700 LOC** ajoutées (migrations + handlers Worker + stores dual-mode + UI refactor + workflow + docs). Lint 0/0, tsc 0, vitest 346/346, build 118 pages.
 
