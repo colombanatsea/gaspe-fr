@@ -195,15 +195,34 @@ export async function deleteFormation(id: string): Promise<boolean> {
 /* ── Helpers UI : gestion d'inscription côté adhérent / candidat ── */
 
 /**
- * Inscrit un user à une formation. Persiste via API en prod (PATCH avec le
- * tableau `registrations` mis à jour côté Worker), via localStorage en demo.
+ * Inscrit un user à une formation.
  *
- * Retourne `null` si la deadline d'inscription est passée (P0-3).
+ * En mode API (prod) : appelle `POST /api/formations/:id/register` qui ne
+ * nécessite qu'un JWT simple (la permission staff `manage_formations` est
+ * réservée à l'admin pour les opérations CRUD). Le Worker valide la
+ * deadline et la capacité côté serveur.
+ *
+ * En mode demo : modification localStorage directe.
+ *
+ * Retourne `null` si l'inscription a échoué (deadline dépassée, capacité,
+ * formation archivée, pas authentifié).
  */
 export async function registerUserToFormation(
   formationId: string,
   userId: string,
 ): Promise<StoredFormation | null> {
+  if (isApiMode()) {
+    try {
+      const res = await apiFetch<{ formation?: StoredFormation }>(
+        `/api/formations/${encodeURIComponent(formationId)}/register`,
+        { method: "POST" },
+      );
+      return res.formation ?? null;
+    } catch {
+      return null;
+    }
+  }
+  // Mode demo
   const f = await getFormation(formationId);
   if (!f) return null;
   if (isRegistrationClosed(f)) return null;
@@ -216,6 +235,18 @@ export async function unregisterUserFromFormation(
   formationId: string,
   userId: string,
 ): Promise<StoredFormation | null> {
+  if (isApiMode()) {
+    try {
+      const res = await apiFetch<{ formation?: StoredFormation }>(
+        `/api/formations/${encodeURIComponent(formationId)}/unregister`,
+        { method: "POST" },
+      );
+      return res.formation ?? null;
+    } catch {
+      return null;
+    }
+  }
+  // Mode demo
   const f = await getFormation(formationId);
   if (!f) return null;
   const registrations = (f.registrations ?? []).filter((id) => id !== userId);

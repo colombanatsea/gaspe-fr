@@ -681,6 +681,17 @@ export default {
         const id = path.split("/api/formations/")[1];
         return handleDeleteFormation(request, env, corsHeaders, id);
       }
+      // Inscription formation par adhérent / candidat (B1 fix session 54+++)
+      // Endpoints dédiés qui ne demandent qu'un JWT simple, pas la permission
+      // staff `manage_formations` (réservée à l'admin pour CRUD formations).
+      if (path.match(/^\/api\/formations\/[^/]+\/register$/) && request.method === "POST") {
+        const id = path.replace("/api/formations/", "").replace("/register", "");
+        return handleFormationRegister(request, env, corsHeaders, id);
+      }
+      if (path.match(/^\/api\/formations\/[^/]+\/unregister$/) && request.method === "POST") {
+        const id = path.replace("/api/formations/", "").replace("/unregister", "");
+        return handleFormationUnregister(request, env, corsHeaders, id);
+      }
 
       // ─── Positions CRUD (P0-2 session 54, migration 0032) ────────────
       if (path === "/api/positions" && request.method === "GET") {
@@ -6583,4 +6594,76 @@ async function handleAuditLogList(request: Request, env: Env, corsHeaders: Recor
   } catch {
     return json({ entries: [], total: 0, limit, offset }, corsHeaders);
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Formation register / unregister (B1 fix session 54+++)
+//  Endpoints dédiés pour qu'un adhérent / candidat puisse s'inscrire ou
+//  se désinscrire d'une formation sans avoir besoin de la permission
+//  staff `manage_formations`. Authentification JWT simple suffit.
+//
+//  POST /api/formations/:id/register
+//  POST /api/formations/:id/unregister
+// ════════════════════════════════════════════════════════════════════
+
+async function handleFormationRegister(
+  request: Request, env: Env, corsHeaders: Record<string, string>, id: string,
+) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  await ensureFormationsTable(env);
+
+  const row = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
+    .bind(id).first<DbFormation>();
+  if (!row) return json({ error: "Formation introuvable" }, corsHeaders, 404);
+  if (row.is_archived === 1) return json({ error: "Formation archivée" }, corsHeaders, 400);
+
+  // Deadline check (mirror du helper isRegistrationClosed front)
+  if (row.registration_deadline) {
+    const deadline = new Date(row.registration_deadline);
+    if (!isNaN(deadline.getTime()) && new Date() > deadline) {
+      return json({ error: "Date limite d'inscription dépassée" }, corsHeaders, 400);
+    }
+  }
+
+  // Capacity check
+  const current = safeJsonParse<string[]>(row.registrations_json, []);
+  if (current.length >= row.capacity && !current.includes(payload.sub)) {
+    return json({ error: "Formation complète" }, corsHeaders, 400);
+  }
+
+  const updated = Array.from(new Set([...current, payload.sub]));
+  await env.DB.prepare(
+    "UPDATE formations SET registrations_json = ?, updated_at = ? WHERE id = ?",
+  ).bind(JSON.stringify(updated), new Date().toISOString(), id).run();
+
+  const fresh = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
+    .bind(id).first<DbFormation>();
+  return json({ formation: fresh ? toFrontendFormation(fresh) : null }, corsHeaders);
+}
+
+async function handleFormationUnregister(
+  request: Request, env: Env, corsHeaders: Record<string, string>, id: string,
+) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  await ensureFormationsTable(env);
+
+  const row = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
+    .bind(id).first<DbFormation>();
+  if (!row) return json({ error: "Formation introuvable" }, corsHeaders, 404);
+
+  const current = safeJsonParse<string[]>(row.registrations_json, []);
+  const updated = current.filter((uid) => uid !== payload.sub);
+  await env.DB.prepare(
+    "UPDATE formations SET registrations_json = ?, updated_at = ? WHERE id = ?",
+  ).bind(JSON.stringify(updated), new Date().toISOString(), id).run();
+
+  const fresh = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
+    .bind(id).first<DbFormation>();
+  return json({ formation: fresh ? toFrontendFormation(fresh) : null }, corsHeaders);
 }
