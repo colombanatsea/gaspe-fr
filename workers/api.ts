@@ -707,6 +707,14 @@ export default {
         return handleAdminExportAll(request, env, corsHeaders);
       }
 
+      // ─── Seed hashes versionning (G3 / P2-1 session 54+) ────────────
+      if (path === "/api/admin/seed-hashes" && request.method === "GET") {
+        return handleSeedHashesList(request, env, corsHeaders);
+      }
+      if (path === "/api/admin/seed-hashes" && request.method === "POST") {
+        return handleSeedHashesUpsert(request, env, corsHeaders);
+      }
+
       // ─── RSS / sitemap dynamiques depuis D1 (P1 SEO session 54+) ────
       if (path === "/api/feed.xml" && request.method === "GET") {
         return handleFeedXml(env, corsHeaders);
@@ -6422,4 +6430,97 @@ ${urls}
       "Cache-Control": "public, max-age=600, s-maxage=1800",
     },
   });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Seed hashes versionning (P2-1 session 54+)
+//  GET  /api/admin/seed-hashes → liste les hashes en D1 (admin only).
+//  POST /api/admin/seed-hashes → enregistre un batch de hashes.
+//  Migration 0037_seed_hashes.sql.
+//
+//  Usage : `npx tsx scripts/compute-seed-hashes.ts --post` après chaque
+//  release qui modifie un seed. Permet de détecter au déploiement si
+//  un seed a été modifié depuis la dernière validation (drift).
+// ════════════════════════════════════════════════════════════════════
+
+async function ensureSeedHashesTable(env: Env): Promise<void> {
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS seed_hashes (
+      seed_name TEXT PRIMARY KEY,
+      sha256 TEXT NOT NULL,
+      byte_size INTEGER,
+      recorded_by TEXT,
+      recorded_at TEXT NOT NULL DEFAULT (datetime('now')),
+      notes TEXT
+    )
+  `).run().catch(() => { /* best-effort */ });
+}
+
+async function handleSeedHashesList(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Réservé à l'administrateur maître" }, corsHeaders, 403);
+  }
+  await ensureSeedHashesTable(env);
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT seed_name, sha256, byte_size, recorded_by, recorded_at, notes FROM seed_hashes ORDER BY seed_name",
+    ).all<{ seed_name: string; sha256: string; byte_size: number; recorded_by: string | null; recorded_at: string; notes: string | null }>();
+    return json({ hashes: results ?? [] }, corsHeaders);
+  } catch {
+    return json({ hashes: [] }, corsHeaders);
+  }
+}
+
+async function handleSeedHashesUpsert(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Réservé à l'administrateur maître" }, corsHeaders, 403);
+  }
+  await ensureSeedHashesTable(env);
+
+  let body: { hashes?: Array<{ name: string; sha256: string; byte_size?: number; notes?: string }> };
+  try {
+    body = await request.json() as typeof body;
+  } catch {
+    return json({ error: "Body JSON invalide" }, corsHeaders, 400);
+  }
+  if (!body.hashes || !Array.isArray(body.hashes)) {
+    return json({ error: "Champ 'hashes' (array) requis" }, corsHeaders, 400);
+  }
+
+  let upserted = 0;
+  for (const h of body.hashes) {
+    if (typeof h.name !== "string" || typeof h.sha256 !== "string") continue;
+    if (!/^[a-f0-9]{64}$/i.test(h.sha256)) continue; // strict hex sha-256
+    try {
+      await env.DB.prepare(`
+        INSERT OR REPLACE INTO seed_hashes
+          (seed_name, sha256, byte_size, recorded_by, recorded_at, notes)
+        VALUES (?, ?, ?, ?, datetime('now'), ?)
+      `).bind(
+        h.name.slice(0, 64),
+        h.sha256.toLowerCase(),
+        typeof h.byte_size === "number" ? h.byte_size : null,
+        payload.sub,
+        h.notes ?? null,
+      ).run();
+      upserted++;
+    } catch (err) {
+      console.error("[seed-hashes] upsert failed for", h.name, err instanceof Error ? err.message : err);
+    }
+  }
+
+  await logAudit(
+    env, request,
+    { id: payload.sub, email: payload.email ?? null, role: payload.role },
+    "seed_hashes.upsert", "seed_hashes", null, null,
+    { upserted, total: body.hashes.length },
+  );
+
+  return json({ success: true, upserted, total: body.hashes.length }, corsHeaders);
 }
