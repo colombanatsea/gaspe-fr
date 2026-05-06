@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, startTransition } from "react";
 import Image from "next/image";
+import { useModalA11y } from "@/lib/useModalA11y";
 import {
   getMedia, addMedia, deleteMedia, type MediaItem,
   apiGetMedia, apiUploadMedia, apiDeleteMedia, type ApiMediaItem,
@@ -149,14 +150,17 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
     return true;
   });
 
+  // A11y : Escape, focus trap, restore focus à la fermeture (session 54)
+  const { modalRef } = useModalA11y(open, onClose);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true" onClick={onClose}>
+    <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true" aria-labelledby="media-library-title" onClick={onClose}>
       <div className="rounded-2xl bg-white shadow-2xl w-[90vw] max-w-4xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-200)] px-6 py-4">
-          <h2 className="font-heading text-xl font-bold text-foreground">Bibliothèque de médias</h2>
+          <h2 id="media-library-title" className="font-heading text-xl font-bold text-foreground">Bibliothèque de médias</h2>
           <button onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-surface" aria-label="Fermer">
             <svg className="h-5 w-5 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />

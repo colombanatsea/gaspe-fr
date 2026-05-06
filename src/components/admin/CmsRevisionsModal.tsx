@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, isApiMode } from "@/lib/api-client";
 import { CmsRevisionDiff, type CmsRevisionDetail } from "./CmsRevisionDiff";
+import { useModalA11y } from "@/lib/useModalA11y";
 
 export interface CmsRevision {
   id: number;
@@ -200,8 +201,11 @@ export function CmsRevisionsModal({ pageId, open, onClose, onRestored }: Props) 
 
   const hasFilters = authorFilter || fromDate || toDate;
 
+  const { modalRef } = useModalA11y(open, onClose);
+
   return (
     <div
+      ref={modalRef}
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
       role="dialog"

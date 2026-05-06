@@ -4,6 +4,7 @@ import { useEffect, useState, startTransition } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { listValidationsForOrg } from "@/lib/validation-store";
+import { useModalA11y } from "@/lib/useModalA11y";
 import {
   diffSnapshots,
   FIELD_LABELS_FR,
@@ -57,14 +58,8 @@ export function SnapshotDiffModal({
     };
   }, [slug]);
 
-  // Echap pour fermer
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  // A11y : Escape, focus trap, restore focus à la fermeture (session 54)
+  const { modalRef } = useModalA11y(true, onClose);
 
   // Pour chaque (itemType, itemId), prendre la derniere entree pour targetYear
   // et pour previousYear (history est trie par DESC sur target_year + validated_at).
@@ -129,6 +124,7 @@ export function SnapshotDiffModal({
 
   return (
     <div
+      ref={modalRef}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"

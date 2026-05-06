@@ -6,6 +6,7 @@ import { useAuth, type User, type UserRole, type MembershipStatus, COMPANY_ROLES
 import { Badge } from "@/components/ui/Badge";
 import { ALL_STAFF_PERMISSIONS, STAFF_PERMISSION_LABELS, type StaffPermission } from "@/lib/auth/types";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
+import { useModalA11y } from "@/lib/useModalA11y";
 
 const roleBadge: Record<UserRole, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   admin: { label: "Admin", variant: "teal" },
@@ -398,11 +399,21 @@ function StaffPermissionsModal({
     });
   }
 
+  // A11y : Escape, focus trap, restore focus (session 54)
+  const { modalRef } = useModalA11y(true, onClose);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="staff-permissions-title"
+      onClick={onClose}
+    >
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-baseline justify-between mb-2">
-          <h3 className="font-heading text-lg font-bold text-foreground">Accès staff GASPE</h3>
+          <h3 id="staff-permissions-title" className="font-heading text-lg font-bold text-foreground">Accès staff GASPE</h3>
           <button onClick={onClose} className="text-foreground-muted hover:text-foreground" aria-label="Fermer">✕</button>
         </div>
         <p className="text-sm text-foreground-muted mb-4">
