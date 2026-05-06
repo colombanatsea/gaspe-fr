@@ -1246,10 +1246,24 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
   }
 
   if (updates.length === 0) return json({ error: "Aucun champ à mettre à jour" }, corsHeaders, 400);
+
+  // Snapshot before pour audit
+  const before = await env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(orgId).first<Record<string, unknown>>();
+
   updates.push("updated_at = datetime('now')");
   values.push(orgId);
 
   await env.DB.prepare(`UPDATE organizations SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
+
+  // Snapshot after
+  const after = await env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(orgId).first<Record<string, unknown>>();
+
+  await logAudit(
+    env, request,
+    { id: payload.sub, email: payload.email ?? null, role: payload.role },
+    "organization.update", "organization", orgId, before, after,
+  );
+
   return json({ success: true }, corsHeaders);
 }
 
@@ -2684,13 +2698,22 @@ async function handleJobDelete(request: Request, env: Env, corsHeaders: Record<s
   const payload = await verifyJwt(token, env.JWT_SECRET);
   if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
 
-  const existing = await env.DB.prepare("SELECT created_by FROM jobs WHERE id = ?").bind(jobId).first<{ created_by: string | null }>();
-  if (!existing) return json({ error: "Offre introuvable" }, corsHeaders, 404);
-  if (payload.role !== "admin" && existing.created_by !== payload.sub) {
+  // Snapshot before pour audit log (avant DELETE)
+  const before = await env.DB.prepare("SELECT * FROM jobs WHERE id = ?").bind(jobId).first<DbJob>();
+  if (!before) return json({ error: "Offre introuvable" }, corsHeaders, 404);
+  if (payload.role !== "admin" && before.created_by !== payload.sub) {
     return json({ error: "Accès refusé" }, corsHeaders, 403);
   }
 
   await env.DB.prepare("DELETE FROM jobs WHERE id = ?").bind(jobId).run();
+
+  // Audit log (best-effort, n'échoue pas la requête)
+  await logAudit(
+    env, request,
+    { id: payload.sub, email: payload.email ?? null, role: payload.role },
+    "job.delete", "job", jobId, before, null,
+  );
+
   return json({ success: true }, corsHeaders);
 }
 
@@ -5822,14 +5845,21 @@ async function handleDeleteFormation(
   if ("error" in auth) return auth.error;
   await ensureFormationsTable(env);
 
-  const existing = await env.DB.prepare("SELECT id FROM formations WHERE id = ?")
-    .bind(id).first<{ id: string }>();
-  if (!existing) return json({ error: "Formation introuvable" }, corsHeaders, 404);
+  // Snapshot before pour audit log
+  const before = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
+    .bind(id).first<DbFormation>();
+  if (!before) return json({ error: "Formation introuvable" }, corsHeaders, 404);
 
   // Soft-delete (preserve traçabilité) : is_archived = 1, is_published = 0
   await env.DB.prepare(
     "UPDATE formations SET is_archived = 1, is_published = 0, updated_at = ? WHERE id = ?",
   ).bind(new Date().toISOString(), id).run();
+
+  await logAudit(
+    env, request,
+    { id: auth.userId, role: "staff" },
+    "formation.delete", "formation", id, before, null,
+  );
 
   return json({ success: true, archived: true }, corsHeaders);
 }
@@ -6149,4 +6179,86 @@ async function handleAdminExportAll(
       "Cache-Control": "no-store",
     },
   });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Audit log applicatif (session 54+, P2-3 PRODUCTION-SAFETY-2026)
+//  Migration 0035_audit_log.sql.
+//
+//  Helper `logAudit(env, request, user, action, entityType, entityId,
+//  before, after)` — best-effort, n'échoue jamais le caller. Si la table
+//  n'existe pas (déploiement avant migration), on ignore silencieusement.
+// ════════════════════════════════════════════════════════════════════
+
+interface AuditUser {
+  id?: string | null;
+  email?: string | null;
+  role?: string | null;
+}
+
+async function ensureAuditLogTable(env: Env): Promise<void> {
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT, user_email TEXT, user_role TEXT,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT,
+      before_json TEXT, after_json TEXT,
+      ip TEXT, user_agent TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `).run().catch(() => { /* table peut exister, ignore */ });
+}
+
+const MAX_AUDIT_PAYLOAD_LEN = 1_000_000; // 1 MB par snapshot (au-delà → tronqué)
+
+function truncateForAudit(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  try {
+    const s = JSON.stringify(value);
+    if (s.length > MAX_AUDIT_PAYLOAD_LEN) {
+      return JSON.stringify({ _truncated: true, length: s.length, preview: s.slice(0, 500) });
+    }
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+async function logAudit(
+  env: Env,
+  request: Request,
+  user: AuditUser | null,
+  action: string,
+  entityType: string,
+  entityId: string | null,
+  before: unknown,
+  after: unknown,
+): Promise<void> {
+  try {
+    await ensureAuditLogTable(env);
+    const ip = request.headers.get("CF-Connecting-IP") ?? request.headers.get("x-forwarded-for") ?? null;
+    const ua = (request.headers.get("user-agent") ?? "").slice(0, 500) || null;
+    await env.DB.prepare(`
+      INSERT INTO audit_log (
+        user_id, user_email, user_role, action, entity_type, entity_id,
+        before_json, after_json, ip, user_agent
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      user?.id ?? null,
+      user?.email ?? null,
+      user?.role ?? null,
+      action,
+      entityType,
+      entityId,
+      truncateForAudit(before),
+      truncateForAudit(after),
+      ip,
+      ua,
+    ).run();
+  } catch (err) {
+    // Best-effort : logguer l'audit ne doit jamais faire échouer la requête.
+    console.error("[audit] failed to log:", err instanceof Error ? err.message : err);
+  }
 }
