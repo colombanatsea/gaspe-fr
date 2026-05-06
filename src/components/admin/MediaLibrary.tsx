@@ -28,6 +28,22 @@ function isImage(type: string) {
   return type.startsWith("image/");
 }
 
+// Windows ne fournit pas toujours file.type pour .docx → fallback extension (C20).
+function deriveMimeType(file: File): string {
+  const declared = file.type;
+  if (declared && declared !== "application/octet-stream") return declared;
+  const name = (file.name ?? "").toLowerCase();
+  if (name.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (name.endsWith(".doc")) return "application/msword";
+  if (name.endsWith(".pdf")) return "application/pdf";
+  if (name.endsWith(".png")) return "image/png";
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+  if (name.endsWith(".gif")) return "image/gif";
+  if (name.endsWith(".webp")) return "image/webp";
+  if (name.endsWith(".svg")) return "image/svg+xml";
+  return declared || "application/octet-stream";
+}
+
 /** Unified item type for display (works for both localStorage and API items) */
 type DisplayItem = {
   id: string;
@@ -80,8 +96,9 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
           alert(`"${file.name}" dépasse 5 Mo.`);
           continue;
         }
-        if (!ACCEPTED_TYPES.includes(file.type)) {
-          alert(`Type non accepté : ${file.type}`);
+        const effectiveType = deriveMimeType(file);
+        if (!ACCEPTED_TYPES.includes(effectiveType)) {
+          alert(`Type non accepté : ${effectiveType || "inconnu"}`);
           continue;
         }
         await apiUploadMedia(file);
@@ -96,8 +113,9 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
             resolve();
             return;
           }
-          if (!ACCEPTED_TYPES.includes(file.type)) {
-            alert(`Type non accepté : ${file.type}`);
+          const effectiveType = deriveMimeType(file);
+          if (!ACCEPTED_TYPES.includes(effectiveType)) {
+            alert(`Type non accepté : ${effectiveType || "inconnu"}`);
             resolve();
             return;
           }
@@ -106,7 +124,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
             addMedia({
               id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               name: file.name,
-              type: file.type,
+              type: effectiveType,
               data: reader.result as string,
               size: file.size,
               uploadedAt: new Date().toISOString(),
@@ -184,7 +202,7 @@ export function MediaLibrary({ open, onClose, onSelect }: MediaLibraryProps) {
             ref={fileInputRef}
             type="file"
             multiple
-            accept={ACCEPTED_TYPES.join(",")}
+            accept={`${ACCEPTED_TYPES.join(",")},.docx,.doc,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg`}
             onChange={(e) => handleFiles(e.target.files)}
             className="hidden"
           />

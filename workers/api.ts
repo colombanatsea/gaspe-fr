@@ -308,6 +308,23 @@ function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean 
   return signatures.some((sig) => sig.every((byte, i) => header[i] === byte));
 }
 
+// Windows ne reconnaît pas toujours .docx → file.type vide ou octet-stream.
+// On retombe sur l'extension pour identifier le type réel (C20 post-launch).
+function deriveMimeType(file: File): string {
+  const declared = file.type;
+  if (declared && declared !== "application/octet-stream") return declared;
+  const name = (file.name ?? "").toLowerCase();
+  if (name.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (name.endsWith(".doc")) return "application/msword";
+  if (name.endsWith(".pdf")) return "application/pdf";
+  if (name.endsWith(".png")) return "image/png";
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+  if (name.endsWith(".gif")) return "image/gif";
+  if (name.endsWith(".webp")) return "image/webp";
+  if (name.endsWith(".svg")) return "image/svg+xml";
+  return declared || "application/octet-stream";
+}
+
 // ═══════════════════════════════════════════════════════════
 //  Main fetch handler
 // ═══════════════════════════════════════════════════════════
@@ -1961,13 +1978,14 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
     return json({ error: "Aucun fichier fourni" }, corsHeaders, 400);
   }
 
-  // Validate MIME type
+  // Validate MIME type (fallback extension si file.type vide ou octet-stream)
+  const effectiveType = deriveMimeType(file);
   const allowed = [
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
-  if (!allowed.includes(file.type)) {
+  if (!allowed.includes(effectiveType)) {
     return json({ error: "Type de fichier non autorisé (PDF, DOC, DOCX uniquement)" }, corsHeaders, 400);
   }
 
@@ -1978,7 +1996,7 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
 
   // Magic bytes validation – read first 4 bytes to verify actual file type
   const buffer = await file.arrayBuffer();
-  if (!validateMagicBytes(buffer, file.type)) {
+  if (!validateMagicBytes(buffer, effectiveType)) {
     return json(
       { error: "Le contenu du fichier ne correspond pas au type déclaré. Fichier refusé." },
       corsHeaders,
@@ -1988,7 +2006,7 @@ async function handleUpload(request: Request, env: Env, corsHeaders: Record<stri
 
   const key = `${type || "document"}/${crypto.randomUUID()}-${file.name}`;
   await env.UPLOADS.put(key, buffer, {
-    httpMetadata: { contentType: file.type },
+    httpMetadata: { contentType: effectiveType },
     customMetadata: { originalName: file.name, uploadedAt: new Date().toISOString() },
   });
 
@@ -2962,13 +2980,16 @@ async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record
 
   if (!file) return json({ error: "Aucun fichier fourni" }, corsHeaders, 400);
 
+  // Type effectif (fallback sur extension si file.type vide / octet-stream — Windows DOCX)
+  const effectiveType = deriveMimeType(file);
+
   const allowedTypes = [
     "image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml",
     "application/pdf", "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
 
-  if (!allowedTypes.includes(file.type)) {
+  if (!allowedTypes.includes(effectiveType)) {
     return json({ error: "Type de fichier non autorisé" }, corsHeaders, 400);
   }
 
@@ -2977,7 +2998,7 @@ async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record
   }
 
   const buffer = await file.arrayBuffer();
-  if (!validateMediaMagicBytes(buffer, file.type)) {
+  if (!validateMediaMagicBytes(buffer, effectiveType)) {
     return json({ error: "Le contenu du fichier ne correspond pas au type déclaré" }, corsHeaders, 400);
   }
 
@@ -2985,18 +3006,18 @@ async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record
   const r2Key = `media/${crypto.randomUUID()}-${file.name}`;
 
   await env.UPLOADS.put(r2Key, buffer, {
-    httpMetadata: { contentType: file.type },
+    httpMetadata: { contentType: effectiveType },
     customMetadata: { originalName: file.name, uploadedAt: new Date().toISOString() },
   });
 
   await env.DB.prepare(`
     INSERT INTO media_files (id, name, type, r2_key, size, alt, uploaded_by)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(id, file.name, file.type, r2Key, file.size, alt || null, payload.sub).run();
+  `).bind(id, file.name, effectiveType, r2Key, file.size, alt || null, auth.userId).run();
 
   return json({
     success: true,
-    item: { id, name: file.name, type: file.type, r2Key, size: file.size, alt: alt || undefined, uploadedAt: new Date().toISOString() },
+    item: { id, name: file.name, type: effectiveType, r2Key, size: file.size, alt: alt || undefined, uploadedAt: new Date().toISOString() },
   }, corsHeaders, 201);
 }
 

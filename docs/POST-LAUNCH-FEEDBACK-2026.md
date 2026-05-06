@@ -25,7 +25,7 @@
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| B1 | Bouton « S'inscrire » formation ne fonctionne pas | 🔴 | 🟢 (suivi) |
+| B1 | Bouton « S'inscrire » formation ne fonctionne pas | 🔴 | ✅ (66e2e28) |
 | B2 | Validation d'une offre avec deadline passée : « rien ne se passe » → le submit doit créer l'offre quand même, et l'afficher avec statut « Expiré » | 🔴 | 🟢 (suivi) |
 | B3 | Offre expirée doit rester visible avec badge « Expiré », pas masquée | 🔴 | 🟢 (suivi) |
 | B4 | Une offre doit afficher un encart de présentation compagnie issu automatiquement de la description compagnie du profil adhérent | 🟠 | 🟢 (suivi) |
@@ -55,7 +55,7 @@
 | C17 | `/admin/pages` : pas de bouton « Ajouter une nouvelle page » | 🟠 | 🟢 (suivi) |
 | C18 | `/admin/pages` : pas de bouton « Ajouter une section », pas de drag-and-drop des sections | 🟠 | 🟢 (suivi) |
 | C19 | `/admin/pages` : choisir le type d'élément ajouté (texte / image / valeur / etc.) | 🟠 | 🟢 (suivi) |
-| C20 | `/admin/documents` : impossible d'uploader des document Word (`.docx`) | 🔴 | 🟢 (suivi) |
+| C20 | `/admin/documents` : impossible d'uploader des document Word (`.docx`) | 🔴 | ✅ (session 55) |
 
 ## D. Newsletter
 
@@ -179,3 +179,14 @@ Endpoint Worker ajouté : `GET /api/admin/audit-log?limit=N&offset=O&action=X&en
 
 **Auteur** : Session 54+++, 6 mai 2026
 **Sources** : test fonctionnel utilisateur post-merge ffb9466
+
+---
+
+## Session 55 — Lots Chantiers 1-4 (6 mai 2026)
+
+### Items livrés
+
+| Item | Commit | Détail |
+|------|:-:|--------|
+| **B1** | 66e2e28 | Endpoints dédiés `POST /api/formations/:id/register` + `/unregister` (auth JWT simple, pas de permission staff). Adhérent peut maintenant cliquer « S'inscrire » sans 403. |
+| **C20** | (cette session) | Upload .docx : helper `deriveMimeType()` côté Worker (`workers/api.ts`) ET côté front (`MediaLibrary.tsx`) qui retombe sur l'extension du fichier quand `file.type` est vide ou `application/octet-stream` (cas Windows + DOCX). Bonus : correction du bug `payload.sub` non déclaré dans `handleMediaUpload` (remplacé par `auth.userId`). Input `accept=` étendu avec extensions `.docx,.doc,.pdf,...` pour aider Windows à les présenter. |
