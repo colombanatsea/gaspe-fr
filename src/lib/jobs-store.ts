@@ -95,16 +95,19 @@ export async function getAllOffers(): Promise<Job[]> {
   return [...publishedJobs, ...getLocalAdminOffers(), ...getLocalAdherentOffers()];
 }
 
-/** Create a new job offer */
+/**
+ * Create a new job offer (B2 fix : surface les erreurs API au lieu de retourner
+ * silencieusement null). Le call site doit try/catch et afficher le message à
+ * l'utilisateur, sinon le formulaire redirige sans aucun feedback en cas d'échec.
+ */
 export async function createJob(job: Partial<Job>): Promise<Job | null> {
   if (isApiMode()) {
-    try {
-      const res = await apiFetch<{ success?: boolean; job?: Job }>("/api/jobs", {
-        method: "POST",
-        body: JSON.stringify(job),
-      });
-      return res.job ?? null;
-    } catch { return null; }
+    const res = await apiFetch<{ success?: boolean; job?: Job; error?: string }>("/api/jobs", {
+      method: "POST",
+      body: JSON.stringify(job),
+    });
+    if (res.error) throw new Error(res.error);
+    return res.job ?? null;
   }
 
   // localStorage mode

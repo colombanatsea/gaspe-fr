@@ -161,6 +161,7 @@ export function JobList() {
               date={job.publishedAt}
               slug={job.slug}
               salaryRange={job.salaryRange}
+              applicationDeadline={job.applicationDeadline}
               matchScore={matchScores.get(job.id)}
               isCandidatLoggedIn={isCandidatLoggedIn}
               isLoggedIn={!!user}

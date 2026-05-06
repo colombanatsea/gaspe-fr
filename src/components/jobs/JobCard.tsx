@@ -16,6 +16,7 @@ interface JobCardProps {
   date: string;
   slug: string;
   salaryRange?: string;
+  applicationDeadline?: string;
   matchScore?: MatchResult;
   isCandidatLoggedIn?: boolean;
   isLoggedIn?: boolean;
@@ -67,6 +68,7 @@ export function JobCard({
   date,
   slug,
   salaryRange,
+  applicationDeadline,
   matchScore,
   isCandidatLoggedIn,
   isLoggedIn,
@@ -77,6 +79,7 @@ export function JobCard({
 }: JobCardProps) {
   const matchColor = matchScore ? MATCH_COLORS[matchScore.level] : null;
   const colors = categoryColors[category] ?? { bg: "var(--gaspe-neutral-100)", text: "var(--gaspe-neutral-700)" };
+  const isExpired = !!applicationDeadline && new Date() > new Date(applicationDeadline);
 
   return (
     <div className="group rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-teal-200)] gaspe-card-hover overflow-hidden">
@@ -109,6 +112,9 @@ export function JobCard({
                     </svg>
                     {matchScore.score}%
                   </span>
+                )}
+                {isExpired && (
+                  <Badge variant="neutral">Expiré</Badge>
                 )}
                 <Badge variant={contractBadgeVariant[contractType] ?? "neutral"}>
                   {contractType}

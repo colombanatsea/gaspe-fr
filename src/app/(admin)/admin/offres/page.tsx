@@ -159,9 +159,14 @@ export default function AdminOffresPage() {
                     <Badge variant="neutral">{job.contractType}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant={job.published ? "green" : "warm"}>
-                      {job.published ? "Publié" : "Brouillon"}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={job.published ? "green" : "warm"}>
+                        {job.published ? "Publié" : "Brouillon"}
+                      </Badge>
+                      {job.applicationDeadline && new Date() > new Date(job.applicationDeadline) && (
+                        <Badge variant="neutral">Expiré</Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-foreground-muted hidden md:table-cell">{formatDate(job.publishedAt)}</td>
                   <td className="px-4 py-3">

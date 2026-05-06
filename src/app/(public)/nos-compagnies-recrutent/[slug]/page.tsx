@@ -332,10 +332,10 @@ export default async function JobDetailPage({ params }: PageProps) {
               </dl>
             </div>
 
-            {/* Company card */}
+            {/* Company card (B4 : enrichi avec description tronquée + lien fiche) */}
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-6">
               <h3 className="font-heading text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
-                L&apos;entreprise
+                À propos de la compagnie
               </h3>
               <div className="flex items-center gap-3 mb-4">
                 {member?.logoUrl ? (
@@ -354,19 +354,39 @@ export default async function JobDetailPage({ params }: PageProps) {
                   <p className="text-xs text-foreground-muted">{job.location}</p>
                 </div>
               </div>
-              {member?.websiteUrl && (
-                <a
-                  href={member.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors font-medium"
-                >
-                  Visiter le site web
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                  </svg>
-                </a>
+              {member?.description && (
+                <p className="mb-4 text-sm leading-relaxed text-foreground-muted">
+                  {member.description.length > 280
+                    ? `${member.description.slice(0, 280).trimEnd()}…`
+                    : member.description}
+                </p>
               )}
+              <div className="flex flex-col gap-2">
+                {member && (
+                  <Link
+                    href={`/nos-adherents/${member.slug}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors"
+                  >
+                    Voir la fiche complète
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                )}
+                {member?.websiteUrl && (
+                  <a
+                    href={member.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-[var(--gaspe-teal-600)] hover:text-[var(--gaspe-teal-700)] transition-colors font-medium"
+                  >
+                    Visiter le site web
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Toolkit encart */}

@@ -28,6 +28,7 @@ export default function AdminNewOffrePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -66,6 +67,7 @@ export default function AdminNewOffrePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     const slug = slugify(form.title);
     const id = `admin-${Date.now()}`;
@@ -96,7 +98,14 @@ export default function AdminNewOffrePage() {
       published: true,
     };
 
-    const created = await createJob(newJob);
+    let created: Job | null = null;
+    try {
+      created = await createJob(newJob);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Erreur inconnue lors de la création de l'offre");
+      setIsSubmitting(false);
+      return;
+    }
     const finalJob = created ?? newJob;
 
     // Publication automatique Hydros Alumni si l'offre est publiée (côté admin :
@@ -437,6 +446,14 @@ export default function AdminNewOffrePage() {
             Offre handi-accueillante
           </label>
         </div>
+
+        {/* Erreur de soumission (B2 fix : surface l'erreur API au lieu de redirect silencieux) */}
+        {submitError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+            <span className="font-semibold">L&apos;offre n&apos;a pas pu être créée : </span>
+            {submitError}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
