@@ -702,6 +702,11 @@ export default {
         return handleDeletePosition(request, env, corsHeaders, id);
       }
 
+      // ─── Admin export-all (G3 / P2-4 session 54) ───────────────────
+      if (path === "/api/admin/export-all" && request.method === "GET") {
+        return handleAdminExportAll(request, env, corsHeaders);
+      }
+
       return json({ error: "Ressource introuvable" }, corsHeaders, 404);
     } catch (err) {
       console.error("Worker error:", err);
@@ -6051,4 +6056,97 @@ async function handleDeletePosition(
   ).bind(new Date().toISOString(), id).run();
 
   return json({ success: true, archived: true }, corsHeaders);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Admin export-all – snapshot JSON exhaustif (session 54, G3 / P2-4)
+//  GET /api/admin/export-all
+//  - Master admin uniquement (role === 'admin', pas staff).
+//  - Streame une réponse JSON contenant chaque table principale.
+//  - Filtre les colonnes sensibles : `auth.password_hash`, tokens reset,
+//    sessions actives — pour permettre un partage légal sans fuite.
+//  - Content-Disposition: attachment pour télécharger en .json.
+//
+//  Cas d'usage : audit DGCCRF, transfert légal, backup ad-hoc, RGPD
+//  (article 20 portabilité), debug post-mortem.
+// ════════════════════════════════════════════════════════════════════
+
+async function handleAdminExportAll(
+  request: Request, env: Env, corsHeaders: Record<string, string>,
+) {
+  // Master admin uniquement (pas staff même avec toutes permissions)
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Réservé à l'administrateur maître" }, corsHeaders, 403);
+  }
+
+  // Liste blanche des tables exportables avec sélection de colonnes safe.
+  // Si une table n'existe pas, le SELECT lève une erreur catché → tableau vide.
+  const exports: Array<{ name: string; query: string }> = [
+    { name: "users", query: "SELECT id, email, name, role, organization_id, is_primary, approved, archived, created_at, updated_at, brevo_synced_at, suppleant_user_id, staff_permissions FROM users" },
+    { name: "organizations", query: "SELECT * FROM organizations" },
+    { name: "organization_vessels", query: "SELECT * FROM organization_vessels" },
+    { name: "invitations", query: "SELECT id, organization_id, invited_by, email, name, org_role, expires_at, accepted, accepted_at, created_at FROM invitations" },
+    { name: "newsletter_preferences", query: "SELECT * FROM newsletter_preferences" },
+    { name: "newsletter", query: "SELECT id, email, archived, created_at FROM newsletter" },
+    { name: "contact_messages", query: "SELECT * FROM contact_messages" },
+    { name: "cms_pages", query: "SELECT * FROM cms_pages" },
+    { name: "cms_documents", query: "SELECT * FROM cms_documents" },
+    { name: "cms_revisions", query: "SELECT id, page_id, created_by, label, created_at FROM cms_revisions" },
+    { name: "media_files", query: "SELECT id, key, content_type, size, created_by, created_at FROM media_files" },
+    { name: "jobs", query: "SELECT * FROM jobs" },
+    { name: "formations", query: "SELECT * FROM formations" },
+    { name: "positions", query: "SELECT * FROM positions" },
+    { name: "medical_visits", query: "SELECT * FROM medical_visits" },
+    { name: "fleet_validation_campaigns", query: "SELECT * FROM fleet_validation_campaigns" },
+    { name: "validation_history", query: "SELECT * FROM validation_history" },
+    { name: "validation_email_sent", query: "SELECT * FROM validation_email_sent" },
+    { name: "votes", query: "SELECT * FROM votes" },
+    { name: "vote_responses", query: "SELECT * FROM vote_responses" },
+    { name: "nl_drafts", query: "SELECT id, subject, status, created_by, created_at, updated_at FROM nl_drafts" },
+    { name: "nl_sends", query: "SELECT id, draft_id, recipients_count, sent_at FROM nl_sends" },
+    { name: "_migrations_applied", query: "SELECT * FROM _migrations_applied" },
+  ];
+
+  const tables: Record<string, unknown[]> = {};
+  const errors: Record<string, string> = {};
+
+  for (const exp of exports) {
+    try {
+      const { results } = await env.DB.prepare(exp.query).all<Record<string, unknown>>();
+      tables[exp.name] = results ?? [];
+    } catch (err) {
+      tables[exp.name] = [];
+      errors[exp.name] = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  const counts: Record<string, number> = {};
+  for (const [name, rows] of Object.entries(tables)) {
+    counts[name] = Array.isArray(rows) ? rows.length : 0;
+  }
+
+  const exportPayload = {
+    exported_at: new Date().toISOString(),
+    exported_by: { id: payload.sub, email: payload.email ?? null },
+    version: "1.0",
+    note: "Export exhaustif D1 GASPE / ACF. Colonnes sensibles (password_hash, tokens, body emails) exclues. À usage interne / audit / RGPD article 20.",
+    counts,
+    errors: Object.keys(errors).length > 0 ? errors : undefined,
+    tables,
+  };
+
+  // Réponse en download avec filename daté
+  const filename = `gaspe-export-${new Date().toISOString().slice(0, 10)}.json`;
+  return new Response(JSON.stringify(exportPayload, null, 2), {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-store",
+    },
+  });
 }
