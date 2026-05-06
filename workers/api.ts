@@ -1205,6 +1205,11 @@ interface DbOrganization {
   address: string | null; email: string | null; phone: string | null;
   description: string | null;
   employee_count: number | null; ship_count: number | null;
+  // Migration 0038 (B5/C3) — colonnes optionnelles, peuvent être absentes en preprod
+  employee_count_navigant?: number | null;
+  employee_count_sedentaire?: number | null;
+  annual_revenue_eur?: number | null;
+  revenue_confidential?: number | null;
   membership_status: string | null;
   archived: number | null;
   created_at: string; updated_at: string;
@@ -1222,6 +1227,10 @@ function toFrontendOrg(row: DbOrganization) {
     address: row.address ?? undefined, email: row.email ?? undefined,
     phone: row.phone ?? undefined, description: row.description ?? undefined,
     employeeCount: row.employee_count ?? undefined, shipCount: row.ship_count ?? undefined,
+    employeeCountNavigant: row.employee_count_navigant ?? undefined,
+    employeeCountSedentaire: row.employee_count_sedentaire ?? undefined,
+    annualRevenueEur: row.annual_revenue_eur ?? undefined,
+    revenueConfidential: row.revenue_confidential === 1,
     membershipStatus: row.membership_status ?? undefined,
     archived: row.archived === 1,
     createdAt: row.created_at, updatedAt: row.updated_at,
@@ -1276,6 +1285,11 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
     logoUrl: "logo_url", websiteUrl: "website_url", address: "address",
     email: "email", phone: "phone", description: "description",
     employeeCount: "employee_count", shipCount: "ship_count",
+    // Session 55 (B5 + C3) : split effectif navigant/sédentaire + CA confidentiel
+    employeeCountNavigant: "employee_count_navigant",
+    employeeCountSedentaire: "employee_count_sedentaire",
+    annualRevenueEur: "annual_revenue_eur",
+    revenueConfidential: "revenue_confidential",
     membershipStatus: "membership_status", archived: "archived",
     college: "college", social3228: "social3228",
   };
@@ -1288,8 +1302,9 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
       const adminOnly = new Set(["membershipStatus", "archived", "college", "social3228"]);
       if (adminOnly.has(frontendKey) && payload.role !== "admin") continue;
       updates.push(`${dbCol} = ?`);
-      // social3228 : booléen frontend → 0/1 SQLite
-      const val = frontendKey === "social3228" ? (body[frontendKey] ? 1 : 0) : body[frontendKey];
+      // Booléens (frontend → 0/1 SQLite)
+      const boolFields = new Set(["social3228", "revenueConfidential"]);
+      const val = boolFields.has(frontendKey) ? (body[frontendKey] ? 1 : 0) : body[frontendKey];
       values.push(val);
     }
   }

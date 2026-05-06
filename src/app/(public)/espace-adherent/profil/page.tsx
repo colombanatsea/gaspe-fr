@@ -9,12 +9,17 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getMySuppleant, setMySuppleant } from "@/lib/votes-store";
+import { ApiAuthStore } from "@/lib/auth/api-auth-store";
+import { isApiMode } from "@/lib/api-client";
+import type { Organization } from "@/lib/auth/types";
 
 export default function AdherentProfilPage() {
   const { user, updateUser } = useAuth();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<"info" | "vessels">("info");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [savingOrg, setSavingOrg] = useState(false);
 
   // Form state
   const [companyRole, setCompanyRole] = useState<CompanyRole | "">(user?.companyRole ?? "");
@@ -24,6 +29,13 @@ export default function AdherentProfilPage() {
   const [companyEmail, setCompanyEmail] = useState(user?.companyEmail ?? "");
   const [companyPhone, setCompanyPhone] = useState(user?.companyPhone ?? "");
   const [companyLinkedinUrl, setCompanyLinkedinUrl] = useState(user?.companyLinkedinUrl ?? "");
+
+  // B5 (session 55) — données canoniques de l'organisation persistées en D1
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [employeeCountNavigant, setEmployeeCountNavigant] = useState<string>("");
+  const [employeeCountSedentaire, setEmployeeCountSedentaire] = useState<string>("");
+  const [annualRevenueEur, setAnnualRevenueEur] = useState<string>("");
+  const [revenueConfidential, setRevenueConfidential] = useState(false);
 
   // Vessels state
   const [vessels, setVessels] = useState<Vessel[]>(user?.vessels ?? []);
@@ -36,6 +48,29 @@ export default function AdherentProfilPage() {
       router.push("/connexion");
     }
   }, [user, router]);
+
+  // B5 — charge l'organisation canonique depuis D1 (effectif navigant/sédentaire,
+  // CA, flag confidentiel, plus les fields legacy partagés avec User pour rester
+  // synchronisé avec ce que l'admin a édité côté /admin/adherents).
+  useEffect(() => {
+    if (!user?.organizationId || !isApiMode()) return;
+    let cancelled = false;
+    void ApiAuthStore.fetchOrganization(user.organizationId).then(({ org: orgRow }) => {
+      if (cancelled || !orgRow) return;
+      setOrg(orgRow);
+      setEmployeeCountNavigant(
+        orgRow.employeeCountNavigant != null ? String(orgRow.employeeCountNavigant) : "",
+      );
+      setEmployeeCountSedentaire(
+        orgRow.employeeCountSedentaire != null ? String(orgRow.employeeCountSedentaire) : "",
+      );
+      setAnnualRevenueEur(
+        orgRow.annualRevenueEur != null ? String(orgRow.annualRevenueEur) : "",
+      );
+      setRevenueConfidential(!!orgRow.revenueConfidential);
+    });
+    return () => { cancelled = true; };
+  }, [user?.organizationId]);
 
   const [prevUserId, setPrevUserId] = useState(user?.id);
   if (prevUserId !== user?.id && user) {
@@ -88,8 +123,12 @@ export default function AdherentProfilPage() {
     reader.readAsDataURL(file);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!user) return;
+    setSaveError(null);
+
+    // 1) Met à jour l'objet User local (legacy, pour le rendu immédiat
+    //    avant rafraîchissement via le contexte Auth)
     updateUser({
       ...user,
       companyRole: companyRole || undefined,
@@ -101,6 +140,42 @@ export default function AdherentProfilPage() {
       companyLinkedinUrl: companyLinkedinUrl || undefined,
       vessels,
     });
+
+    // 2) Persiste les champs « organisation » en D1 via PATCH
+    //    /api/organizations/:id (B5). Sans cet appel les inputs CA / effectif
+    //    navigant / sédentaire / description / logo n'étaient jamais sauvés.
+    if (isApiMode() && user.organizationId) {
+      setSavingOrg(true);
+      try {
+        const orgPatch: Partial<Organization> = {
+          description: companyDescription || undefined,
+          logoUrl: companyLogo || undefined,
+          address: companyAddress || undefined,
+          email: companyEmail || undefined,
+          phone: companyPhone || undefined,
+          employeeCountNavigant: employeeCountNavigant ? Number(employeeCountNavigant) : undefined,
+          employeeCountSedentaire: employeeCountSedentaire ? Number(employeeCountSedentaire) : undefined,
+          annualRevenueEur: annualRevenueEur ? Number(annualRevenueEur) : undefined,
+          revenueConfidential,
+        };
+        const ok = await ApiAuthStore.updateOrganization(user.organizationId, orgPatch);
+        if (!ok) {
+          setSaveError("La mise à jour de la fiche entreprise a échoué côté serveur.");
+          setSavingOrg(false);
+          return;
+        }
+        // Refetch pour synchroniser l'affichage (cas où le worker a normalisé
+        // certaines valeurs, ex: revenue_confidential 0/1 → boolean).
+        const { org: refreshed } = await ApiAuthStore.fetchOrganization(user.organizationId);
+        if (refreshed) setOrg(refreshed);
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : "Erreur réseau");
+        setSavingOrg(false);
+        return;
+      }
+      setSavingOrg(false);
+    }
+
     setEditing(false);
   }
 
@@ -306,8 +381,77 @@ export default function AdherentProfilPage() {
                     />
                   </div>
 
+                  {/* B5 / C3 — split effectif navigant/sédentaire + CA confidentiel */}
+                  <div className="pt-4 border-t border-[var(--gaspe-neutral-100)] space-y-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      Indicateurs entreprise
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="employeeCountNavigant" className="block text-sm font-medium text-foreground mb-1">
+                          Effectif personnel navigant
+                        </label>
+                        <input
+                          id="employeeCountNavigant"
+                          type="number"
+                          min="0"
+                          value={employeeCountNavigant}
+                          onChange={(e) => setEmployeeCountNavigant(e.target.value)}
+                          placeholder="Ex : 42"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="employeeCountSedentaire" className="block text-sm font-medium text-foreground mb-1">
+                          Effectif personnel sédentaire
+                        </label>
+                        <input
+                          id="employeeCountSedentaire"
+                          type="number"
+                          min="0"
+                          value={employeeCountSedentaire}
+                          onChange={(e) => setEmployeeCountSedentaire(e.target.value)}
+                          placeholder="Ex : 8"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="annualRevenueEur" className="block text-sm font-medium text-foreground mb-1">
+                        Chiffre d&apos;affaires annuel (en euros)
+                      </label>
+                      <input
+                        id="annualRevenueEur"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={annualRevenueEur}
+                        onChange={(e) => setAnnualRevenueEur(e.target.value)}
+                        placeholder="Ex : 4500000"
+                        className={inputClass}
+                      />
+                      <label className="mt-2 inline-flex items-center gap-2 text-sm text-foreground-muted">
+                        <input
+                          type="checkbox"
+                          checked={revenueConfidential}
+                          onChange={(e) => setRevenueConfidential(e.target.checked)}
+                          className="h-4 w-4 rounded border-[var(--gaspe-neutral-300)] text-[var(--gaspe-teal-600)]"
+                        />
+                        Marquer ce CA comme confidentiel (cadenas en lecture)
+                      </label>
+                    </div>
+                  </div>
+
+                  {saveError && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                      {saveError}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3 pt-4 border-t border-[var(--gaspe-neutral-100)]">
-                    <Button onClick={handleSave}>Enregistrer</Button>
+                    <Button onClick={handleSave} disabled={savingOrg}>
+                      {savingOrg ? "Enregistrement…" : "Enregistrer"}
+                    </Button>
                     <button
                       onClick={() => setEditing(false)}
                       className="rounded-lg px-4 py-2.5 text-sm font-heading font-semibold text-foreground-muted hover:text-foreground transition-colors"
@@ -380,6 +524,41 @@ export default function AdherentProfilPage() {
                       {user.companyAddress || <span className="text-foreground-muted italic">Non renseignée</span>}
                     </p>
                   </div>
+
+                  {/* B5 / C3 — indicateurs entreprise (read mode) */}
+                  {(org?.employeeCountNavigant != null || org?.employeeCountSedentaire != null || org?.annualRevenueEur != null) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[var(--gaspe-neutral-100)]">
+                      <div>
+                        <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-1">Personnel navigant</p>
+                        <p className="text-sm text-foreground">
+                          {org?.employeeCountNavigant ?? <span className="text-foreground-muted italic">N/R</span>}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-1">Personnel sédentaire</p>
+                        <p className="text-sm text-foreground">
+                          {org?.employeeCountSedentaire ?? <span className="text-foreground-muted italic">N/R</span>}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-1">CA annuel</p>
+                        <p className="text-sm text-foreground">
+                          {org?.revenueConfidential ? (
+                            <span className="inline-flex items-center gap-1.5 text-foreground-muted">
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                              </svg>
+                              Confidentiel
+                            </span>
+                          ) : org?.annualRevenueEur != null ? (
+                            new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(org.annualRevenueEur)
+                          ) : (
+                            <span className="text-foreground-muted italic">N/R</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}

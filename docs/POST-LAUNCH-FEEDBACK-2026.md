@@ -29,7 +29,7 @@
 | B2 | Validation d'une offre avec deadline passée : « rien ne se passe » → le submit doit créer l'offre quand même, et l'afficher avec statut « Expiré » | 🔴 | ✅ (session 55) |
 | B3 | Offre expirée doit rester visible avec badge « Expiré », pas masquée | 🔴 | ✅ (session 55) |
 | B4 | Une offre doit afficher un encart de présentation compagnie issu automatiquement de la description compagnie du profil adhérent | 🟠 | ✅ (session 55) |
-| B5 | Espace adhérent : `/profil` ne permet pas d'enregistrer CA, effectif, logo, etc. (toutes les actions du dashboard `/espace-adherent` ne sont pas fonctionnelles) | 🔴 | 🟢 (suivi) |
+| B5 | Espace adhérent : `/profil` ne permet pas d'enregistrer CA, effectif, logo, etc. (toutes les actions du dashboard `/espace-adherent` ne sont pas fonctionnelles) | 🔴 | ✅ (session 55) |
 | B6 | Position publiée : pas de bouton « Éditer » pour la modifier après création | 🟠 | 🟢 (suivi) |
 
 ## C. Admin
@@ -38,7 +38,7 @@
 |---|------|:-:|:-:|
 | C1 | `/api/admin/export-all` retourne 401 — manque l'UX (bouton dans `/admin/parametres` qui passe le cookie JWT existant) | 🟠 | 🟢 (suivi) |
 | C2 | `/admin/adherents` : les données effectif / nombre de navires doivent venir automatiquement du profil de l'adhérent (pas saisies manuellement par admin) | 🟠 | 🟢 (suivi) |
-| C3 | Toujours différencier **personnel navigant** vs **personnel sédentaire** dans les chiffres effectifs | 🟠 | 🟢 (suivi) |
+| C3 | Toujours différencier **personnel navigant** vs **personnel sédentaire** dans les chiffres effectifs | 🟠 | ✅ (session 55) |
 | C4 | Les champs « Identité (seed) » sont actuellement read-only en mode prod — l'admin doit pouvoir les modifier (slug, name, etc.) | 🔴 | 🟢 (suivi) |
 | C5 | Tuile « Infos site » sur `/admin` : ajouter le nombre d'utilisateurs (différencier candidats / adhérents) | 🟠 | 🟢 (suivi) |
 | C6 | Tuile « 26 CCN 3228 Vote NAO » : afficher en petit dessous le nombre de personnel navigant total couvert | 🟠 | 🟢 (suivi) |
@@ -193,3 +193,4 @@ Endpoint Worker ajouté : `GET /api/admin/audit-log?limit=N&offset=O&action=X&en
 | **B2** | (cette session) | Offre admin : `createJob` ne swallow plus l'erreur API → propage le message via `throw new Error(error)`. Form `/admin/offres/new` ajoute `try/catch` autour du call et affiche un encart rouge `submitError` au-dessus du bouton « Publier l'offre » au lieu de rediriger silencieusement vers `/admin/offres`. Le Worker `handleJobCreate` n'a aucune validation de date passée donc les deadlines passées sont créées sans rejet. |
 | **B3** | (cette session) | Badge « Expiré » : ajouté à `JobCard` (listing public `/nos-compagnies-recrutent`) ET au tableau `/admin/offres` (à côté du badge Publié/Brouillon). La fiche détail (P0-4 session 54) avait déjà le bandeau « Candidatures closes ». |
 | **B4** | (cette session) | Card « À propos de la compagnie » sur fiche offre `/nos-compagnies-recrutent/[slug]` : logo + nom + lieu, plus la `member.description` tronquée à 280 caractères, plus le lien « Voir la fiche complète » vers `/nos-adherents/[slug]`. Le lien site web reste affiché si `member.websiteUrl` présent. |
+| **B5 + C3** | (cette session) | Profil adhérent `/espace-adherent/profil` : la page ne persistait que dans `User` (localStorage côté front via AuthContext), jamais sur l'organisation D1. Désormais : 1) charge `Organization` au mount via `ApiAuthStore.fetchOrganization` ; 2) `handleSave` PATCH `/api/organizations/:id` avec description, logo, address, email, phone, employeeCountNavigant, employeeCountSedentaire, annualRevenueEur, revenueConfidential ; 3) inputs ajoutés pour les 3 nouvelles métriques + checkbox confidentiel ; 4) read-mode affiche les 3 indicateurs avec cadenas si confidentiel. Migration `0038_organizations_b5_split_revenue.sql` ajoute les 4 colonnes. Worker `handleUpdateOrganization` étend `allowedFields` + le mapping `toFrontendOrg` pour exposer les nouveaux champs. Type `Organization` (auth/types.ts) étendu en miroir. NB : la fusion `User.companyXxx ↔ Organization.xxx` reste duplicée pour l'instant (déduplication dans une session future) — le profil pousse vers les deux pour cohérence affichage immédiat. |

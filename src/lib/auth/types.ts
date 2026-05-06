@@ -110,6 +110,12 @@ export interface Organization {
   description?: string;
   employeeCount?: number;
   shipCount?: number;
+  /** Migration 0038 (session 55, B5/C3) — split effectif navigant/sédentaire */
+  employeeCountNavigant?: number;
+  employeeCountSedentaire?: number;
+  /** Chiffre d'affaires annuel en euros (entier). Confidentiel si revenueConfidential. */
+  annualRevenueEur?: number;
+  revenueConfidential?: boolean;
   membershipStatus?: MembershipStatus;
   createdAt?: string;
   updatedAt?: string;
