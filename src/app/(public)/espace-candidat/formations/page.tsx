@@ -15,6 +15,7 @@ import {
   isRegistrationClosed,
   type StoredFormation,
 } from "@/lib/formations-store";
+import { stripHtmlPreview } from "@/lib/text-preview";
 
 type Formation = StoredFormation;
 
@@ -152,7 +153,7 @@ export default function CandidatFormationsPage() {
                   <CardTitle className="text-base">{f.title}</CardTitle>
                   <CardDescription>{f.organizer}</CardDescription>
                   {f.description && (
-                    <p className="mt-2 text-sm text-foreground-muted">{f.description}</p>
+                    <p className="mt-2 text-sm text-foreground-muted line-clamp-3">{stripHtmlPreview(f.description, 200)}</p>
                   )}
                   <div className="mt-3 space-y-1 text-sm text-foreground-muted">
                     <p className="flex items-center gap-2">

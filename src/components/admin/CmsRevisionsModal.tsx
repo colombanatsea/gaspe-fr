@@ -197,11 +197,14 @@ export function CmsRevisionsModal({ pageId, open, onClose, onRestored }: Props) 
     }
   }
 
+  // A11y hook (Esc + focus trap + restore) — TOUJOURS appelé avant les
+  // early returns pour respecter les rules-of-hooks. Le hook lui-même
+  // no-op quand `open === false`.
+  const { modalRef } = useModalA11y(open, onClose);
+
   if (!open) return null;
 
   const hasFilters = authorFilter || fromDate || toDate;
-
-  const { modalRef } = useModalA11y(open, onClose);
 
   return (
     <div

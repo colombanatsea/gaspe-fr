@@ -715,6 +715,11 @@ export default {
         return handleSeedHashesUpsert(request, env, corsHeaders);
       }
 
+      // ─── Audit log lister (G3 / P2-3 UI session 54+++) ──────────────
+      if (path === "/api/admin/audit-log" && request.method === "GET") {
+        return handleAuditLogList(request, env, corsHeaders);
+      }
+
       // ─── RSS / sitemap dynamiques depuis D1 (P1 SEO session 54+) ────
       if (path === "/api/feed.xml" && request.method === "GET") {
         return handleFeedXml(env, corsHeaders);
@@ -6523,4 +6528,59 @@ async function handleSeedHashesUpsert(request: Request, env: Env, corsHeaders: R
   );
 
   return json({ success: true, upserted, total: body.hashes.length }, corsHeaders);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Audit log liste — UI admin (G3 / P2-3 UI session 54+++)
+//  GET /api/admin/audit-log?limit=N&offset=O&action=X&entity_type=Y
+// ════════════════════════════════════════════════════════════════════
+
+async function handleAuditLogList(request: Request, env: Env, corsHeaders: Record<string, string>) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Réservé à l'administrateur maître" }, corsHeaders, 403);
+  }
+  await ensureAuditLogTable(env);
+
+  const url = new URL(request.url);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "50", 10) || 50, 1), 500);
+  const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "0", 10) || 0, 0);
+  const action = url.searchParams.get("action");
+  const entityType = url.searchParams.get("entity_type");
+
+  // Construction WHERE dynamique
+  const wheres: string[] = [];
+  const binds: unknown[] = [];
+  if (action) { wheres.push("action = ?"); binds.push(action); }
+  if (entityType) { wheres.push("entity_type = ?"); binds.push(entityType); }
+  const whereSql = wheres.length > 0 ? `WHERE ${wheres.join(" AND ")}` : "";
+
+  const sql = `
+    SELECT id, user_id, user_email, user_role, action, entity_type, entity_id,
+           ip, user_agent, created_at,
+           CASE WHEN before_json IS NULL THEN 0 ELSE LENGTH(before_json) END AS before_len,
+           CASE WHEN after_json IS NULL THEN 0 ELSE LENGTH(after_json) END AS after_len
+    FROM audit_log
+    ${whereSql}
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?
+  `;
+  binds.push(limit, offset);
+
+  try {
+    const { results } = await env.DB.prepare(sql).bind(...binds).all();
+    // Total count (sans LIMIT/OFFSET)
+    const countSql = `SELECT COUNT(*) AS total FROM audit_log ${whereSql}`;
+    const countBinds = binds.slice(0, binds.length - 2);
+    const totalRow = await env.DB.prepare(countSql).bind(...countBinds).first<{ total: number }>();
+    return json({
+      entries: results ?? [],
+      total: totalRow?.total ?? 0,
+      limit, offset,
+    }, corsHeaders);
+  } catch {
+    return json({ entries: [], total: 0, limit, offset }, corsHeaders);
+  }
 }

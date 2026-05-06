@@ -197,6 +197,120 @@ export default function AdminParametresPage() {
           </button>
         </form>
       </div>
+
+      {user.role === "admin" && <AdminTools />}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+ *  AdminTools — outils backoffice admin uniquement (session 54+++)
+ *  Boutons : exporter D1 (P2-4), vérifier hashes seeds (P2-1).
+ *  Réservé au master admin (role === "admin").
+ * ──────────────────────────────────────────────────────────────────── */
+function AdminTools() {
+  const [seedHashes, setSeedHashes] = useState<Array<{ seed_name: string; sha256: string; recorded_at: string }> | null>(null);
+  const [seedsLoading, setSeedsLoading] = useState(false);
+  const [seedsError, setSeedsError] = useState("");
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+  const handleExport = () => {
+    if (!apiBase) {
+      alert("NEXT_PUBLIC_API_URL n'est pas configuré (mode demo).");
+      return;
+    }
+    // Le cookie JWT httpOnly est envoyé automatiquement par le navigateur.
+    // On ouvre dans un nouvel onglet pour déclencher le download.
+    window.open(`${apiBase}/api/admin/export-all`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCheckHashes = async () => {
+    if (!apiBase) {
+      alert("NEXT_PUBLIC_API_URL n'est pas configuré (mode demo).");
+      return;
+    }
+    setSeedsLoading(true);
+    setSeedsError("");
+    try {
+      const res = await fetch(`${apiBase}/api/admin/seed-hashes`, { credentials: "include" });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json() as { hashes?: Array<{ seed_name: string; sha256: string; recorded_at: string }> };
+      setSeedHashes(data.hashes ?? []);
+    } catch (e) {
+      setSeedsError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setSeedsLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white p-6">
+      <h2 className="font-heading text-lg font-bold text-foreground mb-1">
+        Outils administrateur
+      </h2>
+      <p className="text-sm text-foreground-muted mb-5">
+        Réservés au master admin. Manipulez avec prudence (export complet D1, audit hashes seeds).
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Export D1 */}
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] p-4">
+          <h3 className="font-heading text-sm font-semibold text-foreground">Export complet D1</h3>
+          <p className="mt-1 text-xs text-foreground-muted">
+            Télécharge un JSON exhaustif des 23 tables principales (sans password_hash ni tokens). Pour audit DGCCRF, RGPD article 20, transfert légal.
+          </p>
+          <button
+            type="button"
+            onClick={handleExport}
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-700)] text-white px-4 py-2 text-sm font-medium transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Exporter (JSON)
+          </button>
+        </div>
+
+        {/* Hashes seeds */}
+        <div className="rounded-xl border border-[var(--gaspe-neutral-200)] p-4">
+          <h3 className="font-heading text-sm font-semibold text-foreground">Hashes seeds enregistrés</h3>
+          <p className="mt-1 text-xs text-foreground-muted">
+            Liste des SHA-256 des fichiers de seed (members, fleet, ccn3228, …) tels qu&apos;enregistrés en D1. Pour mettre à jour : <code className="font-mono">npx tsx scripts/compute-seed-hashes.ts --post</code>
+          </p>
+          <button
+            type="button"
+            onClick={handleCheckHashes}
+            disabled={seedsLoading}
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-teal-600)] text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {seedsLoading ? "Chargement…" : "Vérifier les hashes"}
+          </button>
+
+          {seedsError && (
+            <p className="mt-2 text-xs text-red-600">{seedsError}</p>
+          )}
+          {seedHashes && (
+            <div className="mt-3 max-h-60 overflow-y-auto rounded-lg border border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] p-2 text-xs font-mono">
+              {seedHashes.length === 0 ? (
+                <p className="text-foreground-muted italic">Aucun hash enregistré. Lancez <code>compute-seed-hashes --post</code> pour initialiser.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {seedHashes.map((h) => (
+                    <li key={h.seed_name} className="flex flex-col">
+                      <span className="font-semibold">{h.seed_name}</span>
+                      <span className="text-foreground-muted truncate">{h.sha256}</span>
+                      <span className="text-foreground-muted/70">{h.recorded_at}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

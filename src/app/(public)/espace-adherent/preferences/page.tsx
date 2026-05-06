@@ -84,9 +84,6 @@ export default function PreferencesPage() {
             >
               <div>
                 <p className="text-sm font-medium text-foreground">{cat.label}</p>
-                {cat.adherentOnly && (
-                  <p className="text-xs text-foreground-muted">Réservé aux adhérents</p>
-                )}
               </div>
               <div className="relative">
                 <input

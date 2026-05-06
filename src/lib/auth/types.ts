@@ -122,18 +122,29 @@ export interface Organization {
  * `newsletter_preferences` (migration 0003) et sur `CATEGORY_TO_LIST_ENV`
  * dans `workers/api.ts`. Session 29 : `communication_marque` supprimée,
  * remplacée par `veille_data` (ADF) pour cohérence DB ↔ frontend ↔ Brevo.
+ *
+ * Session 54+++ (D1+D2+D3 du test utilisateur) :
+ *   - `actualites_gaspe` repurposé en `communication_image` ("Communication
+ *     et Image") car doublon avec « Informations Générales » côté usage
+ *   - `adherentOnly` reste structurel (filtrage côté UI candidat) mais
+ *     n'affiche plus la mention « Réservé aux adhérents » à l'écran
+ *     (decision UX : pas pertinent pour l'utilisateur final).
  */
 export const NEWSLETTER_CATEGORIES = [
-  { key: "info_generales", label: "Informations Generales", adherentOnly: true },
-  { key: "ag", label: "Assemblee Generale (AG)", adherentOnly: true },
+  { key: "info_generales", label: "Informations Générales", adherentOnly: true },
+  { key: "ag", label: "Assemblée Générale (AG)", adherentOnly: true },
   { key: "emploi", label: "Emploi (CV et offres d'emploi)", adherentOnly: false },
   { key: "formation_opco", label: "Formation & OPCO", adherentOnly: false },
   { key: "veille_juridique", label: "Veille Juridique et Institutionnelle ADF", adherentOnly: true },
   { key: "veille_sociale", label: "Veille Sociale ADF", adherentOnly: true },
-  { key: "veille_surete", label: "Veille Surete Securite ADF", adherentOnly: true },
+  { key: "veille_surete", label: "Veille Sûreté & Sécurité ADF", adherentOnly: true },
   { key: "veille_data", label: "Veille Data ADF", adherentOnly: true },
   { key: "veille_environnement", label: "Veille Environnement ADF", adherentOnly: true },
-  { key: "actualites_gaspe", label: "Actualites GASPE", adherentOnly: false },
+  // Slot D1 D2 : remplace « Actualités GASPE » (doublon) par
+  // « Communication et Image » sans changer la clé D1 pour éviter
+  // une migration. La colonne `actualites_gaspe` continue d'exister en
+  // base, on la repurpose via le label.
+  { key: "actualites_gaspe", label: "Communication et Image", adherentOnly: false },
 ] as const;
 
 export type NewsletterCategory = typeof NEWSLETTER_CATEGORIES[number]["key"];

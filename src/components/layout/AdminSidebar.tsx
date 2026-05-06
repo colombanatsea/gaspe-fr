@@ -17,6 +17,8 @@ type NavItem = {
   badge?: "pending";
   /** Permission requise pour voir l'item (admin maître bypasse). */
   permission?: StaffPermission;
+  /** Si true, visible uniquement par le master admin (role === "admin"). */
+  adminOnly?: boolean;
 };
 
 type NavSection = { title: string; items: NavItem[] };
@@ -55,6 +57,7 @@ const navSections: NavSection[] = [
     title: "Système",
     items: [
       { label: "Paramètres", href: "/admin/parametres", icon: SettingsIcon },
+      { label: "Audit log", href: "/admin/audit-log", icon: ShieldIcon, adminOnly: true },
     ],
   },
 ];
@@ -62,7 +65,11 @@ const navSections: NavSection[] = [
 function visibleSections(user: User | null | undefined): NavSection[] {
   return navSections.map((section) => ({
     ...section,
-    items: section.items.filter((it) => !it.permission || hasStaffPermission(user, it.permission)),
+    items: section.items.filter((it) => {
+      if (it.adminOnly && user?.role !== "admin") return false;
+      if (it.permission && !hasStaffPermission(user, it.permission)) return false;
+      return true;
+    }),
   })).filter((section) => section.items.length > 0);
 }
 

@@ -16,6 +16,7 @@ import {
 import { memberStats } from "@/data/members";
 import { listPositions } from "@/lib/positions-store";
 import { isApiMode } from "@/lib/api-client";
+import { stripHtmlPreview } from "@/lib/text-preview";
 
 const PAGE_ID = "positions";
 const D = (s: string) => getCmsDefault(PAGE_ID, s);
@@ -195,7 +196,7 @@ export default function PositionsPage() {
                       </time>
                     </div>
                     <p className="mt-2 text-sm text-foreground-muted line-clamp-2">
-                      {position.excerpt}
+                      {stripHtmlPreview(position.excerpt, 200)}
                     </p>
                   </article>
                 </Link>

@@ -126,10 +126,10 @@ export default function EspaceAdherentPage() {
       ),
     },
     {
-      title: "Documents privés",
+      title: "Documents",
       count: documentsCount,
       href: "/espace-adherent/documents",
-      description: "Documents institutionnels et réglementaires",
+      description: "Documents institutionnels et réglementaires (publics + privés)",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -179,18 +179,10 @@ export default function EspaceAdherentPage() {
         </svg>
       ),
     },
-    {
-      title: "Visites médicales",
-      count: null,
-      href: "/espace-adherent/visites-medicales",
-      description: "Suivi des aptitudes de vos marins",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-          <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
-          <path d="M12 14h.01M8 14h.01M16 14h.01M12 18h.01M8 18h.01M16 18h.01" />
-        </svg>
-      ),
-    },
+    // Tuile « Visites médicales » masquée du dashboard (E1 du test
+    // utilisateur post-launch session 54+++). La fonctionnalité reste
+    // accessible via l'URL directe /espace-adherent/visites-medicales
+    // mais n'est plus mise en avant côté dashboard.
     {
       title: "Mon équipe",
       count: null,
@@ -378,14 +370,14 @@ function SuppleantWarning() {
   }, []);
   if (hasSuppleant !== false) return null;
   return (
-    <div className="mb-6 rounded-2xl border border-[var(--gaspe-warm-300)] bg-[var(--gaspe-warm-50)] p-4">
+    <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-4">
       <div className="flex items-start gap-3">
-        <svg className="h-5 w-5 shrink-0 mt-0.5 text-[var(--gaspe-warm-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-5 w-5 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">Vous n&apos;avez pas désigné de suppléant.</p>
-          <p className="text-xs text-foreground-muted mt-0.5">
+          <p className="text-sm font-semibold text-amber-900">Vous n&apos;avez pas désigné de suppléant.</p>
+          <p className="text-xs text-amber-800 mt-0.5">
             Le suppléant peut voter en votre nom lors des AG/AGE et NAO. Vous pouvez écraser son vote à tout moment.
             <Link href="/espace-adherent/profil" className="ml-1 text-primary hover:underline font-semibold">Désigner un suppléant →</Link>
           </p>

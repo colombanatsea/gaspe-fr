@@ -10,6 +10,7 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
 import { getCmsDefault } from "@/data/cms-defaults";
 import { listDocuments } from "@/lib/documents-store";
+import { useAuth } from "@/lib/auth/AuthContext";
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY_LABELS,
@@ -62,6 +63,7 @@ function PdfIcon({ className }: { className?: string }) {
 
 function DocumentsContent() {
   const revealRef = useScrollReveal();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [activeCategory, setActiveCategory] = useState<DocumentCategory | null>(
@@ -139,6 +141,34 @@ function DocumentsContent() {
       ref={revealRef}
       className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"
     >
+      {/* H1 du test utilisateur post-launch session 54+++ : si non connecté,
+         on affiche une CTA visible pour inviter à se connecter et accéder
+         aux documents privés (réservés aux adhérents). Les documents
+         publics restent visibles sans connexion. */}
+      {!user && (
+        <div className="mb-8 rounded-2xl border border-[var(--gaspe-teal-200)] bg-[var(--gaspe-teal-50)] p-5 reveal">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className="h-5 w-5 shrink-0 mt-0.5 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.105.895-2 2-2s2 .895 2 2-.895 2-2 2-2-.895-2-2zm-6 0c0-1.105.895-2 2-2s2 .895 2 2-.895 2-2 2-2-.895-2-2zM4 7h16M4 7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-[var(--gaspe-teal-900)]">Documents complémentaires réservés aux adhérents</p>
+                <p className="mt-0.5 text-xs text-[var(--gaspe-teal-800)]">
+                  Connectez-vous pour accéder à l&apos;intégralité des documents (accords, conventions, rapports privés…).
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/connexion"
+              className="inline-flex items-center justify-center rounded-xl bg-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-700)] text-white px-4 py-2 text-sm font-medium shrink-0 transition-colors"
+            >
+              Se connecter →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Search + category filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-10 reveal">
         <div className="relative flex-1">

@@ -15,6 +15,7 @@ import {
   isRegistrationClosed,
   type StoredFormation,
 } from "@/lib/formations-store";
+import { stripHtmlPreview, formatPrice } from "@/lib/text-preview";
 
 const modalityLabel: Record<string, string> = {
   presentiel: "Présentiel",
@@ -85,7 +86,7 @@ export default function AdherentFormationsPage() {
         </div>
 
         {f.description && (
-          <p className="mt-2 text-sm text-foreground-muted line-clamp-2">{f.description}</p>
+          <p className="mt-2 text-sm text-foreground-muted line-clamp-2">{stripHtmlPreview(f.description, 200)}</p>
         )}
 
         <div className="mt-3 space-y-1 text-sm text-foreground-muted">
@@ -114,7 +115,7 @@ export default function AdherentFormationsPage() {
               {f.duration}
             </p>
           )}
-          <p className="text-xs">{f.registrations?.length ?? 0} / {f.capacity} inscrits – {f.price}</p>
+          <p className="text-xs">{f.registrations?.length ?? 0} / {f.capacity} inscrits – {formatPrice(f.price)}</p>
         </div>
 
         {/* Expand/collapse for schedule + attachments */}

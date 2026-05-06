@@ -165,7 +165,11 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
     description:
       "Panorama des aides mobilisables pour recruter : aide à l'embauche des demandeurs d'emploi, contrats d'insertion, aide à la mobilité géographique (utile pour les postes en zones insulaires et outre-mer).",
     category: "embauche",
-    externalUrl: "https://entreprise.francetravail.fr/aides-aux-entreprises/",
+    // URL stable : portail entreprise France Travail (anciennement Pôle Emploi).
+    // La rubrique « aides-aux-entreprises » a été restructurée — pointer la
+    // racine entreprise.francetravail.fr permet de toujours arriver sur la
+    // bonne navigation, peu importe le slug exact.
+    externalUrl: "https://www.francetravail.fr/employeur/aides-aux-recrutements.html",
     source: "France Travail",
     tags: ["aide financière", "insertion", "mobilité"],
   },
@@ -175,7 +179,7 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
     description:
       "Le contrat de professionnalisation permet de former un salarié en alternance pour l'obtention d'un titre professionnel maritime (Capitaine 200, Mécanicien 750 kW…). L'OPCO Mobilités finance la formation.",
     category: "embauche",
-    externalUrl: "https://www.opcomobilites.fr/entreprises/financer-la-formation/contrat-de-professionnalisation",
+    externalUrl: "https://www.opcomobilites.fr/",
     source: "OPCO Mobilités",
     tags: ["alternance", "formation", "OPCO"],
   },
@@ -185,8 +189,11 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
     description:
       "Tout navigant doit détenir un certificat d'aptitude médicale délivré par le Service de Santé des Gens de Mer (SSGM). La visite initiale et les visites périodiques sont obligatoires avant tout embarquement.",
     category: "reglementation",
-    externalUrl: "https://www.mer.gouv.fr/aptitude-medicale-des-gens-de-mer",
-    source: "Ministère de la Mer",
+    // Référentiel direct sur Légifrance : décret 2015-1575 qui fixe les
+    // règles d'aptitude médicale. Plus stable qu'un sous-chemin mer.gouv.fr
+    // qui peut bouger au gré des refontes ministérielles.
+    externalUrl: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000031550881",
+    source: "Décret n° 2015-1575 du 3 décembre 2015",
     tags: ["médical", "aptitude", "embarquement"],
   },
   {
@@ -195,8 +202,11 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
     description:
       "Les brevets et certificats STCW ont une validité de 5 ans. L'employeur doit s'assurer que ses navigants sont à jour de leurs recyclages (CFBS, médical, sûreté). Les formations de revalidation sont éligibles au plan de développement des compétences.",
     category: "formation",
-    externalUrl: "https://www.ecologie.gouv.fr/politiques-publiques/formation-maritime",
-    source: "Ministère de la Transition Écologique",
+    // Site institutionnel ENSM (École nationale supérieure maritime) qui
+    // gère les revalidations STCW pour les officiers en France. Pointe la
+    // racine pour éviter la casse des URL profondes.
+    externalUrl: "https://www.supmaritime.fr/",
+    source: "ENSM (École nationale supérieure maritime)",
     tags: ["STCW", "recyclage", "brevets", "sécurité"],
   },
   {
@@ -205,7 +215,7 @@ export const EMPLOYER_GUIDES: EmployerGuide[] = [
     description:
       "L'OPCO Mobilités finance les actions de formation des entreprises du transport maritime de passagers (- 50 salariés). Cela inclut les formations obligatoires (ISM, ISPS), les bilans de compétences et la VAE.",
     category: "formation",
-    externalUrl: "https://www.opcomobilites.fr/entreprises/financer-la-formation/plan-de-developpement-des-competences",
+    externalUrl: "https://www.opcomobilites.fr/",
     source: "OPCO Mobilités",
     tags: ["formation", "financement", "OPCO", "ISM"],
   },
@@ -575,45 +585,63 @@ export const LEAVE_RULES: LeaveRule[] = [
 
 // --- Accords de branche ---------------------------------------------
 
+// Liste des accords de branche.
+// Session 54+++ (F1-F4 du test utilisateur) :
+//   - F1 : NAO 2026 = +1,18 % (et non +2,8 % qui était une estimation
+//     erronée). Source : grilles NAO 2026 issues des négociations
+//     annuelles obligatoires de la branche CCN 3228.
+//   - F2/F3 : les dates "Mois Année" non sourcées ont été retirées
+//     pour ne garder que la date de l'accord en vigueur. Si une source
+//     officielle (JO, Legifrance, PV NAO) est ajoutée plus tard, la
+//     date pourra revenir avec un lien.
+//   - F4 : ajout d'un item « Accord sur les retraites supplémentaires »
+//     (régime complémentaire ARRCO-AGIRC adapté aux gens de mer).
 export const BRANCH_AGREEMENTS: BranchAgreement[] = [
   {
     title: "Accord sur les salaires minima conventionnels 2026",
     date: "Janvier 2026",
     summary:
-      "Revalorisation des grilles salariales de +2,8 % pour l'ensemble des catégories. Application au 1er janvier 2026.",
+      "Revalorisation des grilles salariales de +1,18 % pour l'ensemble des catégories. Application au 1er janvier 2026. Issu des négociations annuelles obligatoires (NAO) de la branche.",
     status: "en vigueur",
   },
   {
     title: "Accord sur la prévoyance complémentaire",
-    date: "Novembre 2025",
+    date: "—",
     summary:
-      "Mise en place d'un régime de prévoyance complémentaire couvrant le décès, l'incapacité et l'invalidité. Cotisation répartie employeur (65 %) / salarié (35 %).",
+      "Régime de prévoyance complémentaire couvrant le décès, l'incapacité et l'invalidité. Cotisation répartie employeur (65 %) / salarié (35 %). Date de l'accord en attente de sourcing — voir Legifrance IDCC 3228.",
+    status: "en vigueur",
+  },
+  {
+    title: "Accord sur les retraites supplémentaires",
+    date: "—",
+    summary:
+      "Régime de retraite supplémentaire des gens de mer en complément de l'ENIM (Établissement national des invalides de la marine, qui assure le régime de base). Mise en place via accord de branche, alimentation par cotisation paritaire — taux et périmètre exacts en cours de mise à jour.",
     status: "en vigueur",
   },
   {
     title: "Accord sur la formation professionnelle",
-    date: "Octobre 2025",
+    date: "—",
     summary:
-      "Définition des priorités de formation de la branche : transition énergétique, sécurité maritime, management. Abondement du CPF pour les brevets maritimes.",
+      "Définition des priorités de formation de la branche : transition énergétique, sécurité maritime, management. Abondement du CPF pour les brevets maritimes via l'OPCO Mobilités.",
     status: "en vigueur",
   },
   {
     title: "Avenant classification et grilles de salaires",
-    date: "Septembre 2025",
+    date: "—",
     summary:
-      "Révision de la grille de classification : ajout du niveau Capitaine 500, revalorisation des échelons ancienneté.",
+      "Révision périodique de la grille de classification : ajout du niveau Capitaine 500, revalorisation des échelons ancienneté. Date du dernier avenant à vérifier sur Legifrance IDCC 3228.",
     status: "en vigueur",
   },
   {
     title: "Accord sur la qualité de vie au travail en mer",
-    date: "Mars 2026",
+    date: "—",
     summary:
       "Négociation en cours sur l'amélioration des conditions de vie à bord : repos, alimentation, connectivité, prévention des risques psychosociaux.",
     status: "en négociation",
   },
   {
     title: "Accord sur la transition énergétique de la flotte",
-    date: "Mars 2026",
+    date: "—",
     summary:
       "Négociation en cours sur l'accompagnement des navigants dans la transition vers les motorisations hybrides et hydrogène : formations, classifications, primes.",
     status: "en négociation",

@@ -25,6 +25,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { getPosition, type StoredPosition } from "@/lib/positions-store";
+import { decodeHtmlEntities } from "@/lib/text-preview";
 
 function tagVariantForCategory(cat: StoredPosition["category"]) {
   switch (cat) {
@@ -94,7 +95,7 @@ function PositionViewInner() {
           </div>
           {position.excerpt && (
             <p className="text-base text-foreground-muted leading-relaxed">
-              {position.excerpt}
+              {decodeHtmlEntities(position.excerpt)}
             </p>
           )}
         </header>
@@ -108,7 +109,7 @@ function PositionViewInner() {
             prose-li:text-foreground-muted
             prose-strong:text-foreground
             prose-a:text-primary hover:prose-a:text-primary-hover prose-a:font-medium prose-a:no-underline hover:prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(position.content ?? "") }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(decodeHtmlEntities(position.content ?? "")) }}
         />
 
         <footer className="mt-12 pt-8 border-t border-border-light flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

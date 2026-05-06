@@ -13,131 +13,150 @@
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| A1 | Dates dans l'espace de démo doivent évoluer avec la date courante (relative à `new Date()` au lieu d'absolues) | 🟠 | 🟢 |
-| A2 | « Vous n'avez pas désigné de suppléant. » apparaît en gris sur blanc sur fond foncé → illisible. Auditer les autres endroits similaires. | 🔴 | 🟢 |
-| A3 | Bouton « Ajouter un user dans ma compagnie » trop collé au bord → appliquer charte espacement | 🟠 | 🟢 |
-| A4 | Manque le « € » au tarif des formations sur la tuile | 🟠 | 🟢 |
-| A5 | Description de tuile formation affiche du HTML brut (`&lt;table border=...`) → strip HTML avant troncature | 🔴 | 🟢 |
-| A6 | Cassures de caractères « l&#39; » dans le résumé/contenu des positions → décoder les entités HTML avant rendu | 🔴 | 🟢 |
-| A7 | Bouton « Justifier le texte » à ajouter partout (positions, articles, jobs). Icônes alignement gauche/droite/centre cassées dans `RichTextEditor` | 🟠 | 🟢 |
+| A1 | Dates dans l'espace de démo doivent évoluer avec la date courante (relative à `new Date()` au lieu d'absolues) | 🟠 | 🟢 (suivi) |
+| A2 | « Vous n'avez pas désigné de suppléant. » apparaît en gris sur blanc sur fond foncé → illisible. Auditer les autres endroits similaires. | 🔴 | 🟢 (suivi) |
+| A3 | Bouton « Ajouter un user dans ma compagnie » trop collé au bord → appliquer charte espacement | 🟠 | 🟢 (suivi) |
+| A4 | Manque le « € » au tarif des formations sur la tuile | 🟠 | 🟢 (suivi) |
+| A5 | Description de tuile formation affiche du HTML brut (`&lt;table border=...`) → strip HTML avant troncature | 🔴 | 🟢 (suivi) |
+| A6 | Cassures de caractères « l&#39; » dans le résumé/contenu des positions → décoder les entités HTML avant rendu | 🔴 | 🟢 (suivi) |
+| A7 | Bouton « Justifier le texte » à ajouter partout (positions, articles, jobs). Icônes alignement gauche/droite/centre cassées dans `RichTextEditor` | 🟠 | 🟢 (suivi) |
 
 ## B. Bugs fonctionnels
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| B1 | Bouton « S'inscrire » formation ne fonctionne pas | 🔴 | 🟢 |
-| B2 | Validation d'une offre avec deadline passée : « rien ne se passe » → le submit doit créer l'offre quand même, et l'afficher avec statut « Expiré » | 🔴 | 🟢 |
-| B3 | Offre expirée doit rester visible avec badge « Expiré », pas masquée | 🔴 | 🟢 |
-| B4 | Une offre doit afficher un encart de présentation compagnie issu automatiquement de la description compagnie du profil adhérent | 🟠 | 🟢 |
-| B5 | Espace adhérent : `/profil` ne permet pas d'enregistrer CA, effectif, logo, etc. (toutes les actions du dashboard `/espace-adherent` ne sont pas fonctionnelles) | 🔴 | 🟢 |
-| B6 | Position publiée : pas de bouton « Éditer » pour la modifier après création | 🟠 | 🟢 |
+| B1 | Bouton « S'inscrire » formation ne fonctionne pas | 🔴 | 🟢 (suivi) |
+| B2 | Validation d'une offre avec deadline passée : « rien ne se passe » → le submit doit créer l'offre quand même, et l'afficher avec statut « Expiré » | 🔴 | 🟢 (suivi) |
+| B3 | Offre expirée doit rester visible avec badge « Expiré », pas masquée | 🔴 | 🟢 (suivi) |
+| B4 | Une offre doit afficher un encart de présentation compagnie issu automatiquement de la description compagnie du profil adhérent | 🟠 | 🟢 (suivi) |
+| B5 | Espace adhérent : `/profil` ne permet pas d'enregistrer CA, effectif, logo, etc. (toutes les actions du dashboard `/espace-adherent` ne sont pas fonctionnelles) | 🔴 | 🟢 (suivi) |
+| B6 | Position publiée : pas de bouton « Éditer » pour la modifier après création | 🟠 | 🟢 (suivi) |
 
 ## C. Admin
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| C1 | `/api/admin/export-all` retourne 401 — manque l'UX (bouton dans `/admin/parametres` qui passe le cookie JWT existant) | 🟠 | 🟢 |
-| C2 | `/admin/adherents` : les données effectif / nombre de navires doivent venir automatiquement du profil de l'adhérent (pas saisies manuellement par admin) | 🟠 | 🟢 |
-| C3 | Toujours différencier **personnel navigant** vs **personnel sédentaire** dans les chiffres effectifs | 🟠 | 🟢 |
-| C4 | Les champs « Identité (seed) » sont actuellement read-only en mode prod — l'admin doit pouvoir les modifier (slug, name, etc.) | 🔴 | 🟢 |
-| C5 | Tuile « Infos site » sur `/admin` : ajouter le nombre d'utilisateurs (différencier candidats / adhérents) | 🟠 | 🟢 |
-| C6 | Tuile « 26 CCN 3228 Vote NAO » : afficher en petit dessous le nombre de personnel navigant total couvert | 🟠 | 🟢 |
-| C7 | Cotisations doivent revenir à `due` automatiquement lors du démarrage d'une nouvelle campagne annuelle | 🟠 | 🟢 |
-| C8 | L'admin (= `colomban@gaspe.fr`) doit recevoir un email à chaque demande de création de compte | 🔴 | 🟢 |
-| C9 | L'admin maître peut promouvoir d'autres comptes admin (ex `contact@gaspe.fr`) — interface multi-admin | 🟠 | 🟢 |
-| C10 | `/admin/votes` : impossible de créer un vote (bug submit ?) | 🔴 | 🟢 |
-| C11 | Vote « choix simple » → cocher 1 case (radio button), pas un select | 🟠 | 🟢 |
-| C12 | Vote « choix multiple » → cocher plusieurs cases (checkboxes) | 🟠 | 🟢 |
-| C13 | Vote « classement » → drag & drop pour réordonner | 🟠 | 🟢 |
-| C14 | Vote « date selection » → cocher des dates disponibles (multi-select date picker) | 🟠 | 🟢 |
-| C15 | `/admin/pages` : aperçu de la page non disponible | 🔴 | 🟢 |
-| C16 | `/admin/pages` : accès historique cassé | 🔴 | 🟢 |
-| C17 | `/admin/pages` : pas de bouton « Ajouter une nouvelle page » | 🟠 | 🟢 |
-| C18 | `/admin/pages` : pas de bouton « Ajouter une section », pas de drag-and-drop des sections | 🟠 | 🟢 |
-| C19 | `/admin/pages` : choisir le type d'élément ajouté (texte / image / valeur / etc.) | 🟠 | 🟢 |
-| C20 | `/admin/documents` : impossible d'uploader des document Word (`.docx`) | 🔴 | 🟢 |
+| C1 | `/api/admin/export-all` retourne 401 — manque l'UX (bouton dans `/admin/parametres` qui passe le cookie JWT existant) | 🟠 | 🟢 (suivi) |
+| C2 | `/admin/adherents` : les données effectif / nombre de navires doivent venir automatiquement du profil de l'adhérent (pas saisies manuellement par admin) | 🟠 | 🟢 (suivi) |
+| C3 | Toujours différencier **personnel navigant** vs **personnel sédentaire** dans les chiffres effectifs | 🟠 | 🟢 (suivi) |
+| C4 | Les champs « Identité (seed) » sont actuellement read-only en mode prod — l'admin doit pouvoir les modifier (slug, name, etc.) | 🔴 | 🟢 (suivi) |
+| C5 | Tuile « Infos site » sur `/admin` : ajouter le nombre d'utilisateurs (différencier candidats / adhérents) | 🟠 | 🟢 (suivi) |
+| C6 | Tuile « 26 CCN 3228 Vote NAO » : afficher en petit dessous le nombre de personnel navigant total couvert | 🟠 | 🟢 (suivi) |
+| C7 | Cotisations doivent revenir à `due` automatiquement lors du démarrage d'une nouvelle campagne annuelle | 🟠 | 🟢 (suivi) |
+| C8 | L'admin (= `colomban@gaspe.fr`) doit recevoir un email à chaque demande de création de compte | 🔴 | 🟢 (suivi) |
+| C9 | L'admin maître peut promouvoir d'autres comptes admin (ex `contact@gaspe.fr`) — interface multi-admin | 🟠 | 🟢 (suivi) |
+| C10 | `/admin/votes` : impossible de créer un vote (bug submit ?) | 🔴 | 🟢 (suivi) |
+| C11 | Vote « choix simple » → cocher 1 case (radio button), pas un select | 🟠 | 🟢 (suivi) |
+| C12 | Vote « choix multiple » → cocher plusieurs cases (checkboxes) | 🟠 | 🟢 (suivi) |
+| C13 | Vote « classement » → drag & drop pour réordonner | 🟠 | 🟢 (suivi) |
+| C14 | Vote « date selection » → cocher des dates disponibles (multi-select date picker) | 🟠 | 🟢 (suivi) |
+| C15 | `/admin/pages` : aperçu de la page non disponible | 🔴 | 🟢 (suivi) |
+| C16 | `/admin/pages` : accès historique cassé | 🔴 | 🟢 (suivi) |
+| C17 | `/admin/pages` : pas de bouton « Ajouter une nouvelle page » | 🟠 | 🟢 (suivi) |
+| C18 | `/admin/pages` : pas de bouton « Ajouter une section », pas de drag-and-drop des sections | 🟠 | 🟢 (suivi) |
+| C19 | `/admin/pages` : choisir le type d'élément ajouté (texte / image / valeur / etc.) | 🟠 | 🟢 (suivi) |
+| C20 | `/admin/documents` : impossible d'uploader des document Word (`.docx`) | 🔴 | 🟢 (suivi) |
 
 ## D. Newsletter
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| D1 | Ajouter catégorie « Communication et Image » | 🟠 | 🟢 |
-| D2 | Supprimer catégorie « Actualités GASPE » (= « Informations Générales ») | 🟠 | 🟢 |
-| D3 | Supprimer mentions « réservé aux adhérents » sur les catégories partout | 🟠 | 🟢 |
+| D1 | Ajouter catégorie « Communication et Image » | 🟠 | 🟢 (suivi) |
+| D2 | Supprimer catégorie « Actualités GASPE » (= « Informations Générales ») | 🟠 | 🟢 (suivi) |
+| D3 | Supprimer mentions « réservé aux adhérents » sur les catégories partout | 🟠 | 🟢 (suivi) |
 
 ## E. Espace adhérent / dashboard
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| E1 | Masquer la tuile « Visites Médicales » de `/espace-adherent` | 🟠 | 🟢 |
-| E2 | Renommer « Documents privés » → « Documents » et afficher les documents privés ET publics de manière centralisée | 🟠 | 🟢 |
+| E1 | Masquer la tuile « Visites Médicales » de `/espace-adherent` | 🟠 | 🟢 (suivi) |
+| E2 | Renommer « Documents privés » → « Documents » et afficher les documents privés ET publics de manière centralisée | 🟠 | 🟢 (suivi) |
 
 ## F. Boîte à outils / CCN 3228
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| F1 | Accords de branche : afficher **+1,18 %** au lieu de +2,8 % | 🔴 | 🟢 |
-| F2 | « Accord sur la prévoyance complémentaire » : retirer la mention « novembre 2025 » (sans source) ou sourcer | 🟠 | 🟢 |
-| F3 | Idem pour « Accord sur la formation professionnelle », « Avenant classification », « Accord QVT en mer », « Accord transition énergétique flotte » | 🟠 | 🟢 |
-| F4 | Ajouter « Accord sur les retraites supplémentaires » | 🟠 | 🟢 |
-| F5 | Simulateur salaire : ajouter slider temps partiel | 🟠 | 🟢 |
-| F6 | Simulateur salaire : ajouter calcul net après impôts (paramétrable) | 🟠 | 🟢 |
-| F7 | Simulateur salaire : se mettre à jour automatiquement selon les grilles NAO en vigueur | 🟠 | 🟢 |
-| F8 | Classifications : ajouter « Voir la dernière grille NAO pour le minimum conventionnel » + lien documents | 🟠 | 🟢 |
-| F9 | Liens cassés : Aides France Travail à l'embauche | 🔴 | 🟢 |
-| F10 | Liens cassés : Contrat de professionnalisation | 🔴 | 🟢 |
-| F11 | Liens cassés : Aptitude des gens de mer | 🔴 | 🟢 |
-| F12 | Liens cassés : Recyclage des brevets STCW | 🔴 | 🟢 |
-| F13 | Liens cassés : Financer le plan de formation via l'OPCO | 🔴 | 🟢 |
+| F1 | Accords de branche : afficher **+1,18 %** au lieu de +2,8 % | 🔴 | 🟢 (suivi) |
+| F2 | « Accord sur la prévoyance complémentaire » : retirer la mention « novembre 2025 » (sans source) ou sourcer | 🟠 | 🟢 (suivi) |
+| F3 | Idem pour « Accord sur la formation professionnelle », « Avenant classification », « Accord QVT en mer », « Accord transition énergétique flotte » | 🟠 | 🟢 (suivi) |
+| F4 | Ajouter « Accord sur les retraites supplémentaires » | 🟠 | 🟢 (suivi) |
+| F5 | Simulateur salaire : ajouter slider temps partiel | 🟠 | 🟢 (suivi) |
+| F6 | Simulateur salaire : ajouter calcul net après impôts (paramétrable) | 🟠 | 🟢 (suivi) |
+| F7 | Simulateur salaire : se mettre à jour automatiquement selon les grilles NAO en vigueur | 🟠 | 🟢 (suivi) |
+| F8 | Classifications : ajouter « Voir la dernière grille NAO pour le minimum conventionnel » + lien documents | 🟠 | 🟢 (suivi) |
+| F9 | Liens cassés : Aides France Travail à l'embauche | 🔴 | 🟢 (suivi) |
+| F10 | Liens cassés : Contrat de professionnalisation | 🔴 | 🟢 (suivi) |
+| F11 | Liens cassés : Aptitude des gens de mer | 🔴 | 🟢 (suivi) |
+| F12 | Liens cassés : Recyclage des brevets STCW | 🔴 | 🟢 (suivi) |
+| F13 | Liens cassés : Financer le plan de formation via l'OPCO | 🔴 | 🟢 (suivi) |
 
 ## G. Recherche / homepage
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| G1 | Recherche « tourisme » ou « Îles du Ponant » dans la barre principale doit remonter les notes de position liées (indexer le contenu des positions) | 🟠 | 🟢 |
+| G1 | Recherche « tourisme » ou « Îles du Ponant » dans la barre principale doit remonter les notes de position liées (indexer le contenu des positions) | 🟠 | 🟢 (suivi) |
 
 ## H. Documents publics
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| H1 | `/documents` non connecté : afficher une tuile « Connectez-vous pour accéder à tous les documents » | 🟠 | 🟢 |
+| H1 | `/documents` non connecté : afficher une tuile « Connectez-vous pour accéder à tous les documents » | 🟠 | 🟢 (suivi) |
 
 ## I. Brevo intégration (gros lot)
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| I1 | Intégration Brevo emails transactionnels (toutes les notifications : adhésion, validation, vote, formation, etc.) | 🟠 | 🟢 |
-| I2 | Intégration Brevo newsletters (10 catégories → list IDs Brevo, send bulk via API) | 🟠 | 🟢 |
+| I1 | Intégration Brevo emails transactionnels (toutes les notifications : adhésion, validation, vote, formation, etc.) | 🟠 | 🟢 (suivi) |
+| I2 | Intégration Brevo newsletters (10 catégories → list IDs Brevo, send bulk via API) | 🟠 | 🟢 (suivi) |
 
 ## J. Backlog initial (rappel)
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| J1 | Split Worker monolithique 5500 lignes → `workers/handlers/{domain}/` | 🟢 | 🟢 |
-| J2 | UI `/admin/audit-log` (lecture des entrées) | 🟢 | 🟢 |
-| J3 | UI `/admin/parametres` → bouton « Vérifier hashes seeds » | 🟢 | 🟢 |
-| J4 | Lifecycle rule R2 30j (backups) à configurer côté CF dashboard | 🟢 | 🟢 (manuel CF) |
-| J5 | P3 mineurs : tooltips abréviations, scroll progress homepage, dark mode flash, i18n | 🟢 | 🟢 |
+| J1 | Split Worker monolithique 5500 lignes → `workers/handlers/{domain}/` | 🟢 (suivi) | 🟢 |
+| J2 | UI `/admin/audit-log` (lecture des entrées) | 🟢 (suivi) | 🟢 |
+| J3 | UI `/admin/parametres` → bouton « Vérifier hashes seeds » | 🟢 (suivi) | 🟢 |
+| J4 | Lifecycle rule R2 30j (backups) à configurer côté CF dashboard | 🟢 (suivi) | 🟢 (manuel CF) |
+| J5 | P3 mineurs : tooltips abréviations, scroll progress homepage, dark mode flash, i18n | 🟢 (suivi) | 🟢 |
 
 ## K. Outils dev
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| K1 | Adapter `git fetch && git checkout && git pull` en commandes PowerShell séquentielles (pas de `&&`) | 🟢 | 🟢 |
-| K2 | Documenter `npx tsx scripts/compute-seed-hashes.ts` pour PowerShell | 🟢 | 🟢 |
+| K1 | Adapter `git fetch && git checkout && git pull` en commandes PowerShell séquentielles (pas de `&&`) | 🟢 (suivi) | 🟢 |
+| K2 | Documenter `npx tsx scripts/compute-seed-hashes.ts` pour PowerShell | 🟢 (suivi) | 🟢 |
 
 ---
 
 ## Plan de traitement
 
-### Lots traités cette session (54+++)
+### Items effectivement traités session 54+++ (commit en cours)
 
-1. **Lot 1 — Quick wins UX** (commit prochain) : A2, A3, A4, A5, A6, E1
-2. **Lot 2 — Bugs fonctionnels critiques** : B1, B2, B3, B5, C4
-3. **Lot 3 — Newsletter + tuiles dashboard** : D1, D2, D3, C5, C6
-4. **Lot 4 — Documents + boîte à outils** : E2, H1, F1, F2, F3, F4, F9-F13
-5. **Lot 5 — UI audit-log + hashes seeds** : J2, J3
-6. **Lot 6 — Doc + bump version** : K1, K2
+| Item | Statut | Détail |
+|------|:-:|--------|
+| **A2** | ✅ | Bandeau « pas de suppléant » : `bg-warm-50` → `bg-amber-50` + `text-foreground` → `text-amber-900` (avec overrides dark mode `border-amber-300` et `text-amber-900` ajoutés dans `globals.css`) |
+| **A3** | ✅ | Bouton « Inviter un contact » : wrapper `/equipe` reçoit `px-4 py-6 sm:px-6 lg:px-8 max-w-6xl mx-auto` (charte spacing standard) |
+| **A4** | ✅ | Tarif formation : nouveau helper `formatPrice()` qui ajoute « € » automatique si valeur numérique sans devise |
+| **A5** | ✅ | Tuile description : nouveau helper `stripHtmlPreview(text, max)` qui strip tags + decode entities + tronque, appliqué sur 3 pages formations |
+| **A6** | ✅ | Cassures `l&#39;` positions : helper `decodeHtmlEntities()` appliqué sur excerpt + content `/positions/view` |
+| **D1** | ✅ | Catégorie « Communication et Image » : repurpose le slot `actualites_gaspe` (label changé, clé conservée pour éviter migration) |
+| **D2** | ✅ | « Actualités GASPE » disparaît (= doublon avec « Informations Générales ») |
+| **D3** | ✅ | Mention « Réservé aux adhérents » retirée de l'UI préférences adhérent |
+| **E1** | ✅ | Tuile « Visites médicales » masquée du dashboard `/espace-adherent` (URL directe encore accessible) |
+| **E2** (partiel) | ✅ | Renommé « Documents privés » → « Documents » + description « publics + privés ». Centralisation effective restera via `documents-store` côté page (refactor ciblé en backlog). |
+| **F1** | ✅ | NAO 2026 : +2,8 % → **+1,18 %** dans `BRANCH_AGREEMENTS` |
+| **F2/F3** | ✅ | Dates non sourcées remplacées par « — » sur 5 accords (prévoyance, formation, classification, QVT, transition énergétique). Sources à compléter via Legifrance IDCC 3228. |
+| **F4** | ✅ | Ajout « Accord sur les retraites supplémentaires » (régime complémentaire ENIM) |
+| **F9** | ✅ | URL France Travail employeur stabilisée |
+| **F10** | ✅ | Lien OPCO Mobilités → racine stable |
+| **F11** | ✅ | Aptitude médicale : URL Legifrance directe (décret 2015-1575) |
+| **F12** | ✅ | Recyclage STCW : URL ENSM (supmaritime.fr) |
+| **F13** | ✅ | OPCO plan formation : racine stable |
+| **H1** | ✅ | `/documents` non connecté : tuile « Connectez-vous pour accéder à l'intégralité » avec CTA `/connexion` |
+| **J2** | ✅ | UI `/admin/audit-log` : tableau pagine 50 entrées, filtres action/entité, master admin uniquement, lien dans AdminSidebar « Système → Audit log » avec flag `adminOnly: true` |
+| **J3** | ✅ | UI `/admin/parametres` : section « Outils administrateur » (master admin uniquement) avec 2 boutons : Export D1 (lance `/api/admin/export-all` avec cookie JWT), Vérifier hashes seeds (fetch `/api/admin/seed-hashes` + affichage tabulaire) |
+
+Endpoint Worker ajouté : `GET /api/admin/audit-log?limit=N&offset=O&action=X&entity_type=Y` (master admin only, pagination + count, before/after taille seulement pour ne pas surcharger la liste).
 
 ### Lots reportés en backlog (sessions futures)
 

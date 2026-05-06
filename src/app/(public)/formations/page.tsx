@@ -5,6 +5,7 @@ import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { Badge } from "@/components/ui/Badge";
 import { formations } from "@/data/formations";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
+import { stripHtmlPreview, formatPrice } from "@/lib/text-preview";
 
 export const metadata: Metadata = {
   title: "Formations",
@@ -59,7 +60,7 @@ export default function FormationsPage() {
                 </h3>
 
                 <p className="text-sm text-foreground-muted line-clamp-2 mb-4">
-                  {f.description}
+                  {stripHtmlPreview(f.description, 200)}
                 </p>
 
                 <div className="space-y-2 text-xs text-foreground-muted">
@@ -81,7 +82,7 @@ export default function FormationsPage() {
                 <div className="mt-4">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-foreground-muted">{f.enrolled}/{f.capacity} inscrits</span>
-                    <span className="font-medium text-foreground">{f.price}</span>
+                    <span className="font-medium text-foreground">{formatPrice(f.price)}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-[var(--gaspe-neutral-200)]">
                     <div
