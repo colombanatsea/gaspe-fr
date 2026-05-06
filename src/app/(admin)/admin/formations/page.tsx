@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
+import {
+  listAllFormations as apiListFormations,
+  updateFormation as apiUpdateFormation,
+  deleteFormation as apiDeleteFormation,
+} from "@/lib/formations-store";
+import { isApiMode } from "@/lib/api-client";
 
 const FORMATIONS_KEY = "gaspe_formations";
 
@@ -211,6 +217,14 @@ const SEED_FORMATIONS: Formation[] = [
   },
 ];
 
+/**
+ * Mode demo (sans NEXT_PUBLIC_API_URL) : on initialise le localStorage avec
+ * `SEED_FORMATIONS` au premier accès. Mode prod : `formationsListAll()` lit la
+ * D1 (table `formations`, migration 0031), le store gère le fallback localStorage.
+ *
+ * En prod l'admin re-saisit ses formations via /admin/formations/new pour les
+ * persister en D1 partagée (cf. docs/PRODUCTION-SAFETY-2026.md § B.1, P0-1).
+ */
 function getFormations(): Formation[] {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(FORMATIONS_KEY);
@@ -244,11 +258,16 @@ export default function AdminFormationsPage() {
     if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized && user?.role === "admin") {
-    setInitialized(true);
-    setFormations(getFormations());
-  }
+  useEffect(() => {
+    if (!isStaffOrAdmin(user)) return;
+    if (isApiMode()) {
+      apiListFormations()
+        .then((list) => setFormations(list as Formation[]))
+        .catch(() => startTransition(() => setFormations(getFormations())));
+    } else {
+      startTransition(() => setFormations(getFormations()));
+    }
+  }, [user]);
 
   if (!user || !isStaffOrAdmin(user)) return null;
 
@@ -256,22 +275,37 @@ export default function AdminFormationsPage() {
     (f) => !search || f.title.toLowerCase().includes(search.toLowerCase()) || f.organizer.toLowerCase().includes(search.toLowerCase()),
   );
 
-  function saveFormations(updated: Formation[]) {
-    localStorage.setItem(FORMATIONS_KEY, JSON.stringify(updated));
+  async function saveFormations(updated: Formation[]) {
+    // Pas d'écriture batch possible en API : seul le mode demo écrit en bulk.
+    if (!isApiMode()) {
+      localStorage.setItem(FORMATIONS_KEY, JSON.stringify(updated));
+    }
     setFormations(updated);
   }
 
-  function deleteFormation(id: string) {
-    if (!confirm("Supprimer cette formation ?")) return;
-    saveFormations(formations.filter((f) => f.id !== id));
+  async function deleteFormation(id: string) {
+    if (!confirm("Archiver cette formation ? Elle reste consultable mais ne sera plus inscriptible.")) return;
+    if (isApiMode()) {
+      await apiDeleteFormation(id);
+      const list = await apiListFormations();
+      setFormations(list as Formation[]);
+    } else {
+      saveFormations(formations.filter((f) => f.id !== id));
+    }
   }
 
-  function toggleStatus(id: string) {
-    saveFormations(formations.map((f) => {
-      if (f.id !== id) return f;
-      const next: Record<string, Formation["status"]> = { open: "closed", closed: "full", full: "open" };
-      return { ...f, status: next[f.status] || "open" };
-    }));
+  async function toggleStatus(id: string) {
+    const f = formations.find((x) => x.id === id);
+    if (!f) return;
+    const next: Record<string, Formation["status"]> = { open: "closed", closed: "full", full: "open" };
+    const newStatus = next[f.status] || "open";
+    if (isApiMode()) {
+      await apiUpdateFormation(id, { status: newStatus });
+      const list = await apiListFormations();
+      setFormations(list as Formation[]);
+      return;
+    }
+    saveFormations(formations.map((g) => (g.id !== id ? g : { ...g, status: newStatus })));
   }
 
   function handleAttachmentUpload(formationId: string, e: React.ChangeEvent<HTMLInputElement>) {

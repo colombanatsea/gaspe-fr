@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import type { FormationModality, FormationDay } from "../page";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
-
-const FORMATIONS_KEY = "gaspe_formations";
+import { createFormation } from "@/lib/formations-store";
 
 export default function AdminNewFormationPage() {
   const { user } = useAuth();
@@ -30,6 +29,7 @@ export default function AdminNewFormationPage() {
     price: "",
     contactEmail: "",
     modality: "presentiel" as FormationModality,
+    registrationDeadline: "",
   });
 
   const [schedule, setSchedule] = useState<FormationDay[]>([]);
@@ -54,24 +54,23 @@ export default function AdminNewFormationPage() {
     setSchedule((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const newFormation = {
-      id: `formation-${Date.now()}`,
-      ...form,
-      capacity: Number(form.capacity) || 0,
-      status: "open" as const,
-      schedule: schedule.length > 0 ? schedule : undefined,
-    };
-
-    const raw = localStorage.getItem(FORMATIONS_KEY);
-    const existing = raw ? JSON.parse(raw) : [];
-    existing.push(newFormation);
-    localStorage.setItem(FORMATIONS_KEY, JSON.stringify(existing));
-
-    router.push("/admin/formations");
+    try {
+      await createFormation({
+        ...form,
+        capacity: Number(form.capacity) || 0,
+        status: "open",
+        schedule: schedule.length > 0 ? schedule : undefined,
+        registrationDeadline: form.registrationDeadline || undefined,
+      });
+      router.push("/admin/formations");
+    } catch {
+      setIsSubmitting(false);
+      alert("Erreur lors de la création de la formation. Réessayez.");
+    }
   }
 
   const inputClass =
@@ -149,6 +148,23 @@ export default function AdminNewFormationPage() {
             <label htmlFor="endDate" className="block text-sm font-medium text-foreground mb-1">Date de fin</label>
             <input id="endDate" name="endDate" type="date" value={form.endDate} onChange={handleChange} className={inputClass} />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="registrationDeadline" className="block text-sm font-medium text-foreground mb-1">
+            Date limite d&apos;inscription
+            <span className="ml-2 text-xs font-normal text-foreground-muted">
+              (optionnel — passé cette date, la fiche reste consultable mais le bouton « S&apos;inscrire » est désactivé)
+            </span>
+          </label>
+          <input
+            id="registrationDeadline"
+            name="registrationDeadline"
+            type="date"
+            value={form.registrationDeadline}
+            onChange={handleChange}
+            className={inputClass}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

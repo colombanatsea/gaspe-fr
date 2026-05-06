@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -14,6 +14,8 @@ import {
   type PositionTag,
 } from "@/data/positions";
 import { memberStats } from "@/data/members";
+import { listPositions } from "@/lib/positions-store";
+import { isApiMode } from "@/lib/api-client";
 
 const PAGE_ID = "positions";
 const D = (s: string) => getCmsDefault(PAGE_ID, s);
@@ -32,30 +34,58 @@ function tagVariant(tag: PositionTag) {
   }
 }
 
+/** Mappe une StoredPosition (D1) vers PositionItem (UI/seed type). */
+function storedToItem(p: { slug: string; title: string; excerpt: string; content: string; category: string; date: string; }): PositionItem {
+  const tag: PositionTag = p.category === "Communiqué de presse" ? "Presse"
+    : p.category === "Actualité" ? "Actualité" : "Position";
+  return {
+    title: p.title,
+    date: p.date,
+    sortKey: p.date || "0000-00-00",
+    publishedAt: p.date ? new Date(p.date).toISOString() : new Date().toISOString(),
+    excerpt: p.excerpt ?? "",
+    tag,
+    slug: p.slug,
+    body: p.content ?? "",
+  };
+}
+
 export default function PositionsPage() {
   const revealRef = useScrollReveal();
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<PositionTag | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [items, setItems] = useState<PositionItem[]>([...publishedPositions]);
+
+  useEffect(() => {
+    // Mode prod (avec NEXT_PUBLIC_API_URL) : fetch D1 ; sinon garde le seed.
+    listPositions()
+      .then((list) => {
+        if (list.length > 0) setItems(list.map(storedToItem));
+      })
+      .catch(() => {
+        /* fallback silencieux sur le seed déjà initialisé */
+      });
+  }, []);
 
   const filtered = useMemo<PositionItem[]>(() => {
-    let items = [...publishedPositions];
+    let result = [...items];
 
     if (activeTag) {
-      items = items.filter((p) => p.tag === activeTag);
+      result = result.filter((p) => p.tag === activeTag);
     }
 
     if (search.trim()) {
       const q = search.toLowerCase();
-      items = items.filter(
+      result = result.filter(
         (p) =>
           p.title.toLowerCase().includes(q) ||
           p.excerpt.toLowerCase().includes(q),
       );
     }
 
-    return items;
-  }, [search, activeTag]);
+    return result;
+  }, [items, search, activeTag]);
 
   const visible = showAll ? filtered : filtered.slice(0, INITIAL_VISIBLE);
 
@@ -143,7 +173,7 @@ export default function PositionsPage() {
               {visible.map((position) => (
                 <Link
                   key={position.slug}
-                  href={`/positions/${position.slug}`}
+                  href={isApiMode() ? `/positions/view?slug=${encodeURIComponent(position.slug)}` : `/positions/${position.slug}`}
                   className="group relative overflow-hidden block rounded-xl bg-background border border-border-light p-6 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
                   <div className="gaspe-card-top-strip" />
@@ -217,7 +247,8 @@ export default function PositionsPage() {
                   {memberStats.compagnies} compagnies maritimes côtières
                   françaises assurant les liaisons de service public sur
                   l&apos;hexagone et en outre-mer. 1&nbsp;494 marins français,{" "}
-                  {memberStats.totalShips} navires, 25 M+ de passagers par an.
+                  {memberStats.totalShips} navires, 25 M+ de passagers par an
+                  (chiffres consolidés 2025).
                 </p>
 
                 <p className="text-sm text-foreground-muted mb-6">

@@ -255,7 +255,7 @@ export function GroupementContent() {
                     </div>
                     <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4">
                       <p className="font-heading text-2xl font-bold">1 494</p>
-                      <p className="text-xs text-white/70">Marins français</p>
+                      <p className="text-xs text-white/70">Marins français (2025)</p>
                     </div>
                   </div>
                 </div>

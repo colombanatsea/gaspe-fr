@@ -31,6 +31,13 @@ export interface Job {
   salaryMin?: number;
   publishedAt: string;
   expiresAt?: string;
+  /**
+   * Date limite de candidature (ISO YYYY-MM-DD).
+   * Quand elle est dépassée, l'UI affiche un badge « Candidatures closes »
+   * et désactive le bouton « Postuler ». La fiche reste consultable.
+   * P0-4 du rapport docs/PRODUCTION-SAFETY-2026.md (session 54).
+   */
+  applicationDeadline?: string;
   published: boolean;
 
   // Hydros Alumni integration

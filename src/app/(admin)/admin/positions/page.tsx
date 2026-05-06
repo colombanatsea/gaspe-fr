@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
+import {
+  listAllPositions as apiListAllPositions,
+  updatePosition as apiUpdatePosition,
+  deletePosition as apiDeletePosition,
+} from "@/lib/positions-store";
+import { isApiMode } from "@/lib/api-client";
 
 const POSITIONS_KEY = "gaspe_positions";
 
@@ -40,11 +46,16 @@ export default function AdminPositionsPage() {
     if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
   }, [user, router]);
 
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized && user?.role === "admin") {
-    setInitialized(true);
-    setPositions(getPositions());
-  }
+  useEffect(() => {
+    if (!isStaffOrAdmin(user)) return;
+    if (isApiMode()) {
+      apiListAllPositions()
+        .then((list) => setPositions(list as Position[]))
+        .catch(() => startTransition(() => setPositions(getPositions())));
+    } else {
+      startTransition(() => setPositions(getPositions()));
+    }
+  }, [user]);
 
   if (!user || !isStaffOrAdmin(user)) return null;
 
@@ -57,16 +68,28 @@ export default function AdminPositionsPage() {
     return matchSearch && matchCat;
   });
 
-  function togglePublish(id: string) {
-    const updated = positions.map((p) =>
-      p.id === id ? { ...p, published: !p.published } : p
-    );
+  async function togglePublish(id: string) {
+    const target = positions.find((p) => p.id === id);
+    if (!target) return;
+    if (isApiMode()) {
+      await apiUpdatePosition(id, { published: !target.published });
+      const list = await apiListAllPositions();
+      setPositions(list as Position[]);
+      return;
+    }
+    const updated = positions.map((p) => (p.id === id ? { ...p, published: !p.published } : p));
     localStorage.setItem(POSITIONS_KEY, JSON.stringify(updated));
     setPositions(updated);
   }
 
-  function deletePosition(id: string) {
-    if (!confirm("Supprimer cet article ?")) return;
+  async function deletePosition(id: string) {
+    if (!confirm("Archiver cet article ? Il restera consultable depuis l'admin pour traçabilité.")) return;
+    if (isApiMode()) {
+      await apiDeletePosition(id);
+      const list = await apiListAllPositions();
+      setPositions(list as Position[]);
+      return;
+    }
     const updated = positions.filter((p) => p.id !== id);
     localStorage.setItem(POSITIONS_KEY, JSON.stringify(updated));
     setPositions(updated);

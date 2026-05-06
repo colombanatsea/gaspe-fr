@@ -2,6 +2,16 @@
 // `chore(release): bump v2.X.Y` doit toucher package.json + ce fichier.
 export const SITE_VERSION = "2.44.0";
 export const SITE_NAME = "GASPE";
+/**
+ * Date (ISO) de la dernière vérification éditoriale globale des chiffres et
+ * sources institutionnelles affichés sur le site. Affichée dans le footer
+ * pour la traçabilité (DGCCRF, audits, presse). À mettre à jour dès qu'un
+ * chiffre clé (adhérents, navires, marins, passagers) change ou qu'un
+ * texte réglementaire évolue. Format : YYYY-MM-DD.
+ */
+export const LAST_DATA_REVIEW_DATE = "2026-04-30";
+/** Format FR lisible pour affichage. */
+export const LAST_DATA_REVIEW_LABEL = "30 avril 2026";
 export const SITE_FULL_NAME =
   "Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau";
 export const SITE_TAGLINE = "D'un littoral à l'autre. Localement ancrés. Socialement engagés.";

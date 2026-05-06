@@ -532,6 +532,11 @@ Shared API client: `src/lib/api-client.ts` (JWT auth, FormData support, `isApiMo
 - **CF secrets** – Deploy Worker skips gracefully if `CF_CONFIGURED` repo var is not `true`
 - **Members store** – dual-mode via /api/organizations (archive supported in API mode since v2.12, migration 0007)
 - **ENM import** – copy-paste from portal (FranceConnect auth prevents direct API access)
+- ✅ **Formations migrées en D1** (session 54, commit 9b53edf) : table `formations` + 5 endpoints CRUD + store dual-mode + refactor des 7 fichiers UI + colonne `registration_deadline` (P0-3) + badge « Inscriptions closes ». Cf. `docs/PRODUCTION-SAFETY-2026.md` § D.1.
+- ✅ **Positions migrées en D1** (session 54, commit 487acbb) : table `positions` + 5 endpoints CRUD + store dual-mode + refactor admin + nouvelle route Client `/positions/view?slug=X`. Limitation P1 résiduelle : `feed.xml` / `sitemap.xml` continuent de lister uniquement le seed `data/positions.ts` (pas les positions D1).
+- ✅ **Application deadline jobs** (session 54, commit 70a27c1, P0-4) : `ALTER TABLE jobs ADD application_deadline`, type étendu, formulaires admin + adhérent, encart « Candidatures closes » sur fiche publique.
+- ✅ **Workflow découplé en 2 phases** (session 54, commit 9519181, P0-5) : `deploy-worker.yml` ne re-applique plus automatiquement les migrations destructives (`0014`, `0016`, `0025` déplacées dans `workers/migrations/_manual/`). Exécution manuelle via `workflow_dispatch + apply_manual_migrations=true` après backup et validation. README explicatif dans `_manual/`.
+- 🟠 **Workflow `deploy-worker.yml` swallow encore les erreurs phase 1 inattendues** — un échec réel passe en `::warning::` mais le job reste vert. Phase 2 manuelle exit 1 si erreur. Action P1-1 / P1-2 : durcir post-launch avec table `_migrations_applied` (cf. `docs/PRODUCTION-SAFETY-2026.md` § D.2).
 
 ## Session history
 | Session | Version | Key deliverables |

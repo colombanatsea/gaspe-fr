@@ -31,7 +31,7 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     ]),
     "stats-eyebrow": "Des chiffres qui parlent",
     "stats-title": "Le GASPE en chiffres",
-    "stats-subtitle": "Un écosystème maritime de proximité qui rayonne sur tout le littoral français.",
+    "stats-subtitle": "Un écosystème maritime de proximité qui rayonne sur tout le littoral français. Chiffres consolidés 2025.",
     // Mêmes sources que le hero pour navires/passagers → cohérence visuelle.
     "stats-items": JSON.stringify([
       { value: "{adherents}", label: "Adhérents", iconKey: "ship" },

@@ -8,8 +8,8 @@ import { publishedJobs } from "@/data/jobs";
 import { exportAccountsCsv, exportMembershipsCsv } from "@/lib/export-csv";
 import { SITE_VERSION } from "@/lib/constants";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
+import { listFormations } from "@/lib/formations-store";
 
-const FORMATIONS_KEY = "gaspe_formations";
 const POSITIONS_KEY = "gaspe_positions";
 const AGENDA_KEY = "gaspe_agenda";
 const DOCUMENTS_KEY = "gaspe_documents";
@@ -28,18 +28,21 @@ export default function AdminDashboardPage() {
   });
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) { router.push("/connexion"); return; }
-    getAllUsers().then((users) => {
+    Promise.all([
+      getAllUsers(),
+      listFormations().catch(() => []),
+    ]).then(([users, formations]) => {
       setCounts({
         pending: users.filter((u) => u.role === "adherent" && !u.approved && !u.archived).length,
         adherents: users.filter((u) => u.role === "adherent" && u.approved && !u.archived).length,
         candidats: users.filter((u) => u.role === "candidat" && !u.archived).length,
         total: users.filter((u) => !u.archived).length,
-        formations: getStorageCount(FORMATIONS_KEY),
+        formations: formations.length,
         positions: getStorageCount(POSITIONS_KEY),
         events: getStorageCount(AGENDA_KEY),
         documents: getStorageCount(DOCUMENTS_KEY),
       });
-    }).finally(() => { /* loaded */ });
+    });
   }, [user, router, getAllUsers]);
 
   if (!user || !isStaffOrAdmin(user)) return null;
@@ -118,6 +121,7 @@ export default function AdminDashboardPage() {
         <Link
           href="/"
           target="_blank"
+          rel="noopener noreferrer"
           className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-4 py-2.5 text-sm font-medium text-foreground-muted hover:text-foreground hover:border-[var(--gaspe-neutral-300)] transition-colors"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

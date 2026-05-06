@@ -8,32 +8,15 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-interface Formation {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  duration: string;
-  capacity: number;
-  organizer: string;
-  description: string;
-  registrations: string[];
-}
+import {
+  listFormations,
+  registerUserToFormation,
+  unregisterUserFromFormation,
+  isRegistrationClosed,
+  type StoredFormation,
+} from "@/lib/formations-store";
 
-const FORMATIONS_KEY = "gaspe_formations";
-
-function readFormations(): Formation[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function writeFormations(formations: Formation[]) {
-  localStorage.setItem(FORMATIONS_KEY, JSON.stringify(formations));
-}
+type Formation = StoredFormation;
 
 export default function CandidatFormationsPage() {
   const { user } = useAuth();
@@ -44,34 +27,26 @@ export default function CandidatFormationsPage() {
     if (!user || user.role !== "candidat") router.push("/connexion");
   }, [user, router]);
 
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized && user?.role === "candidat") {
-    setInitialized(true);
-    setFormations(readFormations());
-  }
+  useEffect(() => {
+    if (user?.role !== "candidat") return;
+    listFormations().then(setFormations).catch(() => setFormations([]));
+  }, [user]);
 
   if (!user || user.role !== "candidat") return null;
 
-  const handleRegister = (formationId: string) => {
-    const all = readFormations();
-    const idx = all.findIndex((f) => f.id === formationId);
-    if (idx >= 0) {
-      if (!all[idx].registrations) all[idx].registrations = [];
-      if (!all[idx].registrations.includes(user.id)) {
-        all[idx].registrations.push(user.id);
-        writeFormations(all);
-        setFormations(readFormations());
-      }
+  const handleRegister = async (formationId: string) => {
+    const updated = await registerUserToFormation(formationId, user.id);
+    if (updated) {
+      const list = await listFormations();
+      setFormations(list);
     }
   };
 
-  const handleUnregister = (formationId: string) => {
-    const all = readFormations();
-    const idx = all.findIndex((f) => f.id === formationId);
-    if (idx >= 0) {
-      all[idx].registrations = (all[idx].registrations ?? []).filter((id) => id !== user.id);
-      writeFormations(all);
-      setFormations(readFormations());
+  const handleUnregister = async (formationId: string) => {
+    const updated = await unregisterUserFromFormation(formationId, user.id);
+    if (updated) {
+      const list = await listFormations();
+      setFormations(list);
     }
   };
 
@@ -115,7 +90,7 @@ export default function CandidatFormationsPage() {
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    {f.date}
+                    {f.startDate}
                   </p>
                   <p className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">
@@ -171,6 +146,7 @@ export default function CandidatFormationsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {availableFormations.map((f) => {
               const isFull = (f.registrations?.length ?? 0) >= f.capacity;
+              const isClosed = isRegistrationClosed(f);
               return (
                 <Card key={f.id}>
                   <CardTitle className="text-base">{f.title}</CardTitle>
@@ -186,7 +162,7 @@ export default function CandidatFormationsPage() {
                         <line x1="8" y1="2" x2="8" y2="6" />
                         <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
-                      {f.date}
+                      {f.startDate}
                     </p>
                     <p className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">
@@ -205,7 +181,11 @@ export default function CandidatFormationsPage() {
                     <p className="text-xs">{f.registrations?.length ?? 0} / {f.capacity} inscrits</p>
                   </div>
                   <div className="mt-4">
-                    {isFull ? (
+                    {isClosed ? (
+                      <span title="Date limite d'inscription dépassée. La fiche reste consultable pour archive.">
+                        <Badge variant="warm">Inscriptions closes</Badge>
+                      </span>
+                    ) : isFull ? (
                       <Badge variant="warm">Complet</Badge>
                     ) : (
                       <Button onClick={() => handleRegister(f.id)}>S&apos;inscrire</Button>

@@ -13,8 +13,7 @@ import { publishedJobs } from "@/data/jobs";
 import { computeMatchScore, MATCH_COLORS } from "@/lib/matching";
 import { EnmImport } from "@/components/shared/EnmImport";
 import { EnmProfileDisplay } from "@/components/shared/EnmProfileDisplay";
-
-const FORMATIONS_KEY = "gaspe_formations";
+import { listFormations } from "@/lib/formations-store";
 
 function profileCompletion(user: User): number {
   const weights = [
@@ -69,10 +68,9 @@ export default function EspaceCandidatPage() {
       profilePhoto: user.profilePhoto ?? "",
       linkedinUrl: user.linkedinUrl ?? "",
     });
-    try {
-      const formations = JSON.parse(localStorage.getItem(FORMATIONS_KEY) ?? "[]");
-      setFormationsCount(formations.length);
-    } catch { /* empty */ }
+    listFormations()
+      .then((list) => setFormationsCount(list.length))
+      .catch(() => setFormationsCount(0));
   }
 
   const handleSaveProfile = useCallback(() => {

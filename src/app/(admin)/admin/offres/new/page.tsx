@@ -43,6 +43,7 @@ export default function AdminNewOffrePage() {
     applicationUrl: "",
     reference: "",
     startDate: "Immédiat",
+    applicationDeadline: "",
     profile: "",
     conditions: "",
     handiAccessible: false,
@@ -90,6 +91,7 @@ export default function AdminNewOffrePage() {
       startDate: form.startDate || undefined,
       salaryRange: form.salaryRange || undefined,
       handiAccessible: form.handiAccessible || undefined,
+      applicationDeadline: form.applicationDeadline || undefined,
       publishedAt: new Date().toISOString().split("T")[0],
       published: true,
     };
@@ -351,6 +353,24 @@ export default function AdminNewOffrePage() {
             value={form.salaryRange}
             onChange={handleChange}
             placeholder="Ex : 35 000 - 45 000 EUR brut/an"
+            className={inputClass}
+          />
+        </div>
+
+        {/* Date limite de candidature (P0-4) */}
+        <div>
+          <label htmlFor="applicationDeadline" className="block text-sm font-medium text-foreground mb-1">
+            Date limite de candidature
+            <span className="ml-2 text-xs font-normal text-foreground-muted">
+              (optionnel — passé cette date, la fiche reste consultable mais le bouton « Postuler » est désactivé)
+            </span>
+          </label>
+          <input
+            id="applicationDeadline"
+            name="applicationDeadline"
+            type="date"
+            value={form.applicationDeadline}
+            onChange={handleChange}
             className={inputClass}
           />
         </div>

@@ -44,6 +44,7 @@ interface JobOffer {
   startDate?: string;
   contactPhone?: string;
   handiAccessible?: boolean;
+  applicationDeadline?: string;
   hydrosOfferUrl?: string;
   hydrosOfferId?: string;
 }
@@ -77,6 +78,7 @@ const emptyForm = {
   startDate: "Immédiat",
   contactPhone: "",
   handiAccessible: false,
+  applicationDeadline: "",
 };
 
 function readOffers(): JobOffer[] {
@@ -158,6 +160,7 @@ export default function AdherentOffresPage() {
           startDate: form.startDate || undefined,
           contactPhone: form.contactPhone || undefined,
           handiAccessible: form.handiAccessible || undefined,
+          applicationDeadline: form.applicationDeadline || undefined,
         };
         writeOffers(all);
       }
@@ -180,6 +183,7 @@ export default function AdherentOffresPage() {
         startDate: form.startDate || undefined,
         contactPhone: form.contactPhone || undefined,
         handiAccessible: form.handiAccessible || undefined,
+        applicationDeadline: form.applicationDeadline || undefined,
         status: asDraft ? "draft" : "active",
         createdAt: new Date().toISOString(),
         company: user.company ?? "",
@@ -248,6 +252,7 @@ export default function AdherentOffresPage() {
       startDate: offer.startDate ?? "Immédiat",
       contactPhone: offer.contactPhone ?? "",
       handiAccessible: offer.handiAccessible ?? false,
+      applicationDeadline: offer.applicationDeadline ?? "",
     });
     setEditingId(offer.id);
     setShowForm(true);
@@ -422,6 +427,21 @@ export default function AdherentOffresPage() {
                   className={inputClass}
                   placeholder="Ex: 3 500 - 4 500 €/mois"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  Date limite de candidature
+                  <span className="ml-1 text-xs font-normal text-foreground-muted">(optionnel)</span>
+                </label>
+                <input
+                  type="date"
+                  value={form.applicationDeadline}
+                  onChange={(e) => update("applicationDeadline", e.target.value)}
+                  className={inputClass}
+                />
+                <p className="mt-1 text-xs text-foreground-muted">
+                  Passé cette date, le bouton « Postuler » est désactivé sur la fiche publique.
+                </p>
               </div>
             </div>
 
