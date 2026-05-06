@@ -144,14 +144,14 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 | **P0-4** | **Date limite candidature offres** | S (~1h) | ✅ **LIVRÉ** (commit 70a27c1) : migration 0033 `ALTER TABLE jobs ADD COLUMN application_deadline TEXT`, type `Job.applicationDeadline?: string`, mapper Worker, INSERT/PATCH étendus, champs date dans `/admin/offres/new` + `/espace-adherent/offres`, encart « Candidatures closes » sur la fiche publique `/nos-compagnies-recrutent/[slug]` qui remplace les boutons « Postuler » quand la date est dépassée. |
 | **P0-5** | **Geler les migrations seed UPDATE après import** | XS (~30 min) | ✅ **LIVRÉ** (commit 9519181) : workflow `.github/workflows/deploy-worker.yml` découplé en 2 phases. Phase 1 (auto push main) skip `workers/migrations/_manual/*`. Phase 2 (workflow_dispatch + `apply_manual_migrations=true`) applique les migrations destructives. 3 fichiers déplacés dans `_manual/` : `0014_archive_keolis_bordeaux.sql`, `0016_organization_college.sql`, `0025_repair_data.sql`. README explicatif + checklist d'exécution dans `_manual/README.md`. |
 
-### D.2 Recommandé (post-launch sous 1 mois)
+### D.2 Recommandé (post-launch sous 1 mois) — ✅ G2 livré session 54
 
-| # | Action | Effort |
-|---|--------|:-:|
-| **P1-1** | Implémenter `_migrations_applied` (table tracker, INSERT après chaque migration réussie, SKIP si déjà présente) | M (~2h) |
-| **P1-2** | Durcir le workflow : exit 1 sur erreur inattendue, garder le `::warning::` sur duplicate column | XS |
-| **P1-3** | Backup automatisé D1 quotidien via `wrangler d1 export` + R2 retention 30 jours | M |
-| **P1-4** | Documenter le **protocole release** dans `CLAUDE.md` : « pas de `UPDATE` de seed sans étiquetage explicite `_optional` ou `_oneshot` » | XS |
+| # | Action | Effort | Statut session 54 |
+|---|--------|:-:|-------------------|
+| **P1-1** | Implémenter `_migrations_applied` (table tracker, INSERT après chaque migration réussie, SKIP si déjà présente) | M (~2h) | ✅ **LIVRÉ** (commit 85ac084) : migration `0034_migrations_applied.sql` + bootstrap rétroactif INSERT OR IGNORE des 30 migrations actuellement appliquées en prod (0001-0033 hors `_manual/`). |
+| **P1-2** | Durcir le workflow : exit 1 sur erreur inattendue, garder le `::warning::` sur duplicate column | XS | ✅ **LIVRÉ** (commit 85ac084) : `deploy-worker.yml` phase 1 utilise désormais `already_applied()` + `mark_applied()` via `wrangler d1 execute --command`. Exit 1 si `unexpected > 0` (avant : `::warning::` swallow). Compteurs `applied/skipped/unexpected` affichés en fin de run. |
+| **P1-3** | Backup automatisé D1 quotidien via `wrangler d1 export` + R2 retention 30 jours | M | ✅ **LIVRÉ** : nouveau workflow `.github/workflows/backup-d1.yml` (cron `0 3 * * *` UTC quotidien + `workflow_dispatch` manuel). Export → R2 `gaspe-uploads/_backups/d1/d1-backup-YYYY-MM-DD.sql`. Étape `Cleanup local file` `if: always()`. Retention 30j à scripter en cleanup hebdo (backlog mineur, peut se faire via lifecycle rule R2 côté CF). |
+| **P1-4** | Documenter le **protocole release** dans `CLAUDE.md` | XS | ✅ **LIVRÉ** (commit 85ac084) : nouvelle section « Production safety – protocole release D1 » dans `CLAUDE.md` avant § Known limitations. Détaille la règle d'or, la convention de placement (`workers/migrations/` vs `_manual/`), le tracking, la checklist dev pour toute nouvelle migration, et les 2 procédures release standard (structurelle vs destructive avec backup obligatoire). |
 
 ### D.3 Backlog ouvert (P2)
 
@@ -255,7 +255,7 @@ Conséquence : un `unexpected=$((unexpected + 1))` produit un `::warning::` mais
 |-----|--------|:-:|:-:|
 | **Lot G0** (formations + positions D1) | P0-1 + P0-2 | ~6h | ✅ **LIVRÉ** (9b53edf, 487acbb) |
 | **Lot G1** (deadlines + workflow safe) | P0-3 + P0-4 + P0-5 | ~3h | ✅ **LIVRÉ** (9b53edf, 70a27c1, 9519181) |
-| **Lot G2** (durcissement post-launch) | P1-1 + P1-2 + P1-3 + P1-4 | ~6h | 🟡 sous 1 mois (backlog) |
+| **Lot G2** (durcissement post-launch) | P1-1 + P1-2 + P1-3 + P1-4 | ~6h | ✅ **LIVRÉ** (85ac084 + ce commit) |
 | **Lot G3** (audit, soft-delete, export) | P2-1 → P2-4 | ~12h | 🟢 backlog ouvert |
 
 **Bilan session 54** : G0 + G1 livrés en 5 commits atomiques sur `claude/french-greeting-test-fmBzC` (9b53edf → 9519181). Total ~780+716+91+136 = **~1700 LOC** ajoutées (migrations + handlers Worker + stores dual-mode + UI refactor + workflow + docs). Lint 0/0, tsc 0, vitest 346/346, build 118 pages.

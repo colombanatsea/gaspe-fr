@@ -1,0 +1,80 @@
+name: Backup D1
+
+# Backup automatisé quotidien de la D1 vers R2 (P1-3 du rapport
+# docs/PRODUCTION-SAFETY-2026.md, session 54).
+#
+# Cron : 03:00 UTC tous les jours = 04:00 Paris hiver / 05:00 été
+# (heure creuse, pas de chevauchement avec le cron validation 09:00 UTC).
+#
+# Le backup est stocké dans R2 (bucket gaspe-uploads) sous la clé
+# `_backups/d1/YYYY-MM-DD.sql`. Cette clé est exclue du listing public
+# par convention (préfixe `_`), R2 retournera 403 sur GET direct.
+#
+# Retention : nettoyage hebdomadaire des backups > 30 jours
+# (étape « Cleanup old backups »).
+#
+# Manuel : workflow_dispatch déclenchable depuis l'UI Actions.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'           # quotidien 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    if: ${{ vars.CF_CONFIGURED == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Export D1 → SQL file
+        id: export
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +%Y-%m-%d)
+          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          FILE="d1-backup-${DATE}.sql"
+          echo "Exportation D1 gaspe-db → $FILE …"
+          npx wrangler d1 export gaspe-db --remote \
+            --output "$FILE" \
+            --config workers/wrangler.toml
+          ls -lh "$FILE"
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
+          # Affiche les premières lignes pour audit (en-tête SQL inoffensif).
+          head -5 "$FILE"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Upload backup to R2
+        run: |
+          set -euo pipefail
+          npx wrangler r2 object put \
+            "gaspe-uploads/_backups/d1/${{ steps.export.outputs.file }}" \
+            --file "${{ steps.export.outputs.file }}" \
+            --content-type "application/sql"
+          echo "::notice::Backup uploadé : R2://gaspe-uploads/_backups/d1/${{ steps.export.outputs.file }}"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Cleanup local file
+        if: always()
+        run: rm -f "${{ steps.export.outputs.file }}"
+
+      - name: Summary
+        run: |
+          echo "## Backup D1 — ${{ steps.export.outputs.date }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "* Fichier : \`${{ steps.export.outputs.file }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "* R2 : \`gaspe-uploads/_backups/d1/${{ steps.export.outputs.file }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "* Restauration manuelle : \`wrangler d1 execute gaspe-db --remote --file <ce-fichier>.sql\`" >> "$GITHUB_STEP_SUMMARY"
