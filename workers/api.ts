@@ -2706,23 +2706,33 @@ async function handleJobDelete(request: Request, env: Env, corsHeaders: Record<s
   const payload = await verifyJwt(token, env.JWT_SECRET);
   if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
 
-  // Snapshot before pour audit log (avant DELETE)
+  // Snapshot before pour audit log (avant soft-delete)
   const before = await env.DB.prepare("SELECT * FROM jobs WHERE id = ?").bind(jobId).first<DbJob>();
   if (!before) return json({ error: "Offre introuvable" }, corsHeaders, 404);
   if (payload.role !== "admin" && before.created_by !== payload.sub) {
     return json({ error: "Accès refusé" }, corsHeaders, 403);
   }
 
-  await env.DB.prepare("DELETE FROM jobs WHERE id = ?").bind(jobId).run();
+  // Soft-delete (P2-2 session 54+) : is_archived=1 + published=0 plutôt
+  // qu'un DELETE physique → préserve l'historique pour audit. La colonne
+  // est ajoutée par la migration 0036 ; un fallback DELETE est appliqué
+  // si la colonne n'existe pas encore (migration en cours d'application).
+  try {
+    await env.DB.prepare(
+      "UPDATE jobs SET is_archived = 1, published = 0, updated_at = datetime('now') WHERE id = ?",
+    ).bind(jobId).run();
+  } catch {
+    // Fallback DELETE si la colonne is_archived n'existe pas encore
+    await env.DB.prepare("DELETE FROM jobs WHERE id = ?").bind(jobId).run();
+  }
 
-  // Audit log (best-effort, n'échoue pas la requête)
   await logAudit(
     env, request,
     { id: payload.sub, email: payload.email ?? null, role: payload.role },
     "job.delete", "job", jobId, before, null,
   );
 
-  return json({ success: true }, corsHeaders);
+  return json({ success: true, archived: true }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2850,14 +2860,29 @@ async function handleMedicalDelete(request: Request, env: Env, corsHeaders: Reco
   const payload = await verifyJwt(token, env.JWT_SECRET);
   if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
 
-  const existing = await env.DB.prepare("SELECT user_id FROM medical_visits WHERE id = ?").bind(visitId).first<{ user_id: string }>();
-  if (!existing) return json({ error: "Visite introuvable" }, corsHeaders, 404);
-  if (existing.user_id !== payload.sub && payload.role !== "admin") {
+  const before = await env.DB.prepare("SELECT * FROM medical_visits WHERE id = ?").bind(visitId).first<DbMedicalVisit>();
+  if (!before) return json({ error: "Visite introuvable" }, corsHeaders, 404);
+  if (before.user_id !== payload.sub && payload.role !== "admin") {
     return json({ error: "Accès refusé" }, corsHeaders, 403);
   }
 
-  await env.DB.prepare("DELETE FROM medical_visits WHERE id = ?").bind(visitId).run();
-  return json({ success: true }, corsHeaders);
+  // Soft-delete (P2-2 session 54+) : aptitude médicale = donnée légale
+  // sensible, conserver l'historique pour audits ENIM / DAM.
+  try {
+    await env.DB.prepare(
+      "UPDATE medical_visits SET is_archived = 1, updated_at = datetime('now') WHERE id = ?",
+    ).bind(visitId).run();
+  } catch {
+    await env.DB.prepare("DELETE FROM medical_visits WHERE id = ?").bind(visitId).run();
+  }
+
+  await logAudit(
+    env, request,
+    { id: payload.sub, email: payload.email ?? null, role: payload.role },
+    "medical_visit.delete", "medical_visit", visitId, before, null,
+  );
+
+  return json({ success: true, archived: true }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3156,8 +3181,16 @@ async function handleNlDraftsDelete(request: Request, env: Env, corsHeaders: Rec
   const auth = await requireStaffPermission(request, env, corsHeaders, "manage_newsletter");
   if ("error" in auth) return auth.error;
   await ensureNlDraftsTable(env);
-  await env.DB.prepare("DELETE FROM nl_drafts WHERE id = ?").bind(id).run();
-  return json({ success: true }, corsHeaders);
+  // Soft-delete (P2-2 session 54+) : preserve les brouillons archivés
+  // pour reprise éventuelle.
+  try {
+    await env.DB.prepare(
+      "UPDATE nl_drafts SET is_archived = 1, updated_at = datetime('now') WHERE id = ?",
+    ).bind(id).run();
+  } catch {
+    await env.DB.prepare("DELETE FROM nl_drafts WHERE id = ?").bind(id).run();
+  }
+  return json({ success: true, archived: true }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════════════
