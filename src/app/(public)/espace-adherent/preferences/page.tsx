@@ -1,46 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiAuthStore } from "@/lib/auth/api-auth-store";
 import { isApiMode } from "@/lib/auth/auth-store";
-import { NEWSLETTER_CATEGORIES, type NewsletterPreferences } from "@/lib/auth/types";
+import { apiFetch } from "@/lib/api-client";
+
+interface NewsletterCategory {
+  key: string;
+  label: string;
+  description?: string;
+  audienceFilter: string;
+  isPublic: boolean;
+  sortOrder: number;
+}
 
 export default function PreferencesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [prefs, setPrefs] = useState<NewsletterPreferences | null>(null);
+  const [categories, setCategories] = useState<NewsletterCategory[]>([]);
+  const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== "adherent") { router.push("/connexion"); return; }
-    if (!isApiMode()) return;
-    ApiAuthStore.fetchPreferences().then((p) => {
-      setPrefs(p);
+    if (!isApiMode()) {
+      setLoading(false);
+      return;
+    }
+    // Refonte session 56b : fetch dynamique des catégories filtrées par
+    // audience (le Worker filtre selon social3228 / collège du user). Les
+    // préférences arrivent déjà alignées sur les catégories renvoyées.
+    Promise.all([
+      apiFetch<{ categories?: NewsletterCategory[] }>("/api/newsletter/categories")
+        .then((r) => r.categories ?? [])
+        .catch(() => []),
+      ApiAuthStore.fetchPreferences(),
+    ]).then(([cats, p]) => {
+      setCategories(cats);
+      setPrefs(((p ?? {}) as Record<string, boolean>));
       setLoading(false);
     });
   }, [user, router]);
-
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized && user?.role === "adherent" && !isApiMode()) {
-    setInitialized(true);
-    setLoading(false);
-  }
-
-  const handleToggle = async (key: string) => {
-    if (!prefs) return;
-    const updated = { ...prefs, [key]: !prefs[key as keyof NewsletterPreferences] };
-    setPrefs(updated);
-    setSaving(true);
-    setSaved(false);
-    await ApiAuthStore.updatePreferences({ [key]: updated[key as keyof NewsletterPreferences] });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
 
   if (!user || user.role !== "adherent") return null;
 
@@ -55,8 +59,19 @@ export default function PreferencesPage() {
     );
   }
 
-  // Adherents see all 10 categories
-  const categories = NEWSLETTER_CATEGORIES;
+  async function handleToggle(key: string) {
+    const updated = { ...prefs, [key]: !prefs[key] };
+    setPrefs(updated);
+    setSaving(true);
+    setSaved(false);
+    try {
+      await ApiAuthStore.updatePreferences({ [key]: updated[key] });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -75,20 +90,27 @@ export default function PreferencesPage() {
         <div className="rounded-2xl bg-background border border-border-light p-8 text-center text-foreground-muted">
           Chargement...
         </div>
+      ) : categories.length === 0 ? (
+        <div className="rounded-2xl bg-background border border-border-light p-8 text-center text-foreground-muted">
+          Aucune catégorie de newsletter disponible pour votre profil.
+        </div>
       ) : (
         <div className="rounded-2xl bg-background border border-border-light divide-y divide-border-light overflow-hidden">
           {categories.map((cat) => (
             <label
               key={cat.key}
-              className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-surface/50 transition-colors"
+              className="flex items-start justify-between gap-4 px-6 py-4 cursor-pointer hover:bg-surface/50 transition-colors"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground">{cat.label}</p>
+                {cat.description && (
+                  <p className="mt-1 text-xs text-foreground-muted">{cat.description}</p>
+                )}
               </div>
-              <div className="relative">
+              <div className="relative shrink-0 mt-0.5">
                 <input
                   type="checkbox"
-                  checked={prefs?.[cat.key as keyof NewsletterPreferences] ?? false}
+                  checked={!!prefs[cat.key]}
                   onChange={() => handleToggle(cat.key)}
                   className="sr-only peer"
                 />
