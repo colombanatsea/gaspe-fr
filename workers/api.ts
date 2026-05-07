@@ -1033,53 +1033,36 @@ async function handleForgotPassword(request: Request, env: Env, corsHeaders: Rec
     "INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)",
   ).bind(token, userRow.id, expiresAt).run();
 
-  // Send reset email via Brevo
-  if (env.BREVO_API_KEY) {
-    const resetUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${token}`;
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": env.BREVO_API_KEY,
-      },
-      body: JSON.stringify({
-        sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
-        to: [{ email: userRow.email, name: userRow.name }],
-        subject: "Réinitialisation de votre mot de passe GASPE",
-        htmlContent: `
-          <!DOCTYPE html>
-          <html lang="fr">
-          <head><meta charset="utf-8"></head>
-          <body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
-            <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;margin-top:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-              <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
-                <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
-                <p style="margin:4px 0 0;color:#B2DFE3;font-family:'DM Sans',Helvetica,sans-serif;font-size:13px;">Localement ancrés. Socialement engagés.</p>
-              </div>
-              <div style="padding:32px;">
-                <h2 style="margin:0 0 16px;color:#222221;font-family:'Exo 2',Helvetica,sans-serif;font-size:20px;">Réinitialisation du mot de passe</h2>
-                <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(userRow.name)},</p>
-                <p style="margin:0 0 12px;color:#222221;font-size:15px;">Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau :</p>
-                <p style="margin:24px 0;">
-                  <a href="${resetUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-family:'Exo 2',Helvetica,sans-serif;font-size:14px;">
-                    Réinitialiser mon mot de passe
-                  </a>
-                </p>
-                <p style="margin:0 0 8px;color:#6B6560;font-size:13px;">Ce lien est valide pendant 1 heure.</p>
-                <p style="margin:0;color:#6B6560;font-size:13px;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
-              </div>
-              <div style="margin-top:32px;padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-family:'DM Sans',Helvetica,sans-serif;font-size:12px;color:#6B6560;">
-                <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `,
-        textContent: `Bonjour ${userRow.name}, réinitialisez votre mot de passe GASPE : ${resetUrl} (lien valide 1 heure).`,
-      }),
-    });
-  }
+  // Send reset email via Brevo (session 56 — passe par le helper centralisé,
+  // best-effort + log dans email_sent_log + no-op silencieux si secret absent)
+  const resetUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${token}`;
+  void sendBrevoTransactional(env, {
+    to: [{ email: userRow.email, name: userRow.name }],
+    subject: "Réinitialisation de votre mot de passe GASPE",
+    type: "password_reset",
+    entityId: userRow.id,
+    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
+      <p style="margin:4px 0 0;color:#B2DFE3;font-size:13px;">Localement ancrés. Socialement engagés.</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Réinitialisation du mot de passe</h2>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(userRow.name)},</p>
+      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+      <p style="margin:24px 0;"><a href="${resetUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Réinitialiser mon mot de passe</a></p>
+      <p style="margin:0 0 8px;color:#6B6560;font-size:13px;">Ce lien est valide pendant 1 heure.</p>
+      <p style="margin:0;color:#6B6560;font-size:13px;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+    </div>
+    <div style="padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-size:12px;color:#6B6560;">
+      <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
+    </div>
+  </div>
+</body></html>`,
+    textContent: `Bonjour ${userRow.name}, réinitialisez votre mot de passe GASPE : ${resetUrl} (lien valide 1 heure).`,
+  });
 
   return json({ success: true }, corsHeaders);
 }
@@ -1130,6 +1113,162 @@ async function handleResetPassword(request: Request, env: Env, corsHeaders: Reco
 //  Email sending → Brevo proxy
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * Helper centralisé pour envoyer un email transactionnel via Brevo
+ * (`POST /v3/smtp/email`). Session 56 — I1 du POST-LAUNCH-FEEDBACK.
+ *
+ * Comportement :
+ *   - No-op silencieux si `env.BREVO_API_KEY` absent (mode démo / preprod
+ *     sans secret provisionné).
+ *   - Sender par défaut : `{ name: env.BREVO_SENDER_NAME ?? "GASPE",
+ *     email: env.BREVO_SENDER_EMAIL ?? "ne-pas-repondre@gaspe.fr" }`.
+ *   - Best-effort : un échec Brevo (4xx/5xx, network error) est loggué
+ *     mais ne fait jamais throw. Le caller ne doit jamais bloquer son
+ *     flow métier (création compte, candidature, vote…) à cause d'un
+ *     email qui n'est pas parti.
+ *   - Retourne `{ ok, brevoMessageId?, error? }` pour permettre au caller
+ *     de tracer dans `email_sent_log` (migration 0039).
+ *
+ * Centralise la duplication observée sur 6+ call sites avant le refactor
+ * de la session 56.
+ */
+async function sendBrevoTransactional(
+  env: Env,
+  params: {
+    to: { email: string; name?: string }[];
+    subject: string;
+    htmlContent: string;
+    textContent?: string;
+    sender?: { name: string; email: string };
+    replyTo?: { email: string; name?: string };
+    /** Pour idempotence : voir `alreadyBrevoSent` / `logBrevoSent`. */
+    type?: string;
+    entityId?: string;
+  },
+): Promise<{ ok: boolean; brevoMessageId?: string; error?: string }> {
+  if (!env.BREVO_API_KEY) {
+    // Mode no-op silencieux : preprod / démo sans secret. On log pour
+    // tracer l'intention dans la table audit, sans appel réseau.
+    if (params.type) {
+      for (const r of params.to) {
+        await logBrevoSent(env, params.type, r.email, params.entityId, null, "no-op (BREVO_API_KEY absent)");
+      }
+    }
+    return { ok: false, error: "BREVO_API_KEY non configuré (mode no-op)" };
+  }
+
+  const sender = params.sender ?? {
+    name: env.BREVO_SENDER_NAME ?? "GASPE",
+    email: env.BREVO_SENDER_EMAIL ?? "ne-pas-repondre@gaspe.fr",
+  };
+
+  const body: Record<string, unknown> = {
+    sender,
+    to: params.to,
+    subject: params.subject,
+    htmlContent: params.htmlContent,
+  };
+  if (params.textContent) body.textContent = params.textContent;
+  if (params.replyTo) body.replyTo = params.replyTo;
+
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": env.BREVO_API_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({})) as { message?: string };
+      const errMsg = errBody.message ?? `Brevo HTTP ${res.status}`;
+      console.warn(`[brevo] ${params.type ?? "transactional"} → ${params.to[0]?.email} échoué : ${errMsg}`);
+      if (params.type) {
+        for (const r of params.to) {
+          await logBrevoSent(env, params.type, r.email, params.entityId, null, errMsg);
+        }
+      }
+      return { ok: false, error: errMsg };
+    }
+    const respJson = await res.json().catch(() => ({})) as { messageId?: string };
+    const brevoMessageId = respJson.messageId;
+    if (params.type) {
+      for (const r of params.to) {
+        await logBrevoSent(env, params.type, r.email, params.entityId, brevoMessageId, null);
+      }
+    }
+    return { ok: true, brevoMessageId };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[brevo] ${params.type ?? "transactional"} network error :`, errMsg);
+    if (params.type) {
+      for (const r of params.to) {
+        await logBrevoSent(env, params.type, r.email, params.entityId, null, errMsg);
+      }
+    }
+    return { ok: false, error: errMsg };
+  }
+}
+
+/**
+ * Trace un envoi Brevo dans la table `email_sent_log` (migration 0039).
+ * Idempotence : l'INSERT échoue silencieusement si la combinaison
+ * (type, recipient_email, entity_id, sent_at_day) existe déjà — c'est le
+ * comportement attendu pour éviter le re-spam.
+ *
+ * Best-effort : un échec d'insertion (table absente, etc.) ne fait jamais
+ * throw — le métier passe avant le log.
+ */
+async function logBrevoSent(
+  env: Env,
+  type: string,
+  recipientEmail: string,
+  entityId: string | null | undefined,
+  brevoMessageId: string | null | undefined,
+  error: string | null,
+): Promise<void> {
+  try {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO email_sent_log (type, recipient_email, entity_id, brevo_message_id, error)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).bind(type, recipientEmail, entityId ?? null, brevoMessageId ?? null, error).run();
+  } catch (err) {
+    // Table absente (migration 0039 pas encore appliquée) : ignore silencieusement.
+    if (!(err instanceof Error && /no such table/i.test(err.message))) {
+      console.warn("[brevo] logBrevoSent failed :", err);
+    }
+  }
+}
+
+/**
+ * Vérifie si un envoi (type, recipient_email, entity_id) a déjà été tenté
+ * aujourd'hui. Utile pour empêcher re-spam dans les triggers idempotents.
+ *
+ * Renvoie `false` si la table n'existe pas (preprod) → laisse l'envoi se faire.
+ */
+async function alreadyBrevoSent(
+  env: Env,
+  type: string,
+  recipientEmail: string,
+  entityId: string | null | undefined,
+): Promise<boolean> {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT 1 FROM email_sent_log
+       WHERE type = ? AND recipient_email = ?
+         AND COALESCE(entity_id, '') = COALESCE(?, '')
+         AND sent_at_day = date('now')
+         AND error IS NULL
+       LIMIT 1`,
+    ).bind(type, recipientEmail, entityId ?? null).first();
+    return !!row;
+  } catch {
+    return false;
+  }
+}
+
 async function handleEmail(request: Request, env: Env, corsHeaders: Record<string, string>) {
   // Require authentication to prevent open relay abuse
   const token = extractToken(request);
@@ -1160,36 +1299,21 @@ async function handleEmail(request: Request, env: Env, corsHeaders: Record<strin
     }
   }
 
-  const sender = body.sender ?? { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" };
-
-  try {
-    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": env.BREVO_API_KEY,
-      },
-      body: JSON.stringify({
-        sender,
-        to: body.to,
-        subject: body.subject,
-        htmlContent: body.htmlContent,
-        textContent: body.textContent,
-      }),
-    });
-
-    if (!brevoRes.ok) {
-      const err = await brevoRes.json().catch(() => ({})) as { message?: string };
-      console.error("[Brevo] Error:", err);
-      return json({ error: err.message ?? `Brevo HTTP ${brevoRes.status}` }, corsHeaders, 502);
-    }
-
-    return json({ success: true }, corsHeaders);
-  } catch (err) {
-    console.error("[Brevo] Network error:", err);
-    return json({ error: "Erreur de connexion à Brevo" }, corsHeaders, 502);
+  // Session 56 — passe par le helper centralisé. La sémantique change : un
+  // échec Brevo renvoie 502 mais le log dans email_sent_log se fait quand
+  // même via le helper.
+  const result = await sendBrevoTransactional(env, {
+    to: body.to,
+    subject: body.subject,
+    htmlContent: body.htmlContent,
+    textContent: body.textContent,
+    sender: body.sender,
+    type: "proxy_email",
+  });
+  if (!result.ok) {
+    return json({ error: result.error ?? "Erreur Brevo inconnue" }, corsHeaders, 502);
   }
+  return json({ success: true, brevoMessageId: result.brevoMessageId }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1380,37 +1504,31 @@ async function handleInviteContact(request: Request, env: Env, corsHeaders: Reco
     "INSERT INTO invitations (id, organization_id, invited_by, email, name, org_role, token, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   ).bind(inviteId, orgId, payload.sub, email.trim(), name?.trim() ?? null, orgRole ?? null, inviteToken, expiresAt).run();
 
-  // Send invitation email via Brevo
-  if (env.BREVO_API_KEY) {
-    const org = await env.DB.prepare("SELECT name FROM organizations WHERE id = ?").bind(orgId).first<{ name: string }>();
-    const inviter = await env.DB.prepare("SELECT name FROM users WHERE id = ?").bind(payload.sub).first<{ name: string }>();
-    const inviteUrl = `${SITE_URL}/inscription/invitation?token=${inviteToken}`;
+  // Send invitation email via Brevo (session 56 — helper centralisé)
+  const org = await env.DB.prepare("SELECT name FROM organizations WHERE id = ?").bind(orgId).first<{ name: string }>();
+  const inviter = await env.DB.prepare("SELECT name FROM users WHERE id = ?").bind(payload.sub).first<{ name: string }>();
+  const inviteUrl = `${SITE_URL}/inscription/invitation?token=${inviteToken}`;
 
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
-      body: JSON.stringify({
-        sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
-        to: [{ email: email.trim(), name: name?.trim() ?? email }],
-        subject: `Invitation à rejoindre ${org?.name ?? "votre compagnie"} sur GASPE`,
-        htmlContent: `
-          <!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
-          <body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
-          <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-            <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
-              <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
-            </div>
-            <div style="padding:32px;">
-              <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Vous êtes invité(e)</h2>
-              <p style="color:#222221;font-size:15px;">${sanitize(inviter?.name ?? "Un responsable")} vous invite à rejoindre l'espace <strong>${sanitize(org?.name ?? "")}</strong> sur la plateforme GASPE.</p>
-              <p style="margin:24px 0;"><a href="${inviteUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accepter l'invitation</a></p>
-              <p style="color:#6B6560;font-size:13px;">Ce lien est valide pendant 7 jours.</p>
-            </div>
-          </div></body></html>`,
-        textContent: `Vous êtes invité(e) à rejoindre ${org?.name ?? ""} sur GASPE. Acceptez l'invitation : ${inviteUrl}`,
-      }),
-    });
-  }
+  void sendBrevoTransactional(env, {
+    to: [{ email: email.trim(), name: name?.trim() ?? email }],
+    subject: `Invitation à rejoindre ${org?.name ?? "votre compagnie"} sur GASPE`,
+    type: "invitation_team",
+    entityId: inviteId,
+    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
+  </div>
+  <div style="padding:32px;">
+    <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Vous êtes invité(e)</h2>
+    <p style="color:#222221;font-size:15px;">${sanitize(inviter?.name ?? "Un responsable")} vous invite à rejoindre l'espace <strong>${sanitize(org?.name ?? "")}</strong> sur la plateforme GASPE.</p>
+    <p style="margin:24px 0;"><a href="${inviteUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accepter l'invitation</a></p>
+    <p style="color:#6B6560;font-size:13px;">Ce lien est valide pendant 7 jours.</p>
+  </div>
+</div></body></html>`,
+    textContent: `Vous êtes invité(e) à rejoindre ${org?.name ?? ""} sur GASPE. Acceptez l'invitation : ${inviteUrl}`,
+  });
 
   return json({ success: true }, corsHeaders);
 }
@@ -1645,31 +1763,20 @@ async function handleContact(request: Request, env: Env, corsHeaders: Record<str
     "INSERT INTO contact_messages (id, nom, email, societe, sujet, message) VALUES (?, ?, ?, ?, ?, ?)",
   ).bind(crypto.randomUUID(), nom, email, societe ?? "", sujet, message).run();
 
-  if (env.BREVO_API_KEY) {
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": env.BREVO_API_KEY,
-      },
-      body: JSON.stringify({
-        sender: { name: "GASPE", email: "ne-pas-repondre@gaspe.fr" },
-        to: [{ email: env.CONTACT_EMAIL || "contact@gaspe.fr", name: "GASPE" }],
-        replyTo: { email, name: nom },
-        subject: `[Contact GASPE] ${sujet}`,
-        htmlContent: `
-          <h2>Nouveau message de contact</h2>
-          <p><strong>Nom :</strong> ${nom}</p>
-          <p><strong>Email :</strong> ${sanitize(email)}</p>
-          ${societe ? `<p><strong>Société :</strong> ${societe}</p>` : ""}
-          <p><strong>Sujet :</strong> ${sujet}</p>
-          <hr/>
-          <p>${message.replace(/\n/g, "<br/>")}</p>
-        `,
-      }),
-    });
-  }
+  // Notification interne via le helper centralisé (session 56)
+  void sendBrevoTransactional(env, {
+    to: [{ email: env.CONTACT_EMAIL || "contact@gaspe.fr", name: "GASPE" }],
+    replyTo: { email, name: nom },
+    subject: `[Contact GASPE] ${sujet}`,
+    type: "contact_form",
+    htmlContent: `<h2>Nouveau message de contact</h2>
+<p><strong>Nom :</strong> ${sanitize(nom)}</p>
+<p><strong>Email :</strong> ${sanitize(email)}</p>
+${societe ? `<p><strong>Société :</strong> ${sanitize(societe)}</p>` : ""}
+<p><strong>Sujet :</strong> ${sanitize(sujet)}</p>
+<hr/>
+<p>${sanitize(message).replace(/\n/g, "<br/>")}</p>`,
+  });
 
   return json({ success: true }, corsHeaders);
 }
@@ -3333,24 +3440,22 @@ async function handleNewsletterTestSend(request: Request, env: Env, corsHeaders:
   const senderEmail = env.BREVO_SENDER_EMAIL ?? env.CONTACT_EMAIL ?? "contact@gaspe.fr";
   const senderName = env.BREVO_SENDER_NAME ?? "GASPE";
 
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: { "accept": "application/json", "content-type": "application/json", "api-key": env.BREVO_API_KEY },
-    body: JSON.stringify({
-      sender: { email: senderEmail, name: senderName },
-      to: recipients.map((email) => ({ email })),
-      replyTo: env.BREVO_REPLY_TO ? { email: env.BREVO_REPLY_TO } : undefined,
-      subject: `[TEST] ${draft.subject}`,
-      htmlContent: html,
-      headers: { "X-GASPE-Test": "true" },
-    }),
+  // Session 56 — passe par le helper centralisé. Note : Brevo limite à 99
+  // destinataires par appel `/v3/smtp/email`, ici on a max 5 (validé en amont).
+  const result = await sendBrevoTransactional(env, {
+    to: recipients.map((email) => ({ email })),
+    sender: { email: senderEmail, name: senderName },
+    replyTo: env.BREVO_REPLY_TO ? { email: env.BREVO_REPLY_TO } : undefined,
+    subject: `[TEST] ${draft.subject}`,
+    htmlContent: html,
+    type: "newsletter_test",
+    entityId: draftId,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    return json({ error: `Brevo a refusé l'envoi (${res.status})`, details: text.slice(0, 200) }, corsHeaders, 502);
+  if (!result.ok) {
+    return json({ error: `Brevo a refusé l'envoi : ${result.error ?? "raison inconnue"}` }, corsHeaders, 502);
   }
-  return json({ success: true, sent: recipients.length }, corsHeaders);
+  return json({ success: true, sent: recipients.length, brevoMessageId: result.brevoMessageId }, corsHeaders);
 }
 
 async function handleNewsletterBulkSend(request: Request, env: Env, corsHeaders: Record<string, string>, draftId: string) {
