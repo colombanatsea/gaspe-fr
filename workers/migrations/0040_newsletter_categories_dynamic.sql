@@ -95,30 +95,13 @@ VALUES
   ('cc3228',               'Veille CC 3228',                 'Veille spécifique CCN 3228 et NAO, réservée au collège social.',        27,   'social_3228',     1, 1, 110);
 
 -- ══════════════════════════════════════════════════════════
---  Migration des préférences existantes
+--  Note : transposition des préférences existantes
 -- ══════════════════════════════════════════════════════════
--- Transpose les 10 colonnes booléennes de newsletter_preferences vers
--- des lignes user_newsletter_subscriptions. Idempotent via PRIMARY KEY.
--- Source = 'legacy' pour distinguer les abonnements migrés de ceux créés
--- depuis le nouveau système.
-
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'info_generales', 'legacy'       FROM newsletter_preferences WHERE info_generales = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'ag', 'legacy'                    FROM newsletter_preferences WHERE ag = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'emploi', 'legacy'                FROM newsletter_preferences WHERE emploi = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'formation_opco', 'legacy'        FROM newsletter_preferences WHERE formation_opco = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'veille_juridique', 'legacy'      FROM newsletter_preferences WHERE veille_juridique = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'veille_sociale', 'legacy'        FROM newsletter_preferences WHERE veille_sociale = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'veille_surete', 'legacy'         FROM newsletter_preferences WHERE veille_surete = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'veille_data', 'legacy'           FROM newsletter_preferences WHERE veille_data = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'veille_environnement', 'legacy'  FROM newsletter_preferences WHERE veille_environnement = 1;
-INSERT OR IGNORE INTO user_newsletter_subscriptions (user_id, category_key, source)
-  SELECT user_id, 'actualites_gaspe', 'legacy'      FROM newsletter_preferences WHERE actualites_gaspe = 1;
+-- La transposition depuis newsletter_preferences (table 0003) vers
+-- user_newsletter_subscriptions est isolée dans la migration suivante
+-- (0041) car elle dépend de l'état exact du schéma legacy en prod (la
+-- colonne veille_data peut avoir été ajoutée tardivement). En cas
+-- d'échec de 0041, le code Worker bascule en mode lecture cascade :
+-- si un user n'a aucune entrée user_newsletter_subscriptions mais
+-- existe dans newsletter_preferences, la lecture lit le fallback legacy
+-- automatiquement.
