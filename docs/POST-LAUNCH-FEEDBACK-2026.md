@@ -43,7 +43,7 @@
 | C5 | Tuile « Infos site » sur `/admin` : ajouter le nombre d'utilisateurs (différencier candidats / adhérents) | 🟠 | 🟢 (suivi) |
 | C6 | Tuile « 26 CCN 3228 Vote NAO » : afficher en petit dessous le nombre de personnel navigant total couvert | 🟠 | 🟢 (suivi) |
 | C7 | Cotisations doivent revenir à `due` automatiquement lors du démarrage d'une nouvelle campagne annuelle | 🟠 | 🟢 (suivi) |
-| C8 | L'admin (= `colomban@gaspe.fr`) doit recevoir un email à chaque demande de création de compte | 🔴 | 🟢 (suivi) |
+| C8 | L'admin (= `colomban@gaspe.fr`) doit recevoir un email à chaque demande de création de compte | 🔴 | ✅ (session 56) |
 | C9 | L'admin maître peut promouvoir d'autres comptes admin (ex `contact@gaspe.fr`) — interface multi-admin | 🟠 | 🟢 (suivi) |
 | C10 | `/admin/votes` : impossible de créer un vote (bug submit ?) | 🔴 | ✅ (session 55) |
 | C11 | Vote « choix simple » → cocher 1 case (radio button), pas un select | 🟠 | ✅ (déjà OK, vérifié session 55) |
@@ -106,7 +106,7 @@
 
 | # | Item | Priorité | Statut |
 |---|------|:-:|:-:|
-| I1 | Intégration Brevo emails transactionnels (toutes les notifications : adhésion, validation, vote, formation, etc.) | 🟠 | 🟢 (suivi) |
+| I1 | Intégration Brevo emails transactionnels (toutes les notifications : adhésion, validation, vote, formation, etc.) | 🟠 | 🟠 (partiel — session 56 : helper centralisé + notifications registration. Reste candidatures D1.) |
 | I2 | Intégration Brevo newsletters (10 catégories → list IDs Brevo, send bulk via API) | 🟠 | 🟢 (suivi) |
 
 ## J. Backlog initial (rappel)
@@ -199,11 +199,43 @@ Endpoint Worker ajouté : `GET /api/admin/audit-log?limit=N&offset=O&action=X&en
 | **C15** | (cette session) | `/admin/pages` aperçu iframe : le `public/_headers` envoyait `X-Frame-Options: DENY` et `frame-ancestors 'none'` qui bloquent toute encapsulation iframe, même same-origin. Relâché à `X-Frame-Options: SAMEORIGIN` + `frame-ancestors 'self'`. Conserve la protection contre clickjacking cross-origin. |
 | **C16** | (audit cette session) | Modal historique `CmsRevisionsModal` correctement câblé sur `/api/cms/pages/:pageId/revisions` (list + detail + restore). Le useModalA11y ajouté en session 54+ pour focus trap est OK. Le bug rapporté est probablement un effet de bord du C15 (iframe bloqué donnait l'impression que toute la page admin/pages était cassée). Si le bug persiste post-deploy, audit ciblé à programmer. |
 
-### Backlog résiduel session 55 (à reprendre session 56)
+---
+
+## Session 56 — Lot Brevo (7 mai 2026)
+
+### Items livrés
+
+| Item | Commit | Détail |
+|------|:-:|--------|
+| **I1** (partiel) | 9ac6622 | Helper `sendBrevoTransactional()` centralise les 6+ call sites Brevo dans `workers/api.ts`. Migration `0039_email_sent_log.sql` ajoute la table de tracking idempotent (UNIQUE INDEX sur `(type, recipient_email, COALESCE(entity_id, ''), sent_at_day)`). 5 call sites refactorés : password_reset, invitation_team, contact_form, proxy_email, newsletter_test. No-op silencieux si BREVO_API_KEY absent (preprod safe). |
+| **I1** (notifications) + **C8** | e99c24f | `handleRegister` déclenche `registration_pending_admin` (vers env.CONTACT_EMAIL) + `registration_pending_user` ou `registration_welcome_candidat` (vers le user). `handleUpdateUser` détecte `approved 0→1` → `registration_approved`, `archived 0→1` sur adhérent non approuvé → `registration_rejected`. Tous best-effort, idempotents quotidiens via email_sent_log. |
+| **I2 webhook** | (audit) | `handleBrevoWebhook` vérifié OK : HMAC-SHA256 via BREVO_WEBHOOK_SECRET, écrit dans `nl_events`, désabonne auto sur unsubscribed/hard_bounce. Aucun changement nécessaire. |
+| **C11–C14** | (audit) | `VoteDetailClient` utilise déjà les bons inputs depuis session 40, audit confirmé. |
+
+### Sites NON refactorés (volontairement)
+
+| Site | Raison |
+|------|--------|
+| `handleNewsletterBulkSend` (legacy batches 50 destinataires SMTP) | Déprécié au profit de `handleNlDraftsSendProduction` qui utilise déjà Email Campaigns API. À supprimer dans une session ultérieure. |
+| `notifyCampaignOpened/DueSoon/Overdue` (validation annuelle) | Utilisent déjà la table dédiée `validation_email_sent` (migration 0030) avec helpers métier `alreadySent/logEmailSent`. Refactor introduirait un double-tracking (granularité campaign vs email). |
+
+### Pré-requis prod (action utilisateur GASPE)
+
+Provisionner 14 secrets Brevo via `wrangler secret put` :
+
+* `BREVO_API_KEY` (xkeysib-…)
+* 10 list IDs : `BREVO_LIST_INFO_GENERALES`, `BREVO_LIST_AG`, `BREVO_LIST_EMPLOI`, `BREVO_LIST_FORMATION_OPCO`, `BREVO_LIST_VEILLE_JURIDIQUE`, `BREVO_LIST_VEILLE_SOCIALE`, `BREVO_LIST_VEILLE_SURETE`, `BREVO_LIST_VEILLE_DATA`, `BREVO_LIST_VEILLE_ENVIRONNEMENT`, `BREVO_LIST_ACTUALITES_GASPE`
+* `BREVO_WEBHOOK_SECRET` (chaîne aléatoire 32+ caractères, à coller aussi côté Brevo dashboard → Webhooks)
+* `BREVO_SENDER_EMAIL` (ex `noreply@gaspe.fr`, vérifié DKIM/SPF)
+* `BREVO_SENDER_NAME` (« GASPE »)
+
+Tant que ces secrets ne sont pas en place, le code tourne en mode no-op silencieux : aucune régression, mais aucun email ne part. Le tracking dans `email_sent_log` enregistre quand même l'intention (avec `error: "no-op (BREVO_API_KEY absent)"`).
+
+### Backlog résiduel session 56 (à reprendre session 57)
 
 | Item | Pourquoi reporté | Découpage proposé |
 |------|------------------|-------------------|
 | **C17** | Création de page CMS dynamique (slug-based) — nécessite tracking des page_id custom hors `PAGE_DEFINITIONS` hardcodés. 2 options : (a) inférer via `SELECT DISTINCT page_id FROM cms_pages` côté Worker + endpoint `GET /api/cms/pages/custom`, ou (b) table dédiée `cms_pages_meta`. | UI : bouton « + Nouvelle page » dans `/admin/pages` qui prompt label + slug, crée 1 section placeholder par défaut, sélectionne via `?page=NEW_ID`. ~2-3h. |
 | **C18** | Drag-and-drop sections + ajout section. Migration `0039_cms_pages_sort_order.sql` (`ALTER TABLE cms_pages ADD COLUMN sort_order INTEGER DEFAULT 0`), Worker `handleCmsUpsertPage` étendu avec `sort_order` par section, UI `<SortableContext>` (dnd-kit déjà dans le projet ?). Bouton « + Ajouter une section » avec dialog type/label/id. | ~3-4h, nécessite vérification dnd-kit dispo. |
 | **C19** | Choix du type d'élément (text / richtext / image / list / config). Dialog C18 expose `<select>` du type, le PageSection.type pré-existe. | ~30 min, dépend de C18. |
-| **I1-I2** | Intégration Brevo transactional + bulk newsletter. Nécessite l'admin GASPE pour provisionner 12 secrets via `wrangler secret put` (BREVO_API_KEY + 10 list IDs + BREVO_WEBHOOK_SECRET + BREVO_SENDER_EMAIL/NAME). | Code : helper `sendBrevoTemplate()`, refactor `notifyCampaign*` pour template IDs Brevo paramétrables, bascule `handleNlDraftsSendProduction` sur Email Campaigns API. Mode no-op silencieux si BREVO_API_KEY absente. Migration `0039_email_sent_log.sql` (déduplication idempotente). ~4-5h une fois les secrets dispos. |
+| **I1-I2** | ✅ traité session 56 (voir section dédiée plus bas). Reste : applications CRUD D1 pour notifications candidature reçue/status changed (table `applications` + endpoints REST). |
