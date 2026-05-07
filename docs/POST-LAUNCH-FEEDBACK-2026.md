@@ -231,7 +231,19 @@ Provisionner 14 secrets Brevo via `wrangler secret put` :
 
 Tant que ces secrets ne sont pas en place, le code tourne en mode no-op silencieux : aucune régression, mais aucun email ne part. Le tracking dans `email_sent_log` enregistre quand même l'intention (avec `error: "no-op (BREVO_API_KEY absent)"`).
 
-### Backlog résiduel session 56 (à reprendre session 57)
+---
+
+## Session 56b — Refonte newsletter dynamique (7 mai 2026)
+
+### Items livrés
+
+| Item | Commit | Détail |
+|------|:-:|--------|
+| **Refonte newsletter** | 0e104e3 | Migration 0040 : tables `newsletter_categories` + `user_newsletter_subscriptions` + seed 11 catégories (10 + cc3228 social) + transposition des préférences existantes. 6 endpoints CRUD Worker avec création auto Brevo préfixée `[SITE]`. UI admin `/admin/newsletter/categories`. UI adhérent refactoré pour fetch dynamique. Filtres d'audience (`all`, `adherent_only`, `social_3228`, `college_a/b/c`) appliqués côté UI ET côté API (sécu défensive). |
+| **CC3228 (newsletter)** | 0e104e3 | Nouvelle catégorie `cc3228` (« Veille CC 3228 ») réservée aux users d'organisations `social3228=true` via audience_filter=`social_3228`. Pointe sur la liste Brevo #27 existante. |
+| **Archive NAO/CC3228 (Brevo #23)** | (manuel utilisateur) | À archiver côté dashboard Brevo : la liste #23 est obsolète depuis l'arrivée de la feature votes session 38+. Conserver en archive Brevo pour préserver l'historique des envois passés. |
+
+### Backlog résiduel session 56b (à reprendre session 57)
 
 | Item | Pourquoi reporté | Découpage proposé |
 |------|------------------|-------------------|
