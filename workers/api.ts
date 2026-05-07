@@ -837,6 +837,56 @@ async function handleRegister(request: Request, env: Env, corsHeaders: Record<st
   // Create default newsletter preferences
   await env.DB.prepare("INSERT INTO newsletter_preferences (user_id) VALUES (?)").bind(id).run();
 
+  // Notifications transactionnelles (session 56 — I1 + C8)
+  // (1) Notif admin pour chaque nouvelle demande, avec lien direct vers
+  //     /admin/utilisateurs.
+  void sendBrevoTransactional(env, {
+    to: [{ email: env.CONTACT_EMAIL || "colomban@gaspe.fr", name: "Admin GASPE" }],
+    subject: role === "adherent"
+      ? `[GASPE] Nouvelle demande de compte adhérent — ${sanitize(name.trim())} (${sanitize(company?.trim() ?? "")})`
+      : `[GASPE] Nouveau compte candidat — ${sanitize(name.trim())}`,
+    type: "registration_pending_admin",
+    entityId: id,
+    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">${role === "adherent" ? "Nouvelle demande de compte adhérent" : "Nouveau compte candidat"}</h1>
+  </div>
+  <div style="padding:32px;">
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;"><strong>Nom :</strong> ${sanitize(name.trim())}</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;"><strong>Email :</strong> ${sanitize(email.trim())}</p>
+    ${phone ? `<p style="margin:0 0 12px;color:#222221;font-size:15px;"><strong>Téléphone :</strong> ${sanitize(phone)}</p>` : ""}
+    ${company ? `<p style="margin:0 0 12px;color:#222221;font-size:15px;"><strong>Compagnie :</strong> ${sanitize(company.trim())}</p>` : ""}
+    ${role === "adherent" ? `<p style="margin:24px 0;"><a href="${SITE_URL}/admin/utilisateurs" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Approuver / refuser dans l'admin</a></p>` : ""}
+  </div>
+</div></body></html>`,
+  });
+
+  // (2) Bienvenue côté utilisateur (pending pour adhérent, welcome pour candidat).
+  void sendBrevoTransactional(env, {
+    to: [{ email: email.trim(), name: name.trim() }],
+    subject: role === "adherent" ? "Votre demande a bien été reçue — GASPE" : "Bienvenue sur GASPE",
+    type: role === "adherent" ? "registration_pending_user" : "registration_welcome_candidat",
+    entityId: id,
+    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">GASPE</h1>
+    <p style="margin:4px 0 0;color:#B2DFE3;font-size:13px;">Localement ancrés. Socialement engagés.</p>
+  </div>
+  <div style="padding:32px;">
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(name.trim())},</p>
+    ${role === "adherent"
+      ? `<p style="margin:0 0 12px;color:#222221;font-size:15px;">Votre demande de compte adhérent pour la compagnie <strong>${sanitize(company?.trim() ?? "")}</strong> a bien été enregistrée. Elle sera examinée par l'équipe GASPE sous 48h ouvrées. Vous recevrez un email dès la validation.</p>
+         <p style="margin:0 0 12px;color:#6B6560;font-size:13px;">Aucune action n'est requise de votre part pour l'instant.</p>`
+      : `<p style="margin:0 0 12px;color:#222221;font-size:15px;">Votre compte candidat est actif. Vous pouvez dès à présent compléter votre profil et postuler aux offres de nos compagnies adhérentes.</p>
+         <p style="margin:24px 0;"><a href="${SITE_URL}/espace-candidat" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accéder à mon espace</a></p>`}
+  </div>
+</div></body></html>`,
+  });
+
   // Auto-login for candidats
   if (role === "candidat") {
     const token = await signJwt({ sub: id, email: email.trim(), role }, env.JWT_SECRET);
@@ -971,12 +1021,67 @@ async function handleUpdateUser(request: Request, env: Env, corsHeaders: Record<
     return json({ error: "Aucun champ à mettre à jour" }, corsHeaders, 400);
   }
 
+  // Snapshot AVANT update pour détecter les transitions notifiables
+  // (approved 0→1, archived 0→1) — session 56 I1.
+  const before = payload.role === "admin"
+    ? await env.DB.prepare("SELECT email, name, approved, archived, role FROM users WHERE id = ?")
+        .bind(userId).first<{ email: string; name: string; approved: number; archived: number; role: string }>()
+    : null;
+
   updates.push("updated_at = datetime('now')");
   values.push(userId);
 
   await env.DB.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
 
   const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first<DbUser>();
+
+  // Notifications transition (admin only)
+  if (before && userRow && payload.role === "admin") {
+    // Approbation : approved 0 → 1 sur un adhérent
+    if (before.approved === 0 && userRow.approved === 1 && userRow.role === "adherent") {
+      void sendBrevoTransactional(env, {
+        to: [{ email: userRow.email, name: userRow.name }],
+        subject: "Votre compte adhérent GASPE a été approuvé",
+        type: "registration_approved",
+        entityId: userId,
+        htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">GASPE</h1>
+  </div>
+  <div style="padding:32px;">
+    <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Bienvenue !</h2>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(userRow.name)},</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Votre compte adhérent vient d'être approuvé. Vous pouvez désormais accéder à l'intégralité de l'espace adhérent GASPE.</p>
+    <p style="margin:24px 0;"><a href="${SITE_URL}/espace-adherent" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accéder à mon espace</a></p>
+  </div>
+</div></body></html>`,
+      });
+    }
+    // Refus : archived 0 → 1 sur un adhérent encore non approuvé
+    if (before.archived === 0 && userRow.archived && before.approved === 0 && userRow.role === "adherent") {
+      void sendBrevoTransactional(env, {
+        to: [{ email: userRow.email, name: userRow.name }],
+        subject: "Suite à votre demande de compte adhérent GASPE",
+        type: "registration_rejected",
+        entityId: userId,
+        htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">GASPE</h1>
+  </div>
+  <div style="padding:32px;">
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(userRow.name)},</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Suite à l'examen de votre demande de compte adhérent GASPE, nous ne sommes pas en mesure de la valider à ce stade.</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Pour échanger sur ce point, contactez-nous à <a href="mailto:contact@gaspe.fr" style="color:#1B7E8A;">contact@gaspe.fr</a>.</p>
+  </div>
+</div></body></html>`,
+      });
+    }
+  }
+
   return json({ success: true, user: userRow ? toFrontendUser(userRow) : null }, corsHeaders);
 }
 
