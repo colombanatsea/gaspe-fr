@@ -169,10 +169,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Bastia",
     city: "Bastia",
     region: "Corse",
-    postalCode: "20200",
-    lat: 42.7028,
-    lng: 9.4500,
-    website: "https://lyc-maritime-bastia.web.ac-corse.fr/",
+    // La Citadelle de Bastia (BP 65). Adresse officielle « Citadelle, 20289 Bastia Cedex ».
+    postalCode: "20289",
+    lat: 42.6957,
+    lng: 9.4523,
+    website: "https://www.lyceemaritimebastia.fr/",
     description:
       "Le seul site maritime de Méditerranée à former aux métiers du transport de passagers entre Corse et continent. L'ENSM y a installé une antenne : tu peux y faire toute ta scolarité, du CAP au brevet d'officier, sans quitter Bastia.",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, ENSM_OFFICIER_CHEF],
@@ -185,24 +186,28 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Boulogne",
     city: "Le Portel",
     region: "Hauts-de-France",
+    // 6 rue Georges Honoré, 62480 Le Portel.
     postalCode: "62480",
-    lat: 50.7064,
-    lng: 1.5764,
-    website: "https://www.lyceemaritime-boulogne.fr/",
+    lat: 50.7099,
+    lng: 1.5731,
+    website: "https://www.lyceemaritime-boulogne.com/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PGEM],
   },
   {
     id: "lpm-cherbourg",
     slug: "lpm-cherbourg",
     kind: "lpm",
-    name: "Lycée Professionnel Maritime de Cherbourg",
-    shortName: "LPM Cherbourg",
+    // Officiellement « LPMA Daniel-Rigolet », du nom du résistant
+    // cherbourgeois Daniel Rigolet. Adresse : Rue de Matignon, 50100
+    // Cherbourg-en-Cotentin.
+    name: "Lycée Professionnel Maritime et Aquacole Daniel-Rigolet – Cherbourg",
+    shortName: "LPMA Cherbourg",
     city: "Cherbourg-en-Cotentin",
     region: "Normandie",
     postalCode: "50100",
-    lat: 49.6386,
-    lng: -1.6164,
-    website: "https://lyceemaritime-cherbourg.fr/",
+    lat: 49.6435,
+    lng: -1.6212,
+    website: "https://lpma-daniel-rigolet.fr/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BAC_PRO_POLY],
   },
   {
@@ -228,10 +233,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Étel",
     city: "Étel",
     region: "Bretagne",
+    // 38 avenue Louis Bougo, 56410 Étel.
     postalCode: "56410",
-    lat: 47.6586,
-    lng: -3.2069,
-    website: "https://www.lpmetel.fr/",
+    lat: 47.6553,
+    lng: -3.2059,
+    website: "https://www.lycee-maritime-etel.fr/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_POLY],
   },
   {
@@ -242,10 +248,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Fécamp",
     city: "Fécamp",
     region: "Normandie",
+    // 84 quai Guy de Maupassant, 76400 Fécamp (sur le port).
     postalCode: "76400",
-    lat: 49.7572,
-    lng: 0.3742,
-    website: "https://lpm-anitaconti.fr/",
+    lat: 49.7596,
+    lng: 0.3793,
+    website: "https://www.lycee-anita-conti.fr/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
   {
@@ -256,10 +263,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM La Rochelle",
     city: "La Rochelle",
     region: "Nouvelle-Aquitaine",
+    // Avenue du Maréchal Juin, 17000 La Rochelle (quartier des Minimes).
     postalCode: "17000",
-    lat: 46.1591,
-    lng: -1.1517,
-    website: "https://lyceemaritime-larochelle.fr/",
+    lat: 46.1492,
+    lng: -1.1734,
+    website: "https://www.lycee-maritime-larochelle.fr/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BAC_PRO_POLY],
   },
   {
@@ -284,10 +292,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Paimpol",
     city: "Paimpol",
     region: "Bretagne",
+    // 1 rue Pierre Loti, 22500 Paimpol (quartier de Kerraoul).
     postalCode: "22500",
-    lat: 48.7811,
-    lng: -3.0469,
-    website: "https://lpm-paimpol.fr/",
+    lat: 48.7773,
+    lng: -3.0550,
+    website: "https://www.lycee-maritime-paimpol.com/",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_POLY],
   },
   {
@@ -298,10 +307,11 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Saint-Malo",
     city: "Saint-Malo",
     region: "Bretagne",
+    // 36 rue de la Croix Desilles, 35400 Saint-Malo (intra-muros / Rocabey).
     postalCode: "35400",
-    lat: 48.6493,
-    lng: -2.0257,
-    website: "https://lyceemaritime-saintmalo.fr/",
+    lat: 48.6492,
+    lng: -2.0086,
+    website: "https://www.lycee-maritime-saint-malo.fr/",
     description: "Lycée nommé en hommage à la navigatrice Florence Arthaud, formations pont et machine.",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BAC_PRO_POLY],
   },
@@ -310,19 +320,20 @@ export const SCHOOLS: School[] = [
     slug: "lpm-jacques-cassard-nantes",
     kind: "lpm",
     // Correction partenaire (11/05/2026) : il s'agit bien du LPM
-    // Jacques-Cassard à Nantes (et non de Saint-Nazaire). Seul LPM
-    // français à ne pas proposer le CAP Maritime. Cursus : Bac pro EMM
-    // (qui prépare au BTS Mécatronique Navale, filière machine) +
-    // BTS Mécatronique Navale délivrant l'OCQM.
+    // Jacques-Cassard à Nantes (et non de Saint-Nazaire). Cursus :
+    // Bac pro EMM + BTS Mécatronique Navale (OCQM), filière machine.
     name: "Lycée Professionnel Maritime Jacques-Cassard – Nantes",
     shortName: "LPM Nantes",
     city: "Nantes",
     region: "Pays de la Loire",
-    postalCode: "44100",
-    lat: 47.2069,
-    lng: -1.5781,
+    // 111 rue du Port Boyer, 44300 Nantes (quartier Beaujoire-Ranzay,
+    // sur la rive nord de la Loire). Adresse postale officielle :
+    // 44315 Nantes Cedex 03.
+    postalCode: "44300",
+    lat: 47.2522,
+    lng: -1.5347,
     website: "https://www.lycee-maritime-nantes.fr/",
-    description: "Seul LPM français à ne pas former au CAP Maritime. Filière exclusivement machine : Bac pro EMM, puis BTS Mécatronique Navale qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
+    description: "Filière exclusivement machine : Bac pro EMM, puis BTS Mécatronique Navale qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
     formations: [BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
   {
@@ -333,10 +344,12 @@ export const SCHOOLS: School[] = [
     shortName: "LPM Sète",
     city: "Sète",
     region: "Occitanie",
+    // 112 rue des Cormorans, 34200 Sète (zone du Môle Saint-Louis).
+    // Adresse postale officielle : 34207 Sète Cedex.
     postalCode: "34200",
-    lat: 43.4036,
-    lng: 3.6981,
-    website: "https://lyceemaritime-sete.fr/",
+    lat: 43.4014,
+    lng: 3.6908,
+    website: "https://lyceedelamer.mon-ent-occitanie.fr/",
     description: "Le LPM méditerranéen historique, formations pont, machine et conchyliculture.",
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PGEM],
   },
