@@ -496,3 +496,111 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
 ];
+
+/* ── Custom sections – Phase 1 hybride C17/C18/C19 (migration 0042) ─── */
+
+export interface CmsCustomSection {
+  id: number;
+  pageId: string;
+  sectionId: string;
+  label: string;
+  type: PageSection["type"];
+  itemFields?: PageSection["itemFields"];
+  sortOrder: number;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+/**
+ * Liste publique de toutes les custom sections (utilisée côté admin
+ * pour driver l'éditeur, et côté public via les hooks `useCmsContent`).
+ *
+ * En mode demo (localStorage), pas de custom sections — la feature
+ * n'existe qu'en mode API. Retourne tableau vide silencieusement.
+ */
+export async function apiListCustomSections(): Promise<CmsCustomSection[]> {
+  if (!isApiMode()) return [];
+  try {
+    const res = await apiFetch<{ sections?: CmsCustomSection[] }>("/api/cms/custom-sections");
+    return res.sections ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function apiCreateCustomSection(
+  pageId: string,
+  body: { sectionId: string; label: string; type: PageSection["type"]; itemFields?: PageSection["itemFields"] },
+): Promise<{ success: true } | { success: false; error: string }> {
+  if (!isApiMode()) {
+    return { success: false, error: "Mode local : les sections custom nécessitent l'API." };
+  }
+  try {
+    const res = await apiFetch<{ success?: boolean; error?: string }>(
+      `/api/cms/pages/${encodeURIComponent(pageId)}/custom-sections`,
+      { method: "POST", body: JSON.stringify(body) },
+    );
+    if (res.success) return { success: true };
+    return { success: false, error: res.error ?? "Erreur inconnue" };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+  }
+}
+
+export async function apiDeleteCustomSection(
+  pageId: string,
+  sectionId: string,
+): Promise<boolean> {
+  if (!isApiMode()) return false;
+  try {
+    const res = await apiFetch<{ success?: boolean }>(
+      `/api/cms/pages/${encodeURIComponent(pageId)}/custom-sections/${encodeURIComponent(sectionId)}`,
+      { method: "DELETE" },
+    );
+    return !!res.success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fusionne PAGE_DEFINITIONS (système) avec les custom sections.
+ * Les sections custom sont ajoutées à la fin de chaque page (sort_order
+ * croissant). En cas de page totalement nouvelle (pas dans
+ * PAGE_DEFINITIONS), elle est ignorée pour la Phase 1 — c'est le scope
+ * de la Phase 3.
+ */
+export function mergePageDefinitions(
+  builtin: PageDefinition[],
+  customSections: CmsCustomSection[],
+): PageDefinition[] {
+  if (customSections.length === 0) return builtin;
+  const byPage = new Map<string, CmsCustomSection[]>();
+  for (const s of customSections) {
+    const list = byPage.get(s.pageId) ?? [];
+    list.push(s);
+    byPage.set(s.pageId, list);
+  }
+  return builtin.map((def) => {
+    const customs = byPage.get(def.id);
+    if (!customs || customs.length === 0) return def;
+    const sorted = [...customs].sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    return {
+      ...def,
+      sections: [
+        ...def.sections,
+        ...sorted.map((s) => ({
+          id: s.sectionId,
+          label: s.label,
+          type: s.type,
+          itemFields: s.itemFields,
+        })),
+      ],
+    };
+  });
+}
+
+/** Set des IDs (page+section) qui sont des sections custom (suppressibles). */
+export function customSectionKey(pageId: string, sectionId: string): string {
+  return `${pageId}::${sectionId}`;
+}

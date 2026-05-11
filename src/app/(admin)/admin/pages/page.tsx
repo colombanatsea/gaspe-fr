@@ -21,10 +21,16 @@ import {
   savePageContent,
   apiGetPageContent,
   apiSavePageContent,
+  apiListCustomSections,
+  apiCreateCustomSection,
+  apiDeleteCustomSection,
+  mergePageDefinitions,
+  customSectionKey,
   type PageContent,
   type PageSection,
   type MediaItem,
   type ApiMediaItem,
+  type CmsCustomSection,
 } from "@/lib/cms-store";
 import { isApiMode } from "@/lib/api-client";
 import { getCmsDefault } from "@/data/cms-defaults";
@@ -126,6 +132,24 @@ export default function AdminPagesPage() {
   const [showRevisions, setShowRevisions] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [saveLabel, setSaveLabel] = useState("");
+  // Phase 1 hybride C17/C18/C19 — sections custom mergées au runtime.
+  const [customSections, setCustomSections] = useState<CmsCustomSection[]>([]);
+  const [showAddSectionModal, setShowAddSectionModal] = useState(false);
+
+  // Définitions fusionnées (système + custom). Source de vérité pour
+  // l'éditeur et le sélecteur de page.
+  const mergedDefinitions = useMemo(
+    () => mergePageDefinitions(PAGE_DEFINITIONS, customSections),
+    [customSections],
+  );
+
+  // Set des clés (pageId::sectionId) qui sont des sections custom
+  // suppressibles. Les sections système ne sont jamais dans ce set.
+  const customSectionKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const c of customSections) s.add(customSectionKey(c.pageId, c.sectionId));
+    return s;
+  }, [customSections]);
 
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) {
@@ -133,8 +157,13 @@ export default function AdminPagesPage() {
     }
   }, [user, router]);
 
+  // Charge les custom sections une fois (mode API uniquement).
   useEffect(() => {
-    const pageDef = PAGE_DEFINITIONS.find((p) => p.id === selectedPageId);
+    void apiListCustomSections().then(setCustomSections);
+  }, [reloadKey]);
+
+  useEffect(() => {
+    const pageDef = mergedDefinitions.find((p) => p.id === selectedPageId);
     if (!pageDef) return;
 
     const emptySections = pageDef.sections.map((def) => ({
@@ -167,7 +196,33 @@ export default function AdminPagesPage() {
     } else {
       applyStored(getPageContent(selectedPageId));
     }
-  }, [selectedPageId, reloadKey]);
+  }, [selectedPageId, reloadKey, mergedDefinitions]);
+
+  /** Phase 1 hybride : créer une nouvelle section custom sur la page. */
+  async function handleAddCustomSection(payload: { sectionId: string; label: string; type: PageSection["type"] }) {
+    const res = await apiCreateCustomSection(selectedPageId, payload);
+    if (!res.success) {
+      alert(`Impossible d'ajouter la section : ${res.error}`);
+      return;
+    }
+    setShowAddSectionModal(false);
+    setReloadKey((k) => k + 1); // recharge custom sections + contenu
+  }
+
+  /** Phase 1 hybride : supprimer une section custom (et son contenu). */
+  async function handleDeleteCustomSection(sectionId: string) {
+    if (!confirm(
+      `Supprimer la section « ${sectionId} » ? Le contenu associé sera également effacé.`,
+    )) {
+      return;
+    }
+    const ok = await apiDeleteCustomSection(selectedPageId, sectionId);
+    if (!ok) {
+      alert("Échec de la suppression.");
+      return;
+    }
+    setReloadKey((k) => k + 1);
+  }
 
   function updateSection(id: string, content: string) {
     setSections((prev) =>
@@ -323,8 +378,8 @@ export default function AdminPagesPage() {
       </div>
 
       {/* Page selector */}
-      <div className="flex gap-2 flex-wrap">
-        {PAGE_DEFINITIONS.map((page) => (
+      <div className="flex gap-2 flex-wrap items-center">
+        {mergedDefinitions.map((page) => (
           <button
             key={page.id}
             onClick={() => setSelectedPageId(page.id)}
@@ -337,6 +392,19 @@ export default function AdminPagesPage() {
             {page.label}
           </button>
         ))}
+        {/* Phase 1 hybride : bouton « Ajouter une section » sur la page courante. */}
+        {isApiMode() && (
+          <button
+            onClick={() => setShowAddSectionModal(true)}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[var(--gaspe-teal-400)] bg-[var(--gaspe-teal-50)] px-3.5 py-2 text-sm font-semibold text-[var(--gaspe-teal-700)] hover:bg-[var(--gaspe-teal-100)] transition-colors"
+            title="Ajouter une section custom sur la page sélectionnée"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+            </svg>
+            Ajouter une section
+          </button>
+        )}
       </div>
 
       {/* Search box */}
@@ -383,7 +451,9 @@ export default function AdminPagesPage() {
                   )}
                 </button>
 
-                {!collapsed && groupSections.map((section) => (
+                {!collapsed && groupSections.map((section) => {
+                  const isCustom = customSectionKeys.has(customSectionKey(selectedPageId, section.id));
+                  return (
                   <div key={section.id} className={`rounded-2xl bg-white border overflow-hidden transition-colors ${section.modified ? "border-[var(--gaspe-warm-400)]" : "border-[var(--gaspe-neutral-200)]"}`}>
                     <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] px-5 py-3">
                       <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
@@ -391,6 +461,11 @@ export default function AdminPagesPage() {
                           <span className="h-2 w-2 rounded-full bg-[var(--gaspe-warm-500)]" title="Modifié non enregistré" />
                         )}
                         {section.label}
+                        {isCustom && (
+                          <span className="rounded-full bg-[var(--gaspe-teal-50)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--gaspe-teal-700)]">
+                            Custom
+                          </span>
+                        )}
                       </h3>
                       <div className="flex items-center gap-2">
                         <button
@@ -401,6 +476,16 @@ export default function AdminPagesPage() {
                         >
                           Réinitialiser
                         </button>
+                        {isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomSection(section.id)}
+                            title="Supprimer cette section custom (le contenu est aussi effacé)"
+                            className="text-xs text-foreground-muted hover:text-red-600 underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
                         <span className="rounded-full bg-[var(--gaspe-neutral-200)] px-2.5 py-0.5 text-[10px] font-medium text-foreground-muted uppercase">
                           {section.type}
                         </span>
@@ -453,7 +538,8 @@ export default function AdminPagesPage() {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })}
@@ -545,6 +631,202 @@ export default function AdminPagesPage() {
           setPreviewKey((k) => k + 1);
         }}
       />
+
+      {/* Phase 1 hybride : modale d'ajout d'une section custom */}
+      {showAddSectionModal && (
+        <AddCustomSectionModal
+          pageId={selectedPageId}
+          pageLabel={mergedDefinitions.find((p) => p.id === selectedPageId)?.label ?? selectedPageId}
+          existingSectionIds={new Set(sections.map((s) => s.id))}
+          onCancel={() => setShowAddSectionModal(false)}
+          onCreate={handleAddCustomSection}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   Modale d'ajout d'une section custom (Phase 1 hybride).
+   ────────────────────────────────────────────── */
+
+const SECTION_TYPE_OPTIONS: { value: PageSection["type"]; label: string; hint: string }[] = [
+  { value: "text", label: "Texte court", hint: "Une ligne (titre, libellé, URL courte…)" },
+  { value: "richtext", label: "Texte riche", hint: "Paragraphes, listes, gras, liens, images" },
+  { value: "image", label: "Image", hint: "URL d'image (avec aperçu)" },
+  { value: "config", label: "Valeur de configuration", hint: "Champ technique (couleur, clé, URL longue)" },
+  { value: "list", label: "Liste d'éléments", hint: "Array structurée (avancé)" },
+];
+
+function slugifySectionId(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function AddCustomSectionModal({
+  pageId,
+  pageLabel,
+  existingSectionIds,
+  onCancel,
+  onCreate,
+}: {
+  pageId: string;
+  pageLabel: string;
+  existingSectionIds: Set<string>;
+  onCancel: () => void;
+  onCreate: (payload: { sectionId: string; label: string; type: PageSection["type"] }) => void | Promise<void>;
+}) {
+  const [label, setLabel] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [type, setType] = useState<PageSection["type"]>("text");
+  const [autoSlug, setAutoSlug] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const effectiveSectionId = autoSlug ? slugifySectionId(label) : sectionId.trim();
+  const collision = existingSectionIds.has(effectiveSectionId);
+  const idIsValid = /^[a-z0-9][a-z0-9-]{0,63}$/.test(effectiveSectionId);
+  const canSubmit = label.trim().length > 0 && idIsValid && !collision && !submitting;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setSubmitting(true);
+    try {
+      await onCreate({ sectionId: effectiveSectionId, label: label.trim(), type });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputClass =
+    "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl border border-[var(--gaspe-neutral-200)] bg-white shadow-xl">
+        <div className="flex items-start justify-between border-b border-[var(--gaspe-neutral-200)] px-6 py-4">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-foreground">Ajouter une section</h2>
+            <p className="text-xs text-foreground-muted mt-0.5">
+              Sur la page <span className="font-semibold">{pageLabel}</span> ({pageId})
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label="Fermer"
+            className="rounded-lg p-2 text-foreground-muted transition-colors hover:bg-[var(--gaspe-neutral-100)]"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="flex-1 space-y-5 overflow-y-auto p-6">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Libellé visible <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="Ex : Encart partenaires"
+              className={inputClass}
+              autoFocus
+              maxLength={120}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-foreground">
+                Identifiant technique
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-foreground-muted">
+                <input
+                  type="checkbox"
+                  checked={autoSlug}
+                  onChange={(e) => setAutoSlug(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-[var(--gaspe-neutral-300)] text-[var(--gaspe-teal-600)]"
+                />
+                Auto (à partir du libellé)
+              </label>
+            </div>
+            <input
+              type="text"
+              value={effectiveSectionId}
+              onChange={(e) => setSectionId(e.target.value)}
+              disabled={autoSlug}
+              placeholder="ex : encart-partenaires"
+              className={`${inputClass} font-mono text-xs disabled:bg-[var(--gaspe-neutral-50)] disabled:text-foreground-muted disabled:cursor-not-allowed`}
+              maxLength={64}
+            />
+            <p className="mt-1 text-[11px] text-foreground-muted">
+              a-z, 0-9, tiret. Sert de clé interne, non visible côté public.
+            </p>
+            {effectiveSectionId && !idIsValid && (
+              <p className="mt-1 text-xs text-red-600">Identifiant invalide.</p>
+            )}
+            {collision && (
+              <p className="mt-1 text-xs text-red-600">
+                Une section avec cet identifiant existe déjà sur cette page.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <p className="block text-sm font-medium text-foreground mb-2">Type de contenu</p>
+            <div className="space-y-2">
+              {SECTION_TYPE_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                    type === opt.value
+                      ? "border-[var(--gaspe-teal-400)] bg-[var(--gaspe-teal-50)]"
+                      : "border-[var(--gaspe-neutral-200)] hover:border-[var(--gaspe-neutral-300)]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value={opt.value}
+                    checked={type === opt.value}
+                    onChange={() => setType(opt.value)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                    <p className="text-xs text-foreground-muted">{opt.hint}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-[var(--gaspe-neutral-100)] pt-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-xl px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-100)]"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="rounded-xl bg-[var(--gaspe-teal-600)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-700)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting ? "Création…" : "Créer la section"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
