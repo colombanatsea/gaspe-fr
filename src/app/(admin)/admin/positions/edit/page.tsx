@@ -1,18 +1,21 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PositionForm, type PositionFormValues, type PositionCategory } from "@/components/admin/PositionForm";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 import { getPosition, updatePosition, type StoredPosition } from "@/lib/positions-store";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function AdminEditPositionPage({ params }: PageProps) {
-  const { id } = use(params);
+/**
+ * Route d'édition d'une position. Utilise un query param `?id=X` plutôt
+ * qu'un segment dynamique `/edit/[id]` pour rester compatible avec
+ * `output: 'export'` de Next.js (les segments dynamiques sans
+ * `generateStaticParams` ne sont pas supportés en static export).
+ */
+function EditPositionContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id") ?? "";
   const { user } = useAuth();
   const router = useRouter();
   const [position, setPosition] = useState<StoredPosition | null>(null);
@@ -23,6 +26,11 @@ export default function AdminEditPositionPage({ params }: PageProps) {
     if (!user) return;
     if (!isStaffOrAdmin(user)) {
       router.push("/connexion");
+      return;
+    }
+    if (!id) {
+      setError("Aucun identifiant fourni dans l'URL (?id=…).");
+      setLoading(false);
       return;
     }
     getPosition(id)
@@ -83,5 +91,13 @@ export default function AdminEditPositionPage({ params }: PageProps) {
       </div>
       <PositionForm mode="edit" initialValues={initialValues} onSubmit={handleSubmit} />
     </div>
+  );
+}
+
+export default function AdminEditPositionPage() {
+  return (
+    <Suspense fallback={<p className="py-12 text-center text-sm text-foreground-muted">Chargement…</p>}>
+      <EditPositionContent />
+    </Suspense>
   );
 }

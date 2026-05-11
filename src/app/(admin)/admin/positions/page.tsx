@@ -181,7 +181,7 @@ export default function AdminPositionsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/admin/positions/edit/${p.id}`}
+                        href={`/admin/positions/edit?id=${encodeURIComponent(p.id)}`}
                         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
                       >
                         Éditer
