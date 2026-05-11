@@ -317,7 +317,7 @@ export const SCHOOLS: School[] = [
     postalCode: "44100",
     lat: 47.2069,
     lng: -1.5781,
-    website: "http://www.lpmcassard.fr/",
+    website: "https://www.lycee-maritime-nantes.fr/",
     description: "Seul LPM français à ne pas former au CAP Maritime. Spécialisé Bac Pro et BTS Mécatronique Navale, qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
     formations: [BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
