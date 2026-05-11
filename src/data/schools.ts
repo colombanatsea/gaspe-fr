@@ -75,7 +75,7 @@ const BAC_PRO_CGEM: SchoolFormation = {
 
 const BAC_PRO_CGEM_PECHE_VOILE: SchoolFormation = {
   id: "bac-pro-cgem-peche-voile",
-  title: "Bac pro CGEM (Conduite et Gestion des Entreprises Maritimes – Spécialités Pêche et Commerce, option Voile)",
+  title: "Bac pro CGEM (Conduite et Gestion des Entreprises Maritimes – Spécialités Pêche et Commerce Option Voile)",
   level: "bac_pro",
   family: ["pont"],
   duration: "3 ans",
@@ -84,7 +84,7 @@ const BAC_PRO_CGEM_PECHE_VOILE: SchoolFormation = {
 
 const BAC_PRO_EMM: SchoolFormation = {
   id: "bac-pro-emm",
-  title: "Bac pro EMM (Électromécanicien Marine)",
+  title: "Bac pro EMM (Électromécanicien marine)",
   level: "bac_pro",
   family: ["machine"],
   duration: "3 ans",
@@ -100,9 +100,12 @@ const BAC_PRO_POLY: SchoolFormation = {
   ageEntry: "Après la 3e",
 };
 
-const BTS_PMN: SchoolFormation = {
-  id: "bts-pmn",
-  title: "BTS Pêche et Gestion de l'Environnement Marin",
+// BTS PGEM — Pêche et Gestion de l'Environnement Marin. Sigle officiel
+// du Ministère de l'Agriculture/DGER : « PGEM ». L'ancien sigle « PMN »
+// utilisé ici était erroné (confondu avec d'autres BTS maritimes).
+const BTS_PGEM: SchoolFormation = {
+  id: "bts-pgem",
+  title: "BTS PGEM (Pêche et Gestion de l'Environnement Marin)",
   level: "bts",
   family: ["polyvalent"],
   duration: "2 ans",
@@ -186,7 +189,7 @@ export const SCHOOLS: School[] = [
     lat: 50.7064,
     lng: 1.5764,
     website: "https://www.lyceemaritime-boulogne.fr/",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PMN],
+    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PGEM],
   },
   {
     id: "lpm-cherbourg",
@@ -271,7 +274,7 @@ export const SCHOOLS: School[] = [
     lat: 47.8000,
     lng: -4.2833,
     website: "https://lycee-maritime-guilvinec.bzh/",
-    formations: [CAP_MARIN, BAC_PRO_CGEM_PECHE_VOILE, BAC_PRO_EMM, BTS_PMN],
+    formations: [CAP_MARIN, BAC_PRO_CGEM_PECHE_VOILE, BAC_PRO_EMM, BTS_PGEM],
   },
   {
     id: "lpm-paimpol",
@@ -307,9 +310,10 @@ export const SCHOOLS: School[] = [
     slug: "lpm-jacques-cassard-nantes",
     kind: "lpm",
     // Correction partenaire (11/05/2026) : il s'agit bien du LPM
-    // Jacques-Cassard à Nantes (et non de Saint-Nazaire). Le seul LPM
-    // français à ne pas proposer le CAP Maritime — uniquement Bac Pro
-    // + BTS Mécatronique Navale (OCQM).
+    // Jacques-Cassard à Nantes (et non de Saint-Nazaire). Seul LPM
+    // français à ne pas proposer le CAP Maritime. Cursus : Bac pro EMM
+    // (qui prépare au BTS Mécatronique Navale, filière machine) +
+    // BTS Mécatronique Navale délivrant l'OCQM.
     name: "Lycée Professionnel Maritime Jacques-Cassard – Nantes",
     shortName: "LPM Nantes",
     city: "Nantes",
@@ -318,8 +322,8 @@ export const SCHOOLS: School[] = [
     lat: 47.2069,
     lng: -1.5781,
     website: "https://www.lycee-maritime-nantes.fr/",
-    description: "Seul LPM français à ne pas former au CAP Maritime. Spécialisé Bac Pro et BTS Mécatronique Navale, qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
-    formations: [BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
+    description: "Seul LPM français à ne pas former au CAP Maritime. Filière exclusivement machine : Bac pro EMM, puis BTS Mécatronique Navale qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
+    formations: [BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
   {
     id: "lpm-sete",
@@ -334,7 +338,7 @@ export const SCHOOLS: School[] = [
     lng: 3.6981,
     website: "https://lyceemaritime-sete.fr/",
     description: "Le LPM méditerranéen historique, formations pont, machine et conchyliculture.",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PMN],
+    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PGEM],
   },
 
   /* ---------- 4 sites ENSM ---------- */
