@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import { stripHtmlPreview } from "@/lib/text-preview";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 import {
   listAllFormations as apiListFormations,
@@ -409,7 +410,7 @@ export default function AdminFormationsPage() {
                   </div>
                 </div>
 
-                <p className="text-xs text-foreground-muted mb-4 line-clamp-2">{f.description}</p>
+                <p className="text-xs text-foreground-muted mb-4 line-clamp-2">{stripHtmlPreview(f.description, 200)}</p>
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-2 text-xs mb-4">

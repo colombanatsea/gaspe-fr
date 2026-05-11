@@ -560,7 +560,7 @@ export function EcolesDeLaMerContent() {
                     .map((f) => LEVEL_LABELS[f.level])
                     .filter((v, i, arr) => arr.indexOf(v) === i)
                     .slice(0, 2)
-                    .join(" &middot; ")}
+                    .join(" · ")}
                 </p>
               </a>
             ))}

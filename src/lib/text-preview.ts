@@ -33,6 +33,12 @@ const HTML_ENTITIES: Record<string, string> = {
   "&lsquo;": "‘",
   "&rdquo;": "”",
   "&ldquo;": "“",
+  "&middot;": "·",
+  "&bull;": "•",
+  "&larr;": "←",
+  "&rarr;": "→",
+  "&deg;": "°",
+  "&times;": "×",
 };
 
 /**

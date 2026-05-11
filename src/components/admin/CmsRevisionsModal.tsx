@@ -362,7 +362,9 @@ export function CmsRevisionsModal({ pageId, open, onClose, onRestored }: Props) 
               Aucune révision pour cette page.
               <br />
               <span className="text-xs">
-                Chaque enregistrement créera automatiquement un nouveau snapshot.
+                Un snapshot est créé automatiquement à chaque enregistrement,
+                à partir de la deuxième modification (le premier save n&apos;archive rien).
+                Les 30 dernières versions sont conservées.
               </span>
             </p>
           ) : filteredRevisions.length === 0 ? (

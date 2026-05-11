@@ -6,6 +6,7 @@ import { formations } from "@/data/formations";
 import { ScrollRevealWrapper } from "@/components/shared/ScrollRevealWrapper";
 import { formatDate } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { stripHtmlPreview } from "@/lib/text-preview";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${formation.title} – Formation`,
-    description: formation.description,
+    description: stripHtmlPreview(formation.description, 160),
   };
 }
 
@@ -101,7 +102,7 @@ export default async function FormationDetailPage({ params }: PageProps) {
           <div className="space-y-8">
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal">
               <h2 className="font-heading text-xl font-bold text-foreground mb-4">Présentation</h2>
-              <p className="text-foreground-muted leading-relaxed">{formation.description}</p>
+              <p className="text-foreground-muted leading-relaxed">{stripHtmlPreview(formation.description, 600)}</p>
             </div>
 
             <div className="rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-8 reveal stagger-2">

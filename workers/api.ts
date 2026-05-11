@@ -1544,14 +1544,25 @@ async function handleUpdateOrganization(request: Request, env: Env, corsHeaders:
     revenueConfidential: "revenue_confidential",
     membershipStatus: "membership_status", archived: "archived",
     college: "college", social3228: "social3228",
+    // C4 (session 57) : identité (hors slug) modifiable par admin.
+    // Le slug reste volontairement absent — il sert de permalien public et
+    // n'est pas modifiable post-création pour préserver le SEO.
+    name: "name", city: "city", region: "region",
+    latitude: "latitude", longitude: "longitude",
+    territory: "territory", category: "category",
   };
 
   const updates: string[] = [];
   const values: unknown[] = [];
   for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
     if (frontendKey in body) {
-      // Champs admin-only : membershipStatus, archived, college, social3228
-      const adminOnly = new Set(["membershipStatus", "archived", "college", "social3228"]);
+      // Champs admin-only : statut, archivage, collège, conv. sociale,
+      // et l'ensemble de l'identité hors slug (name, city, region, lat/lng,
+      // territory, category). Le slug n'est pas dans allowedFields.
+      const adminOnly = new Set([
+        "membershipStatus", "archived", "college", "social3228",
+        "name", "city", "region", "latitude", "longitude", "territory", "category",
+      ]);
       if (adminOnly.has(frontendKey) && payload.role !== "admin") continue;
       updates.push(`${dbCol} = ?`);
       // Booléens (frontend → 0/1 SQLite)

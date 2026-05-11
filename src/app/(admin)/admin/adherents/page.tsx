@@ -271,6 +271,16 @@ export default function AdminAdherentsPage() {
         "shipCount",
         "membershipStatus",
         "college",
+        // C4 (session 57) : identité (hors slug) maintenant modifiable par
+        // admin. Le slug n'est volontairement pas inclus pour préserver les
+        // permaliens publics.
+        "name",
+        "city",
+        "region",
+        "latitude",
+        "longitude",
+        "territory",
+        "category",
       ];
       for (const k of patchKeys) {
         const v = form[k];
@@ -1075,7 +1085,10 @@ function EditModal({
   // En mode "create" tout est éditable même en API mode (l'admin n'a pas
   // d'autre option côté demo, et l'API ne supporte pas la création).
   const apiMode = isApiMode();
-  const fieldsLocked = mode === "edit" && apiMode;
+  // C4 (session 57) : en mode prod edit, seul le slug reste read-only
+  // (permalien public, jamais modifiable post-création). Les autres champs
+  // identité sont admin-only mais éditables.
+  const slugLocked = mode === "edit" && apiMode;
 
   function update<K extends keyof EditFormState>(key: K, value: EditFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -1096,7 +1109,7 @@ function EditModal({
               {mode === "create"
                 ? "Mode démo – l'adhérent est ajouté localement (localStorage). En prod : ajouter dans src/data/members.ts puis re-seed D1."
                 : apiMode
-                  ? "Mode prod – les champs seed (nom, ville, coordonnées, catégorie) sont en lecture seule."
+                  ? "Mode prod – tous les champs sont modifiables sauf le slug (permalien public verrouillé)."
                   : "Mode démo – tous les champs sont éditables (persistance localStorage)."}
             </p>
           </div>
@@ -1112,41 +1125,41 @@ function EditModal({
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
-          <Section title="Identité (seed)">
+          <Section title="Identité">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field2 label="Nom">
-                <input className={inputClass} value={form.name} disabled={fieldsLocked}
+                <input className={inputClass} value={form.name}
                   onChange={(e) => update("name", e.target.value)} />
               </Field2>
-              <Field2 label="Slug">
-                <input className={inputClass} value={form.slug} disabled={fieldsLocked}
+              <Field2 label="Slug (permalien)">
+                <input className={inputClass} value={form.slug} disabled={slugLocked}
                   onChange={(e) => update("slug", e.target.value)} />
               </Field2>
               <Field2 label="Ville">
-                <input className={inputClass} value={form.city} disabled={fieldsLocked}
+                <input className={inputClass} value={form.city}
                   onChange={(e) => update("city", e.target.value)} />
               </Field2>
               <Field2 label="Région">
-                <input className={inputClass} value={form.region} disabled={fieldsLocked}
+                <input className={inputClass} value={form.region}
                   onChange={(e) => update("region", e.target.value)} />
               </Field2>
               <Field2 label="Latitude">
-                <input type="number" step="any" className={inputClass} value={form.latitude} disabled={fieldsLocked}
+                <input type="number" step="any" className={inputClass} value={form.latitude}
                   onChange={(e) => update("latitude", parseFloat(e.target.value) || 0)} />
               </Field2>
               <Field2 label="Longitude">
-                <input type="number" step="any" className={inputClass} value={form.longitude} disabled={fieldsLocked}
+                <input type="number" step="any" className={inputClass} value={form.longitude}
                   onChange={(e) => update("longitude", parseFloat(e.target.value) || 0)} />
               </Field2>
               <Field2 label="Territoire">
-                <select className={inputClass} value={form.territory} disabled={fieldsLocked}
+                <select className={inputClass} value={form.territory}
                   onChange={(e) => update("territory", e.target.value as "metropole" | "dom-tom")}>
                   <option value="metropole">Hexagone</option>
                   <option value="dom-tom">Outre-mer</option>
                 </select>
               </Field2>
               <Field2 label="Catégorie">
-                <select className={inputClass} value={form.category} disabled={fieldsLocked}
+                <select className={inputClass} value={form.category}
                   onChange={(e) => update("category", e.target.value as "titulaire" | "associe")}>
                   <option value="titulaire">Titulaire</option>
                   <option value="associe">Associé</option>
