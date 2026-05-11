@@ -66,7 +66,16 @@ const CAP_MARIN: SchoolFormation = {
 
 const BAC_PRO_CGEM: SchoolFormation = {
   id: "bac-pro-cgem",
-  title: "Bac pro CGEM (Conduite et Gestion des Entreprises Maritimes – option commerce)",
+  title: "Bac pro CGEM (Conduite et Gestion des Entreprises Maritimes)",
+  level: "bac_pro",
+  family: ["pont"],
+  duration: "3 ans",
+  ageEntry: "Après la 3e",
+};
+
+const BAC_PRO_CGEM_PECHE_VOILE: SchoolFormation = {
+  id: "bac-pro-cgem-peche-voile",
+  title: "Bac pro CGEM (Conduite et Gestion des Entreprises Maritimes – Spécialités Pêche et Commerce, option Voile)",
   level: "bac_pro",
   family: ["pont"],
   duration: "3 ans",
@@ -100,9 +109,12 @@ const BTS_PMN: SchoolFormation = {
   ageEntry: "Après le bac",
 };
 
-const BTS_MASEN: SchoolFormation = {
-  id: "bts-masen",
-  title: "BTS Maintenance des Systèmes – option Navals",
+// BTS Mécatronique Navale (anciennement BTS Maintenance des Systèmes –
+// option Navals), refondu en 2024. Délivre l'OCQM (Officier Chef de
+// Quart Mécanicien) à l'issue du parcours.
+const BTS_MECATRONIQUE_NAVALE: SchoolFormation = {
+  id: "bts-mecatronique-navale",
+  title: "BTS Mécatronique Navale (délivre l'OCQM – Officier Chef de Quart Mécanicien)",
   level: "bts",
   family: ["machine"],
   duration: "2 ans",
@@ -231,7 +243,7 @@ export const SCHOOLS: School[] = [
     lat: 49.7572,
     lng: 0.3742,
     website: "https://lpm-anitaconti.fr/",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MASEN],
+    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
   {
     id: "lpm-larochelle",
@@ -258,8 +270,8 @@ export const SCHOOLS: School[] = [
     postalCode: "29730",
     lat: 47.8000,
     lng: -4.2833,
-    website: "https://lpm-guilvinec.fr/",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_PMN],
+    website: "https://lycee-maritime-guilvinec.bzh/",
+    formations: [CAP_MARIN, BAC_PRO_CGEM_PECHE_VOILE, BAC_PRO_EMM, BTS_PMN],
   },
   {
     id: "lpm-paimpol",
@@ -291,18 +303,23 @@ export const SCHOOLS: School[] = [
     formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BAC_PRO_POLY],
   },
   {
-    id: "lpm-saintnazaire",
-    slug: "lpm-saint-nazaire",
+    id: "lpm-nantes",
+    slug: "lpm-jacques-cassard-nantes",
     kind: "lpm",
-    name: "Lycée Professionnel Maritime Daniel-Rigolet – Saint-Nazaire",
-    shortName: "LPM Saint-Nazaire",
-    city: "Saint-Nazaire",
+    // Correction partenaire (11/05/2026) : il s'agit bien du LPM
+    // Jacques-Cassard à Nantes (et non de Saint-Nazaire). Le seul LPM
+    // français à ne pas proposer le CAP Maritime — uniquement Bac Pro
+    // + BTS Mécatronique Navale (OCQM).
+    name: "Lycée Professionnel Maritime Jacques-Cassard – Nantes",
+    shortName: "LPM Nantes",
+    city: "Nantes",
     region: "Pays de la Loire",
-    postalCode: "44600",
-    lat: 47.2733,
-    lng: -2.2138,
-    website: "https://www.lyceemaritime-saintnazaire.fr/",
-    formations: [CAP_MARIN, BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MASEN],
+    postalCode: "44100",
+    lat: 47.2069,
+    lng: -1.5781,
+    website: "http://www.lpmcassard.fr/",
+    description: "Seul LPM français à ne pas former au CAP Maritime. Spécialisé Bac Pro et BTS Mécatronique Navale, qui délivre l'OCQM (Officier Chef de Quart Mécanicien).",
+    formations: [BAC_PRO_CGEM, BAC_PRO_EMM, BTS_MECATRONIQUE_NAVALE],
   },
   {
     id: "lpm-sete",
