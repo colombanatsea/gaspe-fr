@@ -753,7 +753,6 @@ function PreferencesTab() {
           <div key={cat.key} className="rounded-xl border border-border-light bg-background p-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-foreground">{cat.label}</p>
-              {cat.adherentOnly && <Badge variant="blue">Réservé adhérents</Badge>}
             </div>
             <button
               className={`relative h-6 w-11 rounded-full transition-colors ${
