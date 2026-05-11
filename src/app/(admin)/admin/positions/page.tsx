@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
@@ -179,9 +180,15 @@ export default function AdminPositionsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/positions/edit/${p.id}`}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                      >
+                        Éditer
+                      </Link>
                       <button
                         onClick={() => togglePublish(p.id)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)] transition-colors"
                       >
                         {p.published ? "Dépublier" : "Publier"}
                       </button>

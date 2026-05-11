@@ -13,6 +13,35 @@ import { getCmsDefault } from "@/data/cms-defaults";
 const DCms = (s: string) => getCmsDefault("decouvrir-espace-adherent", s);
 
 /* ──────────────────────────────────────────────
+   Date helpers — démo : dates relatives à `new Date()` pour
+   éviter que la page paraisse périmée au fil des mois (A1).
+   ────────────────────────────────────────────── */
+
+const TODAY = new Date();
+const offsetISO = (days: number): string => {
+  const d = new Date(TODAY);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const formatLongFr = (days: number): string => {
+  const d = new Date(TODAY);
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+};
+const formatRangeFr = (startDays: number, endDays: number): string => {
+  const start = new Date(TODAY);
+  start.setDate(start.getDate() + startDays);
+  const end = new Date(TODAY);
+  end.setDate(end.getDate() + endDays);
+  const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+  if (sameMonth) {
+    const month = start.toLocaleDateString("fr-FR", { month: "long" });
+    return `${start.getDate()}–${end.getDate()} ${month} ${start.getFullYear()}`;
+  }
+  return `${formatLongFr(startDays)} – ${formatLongFr(endDays)}`;
+};
+
+/* ──────────────────────────────────────────────
    Fake data for demonstration
    ────────────────────────────────────────────── */
 
@@ -43,7 +72,7 @@ const DEMO_OFFERS = [
     category: "Pont",
     status: "active",
     applications: 5,
-    publishedAt: "2026-03-15",
+    publishedAt: offsetISO(-30),
   },
   {
     id: "2",
@@ -53,11 +82,11 @@ const DEMO_OFFERS = [
     category: "Machine",
     status: "active",
     applications: 3,
-    publishedAt: "2026-03-20",
+    publishedAt: offsetISO(-25),
   },
   {
     id: "3",
-    title: "Matelot Pont – Saison 2026",
+    title: "Matelot Pont – Saison",
     location: "Dinard",
     contractType: "Saisonnier",
     category: "Pont",
@@ -74,7 +103,7 @@ const DEMO_FORMATIONS = [
     organizer: "CEFCM",
     category: "Sécurité",
     modality: "Présentiel",
-    date: "14-18 avril 2026",
+    date: formatRangeFr(20, 24),
     location: "Concarneau",
     duration: "5 jours",
     price: "1 200 €",
@@ -88,7 +117,7 @@ const DEMO_FORMATIONS = [
     organizer: "AFPA Maritime",
     category: "Sécurité",
     modality: "Présentiel",
-    date: "5-6 mai 2026",
+    date: formatRangeFr(45, 46),
     location: "Saint-Nazaire",
     duration: "2 jours",
     price: "450 €",
@@ -102,7 +131,7 @@ const DEMO_FORMATIONS = [
     organizer: "GASPE Académie",
     category: "Management",
     modality: "Distanciel",
-    date: "22 mai 2026",
+    date: formatLongFr(60),
     location: "Visioconférence",
     duration: "1 jour",
     price: "Gratuit adhérents",
@@ -113,11 +142,11 @@ const DEMO_FORMATIONS = [
 ];
 
 const DEMO_DOCUMENTS = [
-  { title: "Convention Collective CCN 3228", category: "Social", date: "2026-01-15" },
-  { title: "Rapport AG 2025", category: "Institutionnel", date: "2025-12-10" },
-  { title: "Guide STCW 2025 – Brevets et équivalences", category: "Réglementaire", date: "2025-11-20" },
-  { title: "Barème cotisations 2026", category: "Institutionnel", date: "2026-01-05" },
-  { title: "Note ENIM – Mise à jour régimes", category: "Social", date: "2026-02-01" },
+  { title: "Convention Collective CCN 3228", category: "Social", date: offsetISO(-90) },
+  { title: "Rapport AG annuel", category: "Institutionnel", date: offsetISO(-120) },
+  { title: "Guide STCW – Brevets et équivalences", category: "Réglementaire", date: offsetISO(-150) },
+  { title: "Barème cotisations annuel", category: "Institutionnel", date: offsetISO(-95) },
+  { title: "Note ENIM – Mise à jour régimes", category: "Social", date: offsetISO(-75) },
 ];
 
 const DEMO_TEAM = [
@@ -135,19 +164,19 @@ const DEMO_ANNUAIRE = [
 ];
 
 const DEMO_APPLICATIONS = [
-  { candidate: "Lucas Bernard", offer: "Capitaine 3000 UMS", status: "interview", date: "2026-03-18" },
-  { candidate: "Emma Petit", offer: "Capitaine 3000 UMS", status: "shortlisted", date: "2026-03-20" },
-  { candidate: "Hugo Moreau", offer: "Chef Mécanicien 750 kW", status: "viewed", date: "2026-03-22" },
-  { candidate: "Chloé Durand", offer: "Capitaine 3000 UMS", status: "pending", date: "2026-03-25" },
-  { candidate: "Nathan Robert", offer: "Chef Mécanicien 750 kW", status: "pending", date: "2026-03-28" },
+  { candidate: "Lucas Bernard", offer: "Capitaine 3000 UMS", status: "interview", date: offsetISO(-27) },
+  { candidate: "Emma Petit", offer: "Capitaine 3000 UMS", status: "shortlisted", date: offsetISO(-25) },
+  { candidate: "Hugo Moreau", offer: "Chef Mécanicien 750 kW", status: "viewed", date: offsetISO(-23) },
+  { candidate: "Chloé Durand", offer: "Capitaine 3000 UMS", status: "pending", date: offsetISO(-20) },
+  { candidate: "Nathan Robert", offer: "Chef Mécanicien 750 kW", status: "pending", date: offsetISO(-17) },
 ];
 
 const DEMO_MEDICAL_VISITS = [
-  { sailor: "Thomas Kervarrec", role: "Capitaine", type: "Renouvellement d'aptitude", date: "2026-01-15", expiry: "2028-01-15", status: "completed" as const, doctor: "Dr. Anne Petit" },
-  { sailor: "Yann Le Goff", role: "Chef Mécanicien", type: "Certificat STCW", date: "2025-11-20", expiry: "2026-05-20", status: "expiring_soon" as const, doctor: "Dr. Philippe Martin" },
-  { sailor: "Loïc Briand", role: "Matelot", type: "Renouvellement d'aptitude", date: "2024-06-10", expiry: "2026-06-10", status: "expiring_soon" as const, doctor: "Dr. Anne Petit" },
-  { sailor: "Nolwenn Cariou", role: "Matelot", type: "Aptitude initiale", date: "2025-09-01", expiry: "2027-09-01", status: "completed" as const, doctor: "Dr. Philippe Martin" },
-  { sailor: "Julien Masson", role: "Matelot saisonnier", type: "Visite de reprise", date: "2026-04-10", expiry: undefined, status: "scheduled" as const, doctor: "Dr. Anne Petit" },
+  { sailor: "Thomas Kervarrec", role: "Capitaine", type: "Renouvellement d'aptitude", date: offsetISO(-120), expiry: offsetISO(610), status: "completed" as const, doctor: "Dr. Anne Petit" },
+  { sailor: "Yann Le Goff", role: "Chef Mécanicien", type: "Certificat STCW", date: offsetISO(-180), expiry: offsetISO(15), status: "expiring_soon" as const, doctor: "Dr. Philippe Martin" },
+  { sailor: "Loïc Briand", role: "Matelot", type: "Renouvellement d'aptitude", date: offsetISO(-540), expiry: offsetISO(30), status: "expiring_soon" as const, doctor: "Dr. Anne Petit" },
+  { sailor: "Nolwenn Cariou", role: "Matelot", type: "Aptitude initiale", date: offsetISO(-240), expiry: offsetISO(490), status: "completed" as const, doctor: "Dr. Philippe Martin" },
+  { sailor: "Julien Masson", role: "Matelot saisonnier", type: "Visite de reprise", date: offsetISO(8), expiry: undefined, status: "scheduled" as const, doctor: "Dr. Anne Petit" },
 ];
 
 const medicalStatusConfig: Record<string, { label: string; variant: "green" | "warm" | "neutral" | "teal" }> = {
@@ -808,30 +837,30 @@ export default function DecouvrirEspaceAdherentPage() {
 
 const DEMO_VOTES = [
   {
-    id: "vote-ag-2026",
-    title: "Approbation des comptes annuels 2025",
+    id: "vote-ag-comptes",
+    title: "Approbation des comptes annuels",
     type: "Choix simple" as const,
     audience: "AG (A+B)" as const,
     status: "open" as const,
-    closesAt: "2026-05-30",
+    closesAt: offsetISO(20),
     response: "Pour" as const,
   },
   {
-    id: "vote-nao-2026",
-    title: "Mandat NAO 2026 – grille salariale",
+    id: "vote-nao",
+    title: "Mandat NAO – grille salariale",
     type: "Choix multiple" as const,
     audience: "Social 3228" as const,
     status: "open" as const,
-    closesAt: "2026-06-15",
+    closesAt: offsetISO(35),
     response: null as string | null,
   },
   {
     id: "vote-dates-ag",
-    title: "Disponibilités pour AG 2026",
+    title: "Disponibilités pour AG",
     type: "Sélection de dates" as const,
     audience: "AG (A+B)" as const,
     status: "closed" as const,
-    closesAt: "2026-04-15",
+    closesAt: offsetISO(-25),
     response: "12 mai, 13 mai" as const,
   },
 ];
@@ -897,9 +926,15 @@ interface DemoValidationItem {
   detail: string;
 }
 
+// Campagne annuelle : on cible l'année en cours si on est en début/milieu
+// d'année, sinon l'année suivante (la campagne est ouverte typiquement
+// jusqu'au 31 mars de l'année cible).
+const VALIDATION_YEAR = TODAY.getMonth() >= 8 ? TODAY.getFullYear() + 1 : TODAY.getFullYear();
+const validatedDetailLabel = formatLongFr(-90);
+
 const DEMO_VALIDATION_ITEMS: DemoValidationItem[] = [
-  { type: "profile", name: "Profil de la compagnie", status: "validated", detail: "Validé le 12 février 2027 (inchangé)" },
-  { type: "vessel", name: "Karu Express", status: "validated", detail: "Construit 2018 · 220 pax · 28 véh — validé 12 fév 2027" },
+  { type: "profile", name: "Profil de la compagnie", status: "validated", detail: `Validé le ${validatedDetailLabel} (inchangé)` },
+  { type: "vessel", name: "Karu Express", status: "validated", detail: `Construit 2018 · 220 pax · 28 véh — validé ${validatedDetailLabel}` },
   { type: "vessel", name: "Karu II", status: "pending", detail: "Construit 2010 · 180 pax · 18 véh — en attente" },
   { type: "vessel", name: "Karu III", status: "pending", detail: "Construit 2015 · 250 pax · 32 véh — en attente" },
 ];
@@ -923,11 +958,11 @@ function ValidationTab() {
           </div>
           <div className="flex-1">
             <p className="font-heading font-semibold text-foreground">
-              Validation annuelle ouverte – 2027
+              Validation annuelle ouverte – {VALIDATION_YEAR}
             </p>
             <p className="mt-1 text-sm text-foreground-muted">
-              Confirmez ou mettez à jour les données de votre compagnie pour 2027.
-              Deadline indicative : 31 mars 2027.
+              Confirmez ou mettez à jour les données de votre compagnie pour {VALIDATION_YEAR}.
+              Deadline indicative : 31 mars {VALIDATION_YEAR}.
             </p>
           </div>
         </div>
@@ -966,7 +1001,7 @@ function ValidationTab() {
                     {item.type === "profile" ? "Profil" : "Navire"}
                   </Badge>
                   {item.status === "validated" ? (
-                    <Badge variant="green">✓ Validé 2027</Badge>
+                    <Badge variant="green">✓ Validé {VALIDATION_YEAR}</Badge>
                   ) : (
                     <Badge variant="warm">À valider</Badge>
                   )}

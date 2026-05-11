@@ -32,10 +32,12 @@ const TOOLBAR: ToolbarAction[] = [
   { id: "ul", label: "Liste à puces", icon: "•", command: "insertUnorderedList", group: "list" },
   { id: "ol", label: "Liste numérotée", icon: "1.", command: "insertOrderedList", group: "list" },
   { id: "blockquote", label: "Citation", icon: "❝", command: "formatBlock", value: "blockquote", group: "list" },
-  // Align
-  { id: "left", label: "Aligner à gauche", icon: "⫷", command: "justifyLeft", group: "align" },
-  { id: "center", label: "Centrer", icon: "⫸", command: "justifyCenter", group: "align" },
-  { id: "right", label: "Aligner à droite", icon: "⫹", command: "justifyRight", group: "align" },
+  // Align — icônes SVG (les caractères Unicode ⫷⫸⫹ rendaient inégalement
+  // selon les OS/polices, A7 du feedback post-launch).
+  { id: "left", label: "Aligner à gauche", icon: "ALIGN_LEFT", command: "justifyLeft", group: "align" },
+  { id: "center", label: "Centrer", icon: "ALIGN_CENTER", command: "justifyCenter", group: "align" },
+  { id: "right", label: "Aligner à droite", icon: "ALIGN_RIGHT", command: "justifyRight", group: "align" },
+  { id: "justify", label: "Justifier", icon: "ALIGN_JUSTIFY", command: "justifyFull", group: "align" },
   // Insert
   { id: "link", label: "Lien", icon: "🔗", group: "insert", action: "link" },
   { id: "image", label: "Image", icon: "🖼", group: "insert", action: "image" },
@@ -159,6 +161,50 @@ export function RichTextEditor({
   }
 
   const btnBase = "flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-colors text-[var(--gaspe-neutral-700)] hover:bg-[var(--gaspe-teal-100)] hover:text-[var(--gaspe-teal-700)]";
+
+  // Petits SVG d'alignement de texte (Heroicons style outline).
+  function renderIcon(icon: string) {
+    const svgClass = "h-4 w-4";
+    const svgProps = {
+      className: svgClass,
+      fill: "none",
+      viewBox: "0 0 24 24",
+      stroke: "currentColor",
+      strokeWidth: 1.75,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    };
+    if (icon === "ALIGN_LEFT") {
+      return (
+        <svg {...svgProps} aria-hidden="true">
+          <path d="M3.75 6.75h16.5M3.75 12h10.5M3.75 17.25h13.5" />
+        </svg>
+      );
+    }
+    if (icon === "ALIGN_CENTER") {
+      return (
+        <svg {...svgProps} aria-hidden="true">
+          <path d="M3.75 6.75h16.5M6.75 12h10.5M5.25 17.25h13.5" />
+        </svg>
+      );
+    }
+    if (icon === "ALIGN_RIGHT") {
+      return (
+        <svg {...svgProps} aria-hidden="true">
+          <path d="M3.75 6.75h16.5M9.75 12h10.5M6.75 17.25h13.5" />
+        </svg>
+      );
+    }
+    if (icon === "ALIGN_JUSTIFY") {
+      return (
+        <svg {...svgProps} aria-hidden="true">
+          <path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+        </svg>
+      );
+    }
+    return icon;
+  }
+
   const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-surface px-3 py-2 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
 
   const groups = ["format", "heading", "list", "align", "insert"] as const;
@@ -179,7 +225,7 @@ export function RichTextEditor({
                 title={action.label}
                 aria-label={action.label}
               >
-                {action.icon}
+                {renderIcon(action.icon)}
               </button>
             ))}
           </div>
