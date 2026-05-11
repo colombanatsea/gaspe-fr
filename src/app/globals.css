@@ -148,6 +148,38 @@
   --color-surface-teal: #0B3E44;
   --color-border: #3A3632;
   --color-border-light: #2E2B28;
+
+  /* ── Dark mode : inversion ciblée des tints 50/100/200
+     uniquement, pour que les fonds soft restent lisibles avec
+     `text-foreground` (clair en dark). Cible le bug A2 généralisé
+     (encarts d'alerte/info en dark mode).
+
+     Les shades 600+ et 300–500 sont conservés à dessein :
+       - 600+ sont utilisés en background pour les boutons / badges
+         de type `bg-{couleur}-600 text-white` — les inverser
+         casserait le contraste blanc-sur-clair.
+       - 300/400/500 (sweet spot) gardent leur rôle d'accent décoratif.
+
+     Conséquence : les combos rares `bg-{couleur}-50 + text-{couleur}-700`
+     (ex. badge « Custom » de l'admin CMS) peuvent perdre du contraste
+     en dark — ces cas seront traités au coup par coup par classes
+     explicites `text-{couleur}-300` quand observés. */
+
+  --gaspe-teal-50:  #0B3E44;
+  --gaspe-teal-100: #10545C;
+  --gaspe-teal-200: #156A74;
+
+  --gaspe-blue-50:  #112D40;
+  --gaspe-blue-100: #1B4460;
+  --gaspe-blue-200: #255B80;
+
+  --gaspe-warm-50:  #2A2620;
+  --gaspe-warm-100: #3A3320;
+  --gaspe-warm-200: #5C4A1A;
+
+  --gaspe-green-50:  #1A2818;
+  --gaspe-green-100: #1F321F;
+  --gaspe-green-200: #2D4A30;
 }
 
 @theme inline {
