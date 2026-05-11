@@ -350,6 +350,16 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
   {
+    id: "actualites",
+    label: "Actualités",
+    sections: [
+      { id: "page-header-title", label: "Header – Titre", type: "text" },
+      { id: "page-header-description", label: "Header – Description", type: "text" },
+      { id: "intro-paragraph", label: "Paragraphe d'introduction", type: "text" },
+      { id: "empty-state", label: "Message « aucune actualité »", type: "text" },
+    ],
+  },
+  {
     id: "ssgm",
     label: "SSGM",
     sections: [

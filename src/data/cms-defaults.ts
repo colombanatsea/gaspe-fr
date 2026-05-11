@@ -208,6 +208,13 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "presse-description": "<p>Contact presse : <a href=\"mailto:contact@gaspe.fr\">contact@gaspe.fr</a></p>",
   },
 
+  actualites: {
+    "page-header-title": "Actualités",
+    "page-header-description": "Toutes les prises de parole et actualités récentes du GASPE – flux mis à jour en continu.",
+    "intro-paragraph": "Retrouvez ici les dernières positions, communiqués et actualités du Groupement. Vous pouvez également vous abonner au flux RSS pour recevoir les nouveautés dans votre lecteur favori.",
+    "empty-state": "Aucune actualité ou position publiée pour le moment. Revenez bientôt – le flux RSS vous préviendra automatiquement.",
+  },
+
   ssgm: {
     "page-header-title": "SSGM & Médecins Agréés",
     "page-header-description": "Services de Santé des Gens de Mer – visites d'aptitude, suivi médical et certificats STCW.",

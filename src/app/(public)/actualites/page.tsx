@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { BreadcrumbJsonLd } from "@/components/shared/SEOJsonLd";
 import { buildMetadata } from "@/lib/seo";
-import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { publishedPositions, type PositionTag } from "@/data/positions";
 
 export const metadata: Metadata = buildMetadata({
@@ -29,16 +27,10 @@ function tagVariant(tag: PositionTag) {
 export default function ActualitesPage() {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: SITE_NAME, url: SITE_URL },
-          { name: "Actualités", url: `${SITE_URL}/actualites` },
-        ]}
-      />
-
-      <PageHeader
-        title="Actualités"
-        description="Toutes les prises de parole et actualités récentes du GASPE – flux mis à jour en continu."
+      <CmsPageHeader
+        pageId="actualites"
+        defaultTitle="Actualités"
+        defaultDescription="Toutes les prises de parole et actualités récentes du GASPE – flux mis à jour en continu."
         breadcrumbs={[{ label: "Actualités" }]}
       />
 
