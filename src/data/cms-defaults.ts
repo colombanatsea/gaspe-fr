@@ -215,6 +215,11 @@ export const CMS_DEFAULTS: Record<string, Record<string, string>> = {
     "empty-state": "Aucune actualité ou position publiée pour le moment. Revenez bientôt – le flux RSS vous préviendra automatiquement.",
   },
 
+  recherche: {
+    "page-header-title": "Recherche",
+    "page-header-description": "Cherchez parmi les prises de position, actualités et communiqués de presse du GASPE.",
+  },
+
   ssgm: {
     "page-header-title": "SSGM & Médecins Agréés",
     "page-header-description": "Services de Santé des Gens de Mer – visites d'aptitude, suivi médical et certificats STCW.",

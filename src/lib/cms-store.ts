@@ -360,6 +360,14 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
   {
+    id: "recherche",
+    label: "Recherche",
+    sections: [
+      { id: "page-header-title", label: "Header – Titre", type: "text" },
+      { id: "page-header-description", label: "Header – Description", type: "text" },
+    ],
+  },
+  {
     id: "ssgm",
     label: "SSGM",
     sections: [

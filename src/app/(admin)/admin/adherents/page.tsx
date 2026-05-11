@@ -236,17 +236,30 @@ export default function AdminAdherentsPage() {
 
   // Stats : on compte sur l'ensemble actif (non-archivé) pour les chiffres clés
   const activeRows = rows.filter((r) => !(r as Organization & { archived?: boolean }).archived);
-  const stats = useMemo(() => ({
-    total: activeRows.length,
-    titulaires: activeRows.filter((o) => o.category === "titulaire").length,
-    associes: activeRows.filter((o) => o.category === "associe").length,
-    collegeA: activeRows.filter((o) => o.college === "A").length,
-    collegeB: activeRows.filter((o) => o.college === "B").length,
-    collegeC: activeRows.filter((o) => o.college === "C").length,
-    social3228: activeRows.filter((o) => o.social3228 === true).length,
-    archived: rows.length - activeRows.length,
-    contacts: rows.reduce((sum, o) => sum + o.contacts.length, 0),
-  }), [activeRows, rows]);
+  const stats = useMemo(() => {
+    const ccn3228Orgs = activeRows.filter((o) => o.social3228 === true);
+    // Personnel navigant total couvert par la CCN 3228 (C6 du feedback).
+    // Fallback sur `employeeCount` quand le split navigant/sédentaire n'est
+    // pas renseigné — c'est conservateur (peut surestimer si du sédentaire
+    // est inclus, mais évite de sous-estimer drastiquement).
+    const ccn3228Navigants = ccn3228Orgs.reduce((sum, o) => {
+      const navigant = o.employeeCountNavigant;
+      if (typeof navigant === "number" && navigant > 0) return sum + navigant;
+      return sum + (o.employeeCount ?? 0);
+    }, 0);
+    return {
+      total: activeRows.length,
+      titulaires: activeRows.filter((o) => o.category === "titulaire").length,
+      associes: activeRows.filter((o) => o.category === "associe").length,
+      collegeA: activeRows.filter((o) => o.college === "A").length,
+      collegeB: activeRows.filter((o) => o.college === "B").length,
+      collegeC: activeRows.filter((o) => o.college === "C").length,
+      social3228: ccn3228Orgs.length,
+      social3228Navigants: ccn3228Navigants,
+      archived: rows.length - activeRows.length,
+      contacts: rows.reduce((sum, o) => sum + o.contacts.length, 0),
+    };
+  }, [activeRows, rows]);
 
   /** Sauvegarde modal : PATCH les champs API-éditables, et applique les
    *  champs seed-only au store local en mode demo. */
@@ -530,7 +543,13 @@ export default function AdminAdherentsPage() {
         <StatCard label="Collège A" value={stats.collegeA} hint="Publics" />
         <StatCard label="Collège B" value={stats.collegeB} hint="Privés" />
         <StatCard label="Collège C" value={stats.collegeC} hint="Experts" />
-        <StatCard label="CCN 3228" value={stats.social3228} hint="Vote NAO" accent="warm" />
+        <StatCard
+          label="CCN 3228"
+          value={stats.social3228}
+          hint="Vote NAO"
+          subHint={stats.social3228Navigants > 0 ? `${stats.social3228Navigants.toLocaleString("fr-FR")} navigants couverts` : undefined}
+          accent="warm"
+        />
       </div>
 
       {/* ───── Filtres ───── */}
@@ -656,11 +675,14 @@ function StatCard({
   label,
   value,
   hint,
+  subHint,
   accent,
 }: {
   label: string;
   value: number;
   hint?: string;
+  /** Ligne supplémentaire en plus petit, sous le hint. Ex : « 1 234 navigants ». */
+  subHint?: string;
   accent?: "teal" | "blue" | "warm";
 }) {
   const accentColor =
@@ -676,6 +698,7 @@ function StatCard({
       <p className={`font-heading text-2xl font-bold ${accentColor}`}>{value}</p>
       <p className="text-xs text-foreground-muted">{label}</p>
       {hint && <p className="text-[10px] text-foreground-muted">{hint}</p>}
+      {subHint && <p className="text-[10px] text-foreground-muted/80 mt-0.5">{subHint}</p>}
     </div>
   );
 }

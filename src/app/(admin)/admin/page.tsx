@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
                 <span className="font-semibold">96</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/50">Adhérents</span>
+                <span className="text-white/50">Compagnies</span>
                 <span className="font-semibold">31</span>
               </div>
               <div className="flex justify-between">
@@ -254,8 +254,12 @@ export default function AdminDashboardPage() {
                 <span className="font-semibold">{publishedJobs.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/50">Comptes</span>
-                <span className="font-semibold">{counts.total}</span>
+                <span className="text-white/50">Comptes adhérents</span>
+                <span className="font-semibold">{counts.adherents}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/50">Comptes candidats</span>
+                <span className="font-semibold">{counts.candidats}</span>
               </div>
               <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
                 <span className="text-white/50">Déploiement</span>
