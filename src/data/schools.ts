@@ -274,13 +274,17 @@ export const SCHOOLS: School[] = [
     id: "lpm-guilvinec",
     slug: "lpm-le-guilvinec",
     kind: "lpm",
+    // Le LPM « du Guilvinec » est en réalité implanté sur la commune
+    // voisine de Treffiagat (Av. Jos Quiniou, 29730), comme nombre de
+    // LPM côtiers nommés d'après le port principal voisin. Le shortName
+    // « LPM Le Guilvinec » reste l'appellation usuelle des armateurs.
     name: "Lycée Professionnel Maritime du Guilvinec",
     shortName: "LPM Le Guilvinec",
-    city: "Le Guilvinec",
+    city: "Treffiagat",
     region: "Bretagne",
     postalCode: "29730",
-    lat: 47.8000,
-    lng: -4.2833,
+    lat: 47.7959,
+    lng: -4.2745,
     website: "https://lycee-maritime-guilvinec.bzh/",
     formations: [CAP_MARIN, BAC_PRO_CGEM_PECHE_VOILE, BAC_PRO_EMM, BTS_PGEM],
   },
