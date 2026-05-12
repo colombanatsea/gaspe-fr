@@ -3,7 +3,8 @@
 Document de cadrage pour rendre le CMS partiellement dynamique sans
 sacrifier la stabilité des pages « système ».
 
-Date : 2026-05-11. Statut : Phase 1 en cours sur `feat/cms-hybrid-phase1`.
+Date : 2026-05-11 / mise à jour 2026-05-12. Statut : **Phase 1 + Phase 2
+livrées en prod**. Phase 3 reportée.
 
 ## Contexte
 
@@ -83,13 +84,25 @@ CREATE INDEX IF NOT EXISTS idx_cms_custom_sections_page ON cms_custom_sections(p
 - Sections custom marquées d'un badge « Custom » + bouton « Supprimer ».
 - Les sections système ne sont pas supprimables.
 
-### Phase 2 — Drag-and-drop pour réordonner les sections
+### Phase 2 — Réordonner les sections custom ✅ LIVRÉ 2026-05-12
 
-**Scope** : `sort_order` mutable côté admin via @dnd-kit/sortable.
+**Scope livré** : `sort_order` mutable via boutons ↑/↓ dans l'admin
+(plutôt que drag-drop natif — plus simple, mobile-friendly, accessible,
+zéro dépendance npm ajoutée). Le résultat fonctionnel est équivalent.
 
-**Subtilité** : les sections système ont un ordre intrinsèque défini en
-code. On stocke un override `sort_order` en D1 par page_id + section_id
-qui peut s'appliquer aux deux. Si pas d'override, on garde l'ordre code.
+**Implémentation** :
+- Worker : `PATCH /api/cms/pages/:pageId/custom-sections/reorder` avec
+  body `{ orderedSectionIds: string[] }`. Réécrit `sort_order` en 1..N.
+  Validation SECTION_ID_RE + dédup.
+- Frontend : helper `apiReorderCustomSections(pageId, ids)`.
+- UI : boutons ↑/↓ dans le header de chaque section custom dans
+  `/admin/pages`, disabled aux extrêmes (première/dernière), avec
+  optimistic update local + reload après confirmation API.
+
+**Limitation assumée** : seules les sections custom peuvent être
+réordonnées. Les sections système restent à leur ordre défini en code
+(préserve la cohérence avec les templates publics, qui s'appuient sur
+des `sectionId` précis).
 
 ### Phase 3 — Pages custom complètes
 
