@@ -1,123 +1,156 @@
-# Session 58 — Récap 2026-05-12
+# Session 58 + 59 — Récap 2026-05-12
 
-Session de continuation autonome (Narvi). Vérification de l'état post
-session 57 + livraison de la Phase 2 hybride CMS + tests + nettoyage
-documentaire.
+Deux sessions consécutives sur la même journée :
+- **Session 58** (matin/début après-midi) — Phase 2 hybride CMS + tests.
+- **Session 59** (soir, autonomie complète) — Audit qualité, sécurité,
+  Phase 3 hybride CMS livrée.
 
-## Contexte d'entrée
+## Commits poussés sur main (chronologique)
 
-- Site en production, main à `ca40799` (fix de la route dynamique
-  `/admin/positions/edit` qui débloquait CF Pages en fin de session 57).
-- Backup D1 quotidien : success à 06:17 UTC.
-- Worker + Frontend OK (health endpoint, latence < 1s).
+| Commit | Sujet | Session |
+|---|---|---|
+| `b9bad1b` + `3733374` | Phase 2 hybride CMS — boutons ↑/↓ sections custom | 58 |
+| `1ce1fc8` | docs(cms-hybrid) — plan Phase 1+2 livrées | 58 |
+| `f088eaf` | test(cms-hybrid) — 10 tests `mergePageDefinitions` | 58 |
+| `7ffd8bf` | docs(feedback) — pointeur vers récaps + backlog | 58 |
+| `cbe94ba` | feat(boite-a-outils) — F2/F3 « Date à confirmer + Legifrance » | 58 |
+| `8113b59` | docs(session-58) — récap initial | 58 |
+| `4d4441a` | chore(security) — Next.js 16.2.4 → 16.2.6 + lint fix | 59 |
+| `71260b4` | chore(deps) — retrait three.js (dead code) | 59 |
+| `7d9ebe4` | docs(handoff) — refonte complète | 59 |
+| `2ab0a5d` | test+refactor — extraction search-scoring + 41 tests | 59 |
+| `2e931af` + `c00d120` | **Phase 3 hybride CMS** — pages custom complètes | 59 |
+| `937a3ad` | fix(deps) — régénération lockfile pour CI | 59 |
 
-## Commits poussés sur main
+**Total : 12 commits** sur main, dont 2 merges de branches feature
+(Phase 2 + Phase 3).
 
-| Commit | Sujet |
-|---|---|
-| `b9bad1b` + `3733374` | **Phase 2 hybride CMS** — réordonnancement des sections custom (boutons ↑/↓) |
-| `1ce1fc8` | docs(cms-hybrid) — plan mis à jour (Phase 1+2 livrées) |
-| `f088eaf` | test(cms-hybrid) — 10 tests unitaires `mergePageDefinitions` + `customSectionKey` |
-| `7ffd8bf` | docs(feedback) — pointeur vers récaps session 57/58 + backlog actualisé |
-| `cbe94ba` | feat(boite-a-outils) — F2/F3 amélioration UX dates accords |
+## Phase 2 hybride CMS — réordonner sections custom
 
-## Items du feedback traités
+Boutons **↑/↓** dans le header de chaque section custom de `/admin/pages`,
+plutôt qu'un drag-drop natif HTML5 (plus simple, mobile-friendly,
+accessible, zéro dépendance). Endpoint Worker
+`PATCH /api/cms/pages/:pageId/custom-sections/reorder` (body
+`{ orderedSectionIds: string[] }`), helper `apiReorderCustomSections`,
+optimistic update + reload.
 
-### Vérifiés déjà livrés (faux 🟢 dans le doc)
+Limitation assumée : seules les sections custom peuvent être
+réordonnées. Les sections système gardent leur ordre code (préserve la
+cohérence avec les templates publics).
 
-- **C1** — Bouton Export-all dans `/admin/parametres` : déjà livré en
-  session 54+++ via le composant `AdminTools` (window.open + cookie JWT).
-- **H1** — Tuile « Connectez-vous » sur `/documents` non connecté :
-  déjà livré en session 54+++ (lignes 144-170 de `documents/page.tsx`).
-- → Constat : le tableau de `POST-LAUNCH-FEEDBACK-2026.md` n'était plus
-  tenu à jour ligne à ligne depuis la session 54. Ajout d'un encart de
-  tête qui redirige vers les récaps par session pour l'état réel.
+## Phase 3 hybride CMS — pages custom complètes
 
-### Livrés cette session
+Permet à l'admin de **créer/éditer/publier/archiver** des pages
+entièrement custom, sans lien avec PAGE_DEFINITIONS. Publiées sous
+`/p?slug=X` (query-string pour compat `output: 'export'`).
 
-- **F2/F3** (amélioration UX) — Pour les accords de branche en vigueur
-  sans date sourcée (`date === "—"`), affichage d'une note discrète
-  « Date de signature à confirmer · Voir Legifrance IDCC 3228 » avec
-  lien direct vers la convention Legifrance. Les accords en négociation
-  conservent leur affichage (badge orange suffit).
+**Architecture** :
+- **Migration D1 `0043_cms_custom_pages.sql`** : table avec slug UNIQUE,
+  label, description, content HTML, published flag, is_archived
+  (soft-delete), index partiel.
+- **5 endpoints Worker** : list (public published-only / admin
+  `?all=1` retourne tout), get, create, update, delete (soft).
+- **5 helpers frontend** dans `cms-store.ts` (`apiList/Get/Create/
+  Update/Delete CustomPage`).
+- **Route publique** `/p?slug=X` : Suspense + useSearchParams,
+  `sanitizeHtml + dangerouslySetInnerHTML`, BreadcrumbJsonLd.
+- **UI admin** :
+  - `/admin/pages-custom` : liste avec statut, modale Création avec
+    slug auto (depuis le label), bouton archivage, lien preview.
+  - `/admin/pages-custom/edit?slug=X` : édition richtext (réutilise
+    `RichTextEditor`), toggle publié, preview, MediaLibrary.
+- **AdminSidebar** : lien « Pages custom » sous « Contenu éditorial ».
 
-### Différés explicitement
+**Validation** : slug strict `/^[a-z0-9][a-z0-9-]{0,79}$/`, UNIQUE → 409
+si collision, slug non modifiable après création (permalien stable).
 
-- **C9 — promotion multi-admin** : sensible côté sécurité (multiplier
-  les comptes maître admin). Le système `staff` avec permissions
-  granulaires couvre déjà 80% des besoins. À discuter avec Colomban
-  pour clarifier le cas d'usage avant ouverture.
+**Hors scope** : pas de système de "sections" modulaires comme les pages
+système. Le content est un seul HTML riche. Si besoin, Phase 4.
 
-## Phase 2 hybride CMS — réordonnancement sections custom
+## Audit qualité (session 59)
 
-**Capacité ajoutée** : l'admin peut désormais réordonner les sections
-custom d'une page directement depuis `/admin/pages` via des boutons
-↑/↓ dans le header de chaque section custom.
+### Sécurité
 
-**Choix d'implémentation** : boutons ↑/↓ plutôt qu'un drag-and-drop
-natif HTML5. Plus simple, mobile-friendly, accessible (boutons
-standards avec aria-labels), zéro dépendance npm ajoutée. Le résultat
-fonctionnel est équivalent au drag-drop.
+- **Next.js 16.2.4 → 16.2.6** : résout 13 vulnérabilités high (DoS
+  Server Components, XSS CSP nonces, cache poisoning RSC, middleware
+  bypass, etc.). Patch rétrocompatible, 0 régression.
+- Reste 2 vulnérabilités moderate sur postcss transitif (impact build
+  CSS uniquement, pas de surface runtime pour static export).
 
-**Implémentation** :
-- Worker : `PATCH /api/cms/pages/:pageId/custom-sections/reorder` avec
-  body `{ orderedSectionIds: string[] }`. Réécrit `sort_order` en
-  1..N. Validation : SECTION_ID_RE par entrée, pas de doublons. Admin
-  only (permission `manage_cms`).
-- Frontend : helper `apiReorderCustomSections(pageId, ids)` dans
-  `cms-store.ts`. `mergePageDefinitions` triait déjà par `sortOrder`,
-  rien à toucher.
-- UI : `orderedCustomSectionIds` useMemo pour la page courante,
-  `handleMoveCustomSection(sectionId, delta)` avec optimistic update
-  local + reload après confirmation API. Boutons disabled aux extrêmes
-  (première/dernière section custom).
+### Code quality
 
-**Limitation assumée** : seuls les sections custom peuvent être
-réordonnées. Les sections système restent à leur ordre code (préserve
-la cohérence avec les templates publics).
+- **three.js retiré** des deps (0 import dans `src/`). Gain bundle
+  ~600 KB minified + surface npm réduite.
+- **1 warning lint** fixé : `setState` synchrone dans `useEffect` de
+  `/admin/positions/edit` wrappé dans `startTransition`.
+- **`search-scoring` extrait** de `recherche/page.tsx` vers
+  `src/lib/search-scoring.ts` : module pur réutilisable + testable.
 
-## Tests unitaires Phase 1+2 hybride
+### Tests
 
-10 tests ajoutés dans `src/lib/__tests__/cms-store.test.ts` :
+- **+41 tests unitaires** (364 → 405 verts) :
+  - 19 sur `text-preview` (decodeHtmlEntities, stripHtmlPreview, formatPrice)
+  - 22 sur `search-scoring` (normalize, tokenize, scoreDocument, rankDocuments)
+- Tous verts. 0 erreur TS, 0 warning lint.
 
-- `customSectionKey` : séparateur stable, différenciation cross-pages.
-- `mergePageDefinitions` :
-  - no-op si custom vide (retourne builtin tel quel)
-  - ajout en fin de page concernée
-  - n'affecte pas les pages sans custom
-  - tri par sortOrder croissant
-  - départage par id ascendant si même sortOrder
-  - ignore les custom référençant une page non builtin (Phase 3 scope)
-  - préserve type et itemFields
-  - non-mutation du builtin d'origine
+### Documentation
 
-**Total tests** : 19 (9 existants + 10 nouveaux). Tous verts.
+- **`HANDOFF.md` refait** : était figé à la session 25/26 (v2.12.2).
+  État réel au 12/05/2026 avec métriques actualisées, backlog priorisé,
+  pointeurs récaps, décisions structurantes, points de vigilance.
+- **`docs/CMS-HYBRID-PLAN.md`** mis à jour pour refléter Phase 1+2+3
+  livrées.
+- **`docs/POST-LAUNCH-FEEDBACK-2026.md`** enrichi d'un pointeur vers
+  les récaps de session pour éviter la confusion observée hier (items
+  C1/H1 marqués 🟢 alors qu'ils étaient livrés en session 54).
 
-**E2E non couverts** : la Phase 1+2 hybride nécessite le mode API
-(NEXT_PUBLIC_API_URL défini → Worker mock). À programmer en environnement
-E2E dédié plus tard.
+## Métriques d'arrivée → de sortie (session 59)
 
-## Points ouverts
+| Métrique | Avant | Après |
+|---|---|---|
+| Version | 2.51.0 | 2.51.0 |
+| Tests unitaires | 364 | **405** (+41) |
+| Erreurs TS | 0 | 0 |
+| Warnings lint | 1 | **0** |
+| Vulnérabilités high (npm) | 13 | **0** |
+| Vulnérabilités moderate | 2 | 2 (postcss transitif) |
+| Tables D1 | 13 | **14** (+ `cms_custom_pages`) |
+| Endpoints Worker CMS | 8 | **14** (+ 6 custom-pages CRUD) |
+| Pages publiques | 119 | **120** (+ `/p`) |
+| Pages admin | 24 | **26** (+ 2 pages-custom) |
 
-- **Phase 3 hybride CMS** : pages custom complètes avec route
-  catch-all `/c/[slug]` + table `cms_custom_pages`. Plus structurant —
-  à planifier avec Colomban.
-- **C2 — auto-pull effectif depuis profil adhérent** : touche au modèle
-  data, à discuter.
-- **C7 — reset cotisations campagne** : logique métier à clarifier.
-- **C9 — multi-admin** : décision sécurité Colomban attendue.
-- **F5-F8 — simulateur salaire upgrade** : nécessite grilles NAO 2026
-  + spec calcul net détaillée. Hors scope autonomie.
-- **I2 — Brevo bulk newsletters** : nécessite list IDs Brevo provisionnées.
-- **J1 — split Worker monolithique** : très lourd, plan à construire.
+## Points ouverts pour les prochaines sessions
+
+- **C2** — `/admin/adherents` : effectif/nb navires auto depuis profil
+  adhérent (touche modèle data, sensible).
+- **C7** — Reset cotisations à `due` au démarrage campagne annuelle
+  (logique métier à clarifier).
+- **C9** — Promotion multi-admin (sensible sécurité, décision Colomban
+  attendue).
+- **F5-F8** — Simulateur salaire upgrade (slider temps partiel, calcul
+  net, MAJ auto grilles NAO).
+- **I2** — Brevo bulk newsletters (list IDs Brevo + envoi groupé).
+- **J1** — Split Worker monolithique 5800+ lignes → `workers/handlers/`.
+- **Tests E2E** sur le hybride CMS (Phase 1/2/3) — nécessite Worker
+  mock pour le mode API.
+- **Phase 4 hybride CMS** (optionnelle) — sections modulaires pour les
+  pages custom (au lieu d'un seul HTML).
+- **CMS revisions pour pages custom** — actuellement les pages custom
+  n'ont pas d'historique (contrairement aux pages système qui ont
+  `cms_revisions`).
 
 ## Notes méthodologiques
 
-- Le doc `POST-LAUNCH-FEEDBACK-2026.md` ne suit plus l'état réel — j'ai
-  ajouté un pointeur vers les récaps par session pour éviter la
-  confusion. Pour les futures sessions, mettre à jour ce doc demanderait
-  un audit ligne à ligne. Plus pragmatique de tenir les récaps session.
-- L'erreur de build sur la route `/admin/positions/edit/[id]` (hier en
-  fin de session) a bloqué tous les déploiements CF Pages pour ~30 min.
-  Leçon : toujours vérifier `gh run list` après un merge feature, pas
-  seulement le code local.
+- **Migration D1 + CI** : à chaque merge feature touchant `workers/**`,
+  vérifier le workflow `Deploy Worker` ET `CI` (deux workflows séparés
+  dont les statuts ne se chaînent pas). Le bug du lockfile désynchronisé
+  a bloqué le CI sans bloquer le Deploy Worker — confusion possible.
+- **Lockfile cross-platform** : `npm uninstall <pkg>` sur Windows peut
+  laisser le lockfile incohérent côté Linux (CI). Toujours faire
+  `rm -rf node_modules package-lock.json && npm install` après une
+  modification de deps si on n'est pas sûr.
+- **Pattern static export pour routes admin dynamiques** :
+  systématiquement query-string `?id=X` plutôt que segment dynamique
+  `/[id]`. Trois routes l'utilisent maintenant :
+  `/admin/positions/edit?id=X`, `/admin/pages-custom/edit?slug=X`,
+  `/p?slug=X`.
