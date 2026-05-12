@@ -411,7 +411,7 @@ function Classifications() {
     <div>
       {/* Note pédagogique : la classification salariale combine fonction +
           tranche de jauge UMS – pas le brevet détenu. */}
-      <div className="reveal mb-6 rounded-xl border border-[var(--gaspe-teal-400)]/30 bg-[var(--gaspe-teal-600)]/5 p-4 text-sm text-foreground-muted">
+      <div className="reveal mb-4 rounded-xl border border-[var(--gaspe-teal-400)]/30 bg-[var(--gaspe-teal-600)]/5 p-4 text-sm text-foreground-muted">
         <p className="flex items-start gap-2">
           <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--gaspe-teal-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
@@ -421,6 +421,39 @@ function Classifications() {
             , pas le brevet détenu. Un officier titulaire d&apos;un brevet supérieur exerçant comme second sur un petit navire est rémunéré au minimum de sa fonction réelle. La colonne « Brevet » liste le titre STCW <em>minimum</em> requis pour accéder au poste ; voir la grille NAO 2026 pour le minimum conventionnel associé à chaque tranche UMS.
           </span>
         </p>
+      </div>
+
+      {/* F8 (feedback post-launch) : lien direct vers la dernière grille
+          NAO et le simulateur. Le bandeau cite l'accord signé pour
+          renforcer la crédibilité institutionnelle. */}
+      <div className="reveal mb-6 rounded-xl border border-[var(--gaspe-warm-300)] bg-[var(--gaspe-warm-50)] p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-2 text-sm text-foreground">
+          <svg className="mt-0.5 h-5 w-5 shrink-0 text-[var(--gaspe-warm-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+          </svg>
+          <span>
+            <strong className="block text-foreground">Grille NAO 2026 — Annexe 1 CCN 3228</strong>
+            <span className="text-xs text-foreground-muted">
+              Accord signé le 31/03/2026 par le GASPE et les 4 organisations
+              syndicales représentatives. Revalorisation : <strong>+1,18 %</strong> sur
+              les minimas, <strong>+1,1 %</strong> sur les accessoires.
+            </span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <a
+            href="#simulateur-salaire"
+            className="rounded-xl bg-[var(--gaspe-teal-600)] px-3 py-2 text-xs font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
+          >
+            Simuler le salaire →
+          </a>
+          <a
+            href="/documents?q=NAO"
+            className="rounded-xl border border-[var(--gaspe-warm-300)] bg-white px-3 py-2 text-xs font-semibold text-[var(--gaspe-warm-700)] hover:bg-[var(--gaspe-warm-100)] transition-colors"
+          >
+            Voir l&apos;accord
+          </a>
+        </div>
       </div>
 
       {CATEGORIES.map((cat) => {
@@ -471,33 +504,73 @@ function Classifications() {
 
 function SimulateurSalaire() {
   const [selectedIdx, setSelectedIdx] = useState<number | "">("");
+  // F5 (feedback post-launch) : slider temps partiel (0,5 → 1,0 ETP).
+  const [tempsPartiel, setTempsPartiel] = useState<number>(1);
+  // F6 (feedback post-launch) : taux d'imposition paramétrable (0–30 %).
+  // 11 % par défaut = tranche médiane française pour un revenu moyen
+  // (cf. barème impôt 2025/2026 — célibataire entre ~28 800 € et 82 300 €).
+  const [tauxIR, setTauxIR] = useState<number>(11);
+  // Prime d'ancienneté : 0,3 % du salaire de base par année d'ancienneté
+  // dans l'entreprise (NAO 2026, note 4 de l'Annexe 1).
+  const [anciennete, setAnciennete] = useState<number>(0);
 
   const entry = selectedIdx !== "" ? SALARY_GRID_NAO_2026[selectedIdx] : null;
 
   const result = useMemo(() => {
     if (!entry) return null;
-    const gross = entry.salaireMensuel;
-    const employeeContrib = Math.round(gross * (ENIM_TOTAL_EMPLOYEE_RATE / 100));
+    const baseMensuel = entry.salaireMensuel;
+    // Ancienneté : +0,3 % par année (linéaire, conformément à la note de
+    // l'Annexe 1 NAO 2026).
+    const primeAnciennetePct = Math.max(0, anciennete) * 0.3;
+    const baseAvecAnciennete = baseMensuel * (1 + primeAnciennetePct / 100);
+    // Temps partiel : prorata sur le brut + la prime de fin d'année.
+    const coef = Math.max(0.1, Math.min(1, tempsPartiel));
+    const gross = baseAvecAnciennete * coef;
+    const employeeContrib = gross * (ENIM_TOTAL_EMPLOYEE_RATE / 100);
     const estimatedNet = gross - employeeContrib;
-    const annualGross = gross * 12 + entry.primeFinAnnee;
-    const hourlyNet = Math.round((estimatedNet / 151.67) * 100) / 100;
-    return { gross, employeeContrib, estimatedNet, annualGross, annualPremium: entry.primeFinAnnee, hourlyNet, tauxHoraire: entry.tauxHoraire, tauxHS: entry.tauxHS };
-  }, [entry]);
+    const annualPremium = entry.primeFinAnnee * coef * (1 + primeAnciennetePct / 100);
+    const annualGross = gross * 12 + annualPremium;
+    const hourlyNet = (estimatedNet / (151.67 * coef)) || 0;
+    // F6 : calcul net après IR (prélèvement à la source, taux unique
+    // approximatif — utilisateur peut ajuster).
+    const irRate = Math.max(0, Math.min(30, tauxIR));
+    const netAfterTaxMonthly = estimatedNet * (1 - irRate / 100);
+    const netAfterTaxAnnual = (annualGross - 12 * employeeContrib) * (1 - irRate / 100);
+    return {
+      gross,
+      employeeContrib,
+      estimatedNet,
+      annualGross,
+      annualPremium,
+      hourlyNet,
+      tauxHoraire: entry.tauxHoraire,
+      tauxHS: entry.tauxHS,
+      coef,
+      primeAnciennetePct,
+      netAfterTaxMonthly,
+      netAfterTaxAnnual,
+      irRate,
+    };
+  }, [entry, tempsPartiel, tauxIR, anciennete]);
 
   const selectCls =
     "w-full rounded-xl border border-border-light bg-surface px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--gaspe-teal-600)]/40 focus:border-[var(--gaspe-teal-600)] transition-colors";
+  const sliderCls =
+    "w-full h-2 bg-[var(--gaspe-neutral-200)] rounded-lg appearance-none cursor-pointer accent-[var(--gaspe-teal-600)]";
 
   return (
     <div>
       <Disclaimer />
 
-      <div className="reveal gaspe-card rounded-xl p-6">
-        <h3 className="font-heading text-base font-bold text-foreground mb-4">
-          Selectionnez une fonction
+      <div className="reveal gaspe-card rounded-xl p-6 space-y-5">
+        <h3 className="font-heading text-base font-bold text-foreground">
+          Paramètres
         </h3>
 
         <div>
-          <label htmlFor="sim-fonction" className="block text-xs font-semibold text-foreground-muted mb-1.5">Fonction (grille NAO 2026)</label>
+          <label htmlFor="sim-fonction" className="block text-xs font-semibold text-foreground-muted mb-1.5">
+            Fonction (grille NAO 2026)
+          </label>
           <select
             id="sim-fonction"
             className={selectCls}
@@ -510,6 +583,89 @@ function SimulateurSalaire() {
             ))}
           </select>
         </div>
+
+        {/* F5 : slider temps partiel */}
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <label htmlFor="sim-tp" className="block text-xs font-semibold text-foreground-muted">
+              Temps de travail
+            </label>
+            <span className="text-sm font-semibold text-[var(--gaspe-teal-600)]">
+              {Math.round(tempsPartiel * 100)} % d&apos;un ETP
+            </span>
+          </div>
+          <input
+            id="sim-tp"
+            type="range"
+            min={0.5}
+            max={1}
+            step={0.05}
+            value={tempsPartiel}
+            onChange={(e) => setTempsPartiel(parseFloat(e.target.value))}
+            className={sliderCls}
+            aria-valuetext={`${Math.round(tempsPartiel * 100)} %`}
+          />
+          <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
+            <span>50 % (mi-temps)</span>
+            <span>75 %</span>
+            <span>100 % (plein temps)</span>
+          </div>
+        </div>
+
+        {/* Ancienneté */}
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <label htmlFor="sim-anc" className="block text-xs font-semibold text-foreground-muted">
+              Ancienneté dans l&apos;entreprise
+            </label>
+            <span className="text-sm font-semibold text-[var(--gaspe-teal-600)]">
+              {anciennete} an{anciennete > 1 ? "s" : ""}
+              {anciennete > 0 && (
+                <span className="text-xs text-foreground-muted ml-1">
+                  (+{(anciennete * 0.3).toFixed(1)} %)
+                </span>
+              )}
+            </span>
+          </div>
+          <input
+            id="sim-anc"
+            type="range"
+            min={0}
+            max={40}
+            step={1}
+            value={anciennete}
+            onChange={(e) => setAnciennete(parseInt(e.target.value, 10))}
+            className={sliderCls}
+          />
+          <p className="text-[10px] text-foreground-muted mt-1">
+            +0,3 % du salaire de base par année (Annexe 1 NAO 2026, note 4).
+          </p>
+        </div>
+
+        {/* F6 : taux IR */}
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <label htmlFor="sim-ir" className="block text-xs font-semibold text-foreground-muted">
+              Taux d&apos;impôt sur le revenu (prélèvement à la source)
+            </label>
+            <span className="text-sm font-semibold text-[var(--gaspe-teal-600)]">
+              {tauxIR} %
+            </span>
+          </div>
+          <input
+            id="sim-ir"
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={tauxIR}
+            onChange={(e) => setTauxIR(parseInt(e.target.value, 10))}
+            className={sliderCls}
+          />
+          <p className="text-[10px] text-foreground-muted mt-1">
+            Taux personnalisable (0 → 30 %). 11 % par défaut = tranche médiane française. À ajuster selon votre situation familiale et vos autres revenus.
+          </p>
+        </div>
       </div>
 
       {result && (
@@ -520,18 +676,33 @@ function SimulateurSalaire() {
           </h3>
           <p className="text-xs text-foreground-muted mb-4">
             Plancher légal de rémunération (CCN 3228, avenant NAO 2026). Le salaire effectivement versé peut être supérieur.
+            {result.coef < 1 && <> Calculs au prorata pour {Math.round(result.coef * 100)} % d&apos;un ETP.</>}
+            {result.primeAnciennetePct > 0 && <> Inclut prime ancienneté +{result.primeAnciennetePct.toFixed(1)} %.</>}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <ResultCard label="Brut mensuel minimum" value={fmt2.format(result.gross)} highlight />
+            <ResultCard label="Brut mensuel" value={fmt2.format(result.gross)} highlight />
             <ResultCard label="Cotisations salarié" value={`- ${fmt2.format(result.employeeContrib)}`} sublabel={`(${fmtPct(ENIM_TOTAL_EMPLOYEE_RATE)})`} />
             <ResultCard label="Net minimum estimé" value={fmt2.format(result.estimatedNet)} highlight />
-            <ResultCard label="Brut annuel minimum" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt2.format(result.annualPremium)} de prime`} />
+            <ResultCard label="Brut annuel" value={fmt.format(result.annualGross)} sublabel={`dont ${fmt2.format(result.annualPremium)} de prime`} />
           </div>
+
+          {/* F6 — bloc « après impôts » */}
+          <div className="mt-4 rounded-xl border border-[var(--gaspe-warm-200)] bg-[var(--gaspe-warm-50)] p-4">
+            <p className="text-xs font-semibold text-[var(--gaspe-warm-700)] mb-2">
+              Après prélèvement à la source ({result.irRate} % d&apos;IR)
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ResultCard label="Net mensuel après IR" value={fmt2.format(result.netAfterTaxMonthly)} highlight />
+              <ResultCard label="Net annuel après IR (avec prime)" value={fmt.format(result.netAfterTaxAnnual)} />
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-3 mt-4">
-            <ResultCard label="Taux horaire minimum" value={fmt2.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois (1 607 h/an)" />
+            <ResultCard label="Taux horaire" value={fmt2.format(result.tauxHoraire)} sublabel="Base 151,67 h/mois temps plein" />
             <ResultCard label="Taux HS (25 %)" value={fmt2.format(result.tauxHS)} />
-            <ResultCard label="Net horaire minimum" value={fmt2.format(result.hourlyNet)} />
+            <ResultCard label="Net horaire estimé" value={fmt2.format(result.hourlyNet)} />
           </div>
+
           {entry?.enim && (
             <p className="mt-3 text-xs text-foreground-muted text-center">
               Correspondance cotisations : {entry.enim} ENIM
