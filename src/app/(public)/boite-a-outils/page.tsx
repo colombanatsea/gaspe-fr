@@ -353,18 +353,42 @@ function RegimeENIM() {
 function AccordsBranche() {
   return (
     <div className="space-y-4">
-      {BRANCH_AGREEMENTS.map((accord, i) => (
-        <div key={i} className="reveal gaspe-card gaspe-card-hover rounded-xl p-5">
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <h3 className="font-heading text-sm font-bold text-foreground">{accord.title}</h3>
-            <Badge variant={accord.status === "en vigueur" ? "green" : "warm"} className="shrink-0">
-              {accord.status === "en vigueur" ? "En vigueur" : "En négociation"}
-            </Badge>
+      {BRANCH_AGREEMENTS.map((accord, i) => {
+        const dateUnknown = !accord.date || accord.date === "—";
+        // F2/F3 du feedback : pour les accords en vigueur dont la date
+        // exacte de signature reste à vérifier (PV NAO non publié à
+        // l'instant T, ou avenant antérieur dont la date n'a pas été
+        // rapatriée), on affiche un lien vers Legifrance IDCC 3228 qui
+        // permet à l'utilisateur de retrouver la date officielle.
+        const showLegifrance = dateUnknown && accord.status === "en vigueur";
+        return (
+          <div key={i} className="reveal gaspe-card gaspe-card-hover rounded-xl p-5">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h3 className="font-heading text-sm font-bold text-foreground">{accord.title}</h3>
+              <Badge variant={accord.status === "en vigueur" ? "green" : "warm"} className="shrink-0">
+                {accord.status === "en vigueur" ? "En vigueur" : "En négociation"}
+              </Badge>
+            </div>
+            {!dateUnknown && (
+              <p className="text-xs text-foreground-muted mb-2">{accord.date}</p>
+            )}
+            {showLegifrance && (
+              <p className="text-xs text-foreground-muted mb-2 italic">
+                Date de signature à confirmer.{" "}
+                <a
+                  href="https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000048819127"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="not-italic font-semibold text-[var(--gaspe-teal-600)] underline hover:text-[var(--gaspe-teal-700)]"
+                >
+                  Vérifier sur Legifrance IDCC 3228 →
+                </a>
+              </p>
+            )}
+            <p className="text-sm text-foreground-muted leading-relaxed">{accord.summary}</p>
           </div>
-          <p className="text-xs text-foreground-muted mb-2">{accord.date}</p>
-          <p className="text-sm text-foreground-muted leading-relaxed">{accord.summary}</p>
-        </div>
-      ))}
+        );
+      })}
       <div className="reveal mt-6 text-center">
         <Link
           href="/documents"
