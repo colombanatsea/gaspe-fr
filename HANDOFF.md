@@ -11,7 +11,7 @@
 |----------|--------|
 | Version package.json | **2.51.0** |
 | Branch | `main` |
-| Dernier commit (au 12/05) | `62eeefe` (Merge C2 + C7 + C9 multi-admin) |
+| Dernier commit | `052f6b4` (J1 vague 1.a — CMS revisions extraits) |
 | TypeScript | 0 erreur |
 | Lint | 0 erreur, 0 warning |
 | Tests unitaires | **405** (30 fichiers) |
@@ -21,6 +21,8 @@
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 | Tables D1 | **15** (`cms_custom_pages`, `users.is_master_admin`) |
 | Migrations D1 appliquées | 44 (dernière 0044 master admin) |
+| Lignes `workers/api.ts` | **7777** (-161 depuis le 12/05, J1 vagues 0 + 1.a) |
+| Domaines extraits | 2 (cms-custom-pages, cms-revisions) |
 
 ### Infrastructure
 
@@ -81,11 +83,12 @@ comparaison 2 révisions, restore.
 
 ### 🟠 Important
 
-- **F5-F8** — Simulateur salaire upgrade (slider temps partiel, calcul
-  net après impôts, MAJ auto grilles NAO). Nécessite grilles NAO 2026
-  + spec calcul net.
 - **I2** — Brevo bulk newsletters (10 catégories → list IDs Brevo +
   envoi groupé). Nécessite provisionnement list IDs.
+- **Article 4 NAO 2026** — Intégration emplois restauration à bord
+  (barman, serveur, aide polyvalent) dans la grille de classification
+  CCN 3228. Avenant à négocier en commission paritaire **avant le
+  31/12/2026** (cf. accord NAO signé 31/03/2026).
 
 ### 🟢 Backlog
 
@@ -114,9 +117,12 @@ de session pour l'état réel).
 - `docs/SESSION-2026-05-12-recap.md` — Sessions 58 + 59 du 12/05 :
   Phase 2+3 hybride CMS, 41 tests, audit qualité (Next 16.2.6 sécu,
   three.js retiré), HANDOFF refait.
-- Session 60 (en cours, 12/05 soir) : J1 vague 0 (CMS custom pages
-  extraits + helpers `lib/`), C2 (override admin effectif/navires),
-  C7 (reset cotisations campagne), C9 (multi-admin master transferable).
+- Session 60 (12/05 soir) : J1 vague 0 (CMS custom pages extraits +
+  helpers `lib/`), C2 (override admin effectif/navires), C7 (reset
+  cotisations campagne), C9 (multi-admin master transferable).
+- Session 61 (12/05 nuit) : F5+F6+F7+F8 (simulateur salaire enrichi
+  slider temps partiel + IR + ancienneté + lien NAO classifications),
+  J1 vague 1.a (CMS revisions extraits).
 
 ## Commandes utiles
 
