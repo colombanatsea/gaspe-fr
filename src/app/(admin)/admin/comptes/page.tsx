@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { ALL_STAFF_PERMISSIONS, STAFF_PERMISSION_LABELS, type StaffPermission } from "@/lib/auth/types";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 import { useModalA11y } from "@/lib/useModalA11y";
+import { ApiAuthStore } from "@/lib/auth/api-auth-store";
+import { isApiMode } from "@/lib/api-client";
 
 const roleBadge: Record<UserRole, { label: string; variant: "teal" | "blue" | "warm" | "green" | "neutral" }> = {
   admin: { label: "Admin", variant: "teal" },
@@ -59,6 +61,51 @@ export default function AdminComptesPage() {
     const all = await getAllUsers();
     setUsers(all);
   }, [getAllUsers]);
+
+  // C9 — master admin actions. Visibles uniquement si le user connecté
+  // est lui-même master admin ET seulement en mode API (les flags
+  // is_master_admin sont en DB).
+  const isCurrentUserMaster = user?.isMasterAdmin === true && isApiMode();
+
+  async function handlePromoteAdmin(u: User) {
+    if (!confirm(`Promouvoir « ${u.name} » (${u.email}) en admin ? Il aura toutes les permissions.`)) return;
+    const res = await ApiAuthStore.promoteAdmin(u.id);
+    if (!res.success) {
+      alert(`Échec : ${res.error ?? "erreur inconnue"}`);
+      return;
+    }
+    await refresh();
+  }
+
+  async function handleDemoteAdmin(u: User) {
+    if (!confirm(`Rétrograder « ${u.name} » en staff ? Ses permissions seront effacées.`)) return;
+    const res = await ApiAuthStore.demoteAdmin(u.id);
+    if (!res.success) {
+      alert(`Échec : ${res.error ?? "erreur inconnue"}`);
+      return;
+    }
+    await refresh();
+  }
+
+  async function handleTransferMaster(u: User) {
+    if (!confirm(
+      `⚠️ TRANSFERT DU RÔLE MASTER ADMIN\n\n` +
+      `Vous allez transférer votre rôle de master admin à :\n` +
+      `${u.name} (${u.email})\n\n` +
+      `Vous deviendrez admin secondaire et ne pourrez plus :\n` +
+      `- Promouvoir/rétrograder d'autres admins\n` +
+      `- Transférer à nouveau ce rôle\n\n` +
+      `Action IRRÉVERSIBLE depuis votre compte. Confirmer ?`
+    )) return;
+    if (!confirm(`Dernière confirmation : transférer le master admin à « ${u.name} » ?`)) return;
+    const res = await ApiAuthStore.transferMaster(u.id);
+    if (!res.success) {
+      alert(`Échec : ${res.error ?? "erreur inconnue"}`);
+      return;
+    }
+    alert(`Transfert effectué. ${u.name} est désormais master admin.`);
+    await refresh();
+  }
 
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) { router.push("/connexion"); return; }
@@ -254,8 +301,16 @@ export default function AdminComptesPage() {
                   </div>
 
                   {/* Role */}
-                  <div>
+                  <div className="flex flex-col gap-1">
                     <Badge variant={roleBadge[u.role].variant}>{roleBadge[u.role].label}</Badge>
+                    {u.isMasterAdmin && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[var(--gaspe-warm-700)]">
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z"/>
+                        </svg>
+                        Master
+                      </span>
+                    )}
                   </div>
 
                   {/* Status */}
@@ -346,6 +401,34 @@ export default function AdminComptesPage() {
                           >
                             {u.role === "staff" ? "Modifier accès staff" : "Promouvoir staff"}
                           </button>
+                        )}
+                        {/* C9 — actions master admin (transfert / promotion / rétrogradation) */}
+                        {isCurrentUserMaster && u.id !== user.id && (u.role === "staff" || u.role === "adherent") && (
+                          <button
+                            onClick={() => handlePromoteAdmin(u)}
+                            className="rounded-lg border border-[var(--gaspe-warm-200)] px-3.5 py-1.5 text-xs font-semibold text-[var(--gaspe-warm-700)] hover:bg-[var(--gaspe-warm-50)] transition-colors"
+                            title="Promouvoir en admin secondaire"
+                          >
+                            Promouvoir admin
+                          </button>
+                        )}
+                        {isCurrentUserMaster && u.id !== user.id && u.role === "admin" && !u.isMasterAdmin && (
+                          <>
+                            <button
+                              onClick={() => handleTransferMaster(u)}
+                              className="rounded-lg border border-[var(--gaspe-warm-300)] px-3.5 py-1.5 text-xs font-semibold text-[var(--gaspe-warm-700)] hover:bg-[var(--gaspe-warm-50)] transition-colors"
+                              title="Transférer votre rôle master à cet admin"
+                            >
+                              Transférer master
+                            </button>
+                            <button
+                              onClick={() => handleDemoteAdmin(u)}
+                              className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                              title="Rétrograder en staff"
+                            >
+                              Rétrograder admin
+                            </button>
+                          </>
                         )}
                       </>
                     )}

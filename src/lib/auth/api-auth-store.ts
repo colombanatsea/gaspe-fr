@@ -192,6 +192,45 @@ export class ApiAuthStore implements AuthStore {
     }
   }
 
+  /** C9 — Promouvoir un utilisateur en admin secondaire (master only). */
+  static async promoteAdmin(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/auth/users/${userId}/promote-admin`,
+        { method: "POST" },
+      );
+      return { success: !!res.success, error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
+  /** C9 — Rétrograder un admin secondaire en staff (master only). */
+  static async demoteAdmin(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/auth/users/${userId}/demote-admin`,
+        { method: "POST" },
+      );
+      return { success: !!res.success, error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
+  /** C9 — Transférer le rôle master admin à un autre admin (master only). */
+  static async transferMaster(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/auth/users/${userId}/transfer-master`,
+        { method: "POST" },
+      );
+      return { success: !!res.success, error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
   static async logout(): Promise<void> {
     setToken(null);
   }

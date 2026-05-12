@@ -265,6 +265,32 @@ export default function AdminAdherentsPage() {
    *  champs seed-only au store local en mode demo. */
   async function handleSave(form: EditFormState) {
     if (!editing) return;
+
+    // C2 (session 60) : effectif/navires sont normalement déclarés par
+    // l'adhérent depuis son profil. Si l'admin les modifie ici, on lui
+    // demande confirmation explicite avant d'écraser.
+    const sensitiveChanges: string[] = [];
+    if ((editing.employeeCount ?? 0) !== (form.employeeCount ?? 0)) {
+      sensitiveChanges.push(
+        `Effectif total : ${editing.employeeCount ?? "—"} → ${form.employeeCount ?? "—"}`,
+      );
+    }
+    if ((editing.shipCount ?? 0) !== (form.shipCount ?? 0)) {
+      sensitiveChanges.push(
+        `Nombre de navires : ${editing.shipCount ?? "—"} → ${form.shipCount ?? "—"}`,
+      );
+    }
+    if (sensitiveChanges.length > 0) {
+      const ok = confirm(
+        "Ces données sont normalement déclarées par l'adhérent depuis son " +
+          "profil. Si vous les modifiez ici, vous écraserez les valeurs " +
+          "déclarées.\n\n" +
+          sensitiveChanges.join("\n") +
+          "\n\nConfirmer l'écrasement ?",
+      );
+      if (!ok) return;
+    }
+
     setSaving(true);
     try {
       // 1) Champs supportés par PATCH /api/organizations/:id
@@ -1277,6 +1303,14 @@ function EditModal({
           </Section>
 
           <Section title="Effectifs & flotte">
+            {/* C2 (session 60) : prévenir l'admin que ces données viennent
+                du profil adhérent et que toute modification ici les écrase. */}
+            <div className="mb-3 rounded-lg border border-[var(--gaspe-neutral-200)] bg-[var(--gaspe-neutral-50)] px-3.5 py-2.5 text-xs text-foreground-muted">
+              <span className="font-semibold text-foreground">Source de vérité :</span>{" "}
+              ces valeurs sont normalement déclarées par l&apos;adhérent depuis son profil. Toute
+              modification ici écrasera la valeur déclarée (une confirmation sera demandée au
+              save).
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field2 label="Nombre de collaborateurs">
                 <input
