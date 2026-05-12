@@ -24,6 +24,7 @@ import {
   apiListCustomSections,
   apiCreateCustomSection,
   apiDeleteCustomSection,
+  apiReorderCustomSections,
   mergePageDefinitions,
   customSectionKey,
   type PageContent,
@@ -151,6 +152,15 @@ export default function AdminPagesPage() {
     return s;
   }, [customSections]);
 
+  // Phase 2 hybride : liste ordonnée des sectionIds custom de la page
+  // courante, pour calculer les déplacements ↑↓ et appeler l'API reorder.
+  const orderedCustomSectionIds = useMemo(() => {
+    return customSections
+      .filter((c) => c.pageId === selectedPageId)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
+      .map((c) => c.sectionId);
+  }, [customSections, selectedPageId]);
+
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) {
       router.push("/connexion");
@@ -219,6 +229,40 @@ export default function AdminPagesPage() {
     const ok = await apiDeleteCustomSection(selectedPageId, sectionId);
     if (!ok) {
       alert("Échec de la suppression.");
+      return;
+    }
+    setReloadKey((k) => k + 1);
+  }
+
+  /**
+   * Phase 2 hybride : déplace une section custom de `delta` positions
+   * dans la liste ordonnée. delta = -1 (↑) ou +1 (↓). No-op si la
+   * cible serait hors bornes.
+   */
+  async function handleMoveCustomSection(sectionId: string, delta: -1 | 1) {
+    const idx = orderedCustomSectionIds.indexOf(sectionId);
+    if (idx < 0) return;
+    const targetIdx = idx + delta;
+    if (targetIdx < 0 || targetIdx >= orderedCustomSectionIds.length) return;
+
+    const next = [...orderedCustomSectionIds];
+    [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+
+    // Optimistic update local : reorder customSections + bump sortOrder
+    // pour que le re-render reflète immédiatement le nouveau placement.
+    setCustomSections((prev) => {
+      const orderMap = new Map(next.map((id, i) => [id, i + 1]));
+      return prev.map((c) =>
+        c.pageId === selectedPageId && orderMap.has(c.sectionId)
+          ? { ...c, sortOrder: orderMap.get(c.sectionId)! }
+          : c,
+      );
+    });
+
+    const ok = await apiReorderCustomSections(selectedPageId, next);
+    if (!ok) {
+      alert("Échec du déplacement. Rechargement…");
+      setReloadKey((k) => k + 1);
       return;
     }
     setReloadKey((k) => k + 1);
@@ -453,6 +497,12 @@ export default function AdminPagesPage() {
 
                 {!collapsed && groupSections.map((section) => {
                   const isCustom = customSectionKeys.has(customSectionKey(selectedPageId, section.id));
+                  // Phase 2 hybride : pour les sections custom, on calcule la
+                  // position dans la liste ordonnée des customs de la page —
+                  // sert à activer/désactiver les boutons ↑↓.
+                  const customIdx = isCustom ? orderedCustomSectionIds.indexOf(section.id) : -1;
+                  const isFirstCustom = customIdx === 0;
+                  const isLastCustom = customIdx === orderedCustomSectionIds.length - 1;
                   return (
                   <div key={section.id} className={`rounded-2xl bg-white border overflow-hidden transition-colors ${section.modified ? "border-[var(--gaspe-warm-400)]" : "border-[var(--gaspe-neutral-200)]"}`}>
                     <div className="flex items-center justify-between border-b border-[var(--gaspe-neutral-100)] bg-[var(--gaspe-neutral-50)] px-5 py-3">
@@ -468,6 +518,34 @@ export default function AdminPagesPage() {
                         )}
                       </h3>
                       <div className="flex items-center gap-2">
+                        {isCustom && (
+                          <div className="flex items-center gap-0.5 mr-1" aria-label="Réordonner cette section">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveCustomSection(section.id, -1)}
+                              disabled={isFirstCustom}
+                              title="Monter cette section"
+                              aria-label="Monter cette section"
+                              className="flex h-6 w-6 items-center justify-center rounded-md text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveCustomSection(section.id, 1)}
+                              disabled={isLastCustom}
+                              title="Descendre cette section"
+                              aria-label="Descendre cette section"
+                              className="flex h-6 w-6 items-center justify-center rounded-md text-foreground-muted hover:bg-[var(--gaspe-neutral-200)] hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={() => resetSection(section.id)}

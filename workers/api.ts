@@ -539,6 +539,11 @@ export default {
         const sectionId = decodeURIComponent(parts[6]);
         return handleCmsDeleteCustomSection(request, env, corsHeaders, pageId, sectionId);
       }
+      // Phase 2 hybride : réordonnancement des sections custom d'une page
+      if (path.match(/^\/api\/cms\/pages\/[^/]+\/custom-sections\/reorder$/) && request.method === "PATCH") {
+        const pageId = decodeURIComponent(path.replace("/api/cms/pages/", "").replace("/custom-sections/reorder", ""));
+        return handleCmsReorderCustomSections(request, env, corsHeaders, pageId);
+      }
 
       // ── Jobs ──
       if (path === "/api/jobs" && request.method === "GET") {
@@ -3461,6 +3466,61 @@ async function handleCmsDeleteCustomSection(
   void auth; // utilisé via logAudit ailleurs si nécessaire
 
   return json({ success: true }, corsHeaders);
+}
+
+/**
+ * PATCH /api/cms/pages/:pageId/custom-sections/reorder — réordonner les
+ * sections custom d'une page (Phase 2 hybride). Admin only.
+ *
+ * Body : { orderedSectionIds: string[] } — liste exhaustive des
+ * section_id custom de la page, dans le nouvel ordre voulu. Les
+ * `sort_order` sont réécrits en index 1..N. Les section_id absents de
+ * la liste sont ignorés (rétention de leur sort_order initial).
+ */
+async function handleCmsReorderCustomSections(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  pageId: string,
+) {
+  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
+  if ("error" in auth) return auth.error;
+
+  let body: { orderedSectionIds?: unknown };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ error: "JSON invalide" }, corsHeaders, 400);
+  }
+
+  if (!Array.isArray(body.orderedSectionIds)) {
+    return json({ error: "Champ `orderedSectionIds` (string[]) requis" }, corsHeaders, 400);
+  }
+
+  // Validation : chaque entrée doit être un sectionId valide.
+  const ids: string[] = [];
+  for (const v of body.orderedSectionIds) {
+    if (typeof v !== "string" || !SECTION_ID_RE.test(v)) {
+      return json({ error: "Chaque entrée doit être un sectionId valide" }, corsHeaders, 400);
+    }
+    ids.push(v);
+  }
+
+  // Pas de doublons.
+  if (new Set(ids).size !== ids.length) {
+    return json({ error: "Doublons interdits dans orderedSectionIds" }, corsHeaders, 400);
+  }
+
+  // Application séquentielle : UPDATE chaque section custom (page_id,
+  // section_id) avec son nouvel index. Les sections introuvables sont
+  // tolérées (no-op).
+  for (let i = 0; i < ids.length; i++) {
+    await env.DB.prepare(
+      "UPDATE cms_custom_sections SET sort_order = ? WHERE page_id = ? AND section_id = ?",
+    ).bind(i + 1, pageId, ids[i]).run();
+  }
+
+  return json({ success: true, count: ids.length }, corsHeaders);
 }
 
 // ═══════════════════════════════════════════════════════════
