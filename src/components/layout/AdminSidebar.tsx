@@ -38,6 +38,7 @@ const navSections: NavSection[] = [
       { label: "Formations", href: "/admin/formations", icon: GraduationIcon, permission: "manage_formations" },
       { label: "Positions & Presse", href: "/admin/positions", icon: NewspaperIcon, permission: "manage_positions" },
       { label: "Pages", href: "/admin/pages", icon: PagesIcon, permission: "manage_cms" },
+      { label: "Pages custom", href: "/admin/pages-custom", icon: PagesIcon, permission: "manage_cms" },
     ],
   },
   {

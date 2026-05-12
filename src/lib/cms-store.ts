@@ -626,3 +626,94 @@ export function mergePageDefinitions(
 export function customSectionKey(pageId: string, sectionId: string): string {
   return `${pageId}::${sectionId}`;
 }
+
+/* ── Custom pages — Phase 3 hybride C17 (migration 0043) ──
+ *
+ * Pages entièrement custom (slug, label, description, content HTML
+ * riche), publiées sous /p?slug=X. Distinctes des pages système
+ * (templates dédiés) et des sections custom Phase 1 (ajoutées à des
+ * pages système existantes).
+ */
+
+export interface CmsCustomPage {
+  id: number;
+  slug: string;
+  label: string;
+  description: string;
+  content: string;
+  published: boolean;
+  isArchived: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function apiListCustomPages(includeAll = false): Promise<CmsCustomPage[]> {
+  if (!isApiMode()) return [];
+  try {
+    const url = includeAll ? "/api/cms/custom-pages?all=1" : "/api/cms/custom-pages";
+    const res = await apiFetch<{ pages?: CmsCustomPage[] }>(url);
+    return res.pages ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function apiGetCustomPage(slug: string): Promise<CmsCustomPage | null> {
+  if (!isApiMode()) return null;
+  try {
+    const res = await apiFetch<{ page?: CmsCustomPage }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}`,
+    );
+    return res.page ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function apiCreateCustomPage(
+  body: { slug: string; label: string; description?: string; content?: string; published?: boolean },
+): Promise<{ success: true; slug: string } | { success: false; error: string }> {
+  if (!isApiMode()) {
+    return { success: false, error: "Mode local : les pages custom nécessitent l'API." };
+  }
+  try {
+    const res = await apiFetch<{ success?: boolean; slug?: string; error?: string }>(
+      "/api/cms/custom-pages",
+      { method: "POST", body: JSON.stringify(body) },
+    );
+    if (res.success && res.slug) return { success: true, slug: res.slug };
+    return { success: false, error: res.error ?? "Erreur inconnue" };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+  }
+}
+
+export async function apiUpdateCustomPage(
+  slug: string,
+  body: { label?: string; description?: string; content?: string; published?: boolean },
+): Promise<boolean> {
+  if (!isApiMode()) return false;
+  try {
+    const res = await apiFetch<{ success?: boolean }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}`,
+      { method: "PUT", body: JSON.stringify(body) },
+    );
+    return !!res.success;
+  } catch {
+    return false;
+  }
+}
+
+export async function apiDeleteCustomPage(slug: string): Promise<boolean> {
+  if (!isApiMode()) return false;
+  try {
+    const res = await apiFetch<{ success?: boolean }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}`,
+      { method: "DELETE" },
+    );
+    return !!res.success;
+  } catch {
+    return false;
+  }
+}
