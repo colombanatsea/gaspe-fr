@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, startTransition, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PositionForm, type PositionFormValues, type PositionCategory } from "@/components/admin/PositionForm";
@@ -29,8 +29,12 @@ function EditPositionContent() {
       return;
     }
     if (!id) {
-      setError("Aucun identifiant fourni dans l'URL (?id=…).");
-      setLoading(false);
+      // startTransition pour éviter des renders en cascade (lint
+      // react-hooks/set-state-in-effect).
+      startTransition(() => {
+        setError("Aucun identifiant fourni dans l'URL (?id=…).");
+        setLoading(false);
+      });
       return;
     }
     getPosition(id)
