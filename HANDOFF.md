@@ -1,233 +1,164 @@
-# GASPE Website — Handoff Session 25 → Session 26
+# GASPE Website — Handoff (mis à jour 2026-05-12)
 
-## État actuel : v2.12.2 — Production EN SERVICE avec CMS partiel
+> Ce document est la **source de vérité** pour reprendre le projet en
+> cours. Il agrège l'état technique, les chantiers en cours, le backlog
+> et les décisions structurantes. Les récaps de session détaillés sont
+> dans `docs/SESSION-AAAA-MM-JJ-recap.md`.
+
+## État de production
 
 | Métrique | Valeur |
 |----------|--------|
-| Version | 2.12.2 |
-| Pages HTML (build) | 105+ |
-| Erreurs TypeScript | 0 |
-| Erreurs ESLint | 0 errors, 4 warnings (async data load only) |
-| Tests unitaires | 191 (18 fichiers) |
-| Tests E2E | 11 spec files (Playwright) |
-| Endpoints Worker | 40+ (CMS endpoints defensive) |
-| Tables D1 | 13 + 7 migrations (0001-0007) |
-| Stores dual-mode | 6/6 (auth, CMS, jobs, medical, media, members) |
-| Pages CMS câblées | 4/16 (homepage, notre-groupement, contact, footer) |
+| Version package.json | **2.51.0** |
+| Branch | `main` |
+| Dernier commit (au 12/05) | `71260b4` (chore deps three.js removal) |
+| TypeScript | 0 erreur |
+| Lint | 0 erreur, 0 warning |
+| Tests unitaires | **374** (28 fichiers) |
+| Tests E2E | 11 spec files (Playwright + @axe-core) |
+| Pages HTML générées | 120+ |
+| Vulnérabilités npm (high) | 0 (résolues 12/05 par bump Next.js 16.2.6) |
+| Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 
----
+### Infrastructure
 
-## Production : tout fonctionne
+- **Frontend** : Next.js 16.2.6 + React 19.2.4 + Tailwind v4 + TypeScript
+  → static export → Cloudflare Pages `gaspe-fr.pages.dev`
+- **Backend** : Cloudflare Worker `gaspe-api.hello-0d0.workers.dev`
+  (40+ endpoints, D1 + R2 + JWT httpOnly + PBKDF2)
+- **D1** : 14 tables, 42 migrations appliquées
+- **CI** : `.github/workflows/ci.yml` (typecheck + lint + unit tests +
+  build static export). Vert sur `4d4441a`+.
+- **Deploy Worker** : `.github/workflows/deploy-worker.yml` (migrations
+  structurelles auto + wrangler deploy)
+- **Backup D1** : `.github/workflows/backup-d1.yml` (cron quotidien
+  06:17 UTC, R2)
+
+### Auth (dual-mode, 3 rôles + staff)
+
+| Rôle | Accès |
+|------|-------|
+| `admin` (master) | Console `/admin` complète |
+| `staff` | `/admin/*` selon permissions (granulaires : manage_cms, manage_newsletter, etc.) |
+| `adherent` | `/espace-adherent` (après validation admin) |
+| `candidat` | `/espace-candidat` (auto-approved) |
+
+Endpoints auth : register, login, logout, me, users CRUD, staff perms.
+JWT HMAC-SHA256, 7 jours, httpOnly cookie (Secure SameSite=None).
+
+## Capacités CMS
+
+### Pages éditables via `/admin/pages` (système)
+
+15 pages publiques + footer + newsletter-charte. PAGE_DEFINITIONS en
+code (`src/lib/cms-store.ts`), fallbacks dans `CMS_DEFAULTS`
+(`src/data/cms-defaults.ts`). Cf. `docs/CMS-SPEC.md`.
+
+### CMS hybride (sessions 57-58, 11-12/05)
+
+- **Phase 1** ✅ — Ajout/suppression de sections custom sur n'importe
+  quelle page système via UI admin. Table D1 `cms_custom_sections`,
+  endpoints CRUD, modale `AddCustomSectionModal` (5 types radio).
+- **Phase 2** ✅ — Réordonnancement des sections custom via boutons
+  ↑/↓ (endpoint `PATCH /api/cms/pages/:pageId/custom-sections/reorder`,
+  optimistic update).
+- **Phase 3** ⏳ — Pages custom complètes avec route catch-all `/c/[slug]`.
+  Voir `docs/CMS-HYBRID-PLAN.md`.
+
+### Revisions / historique
+
+Chaque save d'une page crée un snapshot dans `cms_revisions`. Rétention
+30 versions par page. UI dans `/admin/pages` (bouton Historique) avec
+comparaison 2 révisions, restore.
+
+## Backlog priorisé
+
+### 🔴 Critique / sécurité
+
+- Aucun item ouvert actuellement.
+
+### 🟠 Important
+
+- **C2** — `/admin/adherents` : effectif/nb navires auto depuis profil
+  adhérent (pas saisie manuelle admin).
+- **C7** — Cotisations reset auto à `due` au démarrage d'une nouvelle
+  campagne annuelle.
+- **C9** — Promotion multi-admin par master admin (sensible sécurité,
+  décision Colomban attendue).
+- **F5-F8** — Simulateur salaire upgrade (slider temps partiel, calcul
+  net après impôts, MAJ auto grilles NAO). Nécessite grilles NAO 2026
+  + spec calcul net.
+- **I2** — Brevo bulk newsletters (10 catégories → list IDs Brevo +
+  envoi groupé). Nécessite provisionnement list IDs.
+- **Phase 3 hybride CMS** — Pages custom complètes (route catch-all).
+
+### 🟢 Backlog
+
+- **J1** — Split Worker monolithique 5500 lignes → `workers/handlers/{domain}/`.
+- **Tests E2E hybride CMS** (nécessite Worker mock).
+- **A11y audit étendu** : combos `bg-{couleur}-50 + text-{couleur}-700`
+  en dark mode (peu fréquents, à traiter au coup par coup).
+
+### Items du feedback post-launch (sessions 54+ → 58)
+
+Voir `docs/POST-LAUNCH-FEEDBACK-2026.md` (avec pointeurs vers récaps
+de session pour l'état réel).
+
+## Récaps des dernières sessions
+
+- `docs/SESSION-2026-05-11-recap.md` — Session 57 : 13 commits, 17
+  items 🔴/🟠 traités, Phase 1 hybride CMS livrée, audit dark mode,
+  partenaires LPM (Nantes, Guilvinec/Treffiagat).
+- `docs/SESSION-2026-05-12-recap.md` — Session 58 : Phase 2 hybride,
+  10 tests unitaires, F2/F3 amélioré, doc POST-LAUNCH actualisée.
+- Session 59 (en cours) : audit qualité (lint 0, tests 364→374,
+  bump Next 16.2.6 sécurité, retrait three.js dead code).
+
+## Commandes utiles
 
 ```bash
-# Worker en service
-curl https://gaspe-api.hello-0d0.workers.dev/api/health
-# → {"status":"ok",...}
+# Dev local
+npm run dev          # port 3001
+npm run build        # → out/ (static export)
+npm test             # vitest run
+npm run lint         # eslint
+npx tsc --noEmit     # typecheck
 
-# D1 seedé (31 organisations, archived field present)
-curl https://gaspe-api.hello-0d0.workers.dev/api/organizations | python3 -m json.tool | head -20
+# Déploiement
+git push origin main # auto-deploy CF Pages + Worker
 
-# CMS endpoint fonctionnel
-curl https://gaspe-api.hello-0d0.workers.dev/api/cms/pages
-# → {"pages":{}}
+# Migrations D1 manuelles (rare)
+npx wrangler d1 execute gaspe-db --remote --file workers/migrations/00XX.sql
 ```
 
-**Configuration faite (NE PAS RELISTER)** :
-- ✅ Worker déployé via GitHub Actions (deploy-worker.yml avec `--remote`)
-- ✅ Secrets Worker : `JWT_SECRET`, `BREVO_API_KEY`, `CONTACT_EMAIL`, `HYDROS_EMAIL`, `HYDROS_PASSWORD`
-- ✅ GitHub repo vars : `CF_CONFIGURED=true`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-- ✅ CF Pages env var : `NEXT_PUBLIC_API_URL=https://gaspe-api.hello-0d0.workers.dev`
-- ✅ Migrations D1 : 0001-0007 appliquées
+## Décisions structurantes notables
 
----
+- **CMS hybride** plutôt que migration complète vers D1 : préserve la
+  cohérence code ↔ templates publics pour les pages système, permet
+  liberté admin pour les sections custom et (à venir) pages custom.
+- **Slug organisations read-only en prod** : préserve les permaliens.
+- **Boutons ↑/↓ pour réordonner CMS** plutôt que drag-drop natif :
+  plus simple, mobile-friendly, accessible, zéro dépendance.
+- **JWT httpOnly cookie** (pas localStorage) pour la session admin.
+- **Dual-mode storage** sur tous les stores : `LocalStorage` en démo,
+  `D1 via Worker` en prod. Bascule via `NEXT_PUBLIC_API_URL`.
+- **Direct push sur main** validé par Colomban pour les fixes (cf.
+  mémoire `feedback_autonomy_pipeline_debug.md`). Branches feature
+  réservées aux chantiers structurants (Phases hybride CMS).
 
-## Session 25c livraisons (résumé)
+## Points de vigilance
 
-| # | Livraison |
-|---|-----------|
-| 1 | Fix defensive `/api/organizations` pour gérer colonne `archived` manquante |
-| 2 | Fix `deploy-worker.yml` : `--remote` flag + trigger sur fichier workflow |
-| 3 | Fix login redirect en API mode (persist `gaspe_current_user` en localStorage) |
-| 4 | CMS endpoints résilients (try/catch + auto-create `cms_pages`) |
-| 5 | Wire CMS : homepage (hero, CTA) — 6 sections éditables |
-| 6 | Wire CMS : notre-groupement — 18 champs + 3 listes (timeline, engagements, bureau) |
-| 7 | Wire CMS : contact — adresse, email, encart |
-| 8 | Wire CMS : footer — newsletter, linkedin, contact email |
-| 9 | Nouveau type CMS `list` + composant `ListEditor` (add/remove/reorder/fields) |
-| 10 | Pré-remplissage éditeur admin avec defaults de `cms-defaults.ts` |
-| 11 | Fichier `src/data/cms-defaults.ts` : source of truth des fallbacks |
-| 12 | Spec complète : `docs/CMS-SPEC.md` (18 pages inventoriées) |
-| 13 | Spec complète : `docs/NEWSLETTER-SPEC.md` (système Brevo + éditeur blocs) |
+- **Vulnérabilité PostCSS moderate** transitive via Next.js — sera
+  résolue au prochain upgrade Next.
+- **CI bloquant CF Pages** : si le build échoue, CF Pages bloque les
+  déploiements suivants en cascade. Toujours vérifier `gh run list`
+  après un merge feature.
+- **Static export limitation** : routes dynamiques sans
+  `generateStaticParams()` cassent le build. Préférer query params
+  (`/edit?id=X`) pour les routes admin dynamiques.
 
----
+## Contact / référents
 
-## Architecture CMS mise en place
-
-### Flux lecture (page publique)
-
-```typescript
-// Dans un composant
-import { useCmsContent } from "@/lib/use-cms";
-import { getCmsDefault } from "@/data/cms-defaults";
-
-const heroTitle = useCmsContent("homepage", "hero-title", getCmsDefault("homepage", "hero-title"));
-```
-
-- Si CMS a stocké une valeur → elle s'affiche
-- Sinon → fallback sur `cms-defaults.ts` (= contenu actuel hardcodé)
-
-### Flux écriture (admin)
-
-`src/app/(admin)/admin/pages/page.tsx` pré-remplit les champs avec `getCmsDefault()` quand la CMS est vide, pour que l'admin voie le contenu actuel au lieu de champs vides.
-
-### Types de sections disponibles
-
-- `text` : input simple
-- `richtext` : Tiptap WYSIWYG
-- `image` : URL + Media Library picker
-- `list` : JSON stringifié d'array d'objets, éditable via `ListEditor`
-- `config` : champ technique (couleur, clé)
-
-### Fichiers clés
-
-| Fichier | Rôle |
-|---------|------|
-| `src/data/cms-defaults.ts` | Défauts par `pageId.sectionId` |
-| `src/lib/cms-store.ts` | `PAGE_DEFINITIONS` (inventaire des sections) + types |
-| `src/lib/use-cms.tsx` | Hooks `useCmsContent`, `useCmsPage`, composant `CmsBlock` |
-| `src/app/(admin)/admin/pages/page.tsx` | Éditeur admin |
-| `src/components/admin/ListEditor.tsx` | Éditeur d'arrays structurés |
-| `workers/api.ts` | Endpoints CMS (`GET/PUT /api/cms/pages/*`) |
-
----
-
-## TODO session 26 — Scope complet
-
-### 🎯 Objectif principal
-**Rendre 100% du contenu visible éditable via le CMS + système newsletter complet avec charte GASPE via Brevo.**
-
-### 📋 Roadmap ordonnée
-
-#### Sprint 1 : Page headers universels (1h) — **Quick win**
-Ajouter `page-header-title` + `page-header-description` en CMS pour toutes les pages publiques. 16 pages × 2 champs = 32 sections ajoutées.
-
-Fichiers à modifier :
-- `src/lib/cms-store.ts` (PAGE_DEFINITIONS)
-- `src/data/cms-defaults.ts` (defaults)
-- Chaque `page.tsx` dans `src/app/(public)/*` : brancher `useCmsContent` sur le `<PageHeader>`
-
-#### Sprint 2 : Homepage complète (2h)
-Câbler Stats section (6 cards), LatestNews (3 cards), hero quick stats (3 mini-cards), CTAs hero.
-
-#### Sprint 3 : Pages secondaires simples (3h)
-Agenda, Documents, Formations, Positions, Presse, Nos Adhérents, Nos Compagnies Recrutent, Visites Médicales. Voir détails dans `docs/CMS-SPEC.md` §3.
-
-#### Sprint 4 : Pages complexes (3h)
-SSGM (intros + FAQ), Transition Écologique (key figures + technologies + guides), Boîte à Outils (intros + guides list).
-
-#### Sprint 5 : Démo Espace Adhérent (1h)
-CTAs marketing et intros de tabs uniquement (les données démo restent hardcodées car illustratives).
-
-#### Sprint 6 : UX admin (2h)
-- Sections repliables par groupe
-- Indicateur modifié/non-sauvegardé
-- Preview iframe de la page publique
-- Versioning simple
-
-#### Sprint 7 : Seed CMS + documentation utilisateur (1h)
-- Étendre `scripts/seed-cms-to-d1.ts` pour tous les defaults
-- Exécuter en prod (seed initial)
-- Créer `docs/CMS-GUIDE-UTILISATEUR.md` pour l'équipe éditoriale
-
----
-
-### 🎯 Newsletter — Implémentation complète (19h)
-
-Voir `docs/NEWSLETTER-SPEC.md` pour le détail.
-
-#### Phase 1 : Foundation (3h)
-- Migration `0008_newsletter.sql` (drafts, sends, events, templates)
-- Renderer HTML `src/lib/newsletter/render.ts` (inline CSS, charte GASPE)
-- Blocs de base : header, heading, paragraph, image, button, divider, columns, spacer, footer
-- Endpoints Worker : `POST /drafts`, `GET /drafts/:id`, `PUT /drafts/:id`, `DELETE /drafts/:id`, `GET /drafts`
-
-#### Phase 2 : Éditeur admin (5h)
-- `/admin/newsletter` : liste brouillons + historique envois
-- `/admin/newsletter/new` : sélecteur template
-- `/admin/newsletter/:id/edit` : layout 3 colonnes (palette blocs / édition / aperçu)
-- Composants `BlockEditor` par type
-- Aperçu iframe live (regen 500ms)
-
-#### Phase 3 : Envoi production (3h)
-- `POST /api/newsletter/:id/test-send` (1 destinataire)
-- `POST /api/newsletter/:id/send` (batch 50)
-- Personnalisation par destinataire (firstname, unsub token)
-- Modal confirmation pré-envoi
-
-#### Phase 4 : Tracking (2h)
-- `POST /api/newsletter/brevo/webhook` (ingestion events)
-- Config webhook dans Brevo dashboard
-- `/admin/newsletter/:sendId/stats` (dashboard)
-- Export CSV
-
-#### Phase 5 : Sync contacts Brevo (2h)
-- Création 10 listes Brevo + mapping IDs en `wrangler.toml`
-- Sync inscription publique `/api/newsletter` → Brevo
-- Sync préférences → Brevo attributes + lists
-- Sync désinscription
-
-#### Phase 6 : Désinscription publique (1h)
-- Page `/newsletter/unsubscribe?token=`
-- Endpoint `POST /api/newsletter/unsubscribe`
-- JWT tokens signés (secret dédié `NEWSLETTER_UNSUB_SECRET`)
-
-#### Phase 7 : Charte configurable (1h)
-- Page `/admin/newsletter/charte` (CMS dédié `page_id = "newsletter-charte"`)
-- Variables injectées dans renderer : logo URL, couleurs, footer signature, adresse RGPD
-
-#### Phase 8 : Polish (2h)
-- Templates pré-configurés
-- Historique versions
-- Compression images
-- Score antispam
-
----
-
-### 🎯 Tâches annexes
-
-- [ ] Récupérer 2 derniers logos manquants (CMT, STM Mayotte) quand dispo
-- [ ] Fix `/api/cms/pages` qui retourne 200 vide avant seed (actuellement fonctionnel via catch)
-- [ ] Monitoring Worker : CF Analytics + error tracking
-- [ ] Media Library : servir via R2 public URL (plus de base64)
-- [ ] Réduire les 4 ESLint warnings async data load (passage à React 19 `use()` + Suspense)
-
----
-
-## Configuration Brevo requise (à faire dans dashboard Brevo)
-
-Avant d'implémenter la session 26, configurer dans le dashboard Brevo :
-
-1. **Créer 10 listes de contacts** (une par catégorie newsletter) + noter les IDs
-2. **Activer les webhooks transactionnels** pour : `delivered, opened, click, bounce, unsubscribe, complaint`
-3. **Webhook URL** : `https://gaspe-api.hello-0d0.workers.dev/api/newsletter/brevo/webhook`
-4. **Générer un webhook secret** (random 32+ chars) → à mettre en secret Worker `BREVO_WEBHOOK_SECRET`
-5. **Vérifier le plan actuel** : besoin minimum 20k emails/mois (plan Lite 19€/mois)
-6. **Vérifier les templates existants** dans Brevo et décider si on les garde ou si on passe 100% notre renderer
-
-**À la fin de la config Brevo, me communiquer** :
-- Les 10 list IDs (format : `LISTE_INFO_GENERALES=123`)
-- Le plan actuel
-- Les templates existants à conserver (le cas échéant)
-
----
-
-## Branches actives
-
-- `main` : v2.12.2 — production en service, CMS partiel
-- Aucune branche de feature active (tout est mergé)
-
-## Documents de spec
-
-- `docs/CMS-SPEC.md` : Specification CMS complète (18 pages, architecture, roadmap)
-- `docs/NEWSLETTER-SPEC.md` : Specification Newsletter (Brevo, templates, flows, 8 phases)
-- `docs/PRODUCTION-DEPLOYMENT.md` : Guide de déploiement production
+- **Colomban Monnier** — DG du GASPE, propriétaire produit.
+- Cabinet Mírdain (interne) : Narvi (code/infra), Celebrimbor (chef
+  de cabinet, arbitrages).
