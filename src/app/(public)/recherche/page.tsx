@@ -7,38 +7,7 @@ import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { listPositions, type StoredPosition } from "@/lib/positions-store";
 import { stripHtmlPreview } from "@/lib/text-preview";
-
-/** Normalise pour la recherche : minuscules + retire les accents. */
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
-
-/** Découpe la requête en termes (ignore mots vides courts < 2 caractères). */
-function tokenize(q: string): string[] {
-  return normalize(q)
-    .split(/[\s,;]+/)
-    .filter((t) => t.length >= 2);
-}
-
-/** Score une position contre des termes : +5 par match titre, +2 excerpt, +1 corps/tag. */
-function scorePosition(p: StoredPosition, terms: string[]): number {
-  if (terms.length === 0) return 0;
-  const title = normalize(p.title);
-  const excerpt = normalize(p.excerpt ?? "");
-  const body = normalize(stripHtmlPreview(p.content ?? "", 5000));
-  const tags = (p.tags ?? []).map(normalize).join(" ");
-  let score = 0;
-  for (const t of terms) {
-    if (title.includes(t)) score += 5;
-    if (excerpt.includes(t)) score += 2;
-    if (body.includes(t)) score += 1;
-    if (tags.includes(t)) score += 3;
-  }
-  return score;
-}
+import { rankDocuments } from "@/lib/search-scoring";
 
 const tagVariant: Record<StoredPosition["category"], "teal" | "blue" | "warm"> = {
   Position: "teal",
@@ -58,15 +27,7 @@ function RechercheContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const terms = useMemo(() => tokenize(q), [q]);
-
-  const results = useMemo(() => {
-    if (terms.length === 0) return [];
-    return positions
-      .map((p) => ({ position: p, score: scorePosition(p, terms) }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score);
-  }, [positions, terms]);
+  const results = useMemo(() => rankDocuments(positions, q), [positions, q]);
 
   return (
     <>
@@ -115,7 +76,7 @@ function RechercheContent() {
               {results.length} position{results.length > 1 ? "s" : ""} trouvée{results.length > 1 ? "s" : ""}
             </p>
             <ul className="space-y-4">
-              {results.map(({ position }) => (
+              {results.map(({ doc: position }) => (
                 <li key={position.id}>
                   <Link
                     href={`/positions/${position.slug}`}
