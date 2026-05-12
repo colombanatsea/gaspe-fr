@@ -4,7 +4,7 @@ Document de cadrage pour rendre le CMS partiellement dynamique sans
 sacrifier la stabilité des pages « système ».
 
 Date : 2026-05-11 / mise à jour 2026-05-12. Statut : **Phase 1 + Phase 2
-livrées en prod**. Phase 3 reportée.
++ Phase 3 livrées**.
 
 ## Contexte
 
@@ -104,17 +104,52 @@ réordonnées. Les sections système restent à leur ordre défini en code
 (préserve la cohérence avec les templates publics, qui s'appuient sur
 des `sectionId` précis).
 
-### Phase 3 — Pages custom complètes
+### Phase 3 — Pages custom complètes ✅ LIVRÉ 2026-05-12
 
-**Scope** : créer une page entièrement custom (titre, slug, sections),
-publiée sous `/c/[slug]` (catch-all). Pour le routeur Next : nouvelle
-route `src/app/(public)/c/[slug]/page.tsx` qui :
-- charge la page custom via API,
-- rend un template générique (PageHeader + sections),
-- 404 si page inexistante ou non publiée.
+**Scope livré** : créer/éditer/archiver des pages entièrement custom
+(slug, label, description, content HTML riche via le RichTextEditor
+existant), publiées sous **`/p?slug=X`** (query-string plutôt que
+segment dynamique pour rester compatible avec `output: 'export'` de
+Next.js — pattern déjà utilisé pour `/admin/positions/edit?id=X` et
+`/recherche?q=X`).
 
-**Modèle D1** : table `cms_custom_pages` (id, slug, label, published,
-sections_meta_json, created_at, updated_at).
+**Implémentation** :
+
+- **Migration D1** : `0043_cms_custom_pages.sql` — table avec slug
+  UNIQUE, published flag, is_archived (soft-delete), index sur slug
+  partiel (non archivé) et published.
+- **Worker** : 5 endpoints
+  - `GET /api/cms/custom-pages` (public : published+non-archived ;
+    admin via `?all=1` : tout)
+  - `GET /api/cms/custom-pages/:slug` (public : published+non-archived
+    seulement)
+  - `POST /api/cms/custom-pages` (admin only)
+  - `PUT /api/cms/custom-pages/:slug` (admin only, slug non modifiable)
+  - `DELETE /api/cms/custom-pages/:slug` (admin only, soft-delete)
+- **Frontend helpers** (`src/lib/cms-store.ts`) : `apiList/Get/Create/
+  Update/Delete CustomPage`.
+- **Route publique** : `src/app/(public)/p/page.tsx` — Suspense +
+  `useSearchParams`, charge la page via API, rend via
+  `dangerouslySetInnerHTML` + `sanitizeHtml`, BreadcrumbJsonLd.
+- **UI admin** : `/admin/pages-custom` (liste + modale Création avec
+  slug auto-slug) + `/admin/pages-custom/edit?slug=X` (édition
+  richtext, toggle publié/brouillon, lien vers preview, archivage).
+  Liens dans `AdminSidebar` sous « Pages custom ».
+
+**Validation** :
+- Côté Worker : `CUSTOM_PAGE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,79}$/`,
+  UNIQUE constraint sur slug → 409 si collision, label requis.
+- Côté frontend : detection live de collision dans la modale + slug
+  auto depuis le label, non modifiable après création.
+
+**Hors scope (futures évolutions possibles)** :
+- Le content custom est rendu via `dangerouslySetInnerHTML` après
+  `sanitizeHtml`. Pas de système de "sections" type tuiles modulaires
+  comme les pages système (qui ont leurs sections définies en code).
+  Si besoin, ce serait une Phase 4.
+- Pas de slug history / redirections automatiques si on supprime
+  une page custom (mais soft-delete préserve la donnée → restauration
+  manuelle possible).
 
 ## Risques & mitigation
 
