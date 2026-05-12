@@ -179,6 +179,9 @@ export interface User {
   role: UserRole;
   /** Permissions accordées au staff (collaborateurs GASPE). Vide ou absent pour les autres rôles. */
   staffPermissions?: StaffPermission[];
+  /** C9 (migration 0044) : un seul master admin à la fois. Seul lui peut
+   *  promouvoir/rétrograder d'autres admins et transférer son rôle. */
+  isMasterAdmin?: boolean;
   company?: string;
   phone?: string;
   approved?: boolean;

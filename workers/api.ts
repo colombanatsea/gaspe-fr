@@ -143,6 +143,8 @@ interface DbUser {
   invited_by: string | null;
   created_at: string;
   updated_at: string;
+  // C9 (migration 0044) : flag master admin transferable.
+  is_master_admin?: number;
 }
 
 /** Convert DB row → frontend User shape */
@@ -177,6 +179,9 @@ function toFrontendUser(row: DbUser) {
     isPrimary: row.is_primary === 1,
     invitedBy: row.invited_by ?? undefined,
     createdAt: row.created_at,
+    // C9 (migration 0044) : exposé au frontend pour conditionner les
+    // actions « Promouvoir admin » / « Transférer le rôle master ».
+    isMasterAdmin: row.is_master_admin === 1,
   };
 }
 
@@ -386,6 +391,21 @@ export default {
       }
       if (path === "/api/auth/users" && request.method === "GET") {
         return handleListUsers(request, env, corsHeaders);
+      }
+      // C9 — Multi-admin master transferable. Le routage POST sous-spécifique
+      // (promote-admin, demote-admin, transfer-master) doit précéder le
+      // PATCH générique pour ne pas être absorbé par le matcher.
+      if (path.match(/^\/api\/auth\/users\/[^/]+\/promote-admin$/) && request.method === "POST") {
+        const userId = path.split("/api/auth/users/")[1].replace("/promote-admin", "");
+        return handlePromoteAdmin(request, env, corsHeaders, userId);
+      }
+      if (path.match(/^\/api\/auth\/users\/[^/]+\/demote-admin$/) && request.method === "POST") {
+        const userId = path.split("/api/auth/users/")[1].replace("/demote-admin", "");
+        return handleDemoteAdmin(request, env, corsHeaders, userId);
+      }
+      if (path.match(/^\/api\/auth\/users\/[^/]+\/transfer-master$/) && request.method === "POST") {
+        const userId = path.split("/api/auth/users/")[1].replace("/transfer-master", "");
+        return handleTransferMaster(request, env, corsHeaders, userId);
       }
       if (path.startsWith("/api/auth/users/") && request.method === "PATCH") {
         const userId = path.split("/api/auth/users/")[1];
@@ -1174,6 +1194,209 @@ async function handleDeleteUser(request: Request, env: Env, corsHeaders: Record<
 
   await env.DB.prepare("DELETE FROM auth WHERE user_id = ?").bind(userId).run();
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
+
+  return json({ success: true }, corsHeaders);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  C9 — Multi-admin avec master admin transferable (migration 0044)
+//
+//  Modèle : un seul master admin à la fois (contrainte applicative).
+//  Lui seul peut promouvoir/rétrograder d'autres admins. Il peut aussi
+//  transférer son rôle master à un autre admin (action irréversible
+//  pour lui — il devient admin secondaire).
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Vérifie que le requester est le master admin actuel. Retourne
+ * `{ userId, payload }` en succès, `{ error: Response }` sinon.
+ */
+async function requireMasterAdmin(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+): Promise<{ userId: string } | { error: Response }> {
+  const token = extractToken(request);
+  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return { error: json({ error: "Accès refusé : admin requis" }, corsHeaders, 403) };
+  }
+  try {
+    const row = await env.DB
+      .prepare("SELECT is_master_admin FROM users WHERE id = ?")
+      .bind(payload.sub)
+      .first<{ is_master_admin: number | null }>();
+    if (row?.is_master_admin === 1) {
+      return { userId: String(payload.sub) };
+    }
+  } catch { /* table sans la colonne (migration non appliquée) → fail closed */ }
+  return { error: json({ error: "Accès refusé : master admin requis" }, corsHeaders, 403) };
+}
+
+/**
+ * POST /api/auth/users/:id/promote-admin — promouvoir un compte en
+ * admin secondaire. Master only. Le compte cible doit exister.
+ */
+async function handlePromoteAdmin(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  userId: string,
+) {
+  const auth = await requireMasterAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  if (auth.userId === userId) {
+    return json({ error: "Vous êtes déjà admin maître" }, corsHeaders, 400);
+  }
+
+  const target = await env.DB
+    .prepare("SELECT id, role FROM users WHERE id = ? AND archived = 0")
+    .bind(userId)
+    .first<{ id: string; role: string }>();
+  if (!target) return json({ error: "Utilisateur introuvable" }, corsHeaders, 404);
+  if (target.role === "admin") {
+    return json({ error: "Cet utilisateur est déjà admin" }, corsHeaders, 400);
+  }
+
+  await env.DB.prepare(
+    "UPDATE users SET role = 'admin', approved = 1, is_master_admin = 0, updated_at = datetime('now') WHERE id = ?",
+  ).bind(userId).run();
+
+  try {
+    await logAudit(
+      env, request,
+      { id: auth.userId, email: null, role: "admin" },
+      "user.promote_admin",
+      "users",
+      userId,
+      { role: target.role },
+      { role: "admin", isMasterAdmin: false },
+    );
+  } catch { /* best-effort */ }
+
+  return json({ success: true }, corsHeaders);
+}
+
+/**
+ * POST /api/auth/users/:id/demote-admin — rétrograder un admin
+ * secondaire en staff (sans permission). Master only. Refuse si la
+ * cible est le master.
+ */
+async function handleDemoteAdmin(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  userId: string,
+) {
+  const auth = await requireMasterAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  if (auth.userId === userId) {
+    return json(
+      { error: "Le master ne peut pas se rétrograder lui-même. Transférez d'abord le rôle master." },
+      corsHeaders,
+      400,
+    );
+  }
+
+  const target = await env.DB
+    .prepare("SELECT id, role, is_master_admin FROM users WHERE id = ? AND archived = 0")
+    .bind(userId)
+    .first<{ id: string; role: string; is_master_admin: number | null }>();
+  if (!target) return json({ error: "Utilisateur introuvable" }, corsHeaders, 404);
+  if (target.role !== "admin") {
+    return json({ error: "Cet utilisateur n'est pas admin" }, corsHeaders, 400);
+  }
+  if (target.is_master_admin === 1) {
+    return json(
+      { error: "Cet utilisateur est l'admin maître — utilisez « transférer le rôle » d'abord" },
+      corsHeaders,
+      400,
+    );
+  }
+
+  await env.DB.prepare(
+    "UPDATE users SET role = 'staff', staff_permissions = NULL, is_master_admin = 0, updated_at = datetime('now') WHERE id = ?",
+  ).bind(userId).run();
+
+  try {
+    await logAudit(
+      env, request,
+      { id: auth.userId, email: null, role: "admin" },
+      "user.demote_admin",
+      "users",
+      userId,
+      { role: "admin" },
+      { role: "staff" },
+    );
+  } catch { /* best-effort */ }
+
+  return json({ success: true }, corsHeaders);
+}
+
+/**
+ * POST /api/auth/users/:id/transfer-master — transférer le rôle master
+ * vers un autre admin. Master only. Action irréversible côté requester.
+ * La cible doit déjà être admin.
+ */
+async function handleTransferMaster(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+  userId: string,
+) {
+  const auth = await requireMasterAdmin(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+
+  if (auth.userId === userId) {
+    return json({ error: "Vous êtes déjà le master admin" }, corsHeaders, 400);
+  }
+
+  const target = await env.DB
+    .prepare("SELECT id, role FROM users WHERE id = ? AND archived = 0")
+    .bind(userId)
+    .first<{ id: string; role: string }>();
+  if (!target) return json({ error: "Utilisateur introuvable" }, corsHeaders, 404);
+  if (target.role !== "admin") {
+    return json(
+      { error: "La cible doit être admin secondaire avant le transfert" },
+      corsHeaders,
+      400,
+    );
+  }
+
+  // Transaction simulée : on retire d'abord le flag du master courant,
+  // puis on l'attribue à la cible. Si la 2e UPDATE échoue, on a un état
+  // sans master — la migration 0044 garantit qu'il y en avait un avant,
+  // donc on tente un fallback.
+  await env.DB.prepare(
+    "UPDATE users SET is_master_admin = 0, updated_at = datetime('now') WHERE id = ?",
+  ).bind(auth.userId).run();
+  const res = await env.DB.prepare(
+    "UPDATE users SET is_master_admin = 1, updated_at = datetime('now') WHERE id = ?",
+  ).bind(userId).run();
+
+  if (!res.success || (res.meta?.changes ?? 0) === 0) {
+    // Rollback : on remet le master au requester pour éviter l'état sans master.
+    await env.DB.prepare(
+      "UPDATE users SET is_master_admin = 1 WHERE id = ?",
+    ).bind(auth.userId).run();
+    return json({ error: "Échec du transfert (rollback effectué)" }, corsHeaders, 500);
+  }
+
+  try {
+    await logAudit(
+      env, request,
+      { id: auth.userId, email: null, role: "admin" },
+      "user.transfer_master",
+      "users",
+      userId,
+      { fromUserId: auth.userId },
+      { toUserId: userId },
+    );
+  } catch { /* best-effort */ }
 
   return json({ success: true }, corsHeaders);
 }
@@ -5742,8 +5965,14 @@ async function handleCreateCampaign(request: Request, env: Env, corsHeaders: Rec
     "SELECT * FROM fleet_validation_campaigns WHERE target_year = ?"
   ).bind(targetYear).first<DbCampaign>();
 
-  // Side effect : creation directe en 'open' -> notifier les titulaires.
+  // Side effect : creation directe en 'open' -> notifier les titulaires
+  // + reset cotisations à 'due' (C7 du feedback post-launch session 60).
   if (row && row.status === "open") {
+    try {
+      await resetMembershipsToDue(env, request, auth.userId, row.target_year);
+    } catch (err) {
+      console.error("[validation] resetMembershipsToDue failed:", err);
+    }
     try {
       await notifyCampaignOpened(env, row);
     } catch (err) {
@@ -5752,6 +5981,47 @@ async function handleCreateCampaign(request: Request, env: Env, corsHeaders: Rec
   }
 
   return json({ success: true, campaign: row ? toFrontendCampaign(row) : null }, corsHeaders);
+}
+
+/**
+ * C7 hybride : au lancement d'une nouvelle campagne validation annuelle,
+ * remettre toutes les cotisations à `due` (rythme classique d'un cycle
+ * annuel : reset en début d'année, paiement progressif au fur et à
+ * mesure). Audit-logué.
+ */
+async function resetMembershipsToDue(
+  env: Env,
+  request: Request,
+  userId: string,
+  targetYear: number,
+) {
+  // Comptage avant pour le log
+  const beforeCounts = await env.DB.prepare(
+    "SELECT membership_status, COUNT(*) AS n FROM organizations WHERE archived = 0 GROUP BY membership_status",
+  ).all<{ membership_status: string | null; n: number }>();
+
+  const res = await env.DB.prepare(
+    `UPDATE organizations
+        SET membership_status = 'due', updated_at = datetime('now')
+      WHERE archived = 0
+        AND (membership_status IS NULL
+             OR membership_status NOT IN ('due'))`,
+  ).run();
+
+  const affected = res.meta?.changes ?? 0;
+
+  try {
+    await logAudit(
+      env,
+      request,
+      { id: userId, email: null, role: "admin" },
+      "memberships.reset_due",
+      "organizations",
+      null,
+      { counts: beforeCounts.results ?? [], targetYear },
+      { affected, newStatus: "due", targetYear },
+    );
+  } catch { /* best-effort */ }
 }
 
 // ── PATCH /api/campaigns/:id – admin/staff(orgs) : update statut/dates/notes ──
@@ -5814,9 +6084,15 @@ async function handleUpdateCampaign(
   ).bind(campaignId).first<DbCampaign>();
 
   // Side effect : si la campagne vient de basculer en 'open', notifier les
-  // titulaires actifs par email Brevo (best-effort, no-op si pas de secrets).
+  // titulaires actifs par email Brevo (best-effort, no-op si pas de secrets)
+  // ET reset cotisations à 'due' (C7 du feedback post-launch session 60).
   const justOpened = row && row.status === "open" && existing.status !== "open";
   if (justOpened && row) {
+    try {
+      await resetMembershipsToDue(env, request, auth.userId, row.target_year);
+    } catch (err) {
+      console.error("[validation] resetMembershipsToDue failed:", err);
+    }
     // ctx.waitUntil indisponible dans cette signature → on attend mais on
     // capture toute exception pour ne pas faire echouer le PATCH.
     try {
