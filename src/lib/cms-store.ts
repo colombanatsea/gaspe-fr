@@ -564,6 +564,28 @@ export async function apiDeleteCustomSection(
 }
 
 /**
+ * Phase 2 hybride : réordonner les sections custom d'une page. La liste
+ * `orderedSectionIds` doit contenir tous les sectionId custom de la
+ * page, dans le nouvel ordre voulu. Sort_order est réécrit côté D1
+ * en 1..N.
+ */
+export async function apiReorderCustomSections(
+  pageId: string,
+  orderedSectionIds: string[],
+): Promise<boolean> {
+  if (!isApiMode()) return false;
+  try {
+    const res = await apiFetch<{ success?: boolean }>(
+      `/api/cms/pages/${encodeURIComponent(pageId)}/custom-sections/reorder`,
+      { method: "PATCH", body: JSON.stringify({ orderedSectionIds }) },
+    );
+    return !!res.success;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Fusionne PAGE_DEFINITIONS (système) avec les custom sections.
  * Les sections custom sont ajoutées à la fin de chaque page (sort_order
  * croissant). En cas de page totalement nouvelle (pas dans
