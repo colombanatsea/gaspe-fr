@@ -9,6 +9,38 @@
 
 ---
 
+## Mises à jour de traitement (sessions ultérieures)
+
+> Le tableau historique des items ci-dessous **n'est pas tenu à jour
+> ligne à ligne**. Pour l'état réel après chaque session, voir les
+> récaps dédiés :
+>
+> - **Session 57** (11/05/2026) — `docs/SESSION-2026-05-11-recap.md` :
+>   13 commits, 17 items 🔴/🟠 traités, Phase 1 hybride CMS livrée,
+>   audit dark mode systémique, corrections partenaires LPM (Nantes,
+>   Guilvinec/Treffiagat).
+> - **Session 58** (12/05/2026) — voir `docs/SESSION-2026-05-12-recap.md` :
+>   Phase 2 hybride CMS livrée (boutons ↑/↓), 10 tests unitaires
+>   ajoutés, items C1 + H1 confirmés déjà livrés depuis session 54.
+
+### Items 🟠 / 🟢 restants à mi-session 58
+
+- **A11y/UX** : audit dark mode étendu (combos `bg-50 + text-700`)
+- **C2** — admin/adherents auto-pull effectif depuis profil adhérent
+- **C7** — cotisations reset auto à `due` lors campagne annuelle
+- **C9** — promotion multi-admin (sensible sécurité, décision Colomban
+  attendue)
+- **F2/F3** — sourcer ou retirer dates non sourcées sur les accords
+  prévoyance / formation / classification / QVT / transition énergétique
+- **F5-F8** — simulateur salaire upgrade (slider temps partiel, calcul
+  net, MAJ auto grilles NAO)
+- **I2** — Brevo bulk newsletters (list IDs Brevo + envoi groupé)
+- **Phase 3 hybride CMS** — pages custom complètes avec route catch-all
+- **J1** — split Worker monolithique (très lourd, à planifier avec
+  tests préalables robustes)
+
+---
+
 ## A. UX visuel / charte (rapide)
 
 | # | Item | Priorité | Statut |
