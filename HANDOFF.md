@@ -11,14 +11,16 @@
 |----------|--------|
 | Version package.json | **2.51.0** |
 | Branch | `main` |
-| Dernier commit (au 12/05) | `71260b4` (chore deps three.js removal) |
+| Dernier commit (au 12/05) | `62eeefe` (Merge C2 + C7 + C9 multi-admin) |
 | TypeScript | 0 erreur |
 | Lint | 0 erreur, 0 warning |
-| Tests unitaires | **374** (28 fichiers) |
+| Tests unitaires | **405** (30 fichiers) |
 | Tests E2E | 11 spec files (Playwright + @axe-core) |
 | Pages HTML générées | 120+ |
 | Vulnérabilités npm (high) | 0 (résolues 12/05 par bump Next.js 16.2.6) |
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
+| Tables D1 | **15** (`cms_custom_pages`, `users.is_master_admin`) |
+| Migrations D1 appliquées | 44 (dernière 0044 master admin) |
 
 ### Infrastructure
 
@@ -79,25 +81,25 @@ comparaison 2 révisions, restore.
 
 ### 🟠 Important
 
-- **C2** — `/admin/adherents` : effectif/nb navires auto depuis profil
-  adhérent (pas saisie manuelle admin).
-- **C7** — Cotisations reset auto à `due` au démarrage d'une nouvelle
-  campagne annuelle.
-- **C9** — Promotion multi-admin par master admin (sensible sécurité,
-  décision Colomban attendue).
 - **F5-F8** — Simulateur salaire upgrade (slider temps partiel, calcul
   net après impôts, MAJ auto grilles NAO). Nécessite grilles NAO 2026
   + spec calcul net.
 - **I2** — Brevo bulk newsletters (10 catégories → list IDs Brevo +
   envoi groupé). Nécessite provisionnement list IDs.
-- **Phase 3 hybride CMS** — Pages custom complètes (route catch-all).
 
 ### 🟢 Backlog
 
-- **J1** — Split Worker monolithique 5500 lignes → `workers/handlers/{domain}/`.
+- **J1 (suite)** — Vagues 1-7 du split Worker (cf. `docs/WORKER-SPLIT-PLAN.md`).
+  Vague 0 livrée (CMS custom pages + helpers `lib/`). api.ts à 7681
+  lignes, objectif < 800.
 - **Tests E2E hybride CMS** (nécessite Worker mock).
 - **A11y audit étendu** : combos `bg-{couleur}-50 + text-{couleur}-700`
   en dark mode (peu fréquents, à traiter au coup par coup).
+- **Phase 4 hybride CMS** (optionnel) — sections modulaires pour pages
+  custom (au lieu d'un seul HTML).
+- **Revisions pages custom** — actuellement les pages custom n'ont pas
+  d'historique (contrairement aux pages système qui ont
+  `cms_revisions`).
 
 ### Items du feedback post-launch (sessions 54+ → 58)
 
@@ -109,10 +111,12 @@ de session pour l'état réel).
 - `docs/SESSION-2026-05-11-recap.md` — Session 57 : 13 commits, 17
   items 🔴/🟠 traités, Phase 1 hybride CMS livrée, audit dark mode,
   partenaires LPM (Nantes, Guilvinec/Treffiagat).
-- `docs/SESSION-2026-05-12-recap.md` — Session 58 : Phase 2 hybride,
-  10 tests unitaires, F2/F3 amélioré, doc POST-LAUNCH actualisée.
-- Session 59 (en cours) : audit qualité (lint 0, tests 364→374,
-  bump Next 16.2.6 sécurité, retrait three.js dead code).
+- `docs/SESSION-2026-05-12-recap.md` — Sessions 58 + 59 du 12/05 :
+  Phase 2+3 hybride CMS, 41 tests, audit qualité (Next 16.2.6 sécu,
+  three.js retiré), HANDOFF refait.
+- Session 60 (en cours, 12/05 soir) : J1 vague 0 (CMS custom pages
+  extraits + helpers `lib/`), C2 (override admin effectif/navires),
+  C7 (reset cotisations campagne), C9 (multi-admin master transferable).
 
 ## Commandes utiles
 

@@ -1,9 +1,10 @@
-# Session 58 + 59 — Récap 2026-05-12
+# Sessions 58 + 59 + 60 — Récap 2026-05-12
 
-Deux sessions consécutives sur la même journée :
+Trois sessions consécutives sur la même journée :
 - **Session 58** (matin/début après-midi) — Phase 2 hybride CMS + tests.
-- **Session 59** (soir, autonomie complète) — Audit qualité, sécurité,
-  Phase 3 hybride CMS livrée.
+- **Session 59** (soir) — Audit qualité, sécurité, Phase 3 hybride CMS.
+- **Session 60** (nuit, autonomie complète) — J1 vague 0 (split Worker)
+  + C2/C7/C9 (override admin + reset cotisations + multi-admin master).
 
 ## Commits poussés sur main (chronologique)
 
@@ -21,136 +22,164 @@ Deux sessions consécutives sur la même journée :
 | `2ab0a5d` | test+refactor — extraction search-scoring + 41 tests | 59 |
 | `2e931af` + `c00d120` | **Phase 3 hybride CMS** — pages custom complètes | 59 |
 | `937a3ad` | fix(deps) — régénération lockfile pour CI | 59 |
+| `e7a1f12` | docs(session-59) — récap | 59 |
+| `dde21cc` + `05e4eff` | **J1 vague 0** — CMS custom pages extraits | 60 |
+| `62eeefe` + `67bb0ab` | **C2 + C7 + C9** — override admin + cotisations + multi-admin | 60 |
 
-**Total : 12 commits** sur main, dont 2 merges de branches feature
-(Phase 2 + Phase 3).
+**Total : 16 commits** sur main aujourd'hui dont 4 merges de branches
+feature (Phase 2, Phase 3, Worker split, Multi-admin C9).
 
-## Phase 2 hybride CMS — réordonner sections custom
+## Phase 2 hybride CMS (session 58)
 
-Boutons **↑/↓** dans le header de chaque section custom de `/admin/pages`,
-plutôt qu'un drag-drop natif HTML5 (plus simple, mobile-friendly,
-accessible, zéro dépendance). Endpoint Worker
-`PATCH /api/cms/pages/:pageId/custom-sections/reorder` (body
-`{ orderedSectionIds: string[] }`), helper `apiReorderCustomSections`,
-optimistic update + reload.
+Boutons **↑/↓** dans le header de chaque section custom de
+`/admin/pages`. Endpoint Worker
+`PATCH /api/cms/pages/:pageId/custom-sections/reorder`. Choix : pas de
+drag-drop HTML5 (plus simple, accessible, zéro dépendance).
 
-Limitation assumée : seules les sections custom peuvent être
-réordonnées. Les sections système gardent leur ordre code (préserve la
-cohérence avec les templates publics).
+## Phase 3 hybride CMS (session 59)
 
-## Phase 3 hybride CMS — pages custom complètes
-
-Permet à l'admin de **créer/éditer/publier/archiver** des pages
-entièrement custom, sans lien avec PAGE_DEFINITIONS. Publiées sous
-`/p?slug=X` (query-string pour compat `output: 'export'`).
-
-**Architecture** :
-- **Migration D1 `0043_cms_custom_pages.sql`** : table avec slug UNIQUE,
-  label, description, content HTML, published flag, is_archived
-  (soft-delete), index partiel.
-- **5 endpoints Worker** : list (public published-only / admin
-  `?all=1` retourne tout), get, create, update, delete (soft).
-- **5 helpers frontend** dans `cms-store.ts` (`apiList/Get/Create/
-  Update/Delete CustomPage`).
-- **Route publique** `/p?slug=X` : Suspense + useSearchParams,
-  `sanitizeHtml + dangerouslySetInnerHTML`, BreadcrumbJsonLd.
-- **UI admin** :
-  - `/admin/pages-custom` : liste avec statut, modale Création avec
-    slug auto (depuis le label), bouton archivage, lien preview.
-  - `/admin/pages-custom/edit?slug=X` : édition richtext (réutilise
-    `RichTextEditor`), toggle publié, preview, MediaLibrary.
-- **AdminSidebar** : lien « Pages custom » sous « Contenu éditorial ».
-
-**Validation** : slug strict `/^[a-z0-9][a-z0-9-]{0,79}$/`, UNIQUE → 409
-si collision, slug non modifiable après création (permalien stable).
-
-**Hors scope** : pas de système de "sections" modulaires comme les pages
-système. Le content est un seul HTML riche. Si besoin, Phase 4.
+Pages entièrement custom (slug, label, description, content HTML
+riche), publiées sous `/p?slug=X`. Architecture : 5 endpoints Worker,
+migration D1 `0043_cms_custom_pages`, route publique `/p` (Suspense +
+`sanitizeHtml`), UI admin `/admin/pages-custom` (liste + édition).
 
 ## Audit qualité (session 59)
 
-### Sécurité
+- **Next.js 16.2.4 → 16.2.6** : 13 vulnérabilités high résolues.
+- **three.js retiré** : 0 import dans `src/`, gain bundle ~600 KB.
+- **1 warning lint fixé** : `setState` synchrone wrapped dans
+  `startTransition`.
+- **`search-scoring` extrait** vers module testable.
+- **+41 tests unitaires** (364 → 405) : `text-preview` (19) +
+  `search-scoring` (22).
+- **HANDOFF.md refait** : était figé à la session 25/26.
 
-- **Next.js 16.2.4 → 16.2.6** : résout 13 vulnérabilités high (DoS
-  Server Components, XSS CSP nonces, cache poisoning RSC, middleware
-  bypass, etc.). Patch rétrocompatible, 0 régression.
-- Reste 2 vulnérabilités moderate sur postcss transitif (impact build
-  CSS uniquement, pas de surface runtime pour static export).
+## J1 vague 0 — Worker split (session 60)
 
-### Code quality
+Démarrage du refactor du Worker monolithique (7938 lignes initiales).
+Stratégie incrémentale, validée vague par vague en prod.
 
-- **three.js retiré** des deps (0 import dans `src/`). Gain bundle
-  ~600 KB minified + surface npm réduite.
-- **1 warning lint** fixé : `setState` synchrone dans `useEffect` de
-  `/admin/positions/edit` wrappé dans `startTransition`.
-- **`search-scoring` extrait** de `recherche/page.tsx` vers
-  `src/lib/search-scoring.ts` : module pur réutilisable + testable.
+**Infrastructure** (`workers/lib/`) :
+- `env.ts` : interface `Env` (D1, R2, Brevo secrets)
+- `json.ts` : helper `json()` (CORS)
+- `auth.ts` : `extractToken`, `parseStaffPerms`, `requireStaffPermission`
 
-### Tests
+**Domaine pilote** (`workers/handlers/`) :
+- `cms-custom-pages.ts` : 5 handlers Phase 3 extraits (267 lignes
+  retirées de `api.ts`)
 
-- **+41 tests unitaires** (364 → 405 verts) :
-  - 19 sur `text-preview` (decodeHtmlEntities, stripHtmlPreview, formatPrice)
-  - 22 sur `search-scoring` (normalize, tokenize, scoreDocument, rankDocuments)
-- Tous verts. 0 erreur TS, 0 warning lint.
+**api.ts** : 7938 → 7681 lignes. Pattern d'extraction documenté dans
+`docs/WORKER-SPLIT-PLAN.md` (vagues 1-7 + cible final < 800 lignes).
 
-### Documentation
+## C2 — Override admin effectif/navires (session 60)
 
-- **`HANDOFF.md` refait** : était figé à la session 25/26 (v2.12.2).
-  État réel au 12/05/2026 avec métriques actualisées, backlog priorisé,
-  pointeurs récaps, décisions structurantes, points de vigilance.
-- **`docs/CMS-HYBRID-PLAN.md`** mis à jour pour refléter Phase 1+2+3
-  livrées.
-- **`docs/POST-LAUNCH-FEEDBACK-2026.md`** enrichi d'un pointeur vers
-  les récaps de session pour éviter la confusion observée hier (items
-  C1/H1 marqués 🟢 alors qu'ils étaient livrés en session 54).
+Modèle : 1 seule colonne en DB (`employeeCount`, `shipCount`). Admin
+et adhérent y écrivent. Comportement enrichi :
 
-## Métriques d'arrivée → de sortie (session 59)
+- Encart d'information dans la modale d'édition admin : « Source de
+  vérité : profil adhérent ».
+- Au save, comparaison `form vs editing` sur les champs sensibles ; si
+  modifié → `window.confirm` explicite avec détail des changements
+  avant le PATCH.
 
-| Métrique | Avant | Après |
+## C7 — Reset cotisations à `due` (session 60)
+
+Au lancement d'une nouvelle campagne validation annuelle (création
+direct en `open` OU passage `draft → open` via PATCH), toutes les
+cotisations passent à `due` :
+
+- Helper Worker `resetMembershipsToDue(env, request, userId, targetYear)`
+- `UPDATE organizations SET membership_status='due' WHERE archived=0
+  AND (membership_status IS NULL OR membership_status NOT IN ('due'))`
+- Audit-logué (`memberships.reset_due`)
+
+## C9 — Multi-admin master transferable (session 60)
+
+Modèle : `is_master_admin` en DB, **1 seul master à la fois**
+(contrainte applicative).
+
+**Migration D1 0044** :
+- `ALTER TABLE users ADD COLUMN is_master_admin INTEGER DEFAULT 0`
+- Seed : 1er admin existant (par ordre de création) devient master
+- Index partiel `idx_users_master_admin`
+
+**3 endpoints Worker** (master only, audit-logués) :
+- `POST /api/auth/users/:id/promote-admin` — staff/adherent/candidat → admin
+- `POST /api/auth/users/:id/demote-admin` — admin secondaire → staff
+- `POST /api/auth/users/:id/transfer-master` — transfert + rollback si échec
+
+**Garde-fous** :
+- Master ne peut pas se rétrograder
+- Master ne peut pas s'auto-transférer
+- Le master DOIT transférer son rôle avant qu'on puisse le rétrograder
+- Double confirmation sur le transfert (action irréversible côté requester)
+
+**Frontend** :
+- Type `User.isMasterAdmin?: boolean`
+- 3 méthodes statiques `ApiAuthStore.promoteAdmin/demoteAdmin/transferMaster`
+- UI `/admin/comptes` : badge ⭐ « Master » sur le compte concerné,
+  3 boutons conditionnels (master only, en dehors de soi-même) avec
+  confirmations explicites
+
+## Métriques d'arrivée → de sortie
+
+| Métrique | Début session 58 | Fin session 60 |
 |---|---|---|
-| Version | 2.51.0 | 2.51.0 |
 | Tests unitaires | 364 | **405** (+41) |
-| Erreurs TS | 0 | 0 |
-| Warnings lint | 1 | **0** |
-| Vulnérabilités high (npm) | 13 | **0** |
-| Vulnérabilités moderate | 2 | 2 (postcss transitif) |
-| Tables D1 | 13 | **14** (+ `cms_custom_pages`) |
-| Endpoints Worker CMS | 8 | **14** (+ 6 custom-pages CRUD) |
+| Erreurs TS / lint | 0 / 1 | **0 / 0** |
+| Vulnérabilités npm (high) | **13** | **0** |
+| Tables D1 | 13 | **15** (+ `cms_custom_pages`, `is_master_admin`) |
+| Endpoints Worker | ~40 | **~50** (+ CMS custom-pages CRUD + 3 admin) |
+| Lignes `workers/api.ts` | 7938 | **7681** (-257) |
 | Pages publiques | 119 | **120** (+ `/p`) |
-| Pages admin | 24 | **26** (+ 2 pages-custom) |
+| Pages admin | 24 | **26** (+ `/admin/pages-custom`) |
+| Migrations D1 | 42 | **44** (+0043 custom-pages, +0044 master admin) |
+
+## Phases hybride CMS — roadmap complète bouclée
+
+Les 3 phases du `docs/CMS-HYBRID-PLAN.md` sont en prod :
+- ✅ **Phase 1** : Ajout/suppression sections custom sur pages système
+- ✅ **Phase 2** : Réordonnancement sections custom (↑/↓)
+- ✅ **Phase 3** : Pages custom entièrement libres (`/p?slug=X`)
+
+Phase 4 (optionnelle, sections modulaires pour pages custom) :
+ouvrir si besoin remonté.
 
 ## Points ouverts pour les prochaines sessions
 
-- **C2** — `/admin/adherents` : effectif/nb navires auto depuis profil
-  adhérent (touche modèle data, sensible).
-- **C7** — Reset cotisations à `due` au démarrage campagne annuelle
-  (logique métier à clarifier).
-- **C9** — Promotion multi-admin (sensible sécurité, décision Colomban
-  attendue).
-- **F5-F8** — Simulateur salaire upgrade (slider temps partiel, calcul
-  net, MAJ auto grilles NAO).
-- **I2** — Brevo bulk newsletters (list IDs Brevo + envoi groupé).
-- **J1** — Split Worker monolithique 5800+ lignes → `workers/handlers/`.
-- **Tests E2E** sur le hybride CMS (Phase 1/2/3) — nécessite Worker
-  mock pour le mode API.
-- **Phase 4 hybride CMS** (optionnelle) — sections modulaires pour les
-  pages custom (au lieu d'un seul HTML).
-- **CMS revisions pour pages custom** — actuellement les pages custom
-  n'ont pas d'historique (contrairement aux pages système qui ont
-  `cms_revisions`).
+### Worker split (J1 vagues 1-7)
+
+Voir `docs/WORKER-SPLIT-PLAN.md` pour la roadmap détaillée :
+- Vague 1 : CMS pages système + revisions + custom sections
+- Vague 2 : Admin tools (export-all, seed-hashes, audit-log)
+- Vague 3 : Auth + password reset
+- Vague 4 : Brevo / Email / Newsletter
+- Vague 5 : Domaines métier (jobs, formations, positions, etc.)
+- Vague 6 : Organisations + flotte + votes + validation
+- Vague 7 : Périphérie (ENM, Hydros, RSS, cron)
+
+### Backlog feedback restant
+
+- **F5-F8** — Simulateur salaire upgrade. Nécessite grilles NAO 2026.
+- **I2** — Brevo bulk newsletters. Nécessite list IDs Brevo.
+
+### Améliorations qualité
+
+- **Tests E2E hybride CMS** : nécessite Worker mock pour mode API.
+- **A11y audit étendu** : combos `bg-50 + text-700` en dark mode (rares).
+- **Phase 4 hybride CMS** : sections modulaires pour pages custom.
+- **Revisions pages custom** : historique manquant côté pages custom.
 
 ## Notes méthodologiques
 
-- **Migration D1 + CI** : à chaque merge feature touchant `workers/**`,
-  vérifier le workflow `Deploy Worker` ET `CI` (deux workflows séparés
-  dont les statuts ne se chaînent pas). Le bug du lockfile désynchronisé
-  a bloqué le CI sans bloquer le Deploy Worker — confusion possible.
-- **Lockfile cross-platform** : `npm uninstall <pkg>` sur Windows peut
-  laisser le lockfile incohérent côté Linux (CI). Toujours faire
-  `rm -rf node_modules package-lock.json && npm install` après une
-  modification de deps si on n'est pas sûr.
-- **Pattern static export pour routes admin dynamiques** :
-  systématiquement query-string `?id=X` plutôt que segment dynamique
-  `/[id]`. Trois routes l'utilisent maintenant :
-  `/admin/positions/edit?id=X`, `/admin/pages-custom/edit?slug=X`,
-  `/p?slug=X`.
+- **Le Worker n'a pas de tests intégrés** — toutes les modifs côté
+  Worker passent par un smoke test post-déploiement
+  (`curl <endpoint>`). Pour les chantiers structurants (J1, C9), on
+  doit s'appuyer sur le typage TS et la prudence sémantique.
+- **Migration cross-platform lockfile** : si `npm uninstall` sur
+  Windows, faire `rm -rf node_modules package-lock.json && npm install`
+  pour régénérer un lockfile cohérent côté Linux (CI).
+- **Pattern static export** : routes admin dynamiques systématiquement
+  en query-string (`?id=X`), pas en segment dynamique. 5 routes
+  l'utilisent maintenant : `/admin/positions/edit`,
+  `/admin/pages-custom/edit`, `/recherche`, `/p`.
