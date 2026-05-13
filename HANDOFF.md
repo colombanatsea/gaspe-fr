@@ -9,11 +9,11 @@
 
 | Métrique | Valeur |
 |----------|--------|
-| Version package.json | **2.51.0** |
+| Version package.json | **2.52.0** |
 | Branch | `main` |
-| Dernier commit | `052f6b4` (J1 vague 1.a — CMS revisions extraits) |
+| Dernier commit | J1 vague 1.b — CMS pages système extraits |
 | TypeScript | 0 erreur |
-| Lint | 0 erreur, 0 warning |
+| Lint | 0 erreur (9 warnings pré-existants `set-state-in-effect` sur composants React) |
 | Tests unitaires | **405** (30 fichiers) |
 | Tests E2E | 11 spec files (Playwright + @axe-core) |
 | Pages HTML générées | 120+ |
@@ -21,8 +21,8 @@
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 | Tables D1 | **15** (`cms_custom_pages`, `users.is_master_admin`) |
 | Migrations D1 appliquées | 44 (dernière 0044 master admin) |
-| Lignes `workers/api.ts` | **7777** (-161 depuis le 12/05, J1 vagues 0 + 1.a) |
-| Domaines extraits | 2 (cms-custom-pages, cms-revisions) |
+| Lignes `workers/api.ts` | **7658** (-280 depuis le 12/05, J1 vagues 0 + 1.a + 1.b) |
+| Domaines extraits | 3 (cms-custom-pages, cms-revisions, cms-pages) |
 
 ### Infrastructure
 
@@ -123,6 +123,9 @@ de session pour l'état réel).
 - Session 61 (12/05 nuit) : F5+F6+F7+F8 (simulateur salaire enrichi
   slider temps partiel + IR + ancienneté + lien NAO classifications),
   J1 vague 1.a (CMS revisions extraits).
+- Session 62 (13/05) : J1 vague 1.b — CMS pages système extraits
+  (`workers/handlers/cms-pages.ts`, 3 handlers : list / get / upsert).
+  `workers/api.ts` à 7658 lignes (-119).
 
 ## Commandes utiles
 
