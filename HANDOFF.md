@@ -9,9 +9,9 @@
 
 | Métrique | Valeur |
 |----------|--------|
-| Version package.json | **2.52.0** |
+| Version package.json | **2.53.0** |
 | Branch | `main` |
-| Dernier commit | J1 vague 1.b — CMS pages système extraits |
+| Dernier commit | J1 vague 1.c — CMS custom sections extraits (vague 1 close) |
 | TypeScript | 0 erreur |
 | Lint | 0 erreur (9 warnings pré-existants `set-state-in-effect` sur composants React) |
 | Tests unitaires | **405** (30 fichiers) |
@@ -21,8 +21,8 @@
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 | Tables D1 | **15** (`cms_custom_pages`, `users.is_master_admin`) |
 | Migrations D1 appliquées | 44 (dernière 0044 master admin) |
-| Lignes `workers/api.ts` | **7658** (-280 depuis le 12/05, J1 vagues 0 + 1.a + 1.b) |
-| Domaines extraits | 3 (cms-custom-pages, cms-revisions, cms-pages) |
+| Lignes `workers/api.ts` | **7449** (-489 depuis le 12/05, J1 vagues 0 + 1.a + 1.b + 1.c) |
+| Domaines extraits | 4 (cms-custom-pages, cms-revisions, cms-pages, cms-custom-sections) |
 
 ### Infrastructure
 
@@ -123,9 +123,11 @@ de session pour l'état réel).
 - Session 61 (12/05 nuit) : F5+F6+F7+F8 (simulateur salaire enrichi
   slider temps partiel + IR + ancienneté + lien NAO classifications),
   J1 vague 1.a (CMS revisions extraits).
-- Session 62 (13/05) : J1 vague 1.b — CMS pages système extraits
-  (`workers/handlers/cms-pages.ts`, 3 handlers : list / get / upsert).
-  `workers/api.ts` à 7658 lignes (-119).
+- Session 62 (13/05) : J1 vague 1.b puis 1.c. Vague 1.b extrait CMS
+  pages système (`workers/handlers/cms-pages.ts`, 3 handlers). Vague
+  1.c extrait CMS custom sections (`workers/handlers/cms-custom-sections.ts`,
+  4 handlers Phases 1 et 2 hybride). Vague 1 close. `workers/api.ts`
+  à 7449 lignes (-328 sur la session).
 
 ## Commandes utiles
 
