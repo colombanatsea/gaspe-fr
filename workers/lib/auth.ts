@@ -23,6 +23,22 @@ export function extractToken(request: Request): string | null {
   return match?.[1] ?? null;
 }
 
+/** Pose le cookie httpOnly contenant le JWT (7 jours, Secure SameSite=Lax). */
+export function setTokenCookie(token: string, corsHeaders: Record<string, string>): Record<string, string> {
+  return {
+    ...corsHeaders,
+    "Set-Cookie": `gaspe_token=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${7 * 24 * 3600}`,
+  };
+}
+
+/** Efface le cookie de session (logout). */
+export function clearTokenCookie(corsHeaders: Record<string, string>): Record<string, string> {
+  return {
+    ...corsHeaders,
+    "Set-Cookie": "gaspe_token=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+  };
+}
+
 /** Parse la chaîne JSON des permissions staff (tolère null / format invalide). */
 export function parseStaffPerms(raw: string | null): string[] | null {
   if (!raw) return null;
