@@ -111,6 +111,7 @@ import {
   handleTransferMaster,
 } from "./handlers/auth";
 import { handleForgotPassword, handleResetPassword } from "./handlers/password-reset";
+import { handleEmail } from "./handlers/email";
 import {
   buildProfileSnapshot,
   buildVesselSnapshot,
@@ -735,53 +736,6 @@ export default {
 
 // Helpers Brevo core (sendBrevoTransactional, logBrevoSent, alreadyBrevoSent) extraits dans ./lib/brevo (J1 vague 3.0)
 
-
-async function handleEmail(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  // Require authentication to prevent open relay abuse
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
-
-  if (!env.BREVO_API_KEY) {
-    return json({ error: "Clé API Brevo non configurée sur le serveur" }, corsHeaders, 500);
-  }
-
-  const body = await request.json() as {
-    to: { email: string; name?: string }[];
-    subject: string;
-    htmlContent: string;
-    textContent?: string;
-    sender?: { name: string; email: string };
-  };
-
-  if (!body.to?.length || !body.subject || !body.htmlContent) {
-    return json({ error: "Champs requis: to, subject, htmlContent" }, corsHeaders, 400);
-  }
-
-  // Validate email addresses
-  for (const recipient of body.to) {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient.email)) {
-      return json({ error: `Email invalide: ${recipient.email}` }, corsHeaders, 400);
-    }
-  }
-
-  // Session 56 — passe par le helper centralisé. La sémantique change : un
-  // échec Brevo renvoie 502 mais le log dans email_sent_log se fait quand
-  // même via le helper.
-  const result = await sendBrevoTransactional(env, {
-    to: body.to,
-    subject: body.subject,
-    htmlContent: body.htmlContent,
-    textContent: body.textContent,
-    sender: body.sender,
-    type: "proxy_email",
-  });
-  if (!result.ok) {
-    return json({ error: result.error ?? "Erreur Brevo inconnue" }, corsHeaders, 502);
-  }
-  return json({ success: true, brevoMessageId: result.brevoMessageId }, corsHeaders);
-}
 
 // ═══════════════════════════════════════════════════════════
 //  Organizations
