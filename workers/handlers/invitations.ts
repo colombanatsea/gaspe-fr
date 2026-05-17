@@ -16,6 +16,7 @@ import { setTokenCookie, requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { hashPasswordServer } from "../lib/crypto";
 import { sendBrevoTransactional } from "../lib/brevo";
+import { renderEmailLayout, renderEmailButton, renderEmailParagraph } from "../lib/brevo-templates";
 import { type DbUser, toFrontendUser } from "../lib/users";
 import { SITE_URL } from "../lib/constants";
 import type { Env } from "../lib/env";
@@ -71,24 +72,25 @@ export async function handleInviteContact(
   const inviter = await env.DB.prepare("SELECT name FROM users WHERE id = ?").bind(payload.sub).first<{ name: string }>();
   const inviteUrl = `${SITE_URL}/inscription/invitation?token=${inviteToken}`;
 
+  const htmlContent = renderEmailLayout({
+    headerTitle: "GASPE",
+    body: [
+      '<h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Vous êtes invité(e)</h2>',
+      renderEmailParagraph(
+        `${sanitize(inviter?.name ?? "Un responsable")} vous invite à rejoindre l'espace <strong>${sanitize(org?.name ?? "")}</strong> sur la plateforme GASPE.`,
+      ),
+      renderEmailButton(inviteUrl, "Accepter l'invitation"),
+      renderEmailParagraph("Ce lien est valide pendant 7 jours.", { muted: true }),
+    ].join("\n"),
+    footer: null,
+  });
+
   void sendBrevoTransactional(env, {
     to: [{ email: email.trim(), name: name?.trim() ?? email }],
     subject: `Invitation à rejoindre ${org?.name ?? "votre compagnie"} sur GASPE`,
     type: "invitation_team",
     entityId: inviteId,
-    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
-<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
-    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
-  </div>
-  <div style="padding:32px;">
-    <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Vous êtes invité(e)</h2>
-    <p style="color:#222221;font-size:15px;">${sanitize(inviter?.name ?? "Un responsable")} vous invite à rejoindre l'espace <strong>${sanitize(org?.name ?? "")}</strong> sur la plateforme GASPE.</p>
-    <p style="margin:24px 0;"><a href="${inviteUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accepter l'invitation</a></p>
-    <p style="color:#6B6560;font-size:13px;">Ce lien est valide pendant 7 jours.</p>
-  </div>
-</div></body></html>`,
+    htmlContent,
     textContent: `Vous êtes invité(e) à rejoindre ${org?.name ?? ""} sur GASPE. Acceptez l'invitation : ${inviteUrl}`,
   });
 

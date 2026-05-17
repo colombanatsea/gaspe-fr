@@ -12,6 +12,7 @@ import { json } from "../lib/json";
 import { sanitize } from "../lib/sanitize";
 import { hashPasswordServer } from "../lib/crypto";
 import { sendBrevoTransactional } from "../lib/brevo";
+import { renderEmailLayout, renderEmailButton, renderEmailParagraph } from "../lib/brevo-templates";
 import { SITE_URL } from "../lib/constants";
 import type { Env } from "../lib/env";
 
@@ -45,31 +46,25 @@ export async function handleForgotPassword(
   ).bind(token, userRow.id, expiresAt).run();
 
   const resetUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${token}`;
+  const htmlContent = renderEmailLayout({
+    headerTitle: "GASPE",
+    headerSubtitle: "Localement ancrés. Socialement engagés.",
+    body: [
+      '<h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Réinitialisation du mot de passe</h2>',
+      renderEmailParagraph(`Bonjour ${sanitize(userRow.name)},`),
+      renderEmailParagraph("Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"),
+      renderEmailButton(resetUrl, "Réinitialiser mon mot de passe"),
+      renderEmailParagraph("Ce lien est valide pendant 1 heure.", { muted: true }),
+      renderEmailParagraph("Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.", { muted: true }),
+    ].join("\n"),
+  });
+
   void sendBrevoTransactional(env, {
     to: [{ email: userRow.email, name: userRow.name }],
     subject: "Réinitialisation de votre mot de passe GASPE",
     type: "password_reset",
     entityId: userRow.id,
-    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
-  <div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:24px;">GASPE</h1>
-      <p style="margin:4px 0 0;color:#B2DFE3;font-size:13px;">Localement ancrés. Socialement engagés.</p>
-    </div>
-    <div style="padding:32px;">
-      <h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Réinitialisation du mot de passe</h2>
-      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(userRow.name)},</p>
-      <p style="margin:0 0 12px;color:#222221;font-size:15px;">Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
-      <p style="margin:24px 0;"><a href="${resetUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Réinitialiser mon mot de passe</a></p>
-      <p style="margin:0 0 8px;color:#6B6560;font-size:13px;">Ce lien est valide pendant 1 heure.</p>
-      <p style="margin:0;color:#6B6560;font-size:13px;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
-    </div>
-    <div style="padding:16px 32px;border-top:1px solid #DCD5CC;text-align:center;font-size:12px;color:#6B6560;">
-      <p style="margin:0;">GASPE – Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau</p>
-    </div>
-  </div>
-</body></html>`,
+    htmlContent,
     textContent: `Bonjour ${userRow.name}, réinitialisez votre mot de passe GASPE : ${resetUrl} (lien valide 1 heure).`,
   });
 
