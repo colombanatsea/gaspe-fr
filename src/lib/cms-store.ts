@@ -691,13 +691,87 @@ export async function apiCreateCustomPage(
 
 export async function apiUpdateCustomPage(
   slug: string,
-  body: { label?: string; description?: string; content?: string; published?: boolean },
+  body: {
+    label?: string;
+    description?: string;
+    content?: string;
+    published?: boolean;
+    /** Motif libre pour le snapshot de versioning (max 200 chars). */
+    revisionLabel?: string;
+  },
 ): Promise<boolean> {
   if (!isApiMode()) return false;
   try {
     const res = await apiFetch<{ success?: boolean }>(
       `/api/cms/custom-pages/${encodeURIComponent(slug)}`,
       { method: "PUT", body: JSON.stringify(body) },
+    );
+    return !!res.success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Liste les snapshots d'historique d'une page custom (max 30, antéchrono).
+ * Admin/staff(manage_cms) requis.
+ */
+export interface CustomPageRevisionSummary {
+  id: number;
+  slug: string;
+  snapshotLabel: string;
+  snapshotPublished: boolean;
+  createdBy: string | null;
+  createdByEmail: string | null;
+  label: string | null;
+  createdAt: string;
+}
+
+export async function apiListCustomPageRevisions(
+  slug: string,
+): Promise<CustomPageRevisionSummary[]> {
+  if (!isApiMode()) return [];
+  try {
+    const res = await apiFetch<{ revisions?: CustomPageRevisionSummary[] }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}/revisions`,
+    );
+    return res.revisions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Détail d'une révision (snapshot complet pour preview avant restore). */
+export interface CustomPageRevisionDetail extends CustomPageRevisionSummary {
+  snapshotDescription: string;
+  snapshotContent: string;
+}
+
+export async function apiGetCustomPageRevision(
+  slug: string,
+  revisionId: number,
+): Promise<CustomPageRevisionDetail | null> {
+  if (!isApiMode()) return null;
+  try {
+    const res = await apiFetch<{ revision?: CustomPageRevisionDetail }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}/revisions/${revisionId}`,
+    );
+    return res.revision ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Restaure une révision. Snapshot AVANT pour permettre rollback du rollback. */
+export async function apiRestoreCustomPageRevision(
+  slug: string,
+  revisionId: number,
+): Promise<boolean> {
+  if (!isApiMode()) return false;
+  try {
+    const res = await apiFetch<{ success?: boolean }>(
+      `/api/cms/custom-pages/${encodeURIComponent(slug)}/revisions/${revisionId}/restore`,
+      { method: "POST" },
     );
     return !!res.success;
   } catch {

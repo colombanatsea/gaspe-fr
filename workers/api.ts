@@ -29,6 +29,11 @@ import {
   handleCmsDeleteCustomPage,
 } from "./handlers/cms-custom-pages";
 import {
+  handleCustomPageListRevisions,
+  handleCustomPageGetRevision,
+  handleCustomPageRestoreRevision,
+} from "./handlers/cms-custom-page-revisions";
+import {
   handleCmsListRevisions,
   handleCmsGetRevision,
   handleCmsRestoreRevision,
@@ -416,6 +421,25 @@ export default {
       }
       if (path === "/api/cms/custom-pages" && request.method === "POST") {
         return handleCmsCreateCustomPage(request, env, corsHeaders);
+      }
+      // Revisions custom pages (migration 0045) — déclarées AVANT la
+      // règle générique `/api/cms/custom-pages/:slug` pour matcher les
+      // sous-chemins `/revisions` et `/revisions/:id` en priorité.
+      if (path.match(/^\/api\/cms\/custom-pages\/[^/]+\/revisions$/) && request.method === "GET") {
+        const slug = decodeURIComponent(path.replace("/api/cms/custom-pages/", "").replace("/revisions", ""));
+        return handleCustomPageListRevisions(request, env, corsHeaders, slug);
+      }
+      if (path.match(/^\/api\/cms\/custom-pages\/[^/]+\/revisions\/\d+$/) && request.method === "GET") {
+        const parts = path.split("/");
+        const slug = decodeURIComponent(parts[4]);
+        const revisionId = Number(parts[6]);
+        return handleCustomPageGetRevision(request, env, corsHeaders, slug, revisionId);
+      }
+      if (path.match(/^\/api\/cms\/custom-pages\/[^/]+\/revisions\/\d+\/restore$/) && request.method === "POST") {
+        const parts = path.split("/");
+        const slug = decodeURIComponent(parts[4]);
+        const revisionId = Number(parts[6]);
+        return handleCustomPageRestoreRevision(request, env, corsHeaders, slug, revisionId);
       }
       if (path.match(/^\/api\/cms\/custom-pages\/[^/]+$/) && request.method === "GET") {
         const slug = decodeURIComponent(path.split("/api/cms/custom-pages/")[1]);

@@ -16,6 +16,7 @@
 import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
 import { extractToken, requireStaffPermission } from "../lib/auth";
+import { snapshotCustomPage } from "./cms-custom-page-revisions";
 import type { Env } from "../lib/env";
 
 const CUSTOM_PAGE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,79}$/;
@@ -176,6 +177,11 @@ export async function handleCmsCreateCustomPage(
 
 /**
  * PUT /api/cms/custom-pages/:slug — update. Admin only. Slug stable.
+ *
+ * Le body accepte un champ optionnel `revisionLabel` (motif libre) qui
+ * sera stocké dans le snapshot AVANT update, pour traçabilité (ex.
+ * "Mise a jour barème NAO 2026", "Correction typo"). Identique au champ
+ * `label` des revisions de pages système.
  */
 export async function handleCmsUpdateCustomPage(
   request: Request,
@@ -195,11 +201,30 @@ export async function handleCmsUpdateCustomPage(
     description?: string;
     content?: string;
     published?: boolean;
+    revisionLabel?: string;
   };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return json({ error: "JSON invalide" }, corsHeaders, 400);
+  }
+
+  // Snapshot l'état courant AVANT d'updater (best-effort, ne bloque pas).
+  const current = await env.DB.prepare(
+    `SELECT slug, label, description, content, published
+       FROM cms_custom_pages WHERE slug = ? AND is_archived = 0`,
+  ).bind(slug).first<{
+    slug: string;
+    label: string;
+    description: string | null;
+    content: string;
+    published: number;
+  }>();
+  if (current) {
+    const revLabel = typeof body.revisionLabel === "string" && body.revisionLabel.trim()
+      ? body.revisionLabel.trim().slice(0, 200)
+      : null;
+    await snapshotCustomPage(env, current, auth.userId, revLabel);
   }
 
   const updates: string[] = [];
@@ -228,8 +253,6 @@ export async function handleCmsUpdateCustomPage(
   updates.push("updated_at = datetime('now')");
   values.push(slug);
 
-  void auth; // audit log possible ici plus tard
-
   const res = await env.DB.prepare(
     `UPDATE cms_custom_pages SET ${updates.join(", ")} WHERE slug = ? AND is_archived = 0`,
   ).bind(...values).run();
@@ -243,6 +266,9 @@ export async function handleCmsUpdateCustomPage(
 
 /**
  * DELETE /api/cms/custom-pages/:slug — soft-delete. Admin only.
+ *
+ * Capture un dernier snapshot avant archivage pour permettre de
+ * restaurer la page si l'archivage etait accidentel.
  */
 export async function handleCmsDeleteCustomPage(
   request: Request,
@@ -252,7 +278,21 @@ export async function handleCmsDeleteCustomPage(
 ) {
   const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
   if ("error" in auth) return auth.error;
-  void auth;
+
+  // Snapshot avant archivage (best-effort).
+  const current = await env.DB.prepare(
+    `SELECT slug, label, description, content, published
+       FROM cms_custom_pages WHERE slug = ? AND is_archived = 0`,
+  ).bind(slug).first<{
+    slug: string;
+    label: string;
+    description: string | null;
+    content: string;
+    published: number;
+  }>();
+  if (current) {
+    await snapshotCustomPage(env, current, auth.userId, "Avant archivage (DELETE)");
+  }
 
   const res = await env.DB.prepare(
     "UPDATE cms_custom_pages SET is_archived = 1, published = 0, updated_at = datetime('now') WHERE slug = ?",

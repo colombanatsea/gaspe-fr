@@ -14,7 +14,9 @@ import { Badge } from "@/components/ui/Badge";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ContentPreview } from "@/components/admin/ContentPreview";
+import { CustomPageRevisionsModal } from "@/components/admin/CustomPageRevisionsModal";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { isApiMode } from "@/lib/api-client";
 import {
   apiListCustomPages,
   apiUpdateCustomPage,
@@ -40,6 +42,8 @@ function EditCustomPageContent() {
   const [saved, setSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
+  const [revisionLabel, setRevisionLabel] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -80,15 +84,36 @@ function EditCustomPageContent() {
         description,
         content,
         published,
+        revisionLabel: revisionLabel.trim() || undefined,
       });
       if (!ok) {
         alert("Échec de la sauvegarde.");
         return;
       }
       setSaved(true);
+      setRevisionLabel(""); // Reset motif après save réussi
       setTimeout(() => setSaved(false), 3000);
     } finally {
       setSaving(false);
+    }
+  }
+
+  /** Recharge la page depuis l'API après un restore via le modal Historique. */
+  async function reloadFromApi() {
+    if (!slug) return;
+    setLoading(true);
+    try {
+      const list = await apiListCustomPages(true);
+      const found = list.find((p) => p.slug === slug);
+      if (found) {
+        setPage(found);
+        setLabel(found.label);
+        setDescription(found.description);
+        setContent(found.content);
+        setPublished(found.published);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -142,10 +167,20 @@ function EditCustomPageContent() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Badge variant={published ? "green" : "warm"}>
             {published ? "Publiée" : "Brouillon"}
           </Badge>
+          {isApiMode() && (
+            <button
+              type="button"
+              onClick={() => setShowHistory(true)}
+              className="rounded-xl px-3 py-2 text-sm font-medium text-foreground-muted hover:bg-[var(--gaspe-neutral-100)] hover:text-foreground transition-colors"
+              title="Voir l'historique des révisions"
+            >
+              Historique
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowPreview(!showPreview)}
@@ -222,6 +257,29 @@ function EditCustomPageContent() {
             Publier (rend la page accessible sur /p?slug={page.slug})
           </label>
         </div>
+
+        {isApiMode() && (
+          <div className="pt-2 border-t border-[var(--gaspe-neutral-100)]">
+            <label
+              htmlFor="revisionLabel"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              Motif de la modification <span className="text-foreground-muted font-normal">(optionnel)</span>
+            </label>
+            <input
+              id="revisionLabel"
+              type="text"
+              value={revisionLabel}
+              onChange={(e) => setRevisionLabel(e.target.value)}
+              className={inputClass}
+              placeholder="Ex. « Mise à jour barème 2027 », « Correction typo intro »"
+              maxLength={200}
+            />
+            <p className="mt-1 text-xs text-foreground-muted">
+              Apparaîtra dans l&apos;historique des révisions pour traçabilité.
+            </p>
+          </div>
+        )}
       </div>
 
       {showPreview && content && (
@@ -232,6 +290,12 @@ function EditCustomPageContent() {
       )}
 
       <MediaLibrary open={showMedia} onClose={() => setShowMedia(false)} />
+      <CustomPageRevisionsModal
+        slug={page.slug}
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        onRestored={() => void reloadFromApi()}
+      />
     </div>
   );
 }
