@@ -152,6 +152,17 @@ import {
   handleDocumentDelete,
 } from "./handlers/documents";
 import {
+  handleMediaList,
+  handleMediaUpload,
+  handleMediaDelete,
+  handleMediaRaw,
+} from "./handlers/media";
+import {
+  MAGIC_BYTES,
+  validateMagicBytes,
+  deriveMimeType,
+} from "./lib/uploads";
+import {
   buildProfileSnapshot,
   buildVesselSnapshot,
   parseValidationItems,
@@ -219,38 +230,8 @@ function json(data: unknown, headers: Record<string, string>, status = 200, extr
   });
 }
 
-// ── Magic bytes validation for file uploads ──
-const MAGIC_BYTES: Record<string, Uint8Array[]> = {
-  "application/pdf": [new Uint8Array([0x25, 0x50, 0x44, 0x46])], // %PDF
-  "application/msword": [new Uint8Array([0xd0, 0xcf, 0x11, 0xe0])], // OLE2
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
-    new Uint8Array([0x50, 0x4b, 0x03, 0x04]), // PK (ZIP)
-  ],
-};
-
-function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean {
-  const signatures = MAGIC_BYTES[declaredType];
-  if (!signatures) return false;
-  const header = new Uint8Array(buffer.slice(0, 4));
-  return signatures.some((sig) => sig.every((byte, i) => header[i] === byte));
-}
-
-// Windows ne reconnaît pas toujours .docx → file.type vide ou octet-stream.
-// On retombe sur l'extension pour identifier le type réel (C20 post-launch).
-function deriveMimeType(file: File): string {
-  const declared = file.type;
-  if (declared && declared !== "application/octet-stream") return declared;
-  const name = (file.name ?? "").toLowerCase();
-  if (name.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  if (name.endsWith(".doc")) return "application/msword";
-  if (name.endsWith(".pdf")) return "application/pdf";
-  if (name.endsWith(".png")) return "image/png";
-  if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
-  if (name.endsWith(".gif")) return "image/gif";
-  if (name.endsWith(".webp")) return "image/webp";
-  if (name.endsWith(".svg")) return "image/svg+xml";
-  return declared || "application/octet-stream";
-}
+// MAGIC_BYTES, validateMagicBytes, deriveMimeType : extraits dans
+// ./lib/uploads (J1 vague 5.f). Réutilisés par /api/upload + /api/media.
 
 // ═══════════════════════════════════════════════════════════
 //  Main fetch handler
@@ -2312,134 +2293,9 @@ function cleanHtmlText(text: string): string {
 // ═══════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════
-//  Media Files – Upload/list/delete with R2 storage
+//  Media Files (R2) – extrait dans ./handlers/media + ./lib/uploads (J1 vague 5.f)
 // ═══════════════════════════════════════════════════════════
 
-// Image magic bytes for media uploads (extends document magic bytes)
-const IMAGE_MAGIC_BYTES: Record<string, Uint8Array[]> = {
-  "image/png": [new Uint8Array([0x89, 0x50, 0x4e, 0x47])],
-  "image/jpeg": [new Uint8Array([0xff, 0xd8, 0xff])],
-  "image/gif": [new Uint8Array([0x47, 0x49, 0x46, 0x38])],
-  "image/webp": [new Uint8Array([0x52, 0x49, 0x46, 0x46])],
-};
-
-function validateMediaMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean {
-  // SVG is text-based, skip magic bytes
-  if (declaredType === "image/svg+xml") return true;
-  const signatures = IMAGE_MAGIC_BYTES[declaredType] ?? MAGIC_BYTES[declaredType];
-  if (!signatures) return false;
-  const header = new Uint8Array(buffer.slice(0, 4));
-  return signatures.some((sig) => sig.every((byte, i) => header[i] === byte));
-}
-
-async function handleMediaList(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
-  if ("error" in auth) return auth.error;
-
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM media_files ORDER BY created_at DESC"
-  ).all<{ id: string; name: string; type: string; r2_key: string; size: number; alt: string | null; uploaded_by: string | null; created_at: string }>();
-
-  return json({
-    items: (results ?? []).map((r) => ({
-      id: r.id,
-      name: r.name,
-      type: r.type,
-      r2Key: r.r2_key,
-      size: r.size,
-      alt: r.alt ?? undefined,
-      uploadedBy: r.uploaded_by ?? undefined,
-      uploadedAt: r.created_at,
-    })),
-  }, corsHeaders);
-}
-
-async function handleMediaUpload(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
-  if ("error" in auth) return auth.error;
-
-  const formData = await request.formData();
-  const file = formData.get("file") as File;
-  const alt = formData.get("alt") as string;
-
-  if (!file) return json({ error: "Aucun fichier fourni" }, corsHeaders, 400);
-
-  // Type effectif (fallback sur extension si file.type vide / octet-stream — Windows DOCX)
-  const effectiveType = deriveMimeType(file);
-
-  const allowedTypes = [
-    "image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml",
-    "application/pdf", "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ];
-
-  if (!allowedTypes.includes(effectiveType)) {
-    return json({ error: "Type de fichier non autorisé" }, corsHeaders, 400);
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    return json({ error: "Fichier trop volumineux (max 10 Mo)" }, corsHeaders, 400);
-  }
-
-  const buffer = await file.arrayBuffer();
-  if (!validateMediaMagicBytes(buffer, effectiveType)) {
-    return json({ error: "Le contenu du fichier ne correspond pas au type déclaré" }, corsHeaders, 400);
-  }
-
-  const id = `media-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-  const r2Key = `media/${crypto.randomUUID()}-${file.name}`;
-
-  await env.UPLOADS.put(r2Key, buffer, {
-    httpMetadata: { contentType: effectiveType },
-    customMetadata: { originalName: file.name, uploadedAt: new Date().toISOString() },
-  });
-
-  await env.DB.prepare(`
-    INSERT INTO media_files (id, name, type, r2_key, size, alt, uploaded_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(id, file.name, effectiveType, r2Key, file.size, alt || null, auth.userId).run();
-
-  return json({
-    success: true,
-    item: { id, name: file.name, type: effectiveType, r2Key, size: file.size, alt: alt || undefined, uploadedAt: new Date().toISOString() },
-  }, corsHeaders, 201);
-}
-
-async function handleMediaDelete(request: Request, env: Env, corsHeaders: Record<string, string>, mediaId: string) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_cms");
-  if ("error" in auth) return auth.error;
-
-  const row = await env.DB.prepare("SELECT r2_key FROM media_files WHERE id = ?").bind(mediaId).first<{ r2_key: string }>();
-  if (!row) return json({ error: "Fichier introuvable" }, corsHeaders, 404);
-
-  // Delete from R2
-  await env.UPLOADS.delete(row.r2_key);
-  // Delete metadata
-  await env.DB.prepare("DELETE FROM media_files WHERE id = ?").bind(mediaId).run();
-
-  return json({ success: true }, corsHeaders);
-}
-
-/**
- * Public raw media serving – GET /api/media/raw/:r2Key
- * Pas d'auth : les images uploadées via CMS sont destinées à être affichées
- * publiquement (photos bureau, illustrations de pages, etc.).
- * Clé R2 nettoyée pour n'accepter que les préfixes connus.
- */
-async function handleMediaRaw(env: Env, corsHeaders: Record<string, string>, r2Key: string) {
-  // Seules les clés sous "media/" sont exposées publiquement (le reste R2 est privé).
-  if (!r2Key.startsWith("media/") || r2Key.includes("..")) {
-    return new Response("Ressource introuvable", { status: 404, headers: corsHeaders });
-  }
-  const object = await env.UPLOADS.get(r2Key);
-  if (!object) return new Response("Ressource introuvable", { status: 404, headers: corsHeaders });
-
-  const headers = new Headers(corsHeaders);
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "public, max-age=86400, immutable");
-  return new Response(object.body, { headers });
-}
 
 // ═══════════════════════════════════════════════════════════
 //  Newsletter drafts – CRUD (Phase 1 foundation)
