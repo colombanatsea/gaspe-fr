@@ -1,68 +1,26 @@
 /**
- * GASPE API Worker – Cloudflare Workers
+ * GASPE API Worker — point d'entrée Cloudflare Workers.
  *
- * Deployment:
- *   npx wrangler deploy --config workers/wrangler.toml
+ * Le module ne contient plus que :
+ * - Le routeur `fetch` (path matching → délégation vers handlers/*)
+ * - Le `scheduled` handler (cron trigger quotidien validation deadline)
+ * - Le pont entre les ~75 endpoints et les modules `./handlers/*`
  *
- * Bindings needed in wrangler.toml:
- *   - D1: DB (gaspe-db)
- *   - R2: UPLOADS (gaspe-uploads)
- *   - Environment: BREVO_API_KEY, CONTACT_EMAIL, JWT_SECRET
+ * Source de vérité de l'API : voir `docs/feature-coverage-*.md` et
+ * HANDOFF.md. Bindings wrangler : `wrangler.toml`.
  *
- * Endpoints:
- *   POST /api/auth/register    – create account
- *   POST /api/auth/login       – authenticate → JWT cookie
- *   POST /api/auth/logout      – clear session
- *   GET  /api/auth/me          – current user from JWT
- *   GET  /api/auth/users       – admin: list all users
- *   PATCH /api/auth/users/:id  – admin: update/approve user
- *   DELETE /api/auth/users/:id – admin: reject/delete user
- *   POST /api/auth/forgot-password – request password reset email
- *   POST /api/auth/reset-password  – reset password with token
- *   GET  /api/organizations       – list all organizations
- *   GET  /api/organizations/:id   – org details + contacts
- *   PATCH /api/organizations/:id  – update org (primary/admin)
- *   POST /api/organizations/:id/invite – invite contact (primary/admin)
- *   GET  /api/organizations/:id/invitations – list invitations
- *   POST /api/invitations/:token/accept – accept invitation
- *   GET  /api/preferences         – get newsletter preferences
- *   PATCH /api/preferences        – update newsletter preferences
- *   POST /api/contact          – send contact email via Brevo
- *   POST /api/newsletter       – subscribe to newsletter
- *   POST /api/newsletter/send  – admin: bulk send newsletter by category
- *   POST /api/hydros/publish   – publish offer to Hydros Alumni (JWT auth)
- *   POST /api/enm/import       – import data from Espace Numérique Maritime
- *   POST /api/upload           – upload CV/documents to R2
- *   GET  /api/health           – health check
- *
- *   CMS pages:
- *   GET  /api/cms/pages           – list all CMS page content
- *   GET  /api/cms/pages/:pageId   – get single page content
- *   PUT  /api/cms/pages/:pageId   – upsert page sections
- *
- *   Jobs:
- *   GET    /api/jobs              – list all jobs (public: published only)
- *   GET    /api/jobs/:id          – get single job
- *   POST   /api/jobs              – create job (admin/adherent)
- *   PATCH  /api/jobs/:id          – update job (admin/owner)
- *   DELETE /api/jobs/:id          – delete job (admin/owner)
- *
- *   Medical visits:
- *   GET    /api/medical-visits       – list user's medical visits (JWT)
- *   POST   /api/medical-visits       – create medical visit (JWT)
- *   PATCH  /api/medical-visits/:id   – update medical visit (JWT)
- *   DELETE /api/medical-visits/:id   – delete medical visit (JWT)
- *
- *   Media files:
- *   GET    /api/media             – list media files (admin)
- *   POST   /api/media             – upload media file to R2 (admin)
- *   DELETE /api/media/:id         – delete media file + R2 object (admin)
+ * Tous les handlers métier sont dans `workers/handlers/`, les helpers
+ * partagés dans `workers/lib/`. Chantier J1 (split monolithique) clos
+ * le 2026-05-17, cf. `docs/WORKER-SPLIT-PLAN.md`.
  */
 
-import { signJwt, verifyJwt } from "./jwt";
+import type { Env } from "./lib/env";
+import { json } from "./lib/json";
+import { getCorsHeaders } from "./lib/cors";
+import { clearTokenCookie } from "./lib/auth";
 
-// J1 — split Worker progressif (cf. docs/WORKER-SPLIT-PLAN.md).
-// Domaines extraits dans workers/handlers/ :
+// Tous les handlers métier vivent dans `./handlers/*`. Le routeur ci-dessous
+// se contente de matcher (path, method) puis de déléguer.
 import {
   handleCmsListCustomPages,
   handleCmsGetCustomPage,
@@ -92,13 +50,6 @@ import {
   handleSeedHashesUpsert,
   handleAuditLogList,
 } from "./handlers/admin-tools";
-import { logAudit, ensureAuditLogTable } from "./lib/audit";
-import { sendBrevoTransactional, logBrevoSent, alreadyBrevoSent } from "./lib/brevo";
-import { sanitize, sanitizeRichHtml } from "./lib/sanitize";
-import { hashPasswordServer, verifyPasswordServer } from "./lib/crypto";
-import { extractToken, setTokenCookie, clearTokenCookie } from "./lib/auth";
-import { type DbUser, toFrontendUser } from "./lib/users";
-import { SITE_URL } from "./lib/constants";
 import {
   handleRegister,
   handleLogin,
@@ -188,8 +139,6 @@ import {
   handleListOrganizations,
   handleGetOrganization,
   handleUpdateOrganization,
-  toFrontendOrg,
-  type DbOrganization,
 } from "./handlers/organizations";
 import {
   handleInviteContact,
@@ -200,9 +149,6 @@ import {
   handleGetFleet,
   handleListAllFleets,
   handleUpsertFleet,
-  ensureVesselsTable,
-  toFrontendVessel,
-  type DbVessel,
 } from "./handlers/organization-vessels";
 import {
   handleListVotes,
@@ -224,80 +170,9 @@ import {
   handleSubmitValidations,
   runValidationDeadlineCron,
 } from "./handlers/validation-campaigns";
-import {
-  MAGIC_BYTES,
-  validateMagicBytes,
-  deriveMimeType,
-} from "./lib/uploads";
-import {
-  buildProfileSnapshot,
-  buildVesselSnapshot,
-  parseValidationItems,
-  resolveTargetYear,
-  shouldNotifyDueSoon,
-  shouldNotifyOverdue,
-  ValidationInputError,
-  type ValidationCampaignRow,
-  type ValidationRequestItem,
-} from "./handlers/validation-helpers";
 
-interface Env {
-  DB: D1Database;
-  UPLOADS: R2Bucket;
-  HYDROS_EMAIL?: string;
-  HYDROS_PASSWORD?: string;
-  BREVO_API_KEY: string;
-  CONTACT_EMAIL: string;
-  JWT_SECRET: string;
-  // Newsletter v2 – ces vars sont optionnelles tant que Brevo n'est pas configuré.
-  // Quand elles sont définies, les endpoints send/webhook/unsub deviennent actifs.
-  BREVO_SENDER_EMAIL?: string;
-  BREVO_SENDER_NAME?: string;
-  BREVO_REPLY_TO?: string;
-  BREVO_WEBHOOK_SECRET?: string;
-  NEWSLETTER_UNSUB_SECRET?: string;
-  // 10 list IDs Brevo (une par catégorie D1) – à configurer via `wrangler secret put`.
-  // Les noms correspondent aux colonnes de `newsletter_preferences` (migration 0003).
-  BREVO_LIST_INFO_GENERALES?: string;
-  BREVO_LIST_AG?: string;
-  BREVO_LIST_EMPLOI?: string;
-  BREVO_LIST_FORMATION_OPCO?: string;
-  BREVO_LIST_VEILLE_JURIDIQUE?: string;
-  BREVO_LIST_VEILLE_SOCIALE?: string;
-  BREVO_LIST_VEILLE_SURETE?: string;
-  BREVO_LIST_VEILLE_DATA?: string;
-  BREVO_LIST_VEILLE_ENVIRONNEMENT?: string;
-  BREVO_LIST_ACTUALITES_GASPE?: string;
-}
-
-
-// ── CORS ──
-function getCorsHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get("Origin") ?? "";
-  const allowedOrigins = [
-    "https://gaspe-fr.pages.dev",
-    "https://www.gaspe.fr",
-    "https://gaspe.fr",
-    "http://localhost:3001",
-    "http://localhost:3000",
-  ];
-  const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-  return {
-    "Access-Control-Allow-Origin": corsOrigin,
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
-  };
-}
-
-function json(data: unknown, headers: Record<string, string>, status = 200, extraHeaders?: Record<string, string>) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...headers, ...extraHeaders, "Content-Type": "application/json" },
-  });
-}
-
-// MAGIC_BYTES, validateMagicBytes, deriveMimeType : extraits dans
+// `Env`, `json`, `getCorsHeaders` : importés depuis `./lib/*` (vague 8 finalize).
+// `MAGIC_BYTES`, `validateMagicBytes`, `deriveMimeType` : extraits dans
 // ./lib/uploads (J1 vague 5.f). Réutilisés par /api/upload + /api/media.
 
 // ═══════════════════════════════════════════════════════════
