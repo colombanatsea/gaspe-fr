@@ -3,9 +3,12 @@
 Document de cadrage pour découper `workers/api.ts` (initialement 7938
 lignes) en modules par domaine.
 
-Date : 2026-05-12. Statut : **vague 0 livrée** (infrastructure + 1
-domaine pilote). Le reste suit en vagues successives, validées en prod
-entre chaque.
+Date initiale : 2026-05-12. **Clôture : 2026-05-17.**
+
+Statut : **chantier J1 clos**. 23 domaines extraits, `workers/api.ts`
+ramené de **7938 → 899 lignes** (-7039, -88,7%). Smoke test prod vert
+(health 200 + endpoints publics OK) après les 12 push successifs du
+2026-05-17. Cf. note de clôture : `docs/notes-référence/palantiri-mirdain/notes-2026-05-17-narvi-split-worker-cloture-j1.md`.
 
 ## Pourquoi un split incrémental
 
@@ -41,77 +44,76 @@ unitaires côté frontend). Un big-bang refactor du Worker = risque
 importe depuis le module. Surface API publique identique (smoke test
 post-déploiement : `GET /api/cms/custom-pages` → `{"pages":[]}`).
 
-## Roadmap des vagues suivantes
+## Roadmap des vagues — toutes livrées
 
-Ordre proposé : du plus isolé au plus interconnecté.
+Ordre suivi : du plus isolé au plus interconnecté. Newsletter (4.b)
+traitée en dernier pour limiter le blast radius Brevo prod.
 
-### Vague 1 — CMS pages système + revisions + custom sections
+### Vague 1 — CMS ✅ LIVRÉ (sessions 60-62)
 
-- `workers/handlers/cms-pages.ts` (~150 lignes)
-- `workers/handlers/cms-revisions.ts` (~200 lignes)
-- `workers/handlers/cms-custom-sections.ts` (~180 lignes, Phase 1/2)
+- `workers/handlers/cms-pages.ts` (vague 1.b, 3 handlers)
+- `workers/handlers/cms-revisions.ts` (vague 1.a)
+- `workers/handlers/cms-custom-sections.ts` (vague 1.c, Phase 1/2)
 
-Total ~530 lignes à extraire.
+### Vague 2 — Admin tools ✅ LIVRÉ (session 63)
 
-### Vague 2 — Admin tools (export-all, seed-hashes, audit-log)
+- `workers/handlers/admin-tools.ts` (export-all + seed-hashes + audit-log)
+- `workers/lib/audit.ts` (helper logAudit + ensureAuditLogTable)
 
-- `workers/handlers/admin-tools.ts` (~350 lignes)
+### Vague 3 — Auth + password reset ✅ LIVRÉ (session 64)
 
-Domaines tout-en-un mais bien isolés (admin only, peu d'inter-dépendances).
+- `workers/handlers/auth.ts` (register, login, logout, me, users CRUD, promote/demote/transfer master)
+- `workers/handlers/password-reset.ts`
+- `workers/lib/crypto.ts` (hashPasswordServer + verifyPasswordServer)
+- `workers/lib/auth.ts` (extractToken + requireStaffPermission canonique)
+- `workers/lib/users.ts` (DbUser + toFrontendUser)
 
-### Vague 3 — Auth + password reset
+### Vague 4 — Brevo / Email ✅ LIVRÉ (sessions 65 + 70)
 
-- `workers/handlers/auth.ts` (~340 lignes)
-- `workers/handlers/password-reset.ts` (~110 lignes)
+- `workers/lib/brevo.ts` (sendBrevoTransactional + logBrevoSent + alreadyBrevoSent) — vague 4.0
+- `workers/handlers/email.ts` (proxy /api/email) — vague 4.a
+- `workers/handlers/newsletter.ts` (categories + preferences + contact + subscription + send v2 + drafts + brevo webhook + unsubscribe, 1267 lignes regroupées) — vague 4.b
 
-Touche des stores partagés (users) mais surface bien définie.
+### Vague 5 — Domaines métier indépendants ✅ LIVRÉ (sessions 66-70)
 
-### Vague 4 — Brevo / Email
+- `workers/handlers/jobs.ts` (vague 5.a)
+- `workers/handlers/medical-visits.ts` (vague 5.b)
+- `workers/handlers/positions.ts` (vague 5.c)
+- `workers/handlers/formations.ts` (vague 5.d, inclut register/unregister)
+- `workers/handlers/documents.ts` (vague 5.e)
+- `workers/handlers/media.ts` + `workers/lib/uploads.ts` (vague 5.f)
+- Vague 5.g agenda : **sans objet** (agenda servi côté CMS, aucun endpoint Worker).
 
-- `workers/lib/brevo.ts` (helpers Brevo, sendBrevoTransactional)
-- `workers/handlers/contact-form.ts` (~50 lignes)
-- `workers/handlers/newsletter-subscription.ts` (~80 lignes)
-- `workers/handlers/newsletter-categories.ts` (~400 lignes, migration 0040)
-- `workers/handlers/newsletter-preferences.ts` (~200 lignes)
-- `workers/handlers/newsletter-drafts.ts` (~180 lignes)
-- `workers/handlers/newsletter-send.ts` (~280 lignes)
+### Vague 6 — Domaines complexes ✅ LIVRÉ (session 70)
 
-Plus gros lot, mais cohérent thématiquement.
+- `workers/handlers/organizations.ts` (vague 6.a, exporte DbOrganization + toFrontendOrg)
+- `workers/handlers/organization-vessels.ts` (vague 6.b, exporte DbVessel + toFrontendVessel)
+- `workers/handlers/invitations.ts` (vague 6.c)
+- `workers/handlers/votes.ts` (vague 6.d, inclut suppleant)
+- `workers/handlers/validation-campaigns.ts` (vague 6.e, 1196 lignes, le plus gros — inclut cron deadline notifications)
 
-### Vague 5 — Domaines métier indépendants
+### Vague 7 — Périphérie ✅ LIVRÉ (session 70)
 
-- `workers/handlers/jobs.ts` (~220 lignes)
-- `workers/handlers/medical-visits.ts` (~150 lignes)
-- `workers/handlers/positions.ts` (~220 lignes)
-- `workers/handlers/formations.ts` (~310 lignes)
-- `workers/handlers/documents.ts` (~240 lignes)
-- `workers/handlers/media.ts` (~130 lignes)
-- `workers/handlers/agenda.ts` (à confirmer ligne)
-
-### Vague 6 — Domaines complexes (organisations + flotte + votes + validation)
-
-- `workers/handlers/organizations.ts` (~150 lignes)
-- `workers/handlers/organization-vessels.ts` (~320 lignes)
-- `workers/handlers/invitations.ts` (~140 lignes)
-- `workers/handlers/votes.ts` (~460 lignes)
-- `workers/handlers/validation-campaigns.ts` (~780 lignes, le plus gros)
-
-### Vague 7 — Périphérie
-
-- `workers/handlers/upload.ts` (~50 lignes, R2 upload)
-- `workers/handlers/enm-import.ts` (~230 lignes)
-- `workers/handlers/hydros-cross-publication.ts` (~140 lignes)
-- `workers/handlers/feed-rss.ts` (~110 lignes)
-- `workers/handlers/cron-deadline-notifications.ts` (~320 lignes)
+- `workers/handlers/feed-rss.ts` (vague 7.a)
+- `workers/handlers/upload.ts` (vague 7.b)
+- `workers/handlers/hydros-cross-publication.ts` (vague 7.c)
+- `workers/handlers/enm-import.ts` (vague 7.d)
+- `workers/handlers/cron-deadline-notifications.ts` : intégré à `validation-campaigns.ts` (vague 6.e) pour cohésion de domaine.
 
 ### Final — Routeur
 
-À l'issue, `workers/api.ts` ne contient plus que :
-- Le `fetch` handler principal (~500 lignes)
-- Le routeur (route matching → délégation vers handlers/*)
-- Quelques helpers ultra-globaux qui n'ont pas leur place ailleurs
+`workers/api.ts` ne contient plus que :
+- Le `fetch` handler principal (routeur)
+- Le `scheduled` handler (cron trigger qui appelle `runValidationDeadlineCron`)
+- L'interface `Env`, `getCorsHeaders`, le helper local `json`
+- 27 imports de handlers extraits
 
-Objectif cible : `api.ts < 800 lignes`.
+**Total : 899 lignes** (vs cible < 800). 99 lignes au-dessus de l'objectif, acceptable en l'état. Une éventuelle vague 8 pourrait :
+- Extraire `Env` dans `workers/lib/env.ts` (déjà fait, mais l'interface locale d'api.ts duplique encore)
+- Extraire `getCorsHeaders` + `json` (mais `json` local est utilisé par les corsHeaders donc à voir)
+- Découper le routeur en sous-fonctions par préfixe (`/api/cms/*`, `/api/auth/*`, etc.)
+
+À ce stade, le gain marginal ne justifie pas l'effort.
 
 ## Smoke test post-déploiement
 

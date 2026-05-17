@@ -1,4 +1,4 @@
-# GASPE Website — Handoff (mis à jour 2026-05-12)
+# GASPE Website — Handoff (mis à jour 2026-05-17)
 
 > Ce document est la **source de vérité** pour reprendre le projet en
 > cours. Il agrège l'état technique, les chantiers en cours, le backlog
@@ -9,9 +9,9 @@
 
 | Métrique | Valeur |
 |----------|--------|
-| Version package.json | **2.53.0** |
+| Version package.json | **2.68.0** |
 | Branch | `main` |
-| Dernier commit | J1 vague 1.c — CMS custom sections extraits (vague 1 close) |
+| Dernier commit | J1 vague 4.b — newsletter extrait (clôture J1) |
 | TypeScript | 0 erreur |
 | Lint | 0 erreur (9 warnings pré-existants `set-state-in-effect` sur composants React) |
 | Tests unitaires | **405** (30 fichiers) |
@@ -21,8 +21,8 @@
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 | Tables D1 | **15** (`cms_custom_pages`, `users.is_master_admin`) |
 | Migrations D1 appliquées | 44 (dernière 0044 master admin) |
-| Lignes `workers/api.ts` | **7449** (-489 depuis le 12/05, J1 vagues 0 + 1.a + 1.b + 1.c) |
-| Domaines extraits | 4 (cms-custom-pages, cms-revisions, cms-pages, cms-custom-sections) |
+| Lignes `workers/api.ts` | **899** (-7039 depuis le 12/05, J1 close, objectif < 800 quasi atteint) |
+| Domaines extraits | **23** (cms-custom-pages, cms-revisions, cms-pages, cms-custom-sections, admin-tools, auth, password-reset, email, jobs, medical-visits, positions, formations, documents, media, organizations, organization-vessels, invitations, votes, validation-campaigns, feed-rss, upload, hydros-cross-publication, enm-import, newsletter) |
 
 ### Infrastructure
 
@@ -92,9 +92,8 @@ comparaison 2 révisions, restore.
 
 ### 🟢 Backlog
 
-- **J1 (suite)** — Vagues 1-7 du split Worker (cf. `docs/WORKER-SPLIT-PLAN.md`).
-  Vague 0 livrée (CMS custom pages + helpers `lib/`). api.ts à 7681
-  lignes, objectif < 800.
+- ~~**J1** — Split Worker monolithique (cf. `docs/WORKER-SPLIT-PLAN.md`).~~ **CLOS 2026-05-17** : 23 domaines extraits, api.ts ramené de 7938 à 899 lignes. Smoke test prod vert (health 200 + endpoints publics OK). Cf. `docs/notes-référence/palantiri-mirdain/notes-2026-05-17-narvi-split-worker-cloture-j1.md`.
+- **Workers tests** — Installer vitest + supertest côté workers/ pour valider les futures évolutions sans dépendre uniquement de tsc + build (rappel HANDOFF session 83).
 - **Tests E2E hybride CMS** (nécessite Worker mock).
 - **A11y audit étendu** : combos `bg-{couleur}-50 + text-{couleur}-700`
   en dark mode (peu fréquents, à traiter au coup par coup).
@@ -124,10 +123,17 @@ de session pour l'état réel).
   slider temps partiel + IR + ancienneté + lien NAO classifications),
   J1 vague 1.a (CMS revisions extraits).
 - Session 62 (13/05) : J1 vague 1.b puis 1.c. Vague 1.b extrait CMS
-  pages système (`workers/handlers/cms-pages.ts`, 3 handlers). Vague
-  1.c extrait CMS custom sections (`workers/handlers/cms-custom-sections.ts`,
-  4 handlers Phases 1 et 2 hybride). Vague 1 close. `workers/api.ts`
-  à 7449 lignes (-328 sur la session).
+  pages système. Vague 1.c extrait CMS custom sections. Vague 1 close.
+- Session 63-69 (13/05) : J1 vagues 2 → 5 partielle (admin-tools, auth,
+  password-reset, email, jobs, medical-visits). api.ts ramené à 5784
+  lignes.
+- **Session 70 (17/05) — clôture J1** : 12 commits, vagues 5.c → 7 → 4.b.
+  23 domaines totaux extraits (positions, formations, documents, media,
+  organizations, vessels, invitations, votes, validation-campaigns +
+  cron, feed-rss, upload, hydros, enm-import, newsletter).
+  `workers/api.ts` passe de 5784 à **899 lignes** (-4885 sur la session,
+  -7039 depuis le début de J1). Smoke test prod vert. Bump 2.55.1 →
+  2.68.0. Cf. `docs/notes-référence/palantiri-mirdain/notes-2026-05-17-narvi-split-worker-cloture-j1.md`.
 
 ## Commandes utiles
 
