@@ -216,28 +216,88 @@ body {
   background-color: var(--color-background) !important;
 }
 
+/* ── Dark mode : remap des combos bg-{couleur}-50 + text-{couleur}-{600+}
+   pour préserver le contraste WCAG AA. Le pattern Tailwind clair fond
+   pâle / texte foncé inverse mal en dark : on remappe vers fond très
+   sombre / texte clair (palette 400). Couverture systématique pour
+   éviter les patches inline dans chaque composant. ── */
+
+/* Rouge (erreurs, alertes) */
 [data-theme="dark"] .bg-red-50 { background-color: #2D1B1B !important; }
-[data-theme="dark"] .bg-amber-50 { background-color: #2D2718 !important; }
-[data-theme="dark"] .border-red-200 { border-color: #5C2929 !important; }
-[data-theme="dark"] .border-amber-200,
-[data-theme="dark"] .border-amber-300 { border-color: #5C4A1A !important; }
-[data-theme="dark"] .text-red-700,
-[data-theme="dark"] .text-red-600 { color: #F87171 !important; }
-[data-theme="dark"] .text-amber-800,
-[data-theme="dark"] .text-amber-900 { color: #FCD34D !important; }
-[data-theme="dark"] .text-amber-600 { color: #FBBF24 !important; }
-[data-theme="dark"] .bg-green-100 { background-color: #1B2D1B !important; }
-[data-theme="dark"] .bg-green-50 { background-color: #1A2B1A !important; }
-[data-theme="dark"] .text-green-600 { color: #4ADE80 !important; }
-[data-theme="dark"] .text-green-500 { color: #4ADE80 !important; }
-[data-theme="dark"] .border-green-500 { border-color: #22C55E !important; }
+[data-theme="dark"] .border-red-200,
 [data-theme="dark"] .border-red-300 { border-color: #5C2929 !important; }
+[data-theme="dark"] .text-red-700,
+[data-theme="dark"] .text-red-800,
+[data-theme="dark"] .text-red-600 { color: #F87171 !important; }
 [data-theme="dark"] .text-red-500 { color: #F87171 !important; }
 [data-theme="dark"] .text-red-400 { color: #FCA5A5 !important; }
 [data-theme="dark"] .hover\:bg-red-50:hover { background-color: #2D1B1B !important; }
-[data-theme="dark"] .hover\:bg-green-50:hover { background-color: #1A2B1A !important; }
 [data-theme="dark"] .hover\:text-red-600:hover { color: #F87171 !important; }
 [data-theme="dark"] .hover\:border-red-200:hover { border-color: #5C2929 !important; }
+
+/* Ambre (avertissements, inscriptions closes) */
+[data-theme="dark"] .bg-amber-50 { background-color: #2D2718 !important; }
+[data-theme="dark"] .border-amber-200,
+[data-theme="dark"] .border-amber-300 { border-color: #5C4A1A !important; }
+[data-theme="dark"] .text-amber-700,
+[data-theme="dark"] .text-amber-800,
+[data-theme="dark"] .text-amber-900 { color: #FCD34D !important; }
+[data-theme="dark"] .text-amber-600 { color: #FBBF24 !important; }
+
+/* Vert (succès, validation) */
+[data-theme="dark"] .bg-green-50 { background-color: #1A2B1A !important; }
+[data-theme="dark"] .bg-green-100 { background-color: #1B2D1B !important; }
+[data-theme="dark"] .border-green-200,
+[data-theme="dark"] .border-green-300 { border-color: #2D5A2D !important; }
+[data-theme="dark"] .border-green-500 { border-color: #22C55E !important; }
+[data-theme="dark"] .text-green-700,
+[data-theme="dark"] .text-green-800 { color: #4ADE80 !important; }
+[data-theme="dark"] .text-green-600 { color: #4ADE80 !important; }
+[data-theme="dark"] .text-green-500 { color: #4ADE80 !important; }
+[data-theme="dark"] .hover\:bg-green-50:hover { background-color: #1A2B1A !important; }
+
+/* Bleu (info, neutralité, accents informatifs) */
+[data-theme="dark"] .bg-blue-50 { background-color: #1A2235 !important; }
+[data-theme="dark"] .border-blue-200,
+[data-theme="dark"] .border-blue-300 { border-color: #2E4A6E !important; }
+[data-theme="dark"] .text-blue-700,
+[data-theme="dark"] .text-blue-800,
+[data-theme="dark"] .text-blue-900 { color: #93C5FD !important; }
+[data-theme="dark"] .text-blue-600 { color: #93C5FD !important; }
+[data-theme="dark"] .text-blue-500 { color: #93C5FD !important; }
+[data-theme="dark"] .text-blue-400 { color: #BFDBFE !important; }
+
+/* Sky/Cyan (variantes bleu décoratives) */
+[data-theme="dark"] .bg-sky-50 { background-color: #1A2530 !important; }
+[data-theme="dark"] .bg-cyan-50 { background-color: #15282D !important; }
+[data-theme="dark"] .text-sky-700,
+[data-theme="dark"] .text-sky-600 { color: #7DD3FC !important; }
+[data-theme="dark"] .text-cyan-700,
+[data-theme="dark"] .text-cyan-600 { color: #67E8F9 !important; }
+
+/* Violet/Purple (catégories décoratives) */
+[data-theme="dark"] .bg-purple-50,
+[data-theme="dark"] .bg-violet-50 { background-color: #251A35 !important; }
+[data-theme="dark"] .text-purple-700,
+[data-theme="dark"] .text-purple-600,
+[data-theme="dark"] .text-violet-700,
+[data-theme="dark"] .text-violet-600 { color: #C4B5FD !important; }
+
+/* Pink/Rose (badges décoratifs) */
+[data-theme="dark"] .bg-pink-50,
+[data-theme="dark"] .bg-rose-50 { background-color: #2D1A25 !important; }
+[data-theme="dark"] .text-pink-700,
+[data-theme="dark"] .text-pink-600,
+[data-theme="dark"] .text-rose-700,
+[data-theme="dark"] .text-rose-600 { color: #F9A8D4 !important; }
+
+/* Teal/Emerald (charte interne — teal est déjà la couleur principale,
+   ces overrides ne servent qu'aux variantes 50/600/700 Tailwind brutes
+   utilisées sporadiquement) */
+[data-theme="dark"] .bg-teal-50 { background-color: #15302D !important; }
+[data-theme="dark"] .bg-emerald-50 { background-color: #15302A !important; }
+[data-theme="dark"] .text-teal-700,
+[data-theme="dark"] .text-emerald-700 { color: #5EEAD4 !important; }
 
 /* ── Gradient signature GASPE ── */
 .gaspe-gradient {
