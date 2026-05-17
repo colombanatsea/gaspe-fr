@@ -9,21 +9,21 @@
 
 | Métrique | Valeur |
 |----------|--------|
-| Version package.json | **2.72.0** |
+| Version package.json | **2.76.0** |
 | Branch | `main` |
-| Dernier commit | feat(cms) : historique révisions pages custom (migration 0045) |
+| Dernier commit | refactor(format-date) : centralise formatTimestamp + formatDate + formatNumber |
 | TypeScript | 0 erreur |
 | Lint | 0 erreur (9 warnings pré-existants `set-state-in-effect` sur composants React) |
-| Tests unitaires | **486** (36 fichiers, +79 workers/lib + 2 anti-drift constants) |
+| Tests unitaires | **554** (40 fichiers, +166 vs baseline post-J1) |
 | Tests E2E | 11 spec files (Playwright + @axe-core) |
 | Pages HTML générées | 120+ |
 | Vulnérabilités npm (high) | 0 (résolues 12/05 par bump Next.js 16.2.6) |
 | Vulnérabilités npm (moderate) | 2 (postcss transitif via Next) |
 | Tables D1 | **16** (cms_custom_pages + cms_custom_page_revisions ajoutée 17/05) |
 | Migrations D1 appliquées | 45 (dernière 0045 cms_custom_page_revisions) |
-| Lignes `workers/api.ts` | **773** (objectif < 800 **atteint** J1 vague 8 finalize, -7165 depuis 12/05) |
-| Domaines extraits workers/handlers | **24** (cms-custom-pages, cms-revisions, cms-pages, cms-custom-sections, cms-custom-page-revisions, admin-tools, auth, password-reset, email, jobs, medical-visits, positions, formations, documents, media, organizations, organization-vessels, invitations, votes, validation-campaigns, feed-rss, upload, hydros-cross-publication, enm-import, newsletter) |
-| Modules partagés workers/lib | **11** (env, json, cors, auth, audit, brevo, sanitize, crypto, users, uploads, constants) |
+| Lignes `workers/api.ts` | **773** (objectif < 800 **atteint** J1 vague 8 finalize) |
+| Domaines extraits workers/handlers | **24** (split monolithique J1 clos) |
+| Modules partagés workers/lib | **14** (env, json, cors, auth, audit, brevo, brevo-templates, sanitize, crypto, users, uploads, db-helpers, constants) |
 
 ### Infrastructure
 
@@ -127,28 +127,20 @@ de session pour l'état réel).
 - Session 63-69 (13/05) : J1 vagues 2 → 5 partielle (admin-tools, auth,
   password-reset, email, jobs, medical-visits). api.ts ramené à 5784
   lignes.
-- **Session 70 (17/05) — clôture J1 + items backlog** : 19 commits, démarrée à 07:00 UTC, terminée à 17:16 UTC. Deux blocs :
-  - **Bloc 1 (07:00-07:36 UTC)** : 12 commits J1 vagues 5.c → 7 → 4.b.
-    23 domaines extraits (positions, formations, documents, media,
-    organizations, vessels, invitations, votes, validation-campaigns +
-    cron, feed-rss, upload, hydros, enm-import, newsletter).
-    `workers/api.ts` passe de 5784 à 899 lignes. Bump 2.55.1 → 2.68.0.
-  - **Bloc 2 (16:55-17:16 UTC)** : 5 commits post-clôture sur backlog
-    HANDOFF :
-    - `5e0deaa` J1 vague 8 finalize (Env / json / cors → lib, headers
-      doc compactés, imports morts purgés). api.ts 899 → **773 lignes**,
-      **objectif < 800 atteint**.
-    - `f21420d` test(workers) : 79 tests unitaires `workers/lib/`
-      (sanitize, uploads, cors, auth, json). 486 tests totaux.
-    - `d9f74c2` chore(release) : aligne `SITE_VERSION` sur 2.70.0 +
-      test anti-drift `constants.test.ts`.
-    - `e846a33` feat(a11y) : couverture systématique dark mode pour
-      8 familles de couleurs Tailwind (bg-X-50 + text-X-{600,700,800,900}).
-    - `6d23641` feat(cms) : historique révisions pages custom
-      (migration 0045, 3 endpoints, modal admin avec preview + restore).
-  - **Bilan global** : 7038 → 773 lignes api.ts (-89,1%), +81 tests
-    workers, +0 vulnérabilité, smoke prod vert sur tous les commits.
-    Cf. `docs/notes-référence/palantiri-mirdain/notes-2026-05-17-narvi-split-worker-cloture-j1.md`.
+- **Session 70 (17/05) — clôture J1 + items backlog + refactor code optimal** : 23 commits, démarrée à 07:00 UTC, terminée à 21:10 UTC. Trois blocs :
+  - **Bloc 1 (07:00-07:36 UTC)** : 12 commits J1 vagues 5.c → 7 → 4.b. 23 domaines extraits. `workers/api.ts` passe de 5784 à 899 lignes. Bump 2.55.1 → 2.68.0.
+  - **Bloc 2 (16:55-17:16 UTC)** : 5 commits post-clôture sur backlog HANDOFF :
+    - `5e0deaa` J1 vague 8 finalize : Env / json / cors → lib, api.ts → **773 lignes** (objectif < 800 atteint).
+    - `f21420d` test(workers) : 79 tests unitaires `workers/lib/` (sanitize, uploads, cors, auth, json).
+    - `d9f74c2` chore(release) : aligne SITE_VERSION 2.51 → 2.70 + test anti-drift.
+    - `e846a33` feat(a11y) : couverture dark mode 8 familles Tailwind.
+    - `6d23641` feat(cms) : historique révisions pages custom (migration 0045 + modal admin).
+    - `6448d8b` docs(HANDOFF) + `f1f3b59` docs(WORKERS-ARCHITECTURE) + `7fdcb8e` PoC mock D1.
+  - **Bloc 3 (20:50-21:10 UTC) — Refactor "code optimal" sur demande utilisateur** : 4 commits structurants après audit DRY :
+    - `c9b5f8a` **db-helpers** : centralise `safeJsonParse` (3 modules), `slugify` (4 variantes inline), `numOrNull` / `strOrNull` / `boolToInt`. Refactor 6 handlers + `requireJwt` dans `lib/auth.ts` qui remplace le pattern boilerplate JWT **28 fois** dans 13 handlers. +34 tests.
+    - `cfe7c0b` **brevo-templates** : `renderEmailLayout` + `renderEmailButton` + `renderEmailParagraph`. Refactor password-reset + invitations. +17 tests.
+    - `e4f89e4` **format-date** : `formatTimestamp` + `formatDate` + `formatNumber`. Refactor 3 modals admin. +12 tests.
+  - **Bilan global session 70** : 7165 → 773 lignes api.ts (-89,2%), +149 tests Workers + frontend (554 totaux), 14 modules lib partagés post-refactor (vs 8 au début), +0 vulnérabilité, smoke prod vert sur tous les commits. Cf. `docs/notes-référence/palantiri-mirdain/notes-2026-05-17-narvi-split-worker-cloture-j1.md`.
 
 ## Commandes utiles
 

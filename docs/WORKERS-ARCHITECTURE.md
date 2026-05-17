@@ -22,19 +22,21 @@ décomposition vague par vague.
   `runValidationDeadlineCron` (validation deadline emails, table
   `validation_email_sent` pour idempotence).
 
-### Helpers partagés (`workers/lib/`, 821 lignes total)
+### Helpers partagés (`workers/lib/`, ~1000 lignes total après refactor session 70 bloc 3)
 
 | Module | Lignes | Rôle |
 |---|---:|---|
 | `env.ts` | 35 | Interface `Env` (D1, R2, secrets Brevo, list IDs newsletter) |
 | `json.ts` | 17 | Helper `json(data, headers, status?, extras?)` |
 | `cors.ts` | 24 | `getCorsHeaders` + whitelist d'origines |
-| `auth.ts` | 83 | `extractToken`, `setTokenCookie`, `clearTokenCookie`, `parseStaffPerms`, `requireStaffPermission` |
+| `auth.ts` | 115 | `extractToken`, `setTokenCookie`, `clearTokenCookie`, `parseStaffPerms`, `requireStaffPermission`, **`requireJwt`** (session 70 bloc 3, élimine 28 occurrences boilerplate dans 13 handlers) |
 | `crypto.ts` | 50 | `hashPasswordServer`, `verifyPasswordServer` (PBKDF2 100k) |
 | `audit.ts` | 90 | `logAudit`, `ensureAuditLogTable` (table `audit_log`, migration 0035) |
 | `brevo.ts` | 149 | `sendBrevoTransactional`, `logBrevoSent`, `alreadyBrevoSent` (idempotence via `email_sent_log`, migration 0039) |
+| `brevo-templates.ts` | 80 | **(session 70 bloc 3)** `renderEmailLayout`, `renderEmailButton`, `renderEmailParagraph`. Adopté par password-reset + invitations. Préparation rebrand ACF nov. 2026. |
 | `sanitize.ts` | 32 | `sanitize` (échappement HTML), `sanitizeRichHtml` (strip script/style/iframe/on*) |
 | `uploads.ts` | 65 | `MAGIC_BYTES`, `IMAGE_MAGIC_BYTES`, `validateMagicBytes`, `validateMediaMagicBytes`, `deriveMimeType` |
+| `db-helpers.ts` | 90 | **(session 70 bloc 3)** `safeJsonParse`, `numOrNull`, `strOrNull`, `boolToInt`, `slugify`. Élimine duplications inline dans positions, formations, jobs, documents, organization-vessels. |
 | `users.ts` | 80 | `DbUser`, `toFrontendUser` (mapper réutilisé entre `auth.ts`, `organizations.ts`, `invitations.ts`) |
 | `constants.ts` | 6 | `SITE_URL` (= "https://www.gaspe.fr") |
 
@@ -138,13 +140,18 @@ modules exportent leurs interfaces et helpers :
 | Cible | Fichier | Tests |
 |---|---|---:|
 | `handlers/validation-helpers.ts` | `handlers/__tests__/validation-helpers.test.ts` | ~325 |
+| `handlers/organizations.ts` (handleListOrganizations) | `handlers/__tests__/organizations.test.ts` (PoC mock D1) | 6 |
 | `lib/sanitize.ts` | `lib/__tests__/sanitize.test.ts` | 20 |
 | `lib/uploads.ts` | `lib/__tests__/uploads.test.ts` | 24 |
 | `lib/cors.ts` | `lib/__tests__/cors.test.ts` | 10 |
 | `lib/auth.ts` | `lib/__tests__/auth.test.ts` | 16 |
 | `lib/json.ts` | `lib/__tests__/json.test.ts` | 8 |
+| `lib/db-helpers.ts` | `lib/__tests__/db-helpers.test.ts` | 34 |
+| `lib/brevo-templates.ts` | `lib/__tests__/brevo-templates.test.ts` | 17 |
 
-**Tests Worker totaux : ~403** (sur 486 tests projet, le reste = tests frontend).
+**Tests Worker totaux : ~460** (sur 554 tests projet, le reste = tests frontend + `src/lib/__tests__/format-date.test.ts` + `constants.test.ts` anti-drift).
+
+**PoC mock D1** : `workers/lib/__tests__/mock-d1.ts` fournit un harness `createMockD1()` queue-based (enqueueAll / enqueueFirst / enqueueRun) pour tester les handlers sans dépendre uniquement de tsc + smoke test prod. Premier test handler : `handleListOrganizations` (6 cas couvrant liste vide, mapping DB→frontend, filtres archived, CORS headers, edge case social3228=0).
 
 **Tests handlers métier** (mock D1 + R2 + JWT) : non installés. Le mock
 D1 nécessite un harness vitest dédié (idées : `unstable_dev` de wrangler,
