@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, isApiMode } from "@/lib/api-client";
+import { formatTimestamp } from "@/lib/format-date";
 import { CmsRevisionDiff, type CmsRevisionDetail } from "./CmsRevisionDiff";
 import { useModalA11y } from "@/lib/useModalA11y";
 
@@ -36,20 +37,7 @@ interface Props {
   onRestored?: () => void;
 }
 
-function formatTs(iso: string): string {
-  try {
-    const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
-    return d.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
+const formatTs = formatTimestamp;
 
 /** Convertit "YYYY-MM-DD" en timestamp inclusif au début/fin de journée. */
 function boundDate(dateStr: string, endOfDay: boolean): number | null {

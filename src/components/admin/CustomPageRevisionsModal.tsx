@@ -20,6 +20,7 @@ import {
   type CustomPageRevisionDetail,
 } from "@/lib/cms-store";
 import { isApiMode } from "@/lib/api-client";
+import { formatTimestamp } from "@/lib/format-date";
 import { useModalA11y } from "@/lib/useModalA11y";
 
 interface Props {
@@ -30,20 +31,7 @@ interface Props {
   onRestored?: () => void;
 }
 
-function formatTs(iso: string): string {
-  try {
-    const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
-    return d.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
+const formatTs = formatTimestamp;
 
 export function CustomPageRevisionsModal({ slug, open, onClose, onRestored }: Props) {
   const [revisions, setRevisions] = useState<CustomPageRevisionSummary[]>([]);

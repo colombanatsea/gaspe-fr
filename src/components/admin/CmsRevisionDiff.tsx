@@ -23,6 +23,7 @@ import {
   type ChangeKind,
   type CmsRevisionDetailSection,
 } from "@/lib/cms-revision-diff";
+import { formatTimestamp } from "@/lib/format-date";
 
 export type { CmsRevisionDetailSection };
 
@@ -43,20 +44,7 @@ interface Props {
   onClose: () => void;
 }
 
-function formatTs(iso: string): string {
-  try {
-    const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
-    return d.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
+const formatTs = formatTimestamp;
 
 function kindBadge(kind: ChangeKind): { label: string; classes: string } {
   switch (kind) {
