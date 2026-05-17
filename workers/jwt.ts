@@ -3,7 +3,7 @@
  * Uses Web Crypto API (HMAC-SHA256) – no external dependencies
  */
 
-interface JwtPayload {
+export interface JwtPayload {
   sub: string;       // user ID
   email: string;
   role: string;

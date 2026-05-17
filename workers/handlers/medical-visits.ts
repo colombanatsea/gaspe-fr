@@ -8,9 +8,8 @@
  * Extrait de `workers/api.ts` en J1 vague 5.b.
  */
 
-import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken } from "../lib/auth";
+import { requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { logAudit } from "../lib/audit";
 import type { Env } from "../lib/env";
@@ -41,10 +40,9 @@ function toFrontendVisit(row: DbMedicalVisit) {
 }
 
 export async function handleMedicalList(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const { results } = await env.DB.prepare(
     "SELECT * FROM medical_visits WHERE user_id = ? ORDER BY date DESC",
@@ -54,10 +52,9 @@ export async function handleMedicalList(request: Request, env: Env, corsHeaders:
 }
 
 export async function handleMedicalCreate(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const body = (await request.json()) as Record<string, unknown>;
   const sailorName = body.sailorName as string;
@@ -92,10 +89,9 @@ export async function handleMedicalCreate(request: Request, env: Env, corsHeader
 }
 
 export async function handleMedicalUpdate(request: Request, env: Env, corsHeaders: Record<string, string>, visitId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const existing = await env.DB.prepare("SELECT user_id FROM medical_visits WHERE id = ?").bind(visitId).first<{ user_id: string }>();
   if (!existing) return json({ error: "Visite introuvable" }, corsHeaders, 404);
@@ -130,10 +126,9 @@ export async function handleMedicalUpdate(request: Request, env: Env, corsHeader
 }
 
 export async function handleMedicalDelete(request: Request, env: Env, corsHeaders: Record<string, string>, visitId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const before = await env.DB.prepare("SELECT * FROM medical_visits WHERE id = ?").bind(visitId).first<DbMedicalVisit>();
   if (!before) return json({ error: "Visite introuvable" }, corsHeaders, 404);

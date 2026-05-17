@@ -20,7 +20,7 @@
 
 import { signJwt, verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken, requireStaffPermission } from "../lib/auth";
+import { extractToken, requireStaffPermission, requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { sendBrevoTransactional, logBrevoSent, alreadyBrevoSent } from "../lib/brevo";
 import { SITE_URL } from "../lib/constants";
@@ -107,10 +107,9 @@ async function userEligibleForCategory(
 export async function handleListNewsletterCategoriesPublic(
   request: Request, env: Env, corsHeaders: Record<string, string>,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   let rows: DbNewsletterCategory[] = [];
   try {
@@ -444,10 +443,9 @@ const NEWSLETTER_COLUMNS = [
 ] as const;
 
 export async function handleGetPreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   // Refonte session 56b : lit la table dynamique. Renvoie un map
   // { category_key: subscribed } limité aux catégories éligibles au user.
@@ -486,10 +484,9 @@ export async function handleGetPreferences(request: Request, env: Env, corsHeade
 }
 
 export async function handleUpdatePreferences(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const body = await request.json() as Record<string, boolean>;
 
@@ -689,10 +686,9 @@ ${societe ? `<p><strong>Société :</strong> ${sanitize(societe)}</p>` : ""}
  * dynamiquement qui est abonné à quelle catégorie, avec filtrage et export CSV.
  */
 export async function handleNewsletterSubscribers(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
   const admin = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first<{ role: string }>();
   if (!admin || admin.role !== "admin") return json({ error: "Accès refusé" }, corsHeaders, 403);
 
@@ -757,10 +753,9 @@ export async function handleNewsletter(request: Request, env: Env, corsHeaders: 
 
 export async function handleNewsletterSend(request: Request, env: Env, corsHeaders: Record<string, string>) {
   // Admin only
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const admin = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(payload.sub).first<{ role: string }>();
   if (!admin || admin.role !== "admin") {

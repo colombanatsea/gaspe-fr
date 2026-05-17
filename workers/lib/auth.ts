@@ -5,7 +5,7 @@
  * Extrait de `workers/api.ts` (session J1, refactor split monolithique).
  */
 
-import { verifyJwt } from "../jwt";
+import { verifyJwt, type JwtPayload } from "../jwt";
 import { json } from "./json";
 import type { Env } from "./env";
 
@@ -37,6 +37,37 @@ export function clearTokenCookie(corsHeaders: Record<string, string>): Record<st
     ...corsHeaders,
     "Set-Cookie": "gaspe_token=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
   };
+}
+
+/**
+ * Vérifie l'authentification JWT. Retourne `{ payload }` si OK, sinon
+ * `{ error: Response }` avec 401 (Non authentifié) ou 401 (Token invalide).
+ *
+ * Remplace le pattern repete 41 fois dans les handlers :
+ * ```ts
+ * const token = extractToken(request);
+ * if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+ * const payload = await verifyJwt(token, env.JWT_SECRET);
+ * if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+ * ```
+ *
+ * Usage :
+ * ```ts
+ * const auth = await requireJwt(request, env, corsHeaders);
+ * if ("error" in auth) return auth.error;
+ * const { payload } = auth;
+ * ```
+ */
+export async function requireJwt(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+): Promise<{ payload: JwtPayload } | { error: Response }> {
+  const token = extractToken(request);
+  if (!token) return { error: json({ error: "Non authentifié" }, corsHeaders, 401) };
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload) return { error: json({ error: "Token invalide" }, corsHeaders, 401) };
+  return { payload };
 }
 
 /** Parse la chaîne JSON des permissions staff (tolère null / format invalide). */

@@ -17,9 +17,8 @@
  * Extrait de  en J1 vague 6.e.
  */
 
-import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken, requireStaffPermission } from "../lib/auth";
+import { requireStaffPermission, requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { sendBrevoTransactional } from "../lib/brevo";
 import { SITE_URL } from "../lib/constants";
@@ -477,10 +476,9 @@ export async function handleCampaignDashboard(
 export async function handleListValidations(
   request: Request, env: Env, corsHeaders: Record<string, string>, slug: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifie" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   await ensureValidationTables(env);
   const org = await env.DB.prepare("SELECT id FROM organizations WHERE slug = ?")
@@ -506,10 +504,9 @@ export async function handleListValidations(
 export async function handleSubmitValidations(
   request: Request, env: Env, corsHeaders: Record<string, string>, slug: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifie" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   await ensureValidationTables(env);
   const org = await env.DB.prepare("SELECT * FROM organizations WHERE slug = ?")

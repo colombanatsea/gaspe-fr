@@ -14,6 +14,7 @@ import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
 import { extractToken, requireStaffPermission } from "../lib/auth";
 import { sanitize, sanitizeRichHtml } from "../lib/sanitize";
+import { safeJsonParse, slugify } from "../lib/db-helpers";
 import type { Env } from "../lib/env";
 
 export interface DbPosition {
@@ -27,11 +28,6 @@ export interface DbPosition {
   is_archived: number;
   created_by: string | null;
   created_at: string; updated_at: string;
-}
-
-function safeJsonParse<T>(s: string | null | undefined, fallback: T): T {
-  if (!s) return fallback;
-  try { return JSON.parse(s) as T; } catch { return fallback; }
 }
 
 export function toFrontendPosition(row: DbPosition) {
@@ -129,10 +125,7 @@ export async function handleCreatePosition(
   const title = sanitize(String(body.title ?? ""));
   if (!title) return json({ error: "title requis" }, corsHeaders, 400);
 
-  const rawSlug = String(body.slug ?? "").trim()
-    || title.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-            .slice(0, 64);
+  const rawSlug = String(body.slug ?? "").trim() || slugify(title, 64);
   const slug = sanitize(rawSlug);
   const id = String(body.id ?? `pos-${slug}-${Date.now().toString(36)}`);
 

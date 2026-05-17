@@ -8,9 +8,9 @@
  * Extrait de `workers/api.ts` en J1 vague 6.b.
  */
 
-import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken } from "../lib/auth";
+import { requireJwt } from "../lib/auth";
+import { numOrNull, strOrNull } from "../lib/db-helpers";
 import type { Env } from "../lib/env";
 
 export interface DbVessel {
@@ -158,10 +158,9 @@ export async function handleListAllFleets(
   env: Env,
   corsHeaders: Record<string, string>,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
   if (payload.role !== "admin" && payload.role !== "adherent") {
     return json({ error: "Accès refusé" }, corsHeaders, 403);
   }
@@ -194,10 +193,9 @@ export async function handleUpsertFleet(
   corsHeaders: Record<string, string>,
   slug: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   await ensureVesselsTable(env);
   const org = await env.DB.prepare("SELECT id FROM organizations WHERE slug = ?")
@@ -236,17 +234,6 @@ export async function handleUpsertFleet(
     const id = typeof v.id === "string" && v.id.length > 0
       ? v.id
       : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const numOrNull = (val: unknown): number | null => {
-      if (val === null || val === undefined || val === "") return null;
-      const n = typeof val === "number" ? val : Number(String(val).replace(",", "."));
-      return Number.isFinite(n) ? n : null;
-    };
-    const strOrNull = (val: unknown): string | null => {
-      if (val === null || val === undefined) return null;
-      const s = String(val).trim();
-      return s ? s : null;
-    };
 
     // Sérialisation JSON propre de crewByBrevet (ne stocke que les paires > 0)
     let crewByBrevetJson: string | null = null;

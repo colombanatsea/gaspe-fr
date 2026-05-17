@@ -12,6 +12,7 @@ import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
 import { extractToken, requireStaffPermission } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
+import { slugify } from "../lib/db-helpers";
 import type { Env } from "../lib/env";
 
 interface DbDocument {
@@ -129,9 +130,7 @@ export async function handleDocumentCreate(
 
   if (!title) return json({ error: "Titre requis" }, corsHeaders, 400);
 
-  const id =
-    (body.id as string) ||
-    `doc-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40)}-${Date.now().toString(36)}`;
+  const id = (body.id as string) || `doc-${slugify(title, 40)}-${Date.now().toString(36)}`;
 
   const description = sanitize(((body.description as string) ?? "").trim());
   const fileUrl = ((body.fileUrl as string) ?? "#").trim() || "#";

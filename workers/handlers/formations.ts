@@ -10,8 +10,9 @@
 
 import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken, requireStaffPermission } from "../lib/auth";
+import { extractToken, requireStaffPermission, requireJwt } from "../lib/auth";
 import { sanitize, sanitizeRichHtml } from "../lib/sanitize";
+import { safeJsonParse, slugify } from "../lib/db-helpers";
 import { logAudit } from "../lib/audit";
 import type { Env } from "../lib/env";
 
@@ -34,11 +35,6 @@ interface DbFormation {
   is_published: number; is_archived: number;
   created_by: string | null;
   created_at: string; updated_at: string;
-}
-
-function safeJsonParse<T>(s: string | null | undefined, fallback: T): T {
-  if (!s) return fallback;
-  try { return JSON.parse(s) as T; } catch { return fallback; }
 }
 
 function toFrontendFormation(row: DbFormation) {
@@ -167,10 +163,7 @@ export async function handleCreateFormation(
   if (!title) return json({ error: "title requis" }, corsHeaders, 400);
 
   // Slug optionnel : généré depuis title si non fourni.
-  const rawSlug = String(body.slug ?? "").trim()
-    || title.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-            .slice(0, 64);
+  const rawSlug = String(body.slug ?? "").trim() || slugify(title, 64);
   const slug = sanitize(rawSlug);
   const id = String(body.id ?? `form-${slug}-${Date.now().toString(36)}`);
 
@@ -327,10 +320,9 @@ export async function handleDeleteFormation(
 export async function handleFormationRegister(
   request: Request, env: Env, corsHeaders: Record<string, string>, id: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
   await ensureFormationsTable(env);
 
   const row = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")
@@ -365,10 +357,9 @@ export async function handleFormationRegister(
 export async function handleFormationUnregister(
   request: Request, env: Env, corsHeaders: Record<string, string>, id: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
   await ensureFormationsTable(env);
 
   const row = await env.DB.prepare("SELECT * FROM formations WHERE id = ?")

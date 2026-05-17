@@ -12,9 +12,8 @@
  * Extrait de `workers/api.ts` en J1 vague 6.a.
  */
 
-import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken } from "../lib/auth";
+import { requireJwt } from "../lib/auth";
 import { logAudit } from "../lib/audit";
 import { type DbUser, toFrontendUser } from "../lib/users";
 import type { Env } from "../lib/env";
@@ -75,10 +74,9 @@ export async function handleListOrganizations(
 export async function handleGetOrganization(
   request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const org = await env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(orgId).first<DbOrganization>();
   if (!org) return json({ error: "Organisation introuvable" }, corsHeaders, 404);
@@ -96,10 +94,9 @@ export async function handleGetOrganization(
 export async function handleUpdateOrganization(
   request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   // Only admin or primary contact of this org can update
   if (payload.role !== "admin") {

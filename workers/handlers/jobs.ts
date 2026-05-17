@@ -9,8 +9,9 @@
 
 import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken } from "../lib/auth";
+import { extractToken, requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
+import { slugify } from "../lib/db-helpers";
 import { logAudit } from "../lib/audit";
 import type { Env } from "../lib/env";
 
@@ -86,10 +87,9 @@ export async function handleJobGet(env: Env, corsHeaders: Record<string, string>
 }
 
 export async function handleJobCreate(request: Request, env: Env, corsHeaders: Record<string, string>) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   if (payload.role !== "admin" && payload.role !== "adherent") {
     return json({ error: "Accès refusé" }, corsHeaders, 403);
@@ -104,7 +104,7 @@ export async function handleJobCreate(request: Request, env: Env, corsHeaders: R
   }
 
   const id = (body.id as string) || `${payload.role === "admin" ? "admin" : "adherent"}-${Date.now()}`;
-  const slug = (body.slug as string) || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const slug = (body.slug as string) || slugify(title);
 
   await env.DB.prepare(`
     INSERT INTO jobs (id, slug, title, company, company_slug, location, zone, contract_type, category,
@@ -114,7 +114,7 @@ export async function handleJobCreate(request: Request, env: Env, corsHeaders: R
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id, slug, sanitize(title.trim()), sanitize(company.trim()),
-    (body.companySlug as string) || company.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    (body.companySlug as string) || slugify(company),
     sanitize((body.location as string) || ""),
     (body.zone as string) || "normandie",
     (body.contractType as string) || "CDI",
@@ -145,10 +145,9 @@ export async function handleJobCreate(request: Request, env: Env, corsHeaders: R
 }
 
 export async function handleJobUpdate(request: Request, env: Env, corsHeaders: Record<string, string>, jobId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const existing = await env.DB.prepare("SELECT created_by FROM jobs WHERE id = ?").bind(jobId).first<{ created_by: string | null }>();
   if (!existing) return json({ error: "Offre introuvable" }, corsHeaders, 404);
@@ -191,10 +190,9 @@ export async function handleJobUpdate(request: Request, env: Env, corsHeaders: R
 }
 
 export async function handleJobDelete(request: Request, env: Env, corsHeaders: Record<string, string>, jobId: string) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const before = await env.DB.prepare("SELECT * FROM jobs WHERE id = ?").bind(jobId).first<DbJob>();
   if (!before) return json({ error: "Offre introuvable" }, corsHeaders, 404);

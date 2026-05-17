@@ -14,7 +14,7 @@
 
 import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken, requireStaffPermission } from "../lib/auth";
+import { extractToken, requireStaffPermission, requireJwt } from "../lib/auth";
 import type { Env } from "../lib/env";
 
 interface DbVote {
@@ -419,10 +419,9 @@ export async function handleDeleteVote(
 export async function handleGetMySuppleant(
   request: Request, env: Env, corsHeaders: Record<string, string>,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const me = await env.DB.prepare(
     "SELECT id, organization_id, is_primary, suppleant_user_id FROM users WHERE id = ?",
@@ -456,10 +455,9 @@ export async function handleGetMySuppleant(
 export async function handleSetMySuppleant(
   request: Request, env: Env, corsHeaders: Record<string, string>,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const me = await env.DB.prepare(
     "SELECT organization_id, is_primary FROM users WHERE id = ?",

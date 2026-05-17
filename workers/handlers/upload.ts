@@ -7,9 +7,8 @@
  * Extrait de `workers/api.ts` en J1 vague 7.b.
  */
 
-import { verifyJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken } from "../lib/auth";
+import { requireJwt } from "../lib/auth";
 import { deriveMimeType, validateMagicBytes } from "../lib/uploads";
 import type { Env } from "../lib/env";
 
@@ -17,10 +16,9 @@ export async function handleUpload(
   request: Request, env: Env, corsHeaders: Record<string, string>,
 ) {
   // Require authentication
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const formData = await request.formData();
   const file = formData.get("file") as File;

@@ -10,9 +10,9 @@
  * Extrait de `workers/api.ts` en J1 vague 6.c.
  */
 
-import { signJwt, verifyJwt } from "../jwt";
+import { signJwt } from "../jwt";
 import { json } from "../lib/json";
-import { extractToken, setTokenCookie } from "../lib/auth";
+import { setTokenCookie, requireJwt } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { hashPasswordServer } from "../lib/crypto";
 import { sendBrevoTransactional } from "../lib/brevo";
@@ -23,10 +23,9 @@ import type { Env } from "../lib/env";
 export async function handleInviteContact(
   request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   // Only primary contact or admin can invite
   if (payload.role !== "admin") {
@@ -99,10 +98,9 @@ export async function handleInviteContact(
 export async function handleListInvitations(
   request: Request, env: Env, corsHeaders: Record<string, string>, orgId: string,
 ) {
-  const token = extractToken(request);
-  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
-  const payload = await verifyJwt(token, env.JWT_SECRET);
-  if (!payload) return json({ error: "Token invalide" }, corsHeaders, 401);
+  const auth = await requireJwt(request, env, corsHeaders);
+  if ("error" in auth) return auth.error;
+  const { payload } = auth;
 
   const { results } = await env.DB.prepare(
     "SELECT * FROM invitations WHERE organization_id = ? ORDER BY created_at DESC",
