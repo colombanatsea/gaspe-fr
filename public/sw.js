@@ -1,5 +1,8 @@
 // GASPE Service Worker — Offline support + cache strategy
-const CACHE_NAME = "gaspe-v1";
+// Bump du nom de cache pour invalider l'ancien cache au prochain load
+// (utile quand Chrome conserve un bundle stale qui pointe vers une URL Worker
+// obsolète ou un chunk qui plante).
+const CACHE_NAME = "gaspe-v2";
 const OFFLINE_URL = "/offline.html";
 
 // Pre-cache essential assets
