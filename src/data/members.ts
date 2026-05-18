@@ -284,7 +284,7 @@ export const members: Member[] = [
     category: "titulaire",
     college: "A",
     social3228: true,
-    description: "Les Services des Transports Maritimes (STM) assurent le transport maritime de passagers à Mayotte, notamment la liaison entre Petite-Terre et Grande-Terre.",
+    description: "Les Services des Transports Maritimes (STM) assurent le transport maritime de passagers à Mayotte, principalement la liaison entre Petite-Terre et Grande-Terre.",
     websiteUrl: "https://www.mayotte.fr/le-conseil-departemental/institution/services-administratifs/dtm",
     employeeCount: 321,
     shipCount: 10,

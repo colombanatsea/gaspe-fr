@@ -607,9 +607,9 @@ export default function AdminAdherentsPage() {
           className="rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3 py-2 text-sm text-foreground focus:border-[var(--gaspe-teal-400)] focus:outline-none focus:ring-1 focus:ring-[var(--gaspe-teal-400)]"
         >
           <option value="all">Tous collèges</option>
-          <option value="A">A — Publics</option>
-          <option value="B">B — Privés</option>
-          <option value="C">C — Experts</option>
+          <option value="A">A · Publics</option>
+          <option value="B">B · Privés</option>
+          <option value="C">C · Experts</option>
         </select>
 
         <select

@@ -94,7 +94,7 @@ function scoreLabel(score: number) {
   if (score >= 75) return "Excellent match";
   if (score >= 50) return "Bon match";
   if (score >= 25) return "Match partiel";
-  return "À explorer";
+  return "À consulter";
 }
 
 interface Props {

@@ -82,7 +82,7 @@ export function CustomPageRevisionsModal({ slug, open, onClose, onRestored }: Pr
 
   const handleRestore = useCallback(
     async (revisionId: number) => {
-      if (!confirm("Restaurer cette révision ? L'état courant sera également snapshotté pour permettre de revenir en arrière.")) return;
+      if (!confirm("Restaurer cette révision ? L'état courant sera également snapshotté afin que vous puissiez revenir en arrière.")) return;
       setRestoring(revisionId);
       try {
         const ok = await apiRestoreCustomPageRevision(slug, revisionId);
