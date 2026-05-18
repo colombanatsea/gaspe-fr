@@ -90,6 +90,11 @@ comparaison 2 révisions, restore.
   (barman, serveur, aide polyvalent) dans la grille de classification
   CCN 3228. Avenant à négocier en commission paritaire **avant le
   31/12/2026** (cf. accord NAO signé 31/03/2026).
+- **« Failed to fetch » création offre** — Bug remonté session 70+
+  non reproduit en sandbox. Worker UP, CORS OK, CSP OK. Patches
+  défensifs livrés (`apiFetch` message FR explicite, SW cache bumpé
+  `v1→v2`). À reproduire en DevTools navigateur Colomban pour cerner
+  la cause exacte (cache stale / HTTP/2 mort / pare-feu).
 
 ### 🟢 Backlog
 
@@ -102,6 +107,9 @@ comparaison 2 révisions, restore.
 - **Phase 4 hybride CMS** (optionnel) — sections modulaires pour pages
   custom (au lieu d'un seul HTML).
 - **SITE_VERSION anti-drift** : maintenant garanti par un test dédié, mais le réflexe de bump simultané `package.json` + `src/lib/constants.ts` reste nécessaire à chaque release.
+- **Refactor pages > 1000 lignes** (audit session 71, 19/05) — `/admin/adherents` (1375), `/decouvrir-espace-adherent` (1036), `/boite-a-outils` (1025), `/admin/pages` (910), `/espace-adherent/offres` (887). Extraction modals + custom hooks, gain ~15 KB hydration par page.
+- **CMS Zod schemas + `usePageId()`** (audit session 71, 19/05) — valider les sections JSON (`list`, `config`) côté admin avant save pour éviter crash `useCmsContent` ; hook auto-dérivé de `usePathname()` pour éviter typos sur `pageId` manuel.
+- ~~**CI `npm ci → npm install`**~~ **LIVRÉ 2026-05-19 (commit `de5471d`)** : workflow `ci.yml` switché en `npm install --legacy-peer-deps --no-audit --no-fund` après que `npm install docx` ait introduit des deps optional `@emnapi/*` inBundle non trackables sur Windows. CI vert restauré.
 
 ### Items du feedback post-launch (sessions 54+ → 58)
 
