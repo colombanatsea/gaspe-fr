@@ -3,8 +3,17 @@
 Document de cadrage pour rendre le CMS partiellement dynamique sans
 sacrifier la stabilité des pages « système ».
 
-Date : 2026-05-11 / mise à jour 2026-05-12. Statut : **Phase 1 + Phase 2
-+ Phase 3 livrées**.
+Date initiale : 2026-05-11. Dernière mise à jour : **2026-05-18**.
+
+**Statut : Phase 1 + 2 + 3 + 3.b livrées.** Phase 4 reste optionnelle,
+arbitrage produit côté Colomban requis avant lancement.
+
+Récap rapide :
+- **Phase 1** ✅ 2026-05-11 — Sections custom ajoutables sur pages système
+- **Phase 2** ✅ 2026-05-12 — Réordonnancement sections custom (↑/↓)
+- **Phase 3** ✅ 2026-05-12 — Pages custom complètes (`/p?slug=X`)
+- **Phase 3.b** ✅ 2026-05-17 — Révisions pages custom (snapshot + restore)
+- **Phase 4** ⏳ optionnel — Sections modulaires sur pages custom
 
 ## Contexte
 
@@ -142,14 +151,131 @@ Next.js — pattern déjà utilisé pour `/admin/positions/edit?id=X` et
 - Côté frontend : detection live de collision dans la modale + slug
   auto depuis le label, non modifiable après création.
 
-**Hors scope (futures évolutions possibles)** :
-- Le content custom est rendu via `dangerouslySetInnerHTML` après
-  `sanitizeHtml`. Pas de système de "sections" type tuiles modulaires
-  comme les pages système (qui ont leurs sections définies en code).
-  Si besoin, ce serait une Phase 4.
+**Hors scope (Phase 3.b + Phase 4 ci-dessous traitent une partie)** :
 - Pas de slug history / redirections automatiques si on supprime
   une page custom (mais soft-delete préserve la donnée → restauration
   manuelle possible).
+
+### Phase 3.b — Révisions pages custom ✅ LIVRÉ 2026-05-17
+
+**Scope livré** : versioning automatique des pages custom, parallèle
+au système `cms_revisions` des pages système (migration 0011). Snapshot
+capturé AVANT chaque `PUT` et avant chaque `DELETE`, permet rollback
+y compris "rollback du rollback".
+
+**Schéma D1** (migration `0045_cms_custom_page_revisions.sql`) :
+
+Schéma simplifié vs `cms_revisions` (pages système) car une page custom
+= 1 bloc HTML unique (vs array de sections pour les pages système) :
+
+```sql
+CREATE TABLE IF NOT EXISTS cms_custom_page_revisions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  custom_page_slug TEXT NOT NULL,
+  snapshot_label TEXT NOT NULL,
+  snapshot_description TEXT,
+  snapshot_content TEXT,
+  snapshot_published INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT,
+  label TEXT,           -- motif libre fourni par l'admin (max 200 chars)
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_custom_page_rev_slug ON cms_custom_page_revisions(custom_page_slug);
+CREATE INDEX idx_custom_page_rev_created ON cms_custom_page_revisions(created_at DESC);
+```
+
+**Rétention** : 30 snapshots par page (auto-purge dans le helper
+`snapshotCustomPage` côté Worker).
+
+**Endpoints Worker** (3 nouveaux, déclarés AVANT la règle générique
+`/api/cms/custom-pages/:slug` pour priorité de matching) :
+
+- `GET /api/cms/custom-pages/:slug/revisions` — liste les 30 dernières
+  (JOIN users pour email auteur). Permission `manage_cms`.
+- `GET /api/cms/custom-pages/:slug/revisions/:id` — détail snapshot
+  complet pour preview avant restore.
+- `POST /api/cms/custom-pages/:slug/revisions/:id/restore` — restaure
+  une révision après avoir snapshotté l'état courant (anti-perte).
+
+**Frontend** :
+- `apiListCustomPageRevisions`, `apiGetCustomPageRevision`,
+  `apiRestoreCustomPageRevision` dans `src/lib/cms-store.ts`.
+- `apiUpdateCustomPage` accepte un champ optionnel `revisionLabel`
+  (motif libre 200 chars) propagé au snapshot pré-update.
+- `<CustomPageRevisionsModal>` (composant) : modal a11y 2 colonnes
+  (liste à gauche + preview à droite + bouton Restaurer avec
+  confirmation). Disponible uniquement en mode API.
+- `/admin/pages-custom/edit?slug=X` :
+  - bouton "Historique" dans le header
+  - champ "Motif de la modification" sous le contenu
+  - reload from API après restore
+
+**Implémentation backend** :
+- `workers/handlers/cms-custom-page-revisions.ts` (~278 lignes) :
+  `snapshotCustomPage` helper exporté + 3 handlers.
+- `workers/handlers/cms-custom-pages.ts` patché :
+  - `handleCmsUpdateCustomPage` snapshotte avant update (best-effort,
+    n'échoue pas l'update si snapshot KO).
+  - `handleCmsDeleteCustomPage` snapshotte avec label "Avant archivage
+    (DELETE)" avant `is_archived = 1`.
+
+### Phase 4 — Sections modulaires pour pages custom ⏳ OPTIONNELLE
+
+**Scope envisagé** : passer du modèle "1 page custom = 1 bloc HTML"
+au modèle "1 page custom = N sections typées" parallèle aux pages
+système (text / richtext / image / list / config). Avec drag/drop
+ou boutons ↑/↓ comme Phase 2.
+
+**Schéma D1 envisagé** (migration `0046_cms_custom_page_sections.sql`,
+non créée à ce jour) :
+
+```sql
+CREATE TABLE cms_custom_page_sections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  custom_page_slug TEXT NOT NULL,
+  section_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('text','richtext','image','list','config')),
+  content TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (custom_page_slug, section_id)
+);
+```
+
+**Endpoints Worker envisagés** (5, parallèles aux pages système) :
+- `GET /api/cms/custom-pages/:slug/sections`
+- `POST /api/cms/custom-pages/:slug/sections`
+- `PATCH /api/cms/custom-pages/:slug/sections/:sectionId`
+- `DELETE /api/cms/custom-pages/:slug/sections/:sectionId`
+- `PATCH /api/cms/custom-pages/:slug/sections/reorder`
+
+**Frontend envisagé** :
+- Refonte `/admin/pages-custom/edit?slug=X` en éditeur sectionné
+  (réutilise les composants de `/admin/pages` pour les sections
+  système : ListEditor, RichTextEditor, image picker).
+- Migration douce : les pages custom existantes (avec `content` HTML
+  unique) deviendraient une section unique de type `richtext` dans
+  la table sections, sans rupture.
+- `/p?slug=X` (route publique) : itère sur les sections triées par
+  `sort_order` et rend chaque type (richtext via `dangerouslySetInnerHTML
+  + sanitizeHtml`, image via `<Image>`, list via map composant).
+
+**Critères de déclenchement** (arbitrage Celebrimbor) :
+- ✅ Si pages éditoriales longues avec mise en page riche (galeries,
+  citations, encarts CTA mixtes, blocs métadonnées)
+- ✅ Si plusieurs pages custom auraient besoin de la même structure
+  réutilisable
+- ❌ Si les pages custom restent des contenus mono-bloc (FAQ, mentions,
+  manifestes) → richtext actuel suffit, Phase 4 = sur-engineering
+
+**Coût estimé** : 1-2 sessions (migration + handlers Worker + UI
+éditeur sectionné + tests + smoke prod). Risque faible (parallèle
+au modèle déjà testé des pages système).
+
+**Décision en attente** côté produit.
 
 ## Risques & mitigation
 

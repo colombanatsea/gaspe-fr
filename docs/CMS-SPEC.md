@@ -478,3 +478,95 @@ Logique pure isolée dans `src/lib/cms-revision-diff.ts` (réutilisée par `CmsR
 - `summarizeChanges(changes)` – compteurs `{ modified, added, removed, unchanged, totalDiffs }` (totalDiffs exclut unchanged)
 
 Couverture : `src/lib/__tests__/cms-revision-diff.test.ts` (18 tests) – voir CLAUDE.md §Tests pour le détail.
+
+
+---
+
+## 8. CMS Pages custom (Phase 3 hybride, session 60 — 2026-05-12)
+
+Voir aussi : `docs/CMS-HYBRID-PLAN.md` Phase 3.
+
+### 8.1 Modèle
+Une page custom est définie **uniquement en D1** (`cms_custom_pages`), sans pendant code. L'admin la crée librement depuis `/admin/pages-custom` avec un slug auto-généré depuis le label (regex `/^[a-z0-9][a-z0-9-]{0,79}$/`). Elle est rendue côté public via la route catch-all `/p?slug=X` (query-string pour compat `output: 'export'`).
+
+```sql
+CREATE TABLE IF NOT EXISTS cms_custom_pages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  description TEXT,
+  content TEXT NOT NULL DEFAULT '',
+  published INTEGER NOT NULL DEFAULT 0,
+  is_archived INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+### 8.2 Endpoints Worker (5)
+- `GET /api/cms/custom-pages` — public (published+non-archived), admin via `?all=1` voit tout.
+- `GET /api/cms/custom-pages/:slug` — public (published+non-archived seulement).
+- `POST /api/cms/custom-pages` — admin only.
+- `PUT /api/cms/custom-pages/:slug` — admin only, slug non modifiable.
+- `DELETE /api/cms/custom-pages/:slug` — admin only, soft-delete (`is_archived = 1`).
+
+### 8.3 UI
+- `/admin/pages-custom` : liste + modale Création (slug auto + détection collision live).
+- `/admin/pages-custom/edit?slug=X` : édition richtext, toggle publié/brouillon, archivage, lien vers preview, **bouton Historique** (depuis session 70), **champ Motif** (depuis session 70).
+- `/p?slug=X` : Suspense + `useSearchParams`, charge la page via API, rend via `dangerouslySetInnerHTML` + `sanitizeHtml`, BreadcrumbJsonLd.
+
+### 8.4 Limitations actuelles
+- Une page custom = **un seul bloc HTML richtext** (vs sections typées pour les pages système). Si besoin de sections modulaires, voir Phase 4 dans CMS-HYBRID-PLAN.md.
+- Pas de slug history. Soft-delete préserve la donnée.
+
+---
+
+## 9. Révisions pages custom (Phase 3.b, session 70 — 2026-05-17)
+
+Voir aussi : `docs/CMS-HYBRID-PLAN.md` Phase 3.b.
+
+### 9.1 Modèle
+Parallèle à `cms_revisions` (pages système, §7) mais schéma simplifié car une page custom = 1 bloc HTML unique. Migration `0045_cms_custom_page_revisions.sql` :
+
+```sql
+CREATE TABLE IF NOT EXISTS cms_custom_page_revisions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  custom_page_slug TEXT NOT NULL,
+  snapshot_label TEXT NOT NULL,
+  snapshot_description TEXT,
+  snapshot_content TEXT,
+  snapshot_published INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT,
+  label TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+### 9.2 Comportement
+- Snapshot automatique AVANT chaque `PUT` et avant chaque `DELETE` (best-effort, n'échoue pas l'action si snapshot KO).
+- Rétention 30 par page (auto-purge dans `snapshotCustomPage` côté Worker).
+- `PUT` accepte un champ optionnel `revisionLabel` (motif libre 200 chars) propagé au snapshot.
+- `DELETE` snapshotte avec label "Avant archivage (DELETE)".
+- `POST .../restore` re-snapshotte l'état courant avant restauration (anti-perte).
+
+### 9.3 Endpoints Worker (3)
+Déclarés AVANT `/api/cms/custom-pages/:slug` dans le routeur pour priorité de matching :
+- `GET /api/cms/custom-pages/:slug/revisions` — JOIN users pour email auteur. Permission `manage_cms`.
+- `GET /api/cms/custom-pages/:slug/revisions/:id` — détail snapshot complet pour preview.
+- `POST /api/cms/custom-pages/:slug/revisions/:id/restore` — restore avec rollback du rollback.
+
+### 9.4 UI
+- `<CustomPageRevisionsModal>` (`src/components/admin/CustomPageRevisionsModal.tsx`) : modal a11y 2 colonnes (liste à gauche / preview HTML à droite + bouton Restaurer). Disponible uniquement en mode API.
+- `/admin/pages-custom/edit?slug=X` :
+  - bouton **Historique** dans le header (visible API mode only)
+  - champ **Motif de la modification** sous le contenu (max 200 chars)
+  - reload from API après restore réussi
+
+### 9.5 Test plan manuel
+1. Éditer une page custom, sauvegarder avec motif "Maj 2027"
+2. Sauvegarder à nouveau avec un autre motif
+3. Ouvrir Historique → vérifier les 2 snapshots + emails auteurs
+4. Cliquer un snapshot → preview HTML rendu dans la colonne droite
+5. Cliquer "Restaurer" → confirmer → vérifier le contenu restauré + qu'un snapshot "Avant restauration de la révision #N" a été créé
+
