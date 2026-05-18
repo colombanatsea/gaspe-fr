@@ -620,6 +620,13 @@ export default function AdherentOffresPage() {
                     </td>
                     <td className="py-4">
                       <div className="flex gap-2 justify-end">
+                        <Link
+                          href={`/offres/export?id=${encodeURIComponent(offer.id)}`}
+                          className="rounded-lg border border-border-light px-3 py-1.5 text-xs font-heading font-semibold text-foreground hover:bg-surface transition-colors"
+                          title="Exporter l'offre en PDF ou DOCX"
+                        >
+                          Exporter
+                        </Link>
                         <button
                           onClick={() => handleEdit(offer)}
                           className="rounded-lg border border-border-light px-3 py-1.5 text-xs font-heading font-semibold text-foreground hover:bg-surface transition-colors"
@@ -670,6 +677,12 @@ export default function AdherentOffresPage() {
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   <Button variant="secondary" onClick={() => handleEdit(offer)}>Modifier</Button>
+                  <Link
+                    href={`/offres/export?id=${encodeURIComponent(offer.id)}`}
+                    className="rounded-lg border-2 border-border-light px-4 py-2 text-sm font-heading font-semibold text-foreground hover:bg-surface transition-colors"
+                  >
+                    Exporter
+                  </Link>
                   <button
                     onClick={() => handleToggleStatus(offer)}
                     className="rounded-lg border-2 border-primary px-4 py-2 text-sm font-heading font-semibold text-primary hover:bg-surface-teal transition-colors"
