@@ -1,9 +1,22 @@
 # GASPE Website – Development Guide
 
+> ⚠️ **Source de vérité courante : [`HANDOFF.md`](./HANDOFF.md)**
+>
+> Ce fichier accumule l'historique session par session (style versionné).
+> Pour l'état prod **à jour**, lire HANDOFF.md (refresh à chaque session).
+> Pour l'inventaire détaillé : [`docs/WORKERS-ARCHITECTURE.md`](./docs/WORKERS-ARCHITECTURE.md),
+> [`docs/CMS-SPEC.md`](./docs/CMS-SPEC.md), [`docs/CMS-HYBRID-PLAN.md`](./docs/CMS-HYBRID-PLAN.md),
+> [`SPECS.md`](./SPECS.md) (pointer concis).
+>
+> **Snapshot 2026-05-18 (session 70 close)** : version **2.76.0**, ~120 pages
+> statiques, 554 tests Vitest, 45 migrations D1, 24 handlers workers/ + 14
+> libs workers/lib/, J1 split monolithique clos (api.ts 7938 → 773 lignes),
+> 0 vuln high.
+
 ## Project
-Next.js 16.2.1 + React 19 + Tailwind CSS v4 + TypeScript
+Next.js 16.2.6 + React 19.2.4 + Tailwind CSS v4 + TypeScript 5 strict
 Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Maritimes de Passages d'Eau, en cours de rebrand vers ACF – Armateurs Côtiers Français – nov. 2026)
-**118 pages statiques** générées – deployed on Cloudflare Pages (static export)
+**~120 pages statiques** générées – deployed on Cloudflare Pages (static export)
 
 ## Working copy
 - **Repo**: github.com/colombanatsea/gaspe-fr.git
@@ -13,10 +26,10 @@ Site institutionnel du GASPE (Groupement des Armateurs de Services Publics Marit
 ```bash
 npm run dev          # dev server (port 3000, Playwright uses 3001)
 npm run build        # production build → out/ (static export)
-npm run test         # unit tests (Vitest, 254 tests, 24 files)
+npm run test         # unit tests (Vitest, 554 tests, 40 files au 2026-05-18)
 npm run test:watch   # unit tests in watch mode
-npm run lint         # ESLint (0 errors, 0 warnings)
-git push origin main # auto-deploy to CF Pages (~1 min)
+npm run lint         # ESLint (0 errors, 9 warnings pré-existants set-state-in-effect)
+git push origin main # auto-deploy to CF Pages (~1 min) + Deploy Worker (Cloudflare)
 ```
 
 ## Deployment (Cloudflare Pages) – ✅ EN SERVICE
