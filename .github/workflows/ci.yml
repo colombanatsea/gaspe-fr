@@ -18,7 +18,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        # npm ci échoue sur des deps optional inBundle cross-platform
+        # (@emnapi/* via @tailwindcss/oxide-wasm32-wasi) que Windows ne
+        # tracke pas dans le lock. npm install --no-audit --no-fund est
+        # tolérant et reste idempotent grâce au lock.
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: TypeScript check
         run: npx tsc --noEmit
