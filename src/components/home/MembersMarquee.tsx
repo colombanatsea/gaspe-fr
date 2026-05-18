@@ -44,11 +44,11 @@ export function MembersMarquee() {
                 className="flex shrink-0 items-center gap-3 rounded-xl border border-white/8 bg-white/5 px-5 py-3 hover:bg-white/10 transition-colors"
               >
                 {member.logoUrl ? (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-white/30 overflow-hidden p-0.5">
-                    <Image src={member.logoUrl} alt={member.name} width={32} height={32} className="w-full h-full object-contain" loading="lazy" unoptimized />
+                  <div className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-white border border-white/30 overflow-hidden p-1">
+                    <Image src={member.logoUrl} alt={member.name} width={56} height={36} className="max-w-full max-h-full object-contain" loading="lazy" unoptimized />
                   </div>
                 ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">
+                  <div className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-[var(--gaspe-teal-600)]/25 border border-[var(--gaspe-teal-400)]/20">
                     <span className="font-heading text-xs font-bold text-[var(--gaspe-teal-400)]">
                       {member.name.charAt(0)}
                     </span>

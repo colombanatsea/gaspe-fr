@@ -129,7 +129,7 @@ export function GroupementContent() {
                 className="group rounded-2xl bg-white border border-[var(--gaspe-neutral-200)] p-4 text-center hover:shadow-md hover:border-[var(--gaspe-teal-200)] transition-all"
               >
                 <div className="flex justify-center mb-3">
-                  <MemberLogo logoUrl={member.logoUrl} name={member.name} size="md" />
+                  <MemberLogo logoUrl={member.logoUrl} name={member.name} size="lg" />
                 </div>
                 <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {member.name}

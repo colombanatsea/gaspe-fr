@@ -12,8 +12,16 @@
 
 import { positions as seedPositions, type PositionItem } from "@/data/positions";
 import { apiFetch, isApiMode } from "./api-client";
+import { decodeHtmlEntities } from "./text-preview";
 
 const STORAGE_KEY = "gaspe_positions";
+
+// Titre et résumé sont affichés en texte brut (JSX) : on décode les entités
+// HTML une fois au sortir du store. L'apostrophe a souvent été sérialisée
+// `&#39;` par Tiptap, JSX la ré-échappe en `&amp;#39;` → affichage `&#39;`.
+function decodeStoredPosition<T extends { title?: string; excerpt?: string }>(p: T): T {
+  return { ...p, title: decodeHtmlEntities(p.title ?? ""), excerpt: decodeHtmlEntities(p.excerpt ?? "") };
+}
 
 export interface StoredPosition {
   id: string;
@@ -82,14 +90,14 @@ export async function listPositions(): Promise<StoredPosition[]> {
   if (isApiMode()) {
     try {
       const res = await apiFetch<{ positions?: StoredPosition[] }>("/api/positions");
-      return res.positions ?? [];
+      return (res.positions ?? []).map(decodeStoredPosition);
     } catch {
       return [];
     }
   }
   const local = readLocalPositions().filter((p) => p.published && !p.isArchived);
-  if (local.length > 0) return local;
-  return seedPositions.map(fromSeedItem);
+  if (local.length > 0) return local.map(decodeStoredPosition);
+  return seedPositions.map(fromSeedItem).map(decodeStoredPosition);
 }
 
 /**
@@ -100,12 +108,12 @@ export async function listAllPositions(): Promise<StoredPosition[]> {
   if (isApiMode()) {
     try {
       const res = await apiFetch<{ positions?: StoredPosition[] }>("/api/positions");
-      return res.positions ?? [];
+      return (res.positions ?? []).map(decodeStoredPosition);
     } catch {
       return [];
     }
   }
-  return readLocalPositions();
+  return readLocalPositions().map(decodeStoredPosition);
 }
 
 /** Récupère une position par slug ou id. */
@@ -115,15 +123,15 @@ export async function getPosition(slugOrId: string): Promise<StoredPosition | nu
       const res = await apiFetch<{ position?: StoredPosition }>(
         `/api/positions/${encodeURIComponent(slugOrId)}`,
       );
-      return res.position ?? null;
+      return res.position ? decodeStoredPosition(res.position) : null;
     } catch {
       return null;
     }
   }
   const local = readLocalPositions().find((p) => p.slug === slugOrId || p.id === slugOrId);
-  if (local) return local;
+  if (local) return decodeStoredPosition(local);
   const fromSeed = seedPositions.find((p) => p.slug === slugOrId);
-  return fromSeed ? fromSeedItem(fromSeed) : null;
+  return fromSeed ? decodeStoredPosition(fromSeedItem(fromSeed)) : null;
 }
 
 /** Crée une position (admin/staff manage_positions côté Worker). */
