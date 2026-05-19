@@ -54,6 +54,7 @@ import {
   handleSeedHashesList,
   handleSeedHashesUpsert,
   handleAuditLogList,
+  handleEmailSentLogList,
 } from "./handlers/admin-tools";
 import {
   handleRegister,
@@ -698,6 +699,11 @@ export default {
       // ─── Audit log lister (G3 / P2-3 UI session 54+++) ──────────────
       if (path === "/api/admin/audit-log" && request.method === "GET") {
         return handleAuditLogList(request, env, corsHeaders);
+      }
+
+      // ─── Email sent log (Brevo) — diagnostic "je ne reçois pas" ─────
+      if (path === "/api/admin/email-sent-log" && request.method === "GET") {
+        return handleEmailSentLogList(request, env, corsHeaders);
       }
 
       // ─── RSS / sitemap dynamiques depuis D1 (P1 SEO session 54+) ────

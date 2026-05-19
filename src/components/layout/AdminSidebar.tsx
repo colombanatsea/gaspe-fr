@@ -60,6 +60,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Paramètres", href: "/admin/parametres", icon: SettingsIcon },
       { label: "Audit log", href: "/admin/audit-log", icon: ShieldIcon, adminOnly: true },
+      { label: "Journal emails", href: "/admin/email-log", icon: MailIcon, adminOnly: true },
     ],
   },
 ];

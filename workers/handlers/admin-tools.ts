@@ -256,3 +256,70 @@ export async function handleAuditLogList(
     return json({ entries: [], total: 0, limit, offset }, corsHeaders);
   }
 }
+
+// ════════════════════════════════════════════════════════════════════
+//  Email sent log (Brevo) — diagnostique des envois transactionnels.
+//  GET /api/admin/email-sent-log?limit=N&type=password_reset&recipient=...
+//
+//  La table email_sent_log (migration 0039) trace chaque tentative Brevo :
+//   - error = null + brevo_message_id non-null : succès
+//   - error = "no-op (BREVO_API_KEY absent)" : Worker en preprod sans clé
+//   - error = "Brevo HTTP 4xx/5xx : sender not allowed..." : config Brevo KO
+//
+//  Indispensable pour diagnostiquer "je ne reçois pas l'email" : on lit
+//  directement ce que le Worker a tenté, sans dépendre des logs Cloudflare.
+// ════════════════════════════════════════════════════════════════════
+
+export async function handleEmailSentLogList(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Réservé à l'administrateur maître" }, corsHeaders, 403);
+  }
+
+  const url = new URL(request.url);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "100", 10) || 100, 1), 500);
+  const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "0", 10) || 0, 0);
+  const type = url.searchParams.get("type");
+  const recipient = url.searchParams.get("recipient");
+
+  const wheres: string[] = [];
+  const binds: unknown[] = [];
+  if (type) { wheres.push("type = ?"); binds.push(type); }
+  if (recipient) { wheres.push("recipient_email = ?"); binds.push(recipient); }
+  const whereSql = wheres.length > 0 ? `WHERE ${wheres.join(" AND ")}` : "";
+
+  const sql = `
+    SELECT id, type, recipient_email, entity_id, sent_at_day, brevo_message_id, error, sent_at
+    FROM email_sent_log
+    ${whereSql}
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?
+  `;
+  binds.push(limit, offset);
+
+  try {
+    const { results } = await env.DB.prepare(sql).bind(...binds).all();
+    const countSql = `SELECT COUNT(*) AS total FROM email_sent_log ${whereSql}`;
+    const countBinds = binds.slice(0, binds.length - 2);
+    const totalRow = await env.DB.prepare(countSql).bind(...countBinds).first<{ total: number }>();
+    return json({
+      entries: results ?? [],
+      total: totalRow?.total ?? 0,
+      limit, offset,
+    }, corsHeaders);
+  } catch (err) {
+    // Si la table n'existe pas (preprod sans migration 0039), retourne vide.
+    return json({
+      entries: [],
+      total: 0,
+      limit, offset,
+      hint: err instanceof Error ? err.message : "table absente ou erreur SQL",
+    }, corsHeaders);
+  }
+}
