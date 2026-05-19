@@ -136,6 +136,24 @@ export default function AdminComptesPage() {
     refresh();
   }
 
+  async function handleEditEmail(u: User) {
+    const next = window.prompt(`Modifier l'email de ${u.name} (actuel : ${u.email})`, u.email);
+    if (!next || next.trim() === "" || next.trim() === u.email) return;
+    const trimmed = next.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      alert("Email invalide. Format attendu : prenom@domaine.fr");
+      return;
+    }
+    const res = await ApiAuthStore.adminUpdateUserEmail(u.id, trimmed);
+    if (!res.success) {
+      alert(`Échec : ${res.error ?? "erreur inconnue"}`);
+      return;
+    }
+    await refresh();
+  }
+
+  const [createOpen, setCreateOpen] = useState(false);
+
   const filtered = users
     .filter((u) => {
       if (filter === "archived") return u.archived;
@@ -178,6 +196,17 @@ export default function AdminComptesPage() {
             )}
           </p>
         </div>
+        {user?.role === "admin" && isApiMode() && (
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--gaspe-teal-600)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-700)] transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nouveau compte
+          </button>
+        )}
         <div className="relative w-full sm:w-72">
           <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -385,6 +414,15 @@ export default function AdminComptesPage() {
                             Archiver
                           </button>
                         )}
+                        {user?.role === "admin" && isApiMode() && (
+                          <button
+                            onClick={() => void handleEditEmail(u)}
+                            className="rounded-lg border border-[var(--gaspe-neutral-200)] px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-[var(--gaspe-teal-50)] hover:text-[var(--gaspe-teal-600)] hover:border-[var(--gaspe-teal-200)] transition-colors"
+                            title="Modifier l'email"
+                          >
+                            Email…
+                          </button>
+                        )}
                         {u.role !== "admin" && u.approved !== false && (
                           <button
                             onClick={() => handleReject(u.id)}
@@ -449,6 +487,169 @@ export default function AdminComptesPage() {
           }}
         />
       )}
+
+      {createOpen && (
+        <CreateUserModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            setCreateOpen(false);
+            void refresh();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─────────── Modal création de compte ─────────── */
+
+interface OrgOption { id: string; name: string }
+
+function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"adherent" | "candidat" | "staff">("adherent");
+  const [orgs, setOrgs] = useState<OrgOption[]>([]);
+  const [organizationId, setOrganizationId] = useState("");
+  const [isPrimary, setIsPrimary] = useState(false);
+  const [companyRole, setCompanyRole] = useState("");
+  const [phone, setPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { modalRef } = useModalA11y(true, onClose);
+
+  useEffect(() => {
+    // Charge les organisations actives pour le select. /api/organizations
+    // est public et renvoie déjà toutes les orgs non-archivées.
+    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/organizations`)
+      .then((r) => r.json())
+      .then((data: { organizations?: OrgOption[] }) => {
+        setOrgs((data.organizations ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch(() => setOrgs([]));
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const payload: Parameters<typeof ApiAuthStore.adminCreateUser>[0] = {
+      name: name.trim(),
+      email: email.trim(),
+      role,
+      organizationId: organizationId || undefined,
+      isPrimary: role === "adherent" ? isPrimary : false,
+      companyRole: companyRole || undefined,
+      phone: phone || undefined,
+    };
+    if (role === "adherent" && !organizationId) {
+      setError("Sélectionnez une compagnie pour ce compte adhérent.");
+      setSubmitting(false);
+      return;
+    }
+    const res = await ApiAuthStore.adminCreateUser(payload);
+    setSubmitting(false);
+    if (!res.success) {
+      setError(res.error ?? "Erreur inconnue.");
+      return;
+    }
+    onCreated();
+  }
+
+  const inputClass = "w-full rounded-xl border border-[var(--gaspe-neutral-200)] bg-white px-3.5 py-2.5 text-sm focus:border-[var(--gaspe-teal-400)] focus:ring-1 focus:ring-[var(--gaspe-teal-400)] focus:outline-none";
+
+  return (
+    <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="create-user-title" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <header className="flex items-center justify-between border-b border-[var(--gaspe-neutral-200)] px-5 py-3">
+          <h2 id="create-user-title" className="font-heading text-base font-semibold text-foreground">Nouveau compte</h2>
+          <button onClick={onClose} aria-label="Fermer" className="text-foreground-muted hover:text-foreground">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </header>
+        <form onSubmit={handleSubmit} className="space-y-4 p-5">
+          <p className="text-xs text-foreground-muted">
+            Le user recevra un email avec un lien pour définir son mot de passe (valide 1 heure). Pas besoin de saisir un mot de passe ici.
+          </p>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground-muted mb-1">Nom complet *</label>
+            <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="Prénom Nom" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground-muted mb-1">Email *</label>
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="prenom@compagnie.fr" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground-muted mb-1">Rôle *</label>
+            <select value={role} onChange={(e) => setRole(e.target.value as "adherent" | "candidat" | "staff")} className={inputClass}>
+              <option value="adherent">Adhérent (compagnie)</option>
+              <option value="staff">Staff GASPE (permissions granulaires)</option>
+              <option value="candidat">Candidat (marin)</option>
+            </select>
+          </div>
+
+          {(role === "adherent" || role === "staff") && (
+            <div>
+              <label className="block text-xs font-medium text-foreground-muted mb-1">
+                Compagnie {role === "adherent" ? "*" : "(optionnel pour staff)"}
+              </label>
+              <select value={organizationId} onChange={(e) => setOrganizationId(e.target.value)} className={inputClass}>
+                <option value="">– sélectionner –</option>
+                {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {role === "adherent" && organizationId && (
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPrimary}
+                onChange={(e) => setIsPrimary(e.target.checked)}
+                className="h-4 w-4 mt-0.5 rounded border-border-light text-primary focus:ring-primary"
+              />
+              <span>
+                <span className="font-semibold">Titulaire de la compagnie</span>
+                <span className="block text-xs text-foreground-muted">Échouera si une autre personne est déjà titulaire actif.</span>
+              </span>
+            </label>
+          )}
+
+          {role === "adherent" && (
+            <div>
+              <label className="block text-xs font-medium text-foreground-muted mb-1">Fonction dans la compagnie (optionnel)</label>
+              <select value={companyRole} onChange={(e) => setCompanyRole(e.target.value)} className={inputClass}>
+                <option value="">– aucune –</option>
+                {COMPANY_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-foreground-muted mb-1">Téléphone (optionnel)</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="06 12 34 56 78" />
+          </div>
+
+          {error && (
+            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              <span className="font-semibold">Échec : </span>{error}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--gaspe-neutral-100)]">
+            <button type="button" onClick={onClose} className="text-sm font-heading font-semibold text-foreground-muted hover:text-foreground">Annuler</button>
+            <button type="submit" disabled={submitting} className="rounded-xl bg-[var(--gaspe-teal-600)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--gaspe-teal-700)] disabled:opacity-60">
+              {submitting ? "Création…" : "Créer le compte"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -222,7 +222,7 @@ export async function handleUpdateUser(request: Request, env: Env, corsHeaders: 
   const values: unknown[] = [];
 
   const allowedFields: Record<string, string> = {
-    name: "name", phone: "phone", company: "company",
+    name: "name", email: "email", phone: "phone", company: "company",
     approved: "approved", archived: "archived",
     role: "role", staffPermissions: "staff_permissions",
     companyRole: "company_role", companyDescription: "company_description",
@@ -236,13 +236,32 @@ export async function handleUpdateUser(request: Request, env: Env, corsHeaders: 
     membershipStatus: "membership_status",
   };
 
-  const adminOnly = ["approved", "archived", "role", "staffPermissions"];
+  // Champs réservés admin : email modifiable uniquement par admin (correction
+  // de typo, fusion comptes). Le user lui-même ne peut pas changer son email
+  // via cet endpoint pour eviter de bypasser un eventuel flow de verification.
+  const adminOnly = ["email", "approved", "archived", "role", "staffPermissions"];
 
   for (const [frontendKey, dbCol] of Object.entries(allowedFields)) {
     if (frontendKey in body) {
       if (adminOnly.includes(frontendKey) && payload.role !== "admin") continue;
-      updates.push(`${dbCol} = ?`);
       const val = body[frontendKey];
+      // Validation email : format + pas de doublon. Refuse l'update sinon.
+      if (frontendKey === "email") {
+        const newEmail = typeof val === "string" ? val.trim() : "";
+        if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+          return json({ error: "Email invalide" }, corsHeaders, 400);
+        }
+        const existing = await env.DB.prepare(
+          "SELECT id FROM users WHERE email = ? COLLATE NOCASE AND id != ?",
+        ).bind(newEmail, userId).first<{ id: string }>();
+        if (existing) {
+          return json({ error: "Un autre compte utilise déjà cet email." }, corsHeaders, 409);
+        }
+        updates.push(`${dbCol} = ?`);
+        values.push(newEmail);
+        continue;
+      }
+      updates.push(`${dbCol} = ?`);
       if (typeof val === "boolean") values.push(val ? 1 : 0);
       else if (frontendKey === "staffPermissions" && Array.isArray(val)) values.push(JSON.stringify(val));
       else values.push(val);
@@ -312,6 +331,147 @@ export async function handleUpdateUser(request: Request, env: Env, corsHeaders: 
   }
 
   return json({ success: true, user: userRow ? toFrontendUser(userRow) : null }, corsHeaders);
+}
+
+/**
+ * Création de compte par l'admin maître. Pas de password fourni : on stocke
+ * un hash aléatoire 64 hex caractères dans `auth` (impossible à retrouver),
+ * l'utilisateur cree devra passer par "mot de passe oublie" pour se
+ * connecter la premiere fois. Email de bienvenue Brevo avec lien direct.
+ *
+ * Body attendu : { name, email, role, organizationId?, isPrimary?,
+ *                  companyRole?, phone?, approved? }
+ *
+ * - role: "adherent" | "candidat" | "staff" (pas "admin" — promotion separee)
+ * - organizationId : requis pour adherent et staff lies a une compagnie
+ * - approved : default 1 (admin valide directement, sinon il aurait
+ *   utilise le flow d'invitation /api/organizations/:id/invite)
+ */
+export async function handleAdminCreateUser(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>,
+) {
+  const token = extractToken(request);
+  if (!token) return json({ error: "Non authentifié" }, corsHeaders, 401);
+  const payload = await verifyJwt(token, env.JWT_SECRET);
+  if (!payload || payload.role !== "admin") {
+    return json({ error: "Accès refusé : admin requis" }, corsHeaders, 403);
+  }
+
+  const body = (await request.json()) as Record<string, unknown>;
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const role = typeof body.role === "string" ? body.role : "";
+  const organizationId = typeof body.organizationId === "string" ? body.organizationId.trim() : null;
+  const isPrimary = body.isPrimary === true;
+  const companyRole = typeof body.companyRole === "string" ? body.companyRole.trim() : null;
+  const phone = typeof body.phone === "string" ? body.phone.trim() : null;
+
+  if (!name || !email || !role) {
+    return json({ error: "Nom, email et rôle requis" }, corsHeaders, 400);
+  }
+  if (!["adherent", "candidat", "staff"].includes(role)) {
+    return json({ error: "Rôle invalide (adherent / candidat / staff seulement)" }, corsHeaders, 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: "Email invalide" }, corsHeaders, 400);
+  }
+
+  const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").bind(email).first();
+  if (existing) {
+    return json({ error: "Un compte existe déjà avec cet email" }, corsHeaders, 409);
+  }
+
+  let resolvedOrgId: string | null = null;
+  let companyName: string | null = null;
+  if (organizationId) {
+    const org = await env.DB.prepare("SELECT id, name FROM organizations WHERE id = ?").bind(organizationId).first<{ id: string; name: string }>();
+    if (!org) {
+      return json({ error: "Organisation introuvable" }, corsHeaders, 404);
+    }
+    resolvedOrgId = org.id;
+    companyName = org.name;
+  } else if (role === "adherent") {
+    return json({ error: "organizationId requis pour un adhérent" }, corsHeaders, 400);
+  }
+
+  // Si is_primary demandé : verifie qu'aucun autre primary actif n'existe
+  // sur cette org (le titulaire est unique). Sinon on stocke 0 et l'admin
+  // fera la bascule via /admin/utilisateurs si necessaire.
+  let primaryFlag = 0;
+  if (isPrimary && resolvedOrgId) {
+    const otherPrimary = await env.DB.prepare(
+      "SELECT id FROM users WHERE organization_id = ? AND is_primary = 1 AND archived = 0",
+    ).bind(resolvedOrgId).first();
+    if (otherPrimary) {
+      return json({
+        error: "Cette compagnie a déjà un titulaire actif. Désigner d'abord un autre titulaire ou décocher la case.",
+      }, corsHeaders, 409);
+    }
+    primaryFlag = 1;
+  }
+
+  const id = `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Password hash aléatoire : le user ne peut pas se connecter jusqu'a
+  // ce qu'il fasse "mot de passe oublie".
+  const randomBytes = crypto.getRandomValues(new Uint8Array(32));
+  const randomPassword = Array.from(randomBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const passwordHash = await hashPasswordServer(randomPassword);
+
+  await env.DB.prepare(`
+    INSERT INTO users (id, email, name, role, phone, company, approved, organization_id, is_primary, company_role, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+  `).bind(
+    id, email, sanitize(name), role,
+    phone, companyName,
+    body.approved === false ? 0 : 1,
+    resolvedOrgId, primaryFlag, companyRole,
+  ).run();
+
+  await env.DB.prepare("INSERT INTO auth (user_id, password_hash) VALUES (?, ?)").bind(id, passwordHash).run();
+  await env.DB.prepare("INSERT OR IGNORE INTO newsletter_preferences (user_id) VALUES (?)").bind(id).run();
+
+  await logAudit(env, payload.sub, "admin", "user.create_by_admin", "user", id, null, {
+    email, role, organizationId: resolvedOrgId, isPrimary: primaryFlag === 1,
+  }, request);
+
+  // Genere un token reset password 1h pour que le user puisse se
+  // connecter sans password. Email de bienvenue avec lien direct.
+  await env.DB.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").bind(id).run();
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const resetToken = Array.from(tokenBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  await env.DB.prepare(
+    "INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)",
+  ).bind(resetToken, id, expiresAt).run();
+
+  const setPasswordUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${resetToken}`;
+  void sendBrevoTransactional(env, {
+    to: [{ email, name }],
+    subject: "Votre compte GASPE a été créé",
+    type: "admin_create_user",
+    entityId: id,
+    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">Bienvenue sur GASPE</h1>
+  </div>
+  <div style="padding:32px;">
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(name)},</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Un compte ${role === "adherent" ? "adhérent" : role === "staff" ? "collaborateur" : "candidat"} a été créé pour vous sur la plateforme GASPE${companyName ? ` (compagnie : <strong>${sanitize(companyName)}</strong>)` : ""}.</p>
+    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Cliquez ci-dessous pour définir votre mot de passe et accéder à votre espace.</p>
+    <p style="margin:24px 0;"><a href="${setPasswordUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Définir mon mot de passe</a></p>
+    <p style="margin:0 0 12px;color:#5C5851;font-size:13px;">Ce lien expire dans 1 heure. Vous pourrez ensuite redemander "Mot de passe oublié" depuis la page de connexion.</p>
+  </div>
+</div></body></html>`,
+    textContent: `Bonjour ${name},\n\nVotre compte GASPE a été créé. Définissez votre mot de passe : ${setPasswordUrl}\n\n(lien valide 1 heure)`,
+  });
+
+  const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<DbUser>();
+  return json({ success: true, user: userRow ? toFrontendUser(userRow) : null }, corsHeaders, 201);
 }
 
 export async function handleDeleteUser(request: Request, env: Env, corsHeaders: Record<string, string>, userId: string) {

@@ -231,6 +231,57 @@ export class ApiAuthStore implements AuthStore {
     }
   }
 
+  /** Admin master : créer un compte lié à une compagnie. Le user reçoit un
+   * email Brevo avec lien direct pour définir son mot de passe (1h).
+   */
+  static async adminCreateUser(payload: {
+    name: string;
+    email: string;
+    role: "adherent" | "candidat" | "staff";
+    organizationId?: string;
+    isPrimary?: boolean;
+    companyRole?: string;
+    phone?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/auth/users`,
+        { method: "POST", body: JSON.stringify(payload) },
+      );
+      return { success: !!res.success, error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
+  /** Admin : modifier l'email d'un user existant (correction de typo, fusion).
+   * Le PATCH renvoie 409 si l'email est déjà pris, 400 si format invalide.
+   */
+  static async adminUpdateUserEmail(userId: string, email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; user?: unknown; error?: string }>(
+        `/api/auth/users/${userId}`,
+        { method: "PATCH", body: JSON.stringify({ email }) },
+      );
+      return { success: !!(res.success ?? res.user), error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
+  /** Admin : suppression définitive d'un compte (master only côté Worker). */
+  static async deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/auth/users/${userId}`,
+        { method: "DELETE" },
+      );
+      return { success: !!res.success, error: res.error };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Erreur réseau" };
+    }
+  }
+
   static async logout(): Promise<void> {
     setToken(null);
   }

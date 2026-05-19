@@ -62,6 +62,7 @@ import {
   handleMe,
   handleListUsers,
   handleUpdateUser,
+  handleAdminCreateUser,
   handleDeleteUser,
   handlePromoteAdmin,
   handleDemoteAdmin,
@@ -232,6 +233,9 @@ export default {
       }
       if (path === "/api/auth/users" && request.method === "GET") {
         return handleListUsers(request, env, corsHeaders);
+      }
+      if (path === "/api/auth/users" && request.method === "POST") {
+        return handleAdminCreateUser(request, env, corsHeaders);
       }
       // C9 — Multi-admin master transferable. Le routage POST sous-spécifique
       // (promote-admin, demote-admin, transfer-master) doit précéder le
