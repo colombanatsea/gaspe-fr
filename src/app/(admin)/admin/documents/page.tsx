@@ -113,7 +113,7 @@ export default function AdminDocumentsPage() {
     await refresh();
   }
 
-  function handleMediaSelect(media: MediaItem | ApiMediaItem) {
+  async function handleMediaSelect(media: MediaItem | ApiMediaItem) {
     const apiBase =
       typeof process !== "undefined" ? process.env.NEXT_PUBLIC_API_URL ?? "" : "";
     const url =
@@ -122,14 +122,30 @@ export default function AdminDocumentsPage() {
         : isApiMode() && apiBase
           ? `${apiBase}/api/media/raw/${(media as ApiMediaItem).r2Key}`
           : "";
-    if (url) {
-      setForm((prev) => ({
-        ...prev,
-        fileUrl: url,
-        fileName: prev.fileName || media.name,
-      }));
+    if (!url) {
+      setShowMedia(false);
+      return;
     }
+    const updated: GaspeDocument = {
+      ...form,
+      fileUrl: url,
+      fileName: form.fileName || media.name,
+    };
+    setForm(updated);
     setShowMedia(false);
+
+    // Mode édition : auto-save dès qu'un fichier est rattaché à un document
+    // existant. Évite le piège « j'ai uploadé mais ça reste en "Bientôt
+    // disponible" » quand on oublie de cliquer Enregistrer ensuite.
+    if (editId) {
+      setSaving(true);
+      try {
+        await saveDocument({ ...updated, id: editId });
+        await refresh();
+      } finally {
+        setSaving(false);
+      }
+    }
   }
 
   if (!user || !isStaffOrAdmin(user)) return null;
