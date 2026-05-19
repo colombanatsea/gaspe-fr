@@ -169,11 +169,11 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
   const [description, setDescription] = useState("");
   const [type, setType] = useState<VoteType>("single_choice");
   const [audience, setAudience] = useState<VoteAudience>("ag_ab");
-  // labelOptions : single_choice / multiple_choice / ranking (libellés textuels)
-  // dateOptions : date_selection (ISO yyyy-mm-dd)
   const [labelOptions, setLabelOptions] = useState<string[]>(["", ""]);
   const [dateOptions, setDateOptions] = useState<string[]>([]);
   const [closesAt, setClosesAt] = useState("");
+  const [showResponsesToVoters, setShowResponsesToVoters] = useState(false);
+  const [includeTime, setIncludeTime] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -189,7 +189,7 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
       options = cleaned.map((label, i) => ({ id: `opt-${i + 1}`, label }));
     } else if (type === "date_selection") {
       if (dateOptions.length === 0) {
-        alert("Au moins 1 date à proposer.");
+        alert(includeTime ? "Au moins 1 créneau à proposer." : "Au moins 1 date à proposer.");
         return;
       }
       options = [...dateOptions];
@@ -202,6 +202,8 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
       audience,
       options,
       closesAt: closesAt || undefined,
+      showResponsesToVoters,
+      includeTime: type === "date_selection" ? includeTime : undefined,
     });
   }
 
@@ -258,17 +260,47 @@ function CreateVoteForm({ onSubmit, onCancel }: { onSubmit: (input: CreateVoteIn
           </div>
         )}
         {type === "date_selection" && (
-          <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-2">
-              Dates proposées (les votants cocheront leurs disponibilités)
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeTime}
+                onChange={(e) => {
+                  setIncludeTime(e.target.checked);
+                  setDateOptions([]);
+                }}
+                className="h-4 w-4 rounded border-border-light text-primary focus:ring-primary"
+              />
+              Inclure les heures (créneaux datetime au lieu de dates simples)
             </label>
-            <DateOptionsPicker value={dateOptions} onChange={setDateOptions} />
+            <label className="block text-xs font-medium text-foreground-muted mb-2">
+              {includeTime
+                ? "Créneaux proposés (les votants cocheront leurs disponibilités)"
+                : "Dates proposées (les votants cocheront leurs disponibilités)"}
+            </label>
+            <DateOptionsPicker value={dateOptions} onChange={setDateOptions} withTime={includeTime} />
           </div>
         )}
         <div>
           <label className="block text-xs font-medium text-foreground-muted mb-1">Clôture automatique (optionnelle)</label>
           <input type="datetime-local" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} className={inputClass} />
           <p className="text-xs text-foreground-muted mt-1">Si renseignée, le vote se ferme automatiquement à cette date et un compteur s&apos;affiche aux votants.</p>
+        </div>
+        <div className="rounded-xl bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-200)] p-3">
+          <label className="flex items-start gap-2 text-sm text-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showResponsesToVoters}
+              onChange={(e) => setShowResponsesToVoters(e.target.checked)}
+              className="h-4 w-4 mt-0.5 rounded border-border-light text-primary focus:ring-primary"
+            />
+            <span>
+              <span className="font-semibold">Visibilité des réponses pour les votants</span>
+              <span className="block text-xs text-foreground-muted mt-0.5">
+                Si coché, chaque adhérent voit l&apos;agrégation des réponses dès qu&apos;il a lui-même voté (compteur par option, choix le plus voté en évidence).
+              </span>
+            </span>
+          </label>
         </div>
         <div className="flex gap-3 pt-2 border-t border-[var(--gaspe-neutral-100)]">
           <Button type="submit">Créer le vote</Button>

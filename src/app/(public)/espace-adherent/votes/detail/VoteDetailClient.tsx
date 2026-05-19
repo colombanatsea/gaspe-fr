@@ -11,6 +11,8 @@ import { getVote, submitVoteResponse } from "@/lib/votes-store";
 import { VOTE_TYPE_LABELS } from "@/types";
 import type { Vote, VoteResponse, VoteOption } from "@/types";
 import { DragRanking } from "@/components/votes/DragRanking";
+import { formatVoteDateOption } from "@/components/votes/DateOptionsPicker";
+import { apiFetch, isApiMode } from "@/lib/api-client";
 
 export default function VoteDetailClient({ id }: { id: string }) {
   const { user } = useAuth();
@@ -233,7 +235,11 @@ export default function VoteDetailClient({ id }: { id: string }) {
 
           {vote.type === "date_selection" && dates.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-foreground-muted mb-2">Cochez vos disponibilités parmi les dates proposées.</p>
+              <p className="text-xs text-foreground-muted mb-2">
+                {vote.includeTime
+                  ? "Cochez vos disponibilités parmi les créneaux proposés."
+                  : "Cochez vos disponibilités parmi les dates proposées."}
+              </p>
               {dates.map((d) => (
                 <label key={d} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--gaspe-neutral-200)] hover:bg-[var(--gaspe-neutral-50)] cursor-pointer">
                   <input
@@ -245,10 +251,15 @@ export default function VoteDetailClient({ id }: { id: string }) {
                     }}
                     disabled={!canVote}
                   />
-                  <span className="text-sm text-foreground">{new Date(d).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
+                  <span className="text-sm text-foreground">{formatVoteDateOption(d)}</span>
                 </label>
               ))}
             </div>
+          )}
+
+          {/* Agrégation des réponses : visible si flag admin activé ET on a déjà voté */}
+          {vote.showResponsesToVoters && myResponse && (
+            <VoteResultsLive vote={vote} />
           )}
 
           {canVote && showConfirm && (
@@ -290,6 +301,122 @@ export default function VoteDetailClient({ id }: { id: string }) {
           )}
         </div>
       </Card>
+    </div>
+  );
+}
+
+/* ─────────── Agrégation des réponses (visible si admin a activé le flag) ─────────── */
+
+interface AggregatedResults {
+  totalResponded: number;
+  totalEligible: number;
+  optionCounts?: Record<string, number>;
+}
+
+function VoteResultsLive({ vote }: { vote: Vote }) {
+  const [results, setResults] = useState<AggregatedResults | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        if (isApiMode()) {
+          const data = await apiFetch<AggregatedResults>(`/api/votes/${encodeURIComponent(vote.id)}/results`);
+          if (!cancelled) setResults(data);
+        } else {
+          // Mode démo : pas d'agrégation côté localStorage. On affiche un état vide.
+          if (!cancelled) setResults({ totalResponded: 0, totalEligible: 0, optionCounts: {} });
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Erreur de chargement.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [vote.id]);
+
+  if (loading) {
+    return (
+      <div className="mt-6 rounded-lg bg-[var(--gaspe-teal-50)] border border-[var(--gaspe-teal-200)] p-4">
+        <p className="text-xs text-foreground-muted italic">Chargement des réponses…</p>
+      </div>
+    );
+  }
+  if (error || !results) {
+    return null;
+  }
+
+  const counts = results.optionCounts ?? {};
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const maxCount = entries[0]?.[1] ?? 0;
+  const totalEligible = results.totalEligible || 1;
+
+  // Pour `date_selection`, on rend dans l'ordre chronologique original des
+  // options du vote (pas par nb votes décroissant) — plus parlant pour
+  // visualiser les créneaux. Pour single/multiple/ranking on rend par
+  // popularité décroissante.
+  const isDate = vote.type === "date_selection";
+  const ordered = isDate
+    ? (vote.options as string[]).map((opt) => [opt, counts[opt] ?? 0] as [string, number])
+    : entries;
+
+  function labelForOption(opt: string): string {
+    if (isDate) return formatVoteDateOption(opt);
+    if (!Array.isArray(vote.options)) return opt;
+    const found = (vote.options as Array<VoteOption | string>).find((o) =>
+      typeof o === "string" ? o === opt : o.id === opt,
+    );
+    if (!found) return opt;
+    return typeof found === "string" ? found : found.label;
+  }
+
+  return (
+    <div className="mt-6 rounded-xl border border-[var(--gaspe-teal-200)] bg-[var(--gaspe-teal-50)] p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-heading text-sm font-semibold text-foreground">
+          Réponses déjà rendues
+        </h3>
+        <span className="text-xs text-foreground-muted">
+          {results.totalResponded} / {results.totalEligible} compagnie{results.totalEligible !== 1 ? "s" : ""}
+        </span>
+      </div>
+      {ordered.length === 0 ? (
+        <p className="text-xs text-foreground-muted italic">Aucune réponse pour le moment.</p>
+      ) : (
+        <ul className="space-y-2">
+          {ordered.map(([opt, count]) => {
+            const isWinner = count > 0 && count === maxCount;
+            const percent = Math.round((count / totalEligible) * 100);
+            return (
+              <li key={opt}>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <span className={`text-sm ${isWinner ? "font-semibold text-[var(--gaspe-teal-700)]" : "text-foreground"}`}>
+                    {labelForOption(opt)}
+                    {isWinner && count > 0 && <span className="ml-2 text-xs">★ choix le plus voté</span>}
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-foreground-muted">
+                    {count} voix
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-white overflow-hidden">
+                  <div
+                    className={`h-full ${isWinner ? "bg-[var(--gaspe-teal-600)]" : "bg-[var(--gaspe-teal-400)]"}`}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

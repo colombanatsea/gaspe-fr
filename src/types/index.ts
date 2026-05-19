@@ -315,7 +315,8 @@ export interface Vote {
   /**
    * Données structurées dépendant du type :
    * - single/multiple/ranking : VoteOption[]
-   * - date_selection : string[] (dates ISO)
+   * - date_selection : string[] (dates ISO `YYYY-MM-DD` ou datetimes
+   *   `YYYY-MM-DDTHH:mm` si `includeTime` est vrai)
    * - text : []
    */
   options: VoteOption[] | string[];
@@ -326,6 +327,18 @@ export interface Vote {
   createdAt: string;
   closedAt?: string;
   closedBy?: string;
+  /**
+   * Si vrai, les adhérents qui ont voté peuvent voir l'agrégation des
+   * réponses (nb voix par option pour single/multi/date, classement
+   * cumulé pour ranking). Paramétré par l'admin au create du vote.
+   */
+  showResponsesToVoters?: boolean;
+  /**
+   * Pour les votes `date_selection` : si vrai, les options incluent
+   * une heure (datetime-local). Permet de proposer des créneaux horaires
+   * en plus de simples dates.
+   */
+  includeTime?: boolean;
 }
 
 /**

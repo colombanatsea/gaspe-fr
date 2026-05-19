@@ -30,6 +30,8 @@ interface DbVote {
   created_at: string;
   closed_at: string | null;
   closed_by: string | null;
+  show_responses_to_voters: number | null;
+  include_time: number | null;
 }
 
 interface DbVoteResponse {
@@ -62,6 +64,8 @@ function toFrontendVote(row: DbVote) {
     createdAt: row.created_at,
     closedAt: row.closed_at ?? undefined,
     closedBy: row.closed_by ?? undefined,
+    showResponsesToVoters: !!row.show_responses_to_voters,
+    includeTime: !!row.include_time,
   };
 }
 
@@ -98,8 +102,14 @@ async function ensureVotesTables(env: Env): Promise<void> {
       created_by TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       closed_at TEXT,
-      closed_by TEXT
+      closed_by TEXT,
+      show_responses_to_voters INTEGER NOT NULL DEFAULT 0,
+      include_time INTEGER NOT NULL DEFAULT 0
     )`).run();
+    // ALTER ADD défensifs si la table existait déjà sans les colonnes
+    // (migrations 0046 non encore appliquées en preprod).
+    try { await env.DB.prepare(`ALTER TABLE votes ADD COLUMN show_responses_to_voters INTEGER NOT NULL DEFAULT 0`).run(); } catch { /* duplicate */ }
+    try { await env.DB.prepare(`ALTER TABLE votes ADD COLUMN include_time INTEGER NOT NULL DEFAULT 0`).run(); } catch { /* duplicate */ }
     await env.DB.prepare(`CREATE TABLE IF NOT EXISTS vote_responses (
       id TEXT PRIMARY KEY,
       vote_id TEXT NOT NULL,
@@ -176,12 +186,23 @@ export async function handleCreateVote(
   const description = typeof body.description === "string" ? body.description.trim() || null : null;
   const closesAt = typeof body.closesAt === "string" && body.closesAt ? body.closesAt : null;
   const optionsJson = body.options !== undefined ? JSON.stringify(body.options) : null;
+  const showResponsesToVoters = body.showResponsesToVoters === true ? 1 : 0;
+  const includeTime = body.includeTime === true && type === "date_selection" ? 1 : 0;
 
   const id = `vote-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  await env.DB.prepare(
-    `INSERT INTO votes (id, title, description, type, audience, options_json, status, closes_at, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
-  ).bind(id, title, description, type, audience, optionsJson, closesAt, auth.userId).run();
+  // ALTER ADD COLUMN sur cette table peut ne pas être appliqué en preprod.
+  // Tentative avec colonnes optionnelles, fallback sans si erreur SQL.
+  try {
+    await env.DB.prepare(
+      `INSERT INTO votes (id, title, description, type, audience, options_json, status, closes_at, created_by, show_responses_to_voters, include_time)
+       VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?, ?, ?)`,
+    ).bind(id, title, description, type, audience, optionsJson, closesAt, auth.userId, showResponsesToVoters, includeTime).run();
+  } catch {
+    await env.DB.prepare(
+      `INSERT INTO votes (id, title, description, type, audience, options_json, status, closes_at, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
+    ).bind(id, title, description, type, audience, optionsJson, closesAt, auth.userId).run();
+  }
 
   const row = await env.DB.prepare("SELECT * FROM votes WHERE id = ?").bind(id).first<DbVote>();
   return json({ success: true, vote: row ? toFrontendVote(row) : null }, corsHeaders);
@@ -295,12 +316,35 @@ export async function handleSubmitVoteResponse(
 export async function handleVoteResults(
   request: Request, env: Env, corsHeaders: Record<string, string>, voteId: string,
 ) {
-  const auth = await requireStaffPermission(request, env, corsHeaders, "manage_votes");
-  if ("error" in auth) return auth.error;
+  // Accès :
+  // - admin / staff(manage_votes) → payload complet
+  // - adhérent (titulaire ou suppléant) ayant déjà voté ET vote.showResponsesToVoters → payload réduit
+  const tokenAuth = await requireJwt(request, env, corsHeaders);
+  if ("error" in tokenAuth) return tokenAuth.error;
+  const { payload: jwtPayload } = tokenAuth;
 
   await ensureVotesTables(env);
   const vote = await env.DB.prepare("SELECT * FROM votes WHERE id = ?").bind(voteId).first<DbVote>();
   if (!vote) return json({ error: "Vote introuvable" }, corsHeaders, 404);
+
+  const isStaff = jwtPayload.role === "admin" || jwtPayload.role === "staff";
+  let isVoterWithAccess = false;
+  if (!isStaff) {
+    if (jwtPayload.role !== "adherent" || !vote.show_responses_to_voters) {
+      return json({ error: "Accès refusé" }, corsHeaders, 403);
+    }
+    // Vérifie que cet adhérent a effectivement voté pour ce vote (lui ou son
+    // titulaire/suppléant via organization_id).
+    const user = await env.DB.prepare(
+      "SELECT organization_id FROM users WHERE id = ?",
+    ).bind(jwtPayload.sub).first<{ organization_id: string | null }>();
+    if (!user?.organization_id) return json({ error: "Aucune organisation" }, corsHeaders, 403);
+    const existing = await env.DB.prepare(
+      "SELECT id FROM vote_responses WHERE vote_id = ? AND organization_id = ? LIMIT 1",
+    ).bind(voteId, user.organization_id).first();
+    if (!existing) return json({ error: "Votez pour voir les réponses" }, corsHeaders, 403);
+    isVoterWithAccess = true;
+  }
 
   // Organisations éligibles
   let orgFilterClause = "";
@@ -373,6 +417,16 @@ export async function handleVoteResults(
         suppleantEmail: suppleant?.email,
       });
     }
+  }
+
+  // Payload réduit pour les votants (pas de PII, pas de mailto).
+  if (isVoterWithAccess) {
+    return json({
+      voteId,
+      totalEligible: orgList.length,
+      totalResponded: respondedOrgIds.size,
+      optionCounts: vote.type === "text" ? undefined : optionCounts,
+    }, corsHeaders);
   }
 
   return json({

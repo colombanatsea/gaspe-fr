@@ -73,6 +73,10 @@ export interface CreateVoteInput {
   audience: Vote["audience"];
   options: VoteOption[] | string[];
   closesAt?: string;
+  /** Si vrai, les votants voient l'agrégation après leur propre vote. */
+  showResponsesToVoters?: boolean;
+  /** Pour `date_selection` : options en datetime au lieu de date seule. */
+  includeTime?: boolean;
 }
 
 export async function createVote(input: CreateVoteInput): Promise<Vote | null> {
