@@ -31,7 +31,7 @@ interface EmailLogEntry {
   sent_at_day: string;
   brevo_message_id: string | null;
   error: string | null;
-  sent_at: string;
+  created_at: string;
 }
 
 interface ListResponse {
@@ -46,6 +46,7 @@ const PAGE_SIZE = 100;
 
 const TYPES = [
   "password_reset",
+  "password_reset_no_user",
   "registration_pending_admin",
   "registration_pending_user",
   "registration_welcome_candidat",
@@ -189,7 +190,7 @@ export default function EmailLogPage() {
             <tbody>
               {entries.map((e) => (
                 <tr key={e.id} className="border-b border-[var(--gaspe-neutral-100)] last:border-0 hover:bg-[var(--gaspe-neutral-50)]/50">
-                  <td className="px-3 py-2 text-xs text-foreground-muted whitespace-nowrap">{e.sent_at}</td>
+                  <td className="px-3 py-2 text-xs text-foreground-muted whitespace-nowrap">{e.created_at}</td>
                   <td className="px-3 py-2 font-mono text-xs text-foreground">{e.type}</td>
                   <td className="px-3 py-2 text-foreground">{e.recipient_email}</td>
                   <td className="px-3 py-2">

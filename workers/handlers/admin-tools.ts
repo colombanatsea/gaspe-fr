@@ -295,7 +295,7 @@ export async function handleEmailSentLogList(
   const whereSql = wheres.length > 0 ? `WHERE ${wheres.join(" AND ")}` : "";
 
   const sql = `
-    SELECT id, type, recipient_email, entity_id, sent_at_day, brevo_message_id, error, sent_at
+    SELECT id, type, recipient_email, entity_id, sent_at_day, brevo_message_id, error, created_at
     FROM email_sent_log
     ${whereSql}
     ORDER BY id DESC

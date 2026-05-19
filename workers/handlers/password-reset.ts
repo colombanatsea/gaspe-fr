@@ -11,7 +11,7 @@
 import { json } from "../lib/json";
 import { sanitize } from "../lib/sanitize";
 import { hashPasswordServer } from "../lib/crypto";
-import { sendBrevoTransactional } from "../lib/brevo";
+import { sendBrevoTransactional, logBrevoSent } from "../lib/brevo";
 import { renderEmailLayout, renderEmailButton, renderEmailParagraph } from "../lib/brevo-templates";
 import { SITE_URL } from "../lib/constants";
 import type { Env } from "../lib/env";
@@ -30,8 +30,12 @@ export async function handleForgotPassword(
 
   const userRow = await env.DB.prepare("SELECT id, name, email FROM users WHERE email = ? COLLATE NOCASE").bind(email).first<{ id: string; name: string; email: string }>();
 
-  // Anti-enumeration : toujours retourner success
+  // Anti-enumeration : toujours retourner success.
+  // Mais on trace dans email_sent_log pour qu'un admin puisse diagnostiquer
+  // « je ne reçois pas le mail » et comprendre que l'email saisi n'est pas
+  // associé à un compte. Pas d'API publique exposant ça côté front.
   if (!userRow) {
+    await logBrevoSent(env, "password_reset_no_user", email, null, null, "Aucun compte n'est associé à cet email");
     return json({ success: true }, corsHeaders);
   }
 
