@@ -48,6 +48,8 @@ export default function AdminDocumentsPage() {
   const [form, setForm] = useState<GaspeDocument>(emptyForm);
   const [showMedia, setShowMedia] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [viewingDoc, setViewingDoc] = useState<GaspeDocument | null>(null);
 
   useEffect(() => {
@@ -92,10 +94,16 @@ export default function AdminDocumentsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(null);
     try {
       await saveDocument({ ...form, id: editId ?? form.id });
       await refresh();
       resetForm();
+      setSaveSuccess("Document enregistré.");
+      setTimeout(() => setSaveSuccess(null), 4000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Erreur inconnue lors de la sauvegarde.");
     } finally {
       setSaving(false);
     }
@@ -139,9 +147,15 @@ export default function AdminDocumentsPage() {
     // disponible" » quand on oublie de cliquer Enregistrer ensuite.
     if (editId) {
       setSaving(true);
+      setSaveError(null);
+      setSaveSuccess(null);
       try {
         await saveDocument({ ...updated, id: editId });
         await refresh();
+        setSaveSuccess("Fichier rattaché et document enregistré.");
+        setTimeout(() => setSaveSuccess(null), 4000);
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : "Erreur inconnue lors de la sauvegarde.");
       } finally {
         setSaving(false);
       }
@@ -207,6 +221,18 @@ export default function AdminDocumentsPage() {
           <h2 className="font-heading text-lg font-semibold text-foreground">
             {editId ? "Modifier le document" : "Nouveau document"}
           </h2>
+
+          {saveError && (
+            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              <span className="font-semibold">La sauvegarde a échoué : </span>
+              {saveError}
+            </div>
+          )}
+          {saveSuccess && (
+            <div role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              ✓ {saveSuccess}
+            </div>
+          )}
 
           <div>
             <label

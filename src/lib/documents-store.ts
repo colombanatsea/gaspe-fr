@@ -116,23 +116,22 @@ export async function saveDocument(
   };
 
   if (isApiMode()) {
-    try {
-      const existing = await getDocument(withTimestamps.id).catch(() => null);
-      if (existing) {
-        const res = await apiFetch<{ document: GaspeDocument }>(
-          `/api/cms/documents/${encodeURIComponent(withTimestamps.id)}`,
-          { method: "PUT", body: JSON.stringify(withTimestamps) },
-        );
-        return res.document;
-      }
+    // Ne PAS swallow l'erreur API : si PUT/POST plante (401, 403, 5xx, réseau),
+    // l'admin doit voir le message. Sinon la "sauvegarde" retombe silencieusement
+    // en localStorage côté admin alors que la D1 prod ne reçoit rien.
+    const existing = await getDocument(withTimestamps.id).catch(() => null);
+    if (existing) {
       const res = await apiFetch<{ document: GaspeDocument }>(
-        `/api/cms/documents`,
-        { method: "POST", body: JSON.stringify(withTimestamps) },
+        `/api/cms/documents/${encodeURIComponent(withTimestamps.id)}`,
+        { method: "PUT", body: JSON.stringify(withTimestamps) },
       );
       return res.document;
-    } catch {
-      /* fallback localStorage */
     }
+    const res = await apiFetch<{ document: GaspeDocument }>(
+      `/api/cms/documents`,
+      { method: "POST", body: JSON.stringify(withTimestamps) },
+    );
+    return res.document;
   }
 
   const docs = readLocal();
@@ -149,14 +148,11 @@ export async function saveDocument(
 /** Supprime un document (admin only). */
 export async function deleteDocument(id: string): Promise<void> {
   if (isApiMode()) {
-    try {
-      await apiFetch(`/api/cms/documents/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      return;
-    } catch {
-      /* fallback */
-    }
+    // Propage l'erreur API au call site pour qu'elle soit affichée.
+    await apiFetch(`/api/cms/documents/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    return;
   }
 
   const docs = readLocal().filter((d) => d.id !== id);
