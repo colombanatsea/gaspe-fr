@@ -10,6 +10,20 @@ import {
   type DocumentCategory,
 } from "@/data/documents-seed";
 import { apiFetch, isApiMode } from "./api-client";
+import { decodeHtmlEntities } from "./text-preview";
+
+// Tiptap (RichTextEditor) sérialise l'apostrophe `'` en `&#39;`. Quand on
+// re-rend le texte via JSX, React échappe `&` en `&amp;` -> affichage
+// `&#39;` visible. On décode une fois au sortir du store sur les champs
+// rendus en texte brut (titre, description). `fileUrl` et `fileName` ne
+// sont jamais des saisies riches, on ne touche pas.
+function decodeDoc(d: GaspeDocument): GaspeDocument {
+  return {
+    ...d,
+    title: decodeHtmlEntities(d.title ?? ""),
+    description: decodeHtmlEntities(d.description ?? ""),
+  };
+}
 
 const DOCUMENTS_KEY = "gaspe_documents";
 
@@ -71,7 +85,7 @@ export async function listDocuments(
       const res = await apiFetch<{ documents?: GaspeDocument[] }>(
         `/api/cms/documents${includePrivate ? "?all=1" : ""}`,
       );
-      const apiDocs = res.documents ?? [];
+      const apiDocs = (res.documents ?? []).map(decodeDoc);
       return sortDocs(apiDocs);
     } catch {
       /* fallback localStorage */
@@ -82,7 +96,7 @@ export async function listDocuments(
   const filtered = includePrivate
     ? docs
     : docs.filter((d) => d.published && d.isPublic);
-  return sortDocs(filtered);
+  return sortDocs(filtered).map(decodeDoc);
 }
 
 /** Charge un document par id (admin / preview). */
@@ -92,12 +106,13 @@ export async function getDocument(id: string): Promise<GaspeDocument | null> {
       const res = await apiFetch<{ document?: GaspeDocument }>(
         `/api/cms/documents/${encodeURIComponent(id)}`,
       );
-      return res.document ?? null;
+      return res.document ? decodeDoc(res.document) : null;
     } catch {
       /* fallback */
     }
   }
-  return readLocal().find((d) => d.id === id) ?? null;
+  const found = readLocal().find((d) => d.id === id);
+  return found ? decodeDoc(found) : null;
 }
 
 /**
