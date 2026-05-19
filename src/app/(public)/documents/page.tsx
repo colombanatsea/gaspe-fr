@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollapsibleSources } from "@/components/shared/CollapsibleSources";
 import { CmsPageHeader } from "@/components/shared/CmsPageHeader";
+import { PdfViewerModal } from "@/components/shared/PdfViewerModal";
 import { Badge } from "@/components/ui/Badge";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useCmsContent } from "@/lib/use-cms";
@@ -72,6 +73,13 @@ function DocumentsContent() {
   const [toast, setToast] = useState("");
   const [documents, setDocuments] = useState<GaspeDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewingDoc, setViewingDoc] = useState<GaspeDocument | null>(null);
+
+  function canPreview(doc: GaspeDocument): boolean {
+    const url = doc.fileUrl ?? "";
+    if (!url || url === "#") return false;
+    return /\.pdf($|\?)/i.test(url) || (doc.fileName?.toLowerCase().endsWith(".pdf") ?? false);
+  }
 
   const searchPlaceholder = useCmsContent(
     "documents",
@@ -282,30 +290,43 @@ function DocumentsContent() {
                         </div>
                       </div>
 
-                      {/* Download button */}
+                      {/* Boutons Consulter + Télécharger (PDF) ou Télécharger seul */}
                       {doc.fileUrl && doc.fileUrl !== "#" ? (
-                        <a
-                          href={doc.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-primary px-4 py-2.5 text-sm font-medium text-primary hover:bg-surface-teal transition-colors"
-                          download
-                        >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
+                        <div className="flex flex-col gap-2 shrink-0 sm:flex-row">
+                          {canPreview(doc) && (
+                            <button
+                              onClick={() => setViewingDoc(doc)}
+                              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                              </svg>
+                              Consulter
+                            </button>
+                          )}
+                          <a
+                            href={doc.fileUrl}
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl border border-primary px-4 py-2.5 text-sm font-medium text-primary hover:bg-surface-teal transition-colors"
+                            download={doc.fileName}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                          </svg>
-                          Télécharger
-                        </a>
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                              />
+                            </svg>
+                            Télécharger
+                          </a>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleDownload(doc)}
@@ -384,6 +405,15 @@ function DocumentsContent() {
           disponibles sur Legifrance.
         </p>
       </CollapsibleSources>
+
+      {viewingDoc && (
+        <PdfViewerModal
+          url={viewingDoc.fileUrl!}
+          title={viewingDoc.title}
+          downloadFileName={viewingDoc.fileName}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

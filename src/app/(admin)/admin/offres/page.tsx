@@ -172,6 +172,13 @@ export default function AdminOffresPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
+                        href={`/admin/offres/edit?id=${encodeURIComponent(job.id)}`}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--gaspe-teal-600)] hover:bg-[var(--gaspe-teal-50)] transition-colors"
+                        title="Modifier l'offre"
+                      >
+                        Modifier
+                      </Link>
+                      <Link
                         href={`/offres/export?id=${encodeURIComponent(job.id)}`}
                         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-[var(--gaspe-neutral-100)] hover:text-foreground transition-colors"
                         title="Exporter l'offre en PDF ou DOCX"

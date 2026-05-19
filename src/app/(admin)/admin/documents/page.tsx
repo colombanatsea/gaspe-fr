@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
+import { PdfViewerModal } from "@/components/shared/PdfViewerModal";
 import { formatDate } from "@/lib/utils";
 import { isApiMode } from "@/lib/api-client";
 import type { MediaItem, ApiMediaItem } from "@/lib/cms-store";
@@ -47,6 +48,7 @@ export default function AdminDocumentsPage() {
   const [form, setForm] = useState<GaspeDocument>(emptyForm);
   const [showMedia, setShowMedia] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<GaspeDocument | null>(null);
 
   useEffect(() => {
     if (!user || !isStaffOrAdmin(user)) router.push("/connexion");
@@ -441,14 +443,13 @@ export default function AdminDocumentsPage() {
                       {doc.fileUrl && doc.fileUrl !== "#" && (
                         <>
                           {" · "}
-                          <a
-                            href={doc.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => setViewingDoc(doc)}
                             className="text-primary hover:underline underline-offset-2"
                           >
                             Aperçu
-                          </a>
+                          </button>
                         </>
                       )}
                     </p>
@@ -489,6 +490,15 @@ export default function AdminDocumentsPage() {
         onClose={() => setShowMedia(false)}
         onSelect={handleMediaSelect}
       />
+
+      {viewingDoc && (
+        <PdfViewerModal
+          url={viewingDoc.fileUrl!}
+          title={viewingDoc.title}
+          downloadFileName={viewingDoc.fileName}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

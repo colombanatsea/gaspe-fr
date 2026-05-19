@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -10,7 +10,7 @@ import { members } from "@/data/members";
 import { slugify } from "@/lib/utils";
 import { ZONE_LABELS, START_DATE_OPTIONS } from "@/data/jobs";
 import type { Job, Zone } from "@/data/jobs";
-import { createJob, publishToHydros, updateJob } from "@/lib/jobs-store";
+import { createJob, getAllOffers, publishToHydros, updateJob } from "@/lib/jobs-store";
 import { isStaffOrAdmin } from "@/lib/auth/permissions";
 
 const contractTypes = ["CDI", "CDD", "Saisonnier", "Stage", "Alternance", "Autres"];
@@ -24,31 +24,82 @@ const categories = [
   "Autre",
 ];
 
-export default function AdminNewOffrePage() {
+const EMPTY_FORM = {
+  title: "",
+  description: "",
+  company: "",
+  location: "",
+  zone: "normandie",
+  contractType: "",
+  category: "",
+  salaryRange: "",
+  contactEmail: "",
+  contactPhone: "",
+  applicationUrl: "",
+  reference: "",
+  startDate: "Immédiat",
+  applicationDeadline: "",
+  profile: "",
+  conditions: "",
+  handiAccessible: false,
+};
+
+function jobToFormValues(job: Job): typeof EMPTY_FORM {
+  return {
+    title: job.title ?? "",
+    description: job.description ?? "",
+    company: job.company ?? "",
+    location: job.location ?? "",
+    zone: job.zone ?? "normandie",
+    contractType: job.contractType ?? "",
+    category: job.category ?? "",
+    salaryRange: job.salaryRange ?? "",
+    contactEmail: job.contactEmail ?? "",
+    contactPhone: job.contactPhone ?? "",
+    applicationUrl: job.applicationUrl ?? "",
+    reference: job.reference ?? "",
+    startDate: job.startDate ?? "Immédiat",
+    applicationDeadline: job.applicationDeadline ?? "",
+    profile: job.profile ?? "",
+    conditions: job.conditions ?? "",
+    handiAccessible: job.handiAccessible ?? false,
+  };
+}
+
+function AdminOffreFormInner() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+  const isEdit = !!editId;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loadingExisting, setLoadingExisting] = useState(isEdit);
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    company: "",
-    location: "",
-    zone: "normandie",
-    contractType: "",
-    category: "",
-    salaryRange: "",
-    contactEmail: "",
-    contactPhone: "",
-    applicationUrl: "",
-    reference: "",
-    startDate: "Immédiat",
-    applicationDeadline: "",
-    profile: "",
-    conditions: "",
-    handiAccessible: false,
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    if (!isEdit || !editId) return;
+    let cancelled = false;
+    setLoadingExisting(true);
+    getAllOffers()
+      .then((all) => {
+        if (cancelled) return;
+        const existing = all.find((j) => j.id === editId || j.slug === editId);
+        if (existing) {
+          setForm(jobToFormValues(existing));
+        } else {
+          setSubmitError("Offre introuvable (id ou slug invalide).");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingExisting(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, isEdit]);
 
   if (!user || !isStaffOrAdmin(user)) {
     if (typeof window !== "undefined") router.push("/connexion");
@@ -70,7 +121,7 @@ export default function AdminNewOffrePage() {
     setSubmitError(null);
 
     const slug = slugify(form.title);
-    const id = `admin-${Date.now()}`;
+    const id = isEdit && editId ? editId : `admin-${Date.now()}`;
     const companySlug = slugify(form.company);
 
     const newJob: Job = {
@@ -98,15 +149,28 @@ export default function AdminNewOffrePage() {
       published: true,
     };
 
-    let created: Job | null = null;
-    try {
-      created = await createJob(newJob);
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Erreur inconnue lors de la création de l'offre");
-      setIsSubmitting(false);
-      return;
+    let finalJob: Job;
+    if (isEdit && editId) {
+      try {
+        const ok = await updateJob(editId, newJob);
+        if (!ok) throw new Error("La mise à jour a été refusée par l'API.");
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Erreur inconnue lors de la mise à jour de l'offre");
+        setIsSubmitting(false);
+        return;
+      }
+      finalJob = newJob;
+    } else {
+      let created: Job | null = null;
+      try {
+        created = await createJob(newJob);
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Erreur inconnue lors de la création de l'offre");
+        setIsSubmitting(false);
+        return;
+      }
+      finalJob = created ?? newJob;
     }
-    const finalJob = created ?? newJob;
 
     // Publication automatique Hydros Alumni si l'offre est publiée (côté admin :
     // toujours `published: true`, l'admin n'a pas de bouton brouillon ici).
@@ -156,11 +220,16 @@ export default function AdminNewOffrePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">
-          Nouvelle offre d&apos;emploi
+          {isEdit ? "Modifier l'offre d'emploi" : "Nouvelle offre d'emploi"}
         </h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          Remplissez les informations ci-dessous pour publier une offre.
+          {isEdit
+            ? "Modifiez les informations de cette offre puis enregistrez."
+            : "Remplissez les informations ci-dessous pour publier une offre."}
         </p>
+        {loadingExisting && (
+          <p className="mt-2 text-xs text-foreground-muted">Chargement de l&apos;offre…</p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 rounded-lg bg-background p-6 shadow-sm">
@@ -450,7 +519,9 @@ export default function AdminNewOffrePage() {
         {/* Erreur de soumission (B2 fix : surface l'erreur API au lieu de redirect silencieux) */}
         {submitError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
-            <span className="font-semibold">L&apos;offre n&apos;a pas pu être créée : </span>
+            <span className="font-semibold">
+              {isEdit ? "L'offre n'a pas pu être modifiée : " : "L'offre n'a pas pu être créée : "}
+            </span>
             {submitError}
           </div>
         )}
@@ -463,11 +534,21 @@ export default function AdminNewOffrePage() {
           >
             Annuler
           </Link>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Publication..." : "Publier l'offre"}
+          <Button type="submit" disabled={isSubmitting || loadingExisting}>
+            {isSubmitting
+              ? isEdit ? "Enregistrement…" : "Publication…"
+              : isEdit ? "Enregistrer" : "Publier l'offre"}
           </Button>
         </div>
       </form>
     </div>
+  );
+}
+
+export default function AdminOffreFormPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-2xl py-10 text-center text-sm text-foreground-muted">Chargement…</div>}>
+      <AdminOffreFormInner />
+    </Suspense>
   );
 }
