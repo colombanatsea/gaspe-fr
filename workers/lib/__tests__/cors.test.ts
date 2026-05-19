@@ -54,6 +54,9 @@ describe("getCorsHeaders", () => {
     const h = getCorsHeaders(reqWithOrigin("https://gaspe.fr"));
     expect(h["Access-Control-Allow-Methods"]).toContain("GET");
     expect(h["Access-Control-Allow-Methods"]).toContain("POST");
+    // PUT requis pour /api/cms/documents/:id et /api/cms/pages/:pageId.
+    // Sans, le preflight CORS bloque l'admin avec "Failed to fetch".
+    expect(h["Access-Control-Allow-Methods"]).toContain("PUT");
     expect(h["Access-Control-Allow-Methods"]).toContain("PATCH");
     expect(h["Access-Control-Allow-Methods"]).toContain("DELETE");
     expect(h["Access-Control-Allow-Methods"]).toContain("OPTIONS");

@@ -17,7 +17,10 @@ export function getCorsHeaders(request: Request): Record<string, string> {
   const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": corsOrigin,
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+    // PUT requis pour /api/cms/documents/:id et /api/cms/pages/:pageId.
+    // Sans, Chrome bloque le preflight et le call site reçoit
+    // "Failed to fetch" sans status HTTP visible.
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
   };
