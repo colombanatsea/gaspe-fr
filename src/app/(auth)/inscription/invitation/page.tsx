@@ -16,7 +16,7 @@ function InvitationForm() {
   useAuth();
   const token = searchParams.get("token") ?? "";
 
-  const [form, setForm] = useState({ name: "", password: "", phone: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", password: "", phone: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -40,14 +40,21 @@ function InvitationForm() {
     e.preventDefault();
     setError("");
 
-    if (!form.name.trim()) { setError("Le nom est requis."); return; }
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError("Prénom et nom sont obligatoires.");
+      return;
+    }
+    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 8) {
+      setError("Un numéro de téléphone valide est obligatoire (8 chiffres minimum).");
+      return;
+    }
     if (form.password.length < 6) { setError("Le mot de passe doit contenir au moins 6 caractères."); return; }
 
     setLoading(true);
     const result = await ApiAuthStore.acceptInvitation(token, {
-      name: form.name,
+      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
       password: form.password,
-      phone: form.phone || undefined,
+      phone: form.phone,
     });
     setLoading(false);
 
@@ -74,28 +81,47 @@ function InvitationForm() {
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-foreground">
-            Prénom et nom
-          </label>
-          <input
-            id="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className={inputClass}
-            placeholder="Jean Dupont"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-foreground">
+              Prénom <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              required
+              autoComplete="given-name"
+              value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              className={inputClass}
+              placeholder="Jean"
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-foreground">
+              Nom <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              required
+              autoComplete="family-name"
+              value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              className={inputClass}
+              placeholder="Dupont"
+            />
+          </div>
         </div>
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-            Téléphone <span className="text-foreground-muted">(optionnel)</span>
+            Téléphone <span className="text-red-500">*</span>
           </label>
           <input
             id="phone"
             type="tel"
+            required
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             className={inputClass}

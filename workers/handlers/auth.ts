@@ -37,6 +37,17 @@ export async function handleRegister(request: Request, env: Env, corsHeaders: Re
     return json({ error: "Le mot de passe doit contenir au moins 6 caractères" }, corsHeaders, 400);
   }
 
+  // Téléphone obligatoire pour tous les comptes (validé contre le front).
+  const phoneDigits = (phone ?? "").replace(/\D/g, "");
+  if (phoneDigits.length < 8) {
+    return json({ error: "Un numéro de téléphone valide est obligatoire (8 chiffres minimum)" }, corsHeaders, 400);
+  }
+
+  // Le nom doit comporter au moins un prénom et un nom (espace au milieu).
+  if (!/\S\s+\S/.test(name.trim())) {
+    return json({ error: "Prénom et nom obligatoires (séparés par un espace)" }, corsHeaders, 400);
+  }
+
   if (role === "adherent" && !company?.trim()) {
     return json({ error: "La compagnie est requise pour les adhérents" }, corsHeaders, 400);
   }
@@ -372,11 +383,18 @@ export async function handleAdminCreateUser(
   if (!name || !email || !role) {
     return json({ error: "Nom, email et rôle requis" }, corsHeaders, 400);
   }
+  if (!/\S\s+\S/.test(name)) {
+    return json({ error: "Prénom et nom obligatoires (séparés par un espace)" }, corsHeaders, 400);
+  }
   if (!["adherent", "candidat", "staff"].includes(role)) {
     return json({ error: "Rôle invalide (adherent / candidat / staff seulement)" }, corsHeaders, 400);
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: "Email invalide" }, corsHeaders, 400);
+  }
+  const phoneDigits = (phone ?? "").replace(/\D/g, "");
+  if (phoneDigits.length < 8) {
+    return json({ error: "Un numéro de téléphone valide est obligatoire (8 chiffres minimum)" }, corsHeaders, 400);
   }
 
   const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").bind(email).first();

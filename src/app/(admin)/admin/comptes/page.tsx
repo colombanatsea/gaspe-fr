@@ -506,7 +506,8 @@ export default function AdminComptesPage() {
 interface OrgOption { id: string; name: string }
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"adherent" | "candidat" | "staff">("adherent");
   const [orgs, setOrgs] = useState<OrgOption[]>([]);
@@ -532,22 +533,31 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setError(null);
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Prénom et nom sont obligatoires.");
+      return;
+    }
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 8) {
+      setError("Un numéro de téléphone valide est obligatoire (8 chiffres minimum).");
+      return;
+    }
+    if (role === "adherent" && !organizationId) {
+      setError("Sélectionnez une compagnie pour ce compte adhérent.");
+      return;
+    }
+
+    setSubmitting(true);
     const payload: Parameters<typeof ApiAuthStore.adminCreateUser>[0] = {
-      name: name.trim(),
+      name: `${firstName.trim()} ${lastName.trim()}`,
       email: email.trim(),
       role,
       organizationId: organizationId || undefined,
       isPrimary: role === "adherent" ? isPrimary : false,
       companyRole: companyRole || undefined,
-      phone: phone || undefined,
+      phone: phone.trim(),
     };
-    if (role === "adherent" && !organizationId) {
-      setError("Sélectionnez une compagnie pour ce compte adhérent.");
-      setSubmitting(false);
-      return;
-    }
     const res = await ApiAuthStore.adminCreateUser(payload);
     setSubmitting(false);
     if (!res.success) {
@@ -575,9 +585,15 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             Le user recevra un email avec un lien pour définir son mot de passe (valide 1 heure). Pas besoin de saisir un mot de passe ici.
           </p>
 
-          <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1">Nom complet *</label>
-            <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="Prénom Nom" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-foreground-muted mb-1">Prénom *</label>
+              <input required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="Jean" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-foreground-muted mb-1">Nom *</label>
+              <input required autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="Dupont" />
+            </div>
           </div>
 
           <div>
@@ -632,8 +648,8 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           )}
 
           <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1">Téléphone (optionnel)</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="06 12 34 56 78" />
+            <label className="block text-xs font-medium text-foreground-muted mb-1">Téléphone *</label>
+            <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="06 12 34 56 78" />
           </div>
 
           {error && (

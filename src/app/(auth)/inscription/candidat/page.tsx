@@ -13,7 +13,8 @@ export default function InscriptionCandidatPage() {
   const { register } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     phone: "",
@@ -30,8 +31,18 @@ export default function InscriptionCandidatPage() {
     e.preventDefault();
     setError("");
 
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError("Prénom et nom sont obligatoires.");
+      return;
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setError("Veuillez entrer une adresse email valide.");
+      return;
+    }
+
+    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 8) {
+      setError("Un numéro de téléphone valide est obligatoire (8 chiffres minimum).");
       return;
     }
 
@@ -44,7 +55,7 @@ export default function InscriptionCandidatPage() {
 
     const result = await register({
       role: "candidat",
-      name: form.name,
+      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
       email: form.email,
       password: form.password,
       phone: form.phone,
@@ -75,19 +86,37 @@ export default function InscriptionCandidatPage() {
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-foreground">
-            Nom complet
-          </label>
-          <input
-            id="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            className={inputClass}
-            placeholder="Jean Dupont"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-foreground">
+              Prénom <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              required
+              autoComplete="given-name"
+              value={form.firstName}
+              onChange={(e) => update("firstName", e.target.value)}
+              className={inputClass}
+              placeholder="Jean"
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-foreground">
+              Nom <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              required
+              autoComplete="family-name"
+              value={form.lastName}
+              onChange={(e) => update("lastName", e.target.value)}
+              className={inputClass}
+              placeholder="Dupont"
+            />
+          </div>
         </div>
 
         <div>
@@ -107,11 +136,12 @@ export default function InscriptionCandidatPage() {
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-            Téléphone
+            Téléphone <span className="text-red-500">*</span>
           </label>
           <input
             id="phone"
             type="tel"
+            required
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
             className={inputClass}
