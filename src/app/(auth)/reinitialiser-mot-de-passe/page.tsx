@@ -9,6 +9,10 @@ import { ApiAuthStore } from "@/lib/auth/api-auth-store";
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  // Quand le Worker envoie le lien de premier accès après création par
+  // l'admin, il ajoute ?first=1. On adapte les libellés (« choisir » au
+  // lieu de « réinitialiser ») et le message de succès.
+  const isFirstLogin = searchParams.get("first") === "1";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -44,9 +48,13 @@ function ResetPasswordForm() {
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
           </div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">Mot de passe modifié</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            {isFirstLogin ? "Mot de passe défini" : "Mot de passe modifié"}
+          </h1>
           <p className="mt-2 text-sm text-foreground-muted">
-            Votre mot de passe a été réinitialisé avec succès.
+            {isFirstLogin
+              ? "Votre compte GASPE est maintenant actif. Connectez-vous pour accéder à votre espace."
+              : "Votre mot de passe a été réinitialisé avec succès."}
           </p>
         </div>
         <div className="mt-6 text-center">
@@ -86,9 +94,13 @@ function ResetPasswordForm() {
 
   return (
     <div className="rounded-2xl bg-background p-8 shadow-sm border-l-[3px] border-l-primary">
-      <h1 className="font-heading text-2xl font-bold text-foreground">Nouveau mot de passe</h1>
+      <h1 className="font-heading text-2xl font-bold text-foreground">
+        {isFirstLogin ? "Bienvenue sur GASPE" : "Nouveau mot de passe"}
+      </h1>
       <p className="mt-1 text-sm text-foreground-muted">
-        Choisissez votre nouveau mot de passe.
+        {isFirstLogin
+          ? "Pour votre première connexion, choisissez le mot de passe de votre choix."
+          : "Choisissez votre nouveau mot de passe."}
       </p>
 
       {error && (
@@ -131,7 +143,9 @@ function ResetPasswordForm() {
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
+          {loading
+            ? isFirstLogin ? "Création du compte…" : "Réinitialisation…"
+            : isFirstLogin ? "Activer mon compte" : "Réinitialiser le mot de passe"}
         </Button>
       </form>
     </div>

@@ -11,6 +11,7 @@ import { extractToken, setTokenCookie } from "../lib/auth";
 import { sanitize } from "../lib/sanitize";
 import { hashPasswordServer, verifyPasswordServer } from "../lib/crypto";
 import { sendBrevoTransactional } from "../lib/brevo";
+import { renderEmailLayout, renderEmailButton, renderEmailParagraph } from "../lib/brevo-templates";
 import { logAudit } from "../lib/audit";
 import { type DbUser, toFrontendUser } from "../lib/users";
 import { SITE_URL } from "../lib/constants";
@@ -447,27 +448,53 @@ export async function handleAdminCreateUser(
     "INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)",
   ).bind(resetToken, id, expiresAt).run();
 
-  const setPasswordUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${resetToken}`;
+  const setPasswordUrl = `${SITE_URL}/reinitialiser-mot-de-passe?token=${resetToken}&first=1`;
+  const loginUrl = `${SITE_URL}/connexion`;
+  const roleLabel = role === "adherent" ? "adhérent" : role === "staff" ? "collaborateur GASPE" : "candidat";
+  const espaceLabel = role === "adherent"
+    ? "l'espace adhérent (carte de la flotte, votes, formations, documents)"
+    : role === "staff"
+      ? "la console d'administration GASPE selon les permissions accordées"
+      : "l'espace candidat (offres d'emploi, formations, profil ENM)";
+
   void sendBrevoTransactional(env, {
     to: [{ email, name }],
-    subject: "Votre compte GASPE a été créé",
+    subject: "Votre compte GASPE a été créé — choisissez votre mot de passe",
     type: "admin_create_user",
     entityId: id,
-    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#F5F3F0;font-family:'DM Sans',Helvetica,sans-serif;">
-<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-  <div style="background:#1B7E8A;padding:24px 32px;text-align:center;">
-    <h1 style="margin:0;color:#fff;font-family:'Exo 2',Helvetica,sans-serif;font-size:22px;">Bienvenue sur GASPE</h1>
-  </div>
-  <div style="padding:32px;">
-    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Bonjour ${sanitize(name)},</p>
-    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Un compte ${role === "adherent" ? "adhérent" : role === "staff" ? "collaborateur" : "candidat"} a été créé pour vous sur la plateforme GASPE${companyName ? ` (compagnie : <strong>${sanitize(companyName)}</strong>)` : ""}.</p>
-    <p style="margin:0 0 12px;color:#222221;font-size:15px;">Cliquez ci-dessous pour définir votre mot de passe et accéder à votre espace.</p>
-    <p style="margin:24px 0;"><a href="${setPasswordUrl}" style="display:inline-block;background:#1B7E8A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Définir mon mot de passe</a></p>
-    <p style="margin:0 0 12px;color:#5C5851;font-size:13px;">Ce lien expire dans 1 heure. Vous pourrez ensuite redemander "Mot de passe oublié" depuis la page de connexion.</p>
-  </div>
-</div></body></html>`,
-    textContent: `Bonjour ${name},\n\nVotre compte GASPE a été créé. Définissez votre mot de passe : ${setPasswordUrl}\n\n(lien valide 1 heure)`,
+    htmlContent: renderEmailLayout({
+      headerTitle: "GASPE",
+      headerSubtitle: "Localement ancrés. Socialement engagés.",
+      body: [
+        `<h2 style="margin:0 0 16px;color:#222221;font-size:20px;">Bienvenue sur la plateforme GASPE</h2>`,
+        renderEmailParagraph(`Bonjour ${sanitize(name)},`),
+        renderEmailParagraph(
+          `L'administrateur GASPE a créé pour vous un compte <strong>${roleLabel}</strong>${
+            companyName ? ` rattaché à la compagnie <strong>${sanitize(companyName)}</strong>` : ""
+          }.`,
+        ),
+        renderEmailParagraph(
+          `Pour finaliser votre première connexion, choisissez le mot de passe de votre choix en cliquant ci-dessous. Vous accéderez ensuite à ${espaceLabel}.`,
+        ),
+        renderEmailButton(setPasswordUrl, "Choisir mon mot de passe"),
+        renderEmailParagraph(
+          `Ce lien personnel est valide pendant 1 heure. Une fois votre mot de passe défini, vous pourrez vous connecter à tout moment depuis <a href="${loginUrl}" style="color:#1B7E8A;text-decoration:underline;">la page de connexion</a>.`,
+          { muted: true },
+        ),
+        renderEmailParagraph(
+          `Si le lien a expiré, demandez simplement « Mot de passe oublié » depuis la page de connexion, un nouveau lien vous sera renvoyé sur cette adresse.`,
+          { muted: true },
+        ),
+      ].join("\n      "),
+    }),
+    textContent:
+      `Bonjour ${name},\n\n` +
+      `L'administrateur GASPE a créé un compte ${roleLabel} pour vous` +
+      `${companyName ? ` (compagnie : ${companyName})` : ""}.\n\n` +
+      `Choisissez votre mot de passe lors de la première connexion : ${setPasswordUrl}\n` +
+      `(lien valide 1 heure)\n\n` +
+      `Une fois votre mot de passe défini, connectez-vous sur ${loginUrl}.\n\n` +
+      `Cordialement,\nL'équipe GASPE`,
   });
 
   const userRow = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<DbUser>();
